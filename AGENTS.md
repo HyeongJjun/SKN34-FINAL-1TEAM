@@ -6,7 +6,7 @@
 
 ## 1. 제품 흐름과 이름
 
-- 1차 범위는 아파트 도배 · 목공이다. 흐름: 집 정보 · 공정 고르기 → 예상 공정표 · 표준견적서 → 업체 추천 → 가견적 요청 → 업체가 가견적서 제출 → 실측 요청 → 업체가 실측 견적서 제출 → 확정 또는 다시 고르기 → 확정 업체가 공사기간 등록 → 확정 공정표.
+- 1차 범위는 아파트 도배 · 목공이다. 흐름: 집 정보 · 공정 고르기 → 예상 공정표 · 표준견적서 → 상담 → 업체 추천 → 가견적 요청 → 업체가 가견적서 제출 → 실측 요청 → 업체가 실측 견적서 제출 → 확정 또는 다시 고르기 → 확정 업체가 공사기간 등록 → 확정 공정표 → 업체별 일정 확인 → 업체가 확정 또는 연기 → 연기면 고객 승인 뒤 공정표 재조정 → 영향받는 업체 재확인 → 전체 확정.
 - 가견적서와 실측 견적서는 업체가 써서 낸다. 믿집은 공공 기준으로 계산한 표준견적서만 비교 기준으로 보여 준다.
 - 업체는 기본 회원정보 + 사업자등록증으로 가입하고, 관리자가 승인해야 업체 기능을 쓴다.
 - 범위 밖(바닥 · 욕실 · 전기 공정, 전자계약, 결제)은 이슈로만 남기고 코드에 자리를 미리 만들지 않는다.
@@ -23,6 +23,13 @@
 | 품 | `man_day` | 기능공 1명 1일 작업량 |
 | 공급면적 / 전용면적 | `area_basis = supply / exclusive` | 평형(분양) / 실제 쓰는 면적 |
 | 도배 유형: 저가형 / 기본형 | `grade = economy / basic` | 고객이 고르는 도배 등급 |
+| 대화 | `chat` | 고객이 에이전트와 주고받는 채팅 |
+| 상담 | `consult` | 모르는 조건을 되물어 채우는 공정별 대화 |
+| 브리프 | `brief` | 상담으로 모은 공정별 조건 |
+| 가이드 | `guide` | 처음 고객의 궁금증과 시작 순서를 안내하는 공통 대화 |
+| 공정 에이전트 | `trade` | 공정을 골라 목공 · 도배 서브에이전트로 잇는 코드 분기 |
+| 견적 설명 | `quote_explanation` | 저장된 금액을 풀이하는 설명. 금액을 만들지 않는다 |
+| 일정 변경 | `schedule_change` | 업체가 연기를 요청하고 고객이 승인하는 공정표 변경 |
 
 ## 2. 구조와 호출 흐름
 
@@ -32,8 +39,9 @@
 | --- | --- |
 | `frontend/` (Next.js) | 화면만. DB 접근 · LLM 호출 · 금액 계산을 하지 않는다 |
 | `backend/app/` (FastAPI) | 유일한 공개 API. 기능 패키지 + 계산 엔진 `calc` + 에이전트 `agent` |
-| `backend/app/worker.py` (arq) | LLM · 기준 단가 수집 · 알림 같은 느린 일 |
-| PostgreSQL 17 | 원본 데이터. Redis는 큐 · 요청 제한 · 짧은 캐시만 (지워져도 되는 것) |
+| `backend/app/worker.py` (arq) | 대화 밖 LLM · 기준 단가 수집 · 알림 같은 느린 일 |
+| `backend/app/mcp_server.py` | 믿집 일정 MCP 서버 |
+| PostgreSQL 17 + pgvector | 원본 데이터와 지식 검색. Redis는 큐 · 요청 제한 · 짧은 캐시만 (지워져도 되는 것) |
 | Cloudflare (운영) | DNS · 사용자 쪽 HTTPS · 방화벽. EC2 앞단 |
 | Caddy (운영) | 서버 쪽 HTTPS, `/api/*` → API, 나머지 → web |
 
@@ -42,12 +50,12 @@
 ```
 app/<경로>/page.tsx      화면(라우트). 권한은 lib/session.ts의 requireRole로 확인
 app/globals.css          디자인 토큰과 여러 화면이 같이 쓰는 공용 클래스. 옮겨 온 화면 전용 클래스가 아직 남아 있어서, 그 화면을 고칠 때 module.css로 옮긴다
-components/<영역>/        화면 조각. 영역: site · start · project · vendors · my · auth · admin · ui
+components/<영역>/        화면 조각. 영역: site · start · project · vendors · my · auth · admin · chat · ui
                          한 컴포넌트에만 쓰는 스타일은 옆에 <이름>.module.css로 둔다
 lib/backend/server.ts    Server Component → FastAPI. 쿠키를 넘기고 읽기만 한다
-lib/backend/client.ts    브라우저 → /api/*. 쓰기와 오류(ApiError)
+lib/backend/client.ts    브라우저 → /api/*. 쓰기 · 오류(ApiError) · 대화 SSE
 lib/backend/schema.d.ts  API 타입. pnpm gen:api로 만들고 손으로 고치지 않는다
-lib/api/<영역>.ts         서버 쪽 읽기의 입구. 영역마다 한 파일: project · vendor · quote · visit · schedule · admin
+lib/api/<영역>.ts         서버 쪽 읽기의 입구. 영역마다 한 파일: project · vendor · quote · visit · schedule · admin · chat
 lib/mock/                예시 데이터. API가 생기면 lib/api/<영역>.ts 안에서만 바꾼다
 lib/session.ts           로그인한 사람(GET /me)
 lib/format.ts · labels.ts · trade-status.ts · types.ts   표시 형식 · 화면 말 · 공정 상태 · 타입
@@ -66,7 +74,7 @@ files/                   올리기 · 사진 처리(images) · 저장(storage)
 project/                 프로젝트 만들기 · 보기
 vendor/                  업체 가입 신청 · 관리자 승인
 migrations/              Alembic. 0001(처음 표 12개)부터 하나씩 더한다
-아직 없음: quote · visit · schedule · refprice · jobs · calc · agent
+아직 없음: quote · visit · schedule · refprice · jobs · calc · agent · chat · knowledge · mcp_server.py
 ```
 
 - 기능 안 파일은 필요한 것만 둔다: `router.py`(HTTP), `service.py`(업무 흐름 · 상태 · commit), `repository.py`(DB), `schemas.py`, `models.py`, `client.py`(외부 API).
@@ -78,6 +86,8 @@ migrations/              Alembic. 0001(처음 표 12개)부터 하나씩 더한�
 - 화면 쓰기: 브라우저 → 같은 주소 `/api/*`(`lib/backend/client.ts`) → 개발은 Next, 운영은 Caddy가 API로 넘긴다. Server Action은 쓰지 않는다.
 - API 안: `CatchAll`(처리 못 한 오류 → 같은 오류 모양) → `BodyLimit`(경로별 본문 한도) → Origin 확인 → `router` → `deps`(세션 · 권한) → `service` → `repository` → PostgreSQL. 오류는 모두 `{"error": {code, message, fields?}}`.
 - 느린 일: service가 같은 트랜잭션에 `jobs` 행을 남기고 commit 뒤 큐에 넣는다 → worker → `agent` · 외부 API → 결과 저장은 해당 기능 service.
+- 대화: 브라우저 → `/api/*`(SSE) → `chat.router` → `chat.service`(대화 잠금, 같은 대화 동시 요청은 409) → 입구 관문 → 담당 에이전트 또는 오케스트레이터 → 도구 · 믿집 MCP → 출력 검사 → 저장은 `chat.service`와 해당 기능 service → 문장 · 카드 전송.
+- 일정 연기: 업체 [연기] → `schedule.service`(상태 변경) → 공정표 에이전트 → 일정 MCP(영향 계산 · 승인 대기 건 저장) → 고객 [승인] → `schedule.service`(공정표 반영) → `jobs` → worker 알림.
 - 예 (견적 받기, 기능이 생긴 뒤):
 
   ```
@@ -92,10 +102,10 @@ migrations/              Alembic. 0001(처음 표 12개)부터 하나씩 더한�
 **층 규칙** (위는 아래를 부를 수 있고 반대는 안 된다. `|`끼리는 서로 import하지 않는다)
 
 ```
-조립   main.py | worker.py
-흐름   schedule → visit → quote
+조립   main.py | worker.py | mcp_server.py
+흐름   chat → schedule → visit → quote
 대상   account | project | vendor
-기반   files | refprice | jobs  → auth
+기반   files | refprice | jobs | knowledge  → auth
 도구   agent → calc
 공통   shared → db | queue → config
 ```
@@ -103,6 +113,7 @@ migrations/              Alembic. 0001(처음 표 12개)부터 하나씩 더한�
 - 다른 기능은 그 기능 service의 공개 함수로만 부른다. 다른 기능 models는 읽기 조인에만 쓰고, router끼리 import하지 않는다.
 - 예외는 하나: `/me`가 업체 승인 상태를 읽으려고 `auth.service → vendor.repository`를 함수 안에서 늦게 import한다.
 - `calc`는 DB · HTTP · 시계를 모르는 순수 함수다. 오늘 날짜는 인자로 받는다.
+- `agent`는 기능 service를 import하지 않는다. 기능 데이터는 `chat/tools.py`의 도구로 넘겨받고, 믿집 MCP는 MCP 클라이언트로만 부른다.
 
 ## 3. 돈 · 날짜 · 상태
 
@@ -112,15 +123,28 @@ migrations/              Alembic. 0001(처음 표 12개)부터 하나씩 더한�
 - 날짜는 서울 기준 `date`, 시각은 `timestamptz`. 공휴일은 데이터로 둔다.
 - 견적 줄은 표준 행 키와 포함 상태 6종(포함 · 묶음 포함 · 따로 계산 · 선택 · 실측 후 · 안 함)으로 저장한다. 합계에는 '포함'과 '따로 계산'만 들어간다.
 - 견적에는 만든 때의 산식 · 단가 버전을 고정한다. 기준 단가는 출처 · 적용일 · 버전과 함께 쌓고, 수집이 일부라도 실패하면 기존 값을 그대로 둔다.
-- 상태는 기능별 service 한 곳에서만 바꾼다: 허용 전이 확인 → 조건부 UPDATE(1행이 아니면 409) → 같은 트랜잭션에 이력 행. 업체 확정 · 다시 고르기 · 공정표 확정은 사람이 누른 요청으로만 일어난다.
+- 상태는 기능별 service 한 곳에서만 바꾼다: 허용 전이 확인 → 조건부 UPDATE(1행이 아니면 409) → 같은 트랜잭션에 이력 행. 업체 확정 · 다시 고르기 · 공정표 확정 · 일정 변경 승인은 사람이 누른 요청으로만 일어난다.
+- 일정 변경 승인 대기 건에는 공정표 버전을 넣고, 승인할 때 버전이 다르면 409다. 같은 응답이 두 번 와도 알림은 한 번만 보낸다.
 
 ## 4. 에이전트
 
-- 에이전트는 예상 공정표, 업체 추천, 확정 공정표 셋이다. 네 번째는 팀이 정한 뒤에 만든다.
-- LLM SDK 호출은 `app/agent/llm.py` 한 곳에서만 한다. 공급자는 팀이 정한 하나만 쓴다.
-- 에이전트는 DB에 쓰지 않고 확정 · 저장 권한이 없다. 출력은 Pydantic 스키마로 검사하고, 숫자는 계산 엔진 결과와 맞지 않으면 버린다. 업체 추천은 후보 목록 밖의 id를 버린다.
+- 에이전트는 오케스트레이터, 가이드, 공정, 견적 설명, 공정표, 업체 추천 여섯이다. 일곱 번째는 팀이 정한 뒤에 만든다.
+- 가이드는 공정 앞에서 처음 고객의 궁금증과 시작 순서를 답하고 다음 단계로 안내한다. 프로젝트 없이 동작하고 로그인한 고객만 쓴다. 일반 금액 · 기간은 말하지 않고 표준견적서로 안내한다.
+- 공정 에이전트는 LLM 없이 공정을 고르는 코드 분기이고, 공정을 알 수 없으면 되묻는다. 목공 · 도배 서브에이전트가 조건 묻기와 공정별 주의점을 맡고, 코드 한 벌에 공정별 설정을 둔다. 두 역할의 프롬프트와 eval 세트는 나눈다. 범위 밖 공정의 서브에이전트는 미리 만들지 않는다.
+- 표준견적서와 확정 공정표는 에이전트가 아니다. 코드와 계산 엔진이 만든다. 공정표 에이전트는 말을 제약으로 바꾸고 결과를 설명만 한다.
+- 입구 관문은 코드 라우터와 직접 학습한 의도 분류 모델이다. 신뢰도가 낮으면 Jev로 한 번 판단하고, 그래도 낮거나 실패하면 고객에게 되묻는다. 범위 밖 요청은 LLM 없이 안내한다.
+- 단일 의도는 담당 에이전트로 바로 보내고, 복합 요청과 공정 간 조정만 오케스트레이터가 맡는다. 화면 버튼과 worker의 일은 입구 관문 없이 해당 에이전트를 부른다.
+- LLM SDK 호출은 `app/agent/llm.py` 한 곳에서만 한다. 공급자는 팀이 정한 하나만 쓴다. 예외는 하나: Jev는 입구 분류에만 쓰고 답변 글을 쓰지 않는다. Jev로 보내는 문장의 전화번호 · 동호수는 가린다.
+- 대화 LLM은 API에서 SSE로 돌리고, 견적 도착 뒤 설명은 worker가 맡는다. 대화 상태는 턴 시작에 짧은 DB 세션으로 복원하고, LLM을 기다리는 동안 세션을 쥐지 않는다. 저장은 새 세션으로 하고 commit 뒤에 완료 신호를 보낸다.
+- 대화 잠금은 조건부 UPDATE와 만료 시각으로 하고, DB 락을 쥔 채 LLM을 기다리지 않는다.
+- 후보 업체처럼 항상 필요한 입력은 코드가 먼저 읽어 에이전트에 넘긴다.
+- 호출 상한: 에이전트별 도구 4회, 턴당 하위 호출 3회, 사용자별 일일 토큰 제한.
+- 에이전트는 DB에 쓰지 않고 확정 · 저장 권한이 없다. 예외는 하나: 일정 MCP의 `request_schedule_change`는 공정표를 바꾸지 않는 승인 대기 건만 저장한다. 슬롯과 일정 변경은 고객이 누른 요청으로 반영한다. 출력은 Pydantic 스키마로 검사하고, 숫자는 계산 엔진 결과와 맞지 않으면 버린다. 대화는 문장 단위로 숫자를 검사한 뒤 보낸다. 업체 추천은 후보 목록 밖의 id를 버린다.
+- 사용자와 `project_id`는 서버가 세션으로 고정하고 LLM 출력으로 받지 않는다. 업체가 쓴 글은 지시문에 넣지 않고 데이터로만 넘긴다.
+- 믿집 MCP는 일정 MCP 하나를 직접 만들고 외부 MCP 서버는 쓰지 않는다. 시방서 검색은 `knowledge.service` 함수로 둔다.
+- 일정 MCP 도구는 `get_schedule`, `list_schedule_alerts`, `preview_schedule_change`, `request_schedule_change`, `draft_schedule_notice`이고, 로그인 필수 · 본인 프로젝트만이다. 공정표 반영 · 확정 · 알림 발송 · 고객 견적 · 브리프 원문은 넣지 않는다.
 - LLM이 실패하면 계산 결과만 보여 주고 "설명을 만들지 못했어요"라고 알린다. 규칙으로 만든 가짜 설명으로 채우지 않는다.
-- 프롬프트는 버전을 붙이고, 바꾸는 PR은 커밋 type `prompt`로 하고 eval 결과를 붙인다. eval 세트(추천 20 · 공정표 15)는 `evaluation/`에 두고 dev와 held-out을 2:1로 나눈다.
+- 프롬프트는 버전을 붙이고, 바꾸는 PR은 커밋 type `prompt`로 하고 eval 결과를 붙인다. eval 세트(추천 20 · 공정표 15 · 의도 분류 200 · RAG 30 · 상담 10 · 오케스트레이터 30 · 가이드 50 · 견적 설명 문제 행 시나리오)는 `evaluation/`에 두고 dev와 held-out을 2:1로 나눈다.
 - CI에서 유료 호출은 0회다(`LLM_LIVE=false` 스텁). 스텁 통과를 에이전트 품질 확인으로 말하지 않는다.
 
 ## 5. 코드 작성
