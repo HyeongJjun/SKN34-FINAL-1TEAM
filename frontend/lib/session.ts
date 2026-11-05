@@ -12,7 +12,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
   try {
     const me = await serverGet<Schemas["MeOut"]>("/me");
     if (!me || !ROLES.includes(me.role as Role)) return null;
-    return { id: me.id, email: me.email, name: me.name, role: me.role as Role, vendorStatus: me.vendor_status ?? null, vendorRejectReason: me.vendor_reject_reason ?? null };
+    return { id: me.id, email: me.email, name: me.name, role: me.role as Role, vendorStatus: me.vendor_status ?? null, vendorRejectReason: me.vendor_reject_reason ?? null, phone: me.phone ?? null, joinedAt: me.created_at };
   } catch (e) {
     console.error("로그인 확인 실패 (API에 연결되지 않음)", e);
     return null;

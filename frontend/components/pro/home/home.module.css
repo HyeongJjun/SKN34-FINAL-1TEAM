@@ -1,0 +1,39 @@
+/* 업체 홈 (시안 WVHome · WVFirst) */
+.b { font-weight: 700; }
+.m { font-weight: 500; }
+.ico { flex: none; margin-top: 2px; }
+
+/* WVHome: 가입 심사 */
+.top { display: flex; flex-direction: column; gap: 8px; padding-block: 40px; }
+.body { display: flex; flex-direction: column; gap: 16px; max-width: 760px; padding-block: 48px 72px; border-top: 1px solid var(--line); }
+.steps { list-style: none; margin: 0; padding: 12px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 28px; border-block: 1px solid var(--line); }
+.steps li { display: inline-flex; align-items: center; gap: 8px; }
+.steps .now { color: var(--accent-ink); }
+.sum { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 12px 24px; }
+.sum dt { font-size: var(--fs-sm); color: var(--ink-sub); }
+.sum dd { margin: 0; font-weight: 500; }
+.file { overflow-wrap: anywhere; }
+.say { margin: 0; display: flex; flex-direction: column; gap: 6px; padding-block: 14px; border-block: 1px solid var(--line); max-width: 640px; }
+.say blockquote { margin: 0; font-size: var(--fs-md); font-weight: 500; }
+.fm { display: flex; flex-direction: column; gap: 16px; max-width: 560px; }
+
+/* WVFirst: 승인 첫날 작업함 */
+.first { display: flex; flex-direction: column; gap: 28px; padding-block: 32px 72px; }
+.band { align-items: center; font-size: var(--fs-md); }
+.big { font-size: var(--fs-md); }
+.cols { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
+.main { flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.firstSec { display: flex; flex-direction: column; gap: 12px; padding-top: 12px; border-top: 2px solid var(--ink); }
+.firstHead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; }
+.todo { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.ti { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; min-height: 72px; padding-block: 12px; border-bottom: 1px solid var(--line); }
+.ti .ico { margin-top: 0; }
+.tt { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.tbtn { min-height: 44px; }
+.fold summary { display: flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.fold summary h2 { display: inline; }
+.empty { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 16px; padding: 40px 16px; border-block: 1px solid var(--line); text-align: center; }
+.aside { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 36px; }
+.tel { display: flex; flex-direction: column; gap: 2px; padding-top: 12px; border-top: 2px solid var(--ink); }
+.telRow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; }
+.telNo { font-size: var(--fs-lg); font-weight: 700; }

@@ -1,0 +1,31 @@
+/* 알림 (시안 WNotify) */
+.head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 32px; padding-top: 40px; }
+.title { display: flex; flex-direction: column; gap: 6px; }
+.acts { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.body { display: flex; flex-direction: column; gap: 32px; padding-block: 32px 96px; }
+
+/* 거르기 칩 */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: 20px; background: var(--bg); color: var(--ink); font-size: var(--fs-sm); font-weight: 500; text-decoration: none; }
+.chip:hover { background: var(--surface); color: var(--ink); }
+.chip[aria-current] { padding: 0 13px; border: 2px solid var(--accent); background: var(--surface); color: var(--accent-ink); font-weight: 700; }
+
+/* 날짜별 목록 */
+.day { display: flex; flex-direction: column; }
+.dh { padding-bottom: 8px; font-size: var(--fs-sm); font-weight: 700; }
+.list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-strong); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; min-height: 76px; padding: 14px 16px; border-bottom: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+.row:hover { background: var(--surface); color: var(--ink); }
+.row:focus-visible { outline-offset: -3px; }
+.new { background: var(--surface); }
+.new:hover { background: var(--accent-weak); }
+.st { flex: 0 0 76px; display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-sm); font-weight: 700; color: var(--ink); }
+.read { font-weight: 500; color: var(--ink-sub); }
+.time { flex: 0 0 48px; font-size: var(--fs-sm); color: var(--ink-sub); }
+.text { flex: 1 1 360px; min-width: 0; }
+.new .text { font-weight: 700; }
+.go { flex: none; display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-sm); font-weight: 500; color: var(--ink-sub); }
+.row:hover .go, .row:focus-visible .go { color: var(--ink); }
+
+/* 알림이 없을 때 */
+.empty { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding-top: 24px; border-top: 1px solid var(--line-strong); }

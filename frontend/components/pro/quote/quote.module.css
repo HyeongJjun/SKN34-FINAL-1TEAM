@@ -1,0 +1,94 @@
+/* 실측 견적서 올리기 (시안 WVQuote) */
+.crumb { padding-top: 12px; padding-bottom: 8px; }
+.page { display: flex; flex-direction: column; gap: 24px; padding-block: 12px 72px; }
+.top { display: flex; flex-direction: column; gap: 16px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.headRow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 8px 24px; }
+.head { display: flex; flex-direction: column; gap: 4px; }
+.code { font-family: var(--font-mono); font-size: var(--fs-sm); }
+.stamp { display: inline-flex; align-items: center; gap: 6px; }
+.light { font-size: var(--fs-sm); font-weight: 400; color: var(--ink-sub); }
+.big { font-size: var(--fs-lg); font-weight: 700; }
+.block { display: block; }
+.r { text-align: right; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.links { display: flex; flex-wrap: wrap; gap: 0 24px; }
+
+/* 요청 요약 */
+.brief { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 8px 32px; }
+.brief > div { display: flex; gap: 12px; min-width: 0; }
+.brief dt { flex: 0 0 72px; color: var(--ink-sub); }
+.brief dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+
+/* 올리기: 파일 | 요약 두 칸, 좁으면 위아래 */
+.form { display: flex; flex-wrap: wrap; gap: 32px 48px; align-items: flex-start; min-width: 0; margin: 0; padding: 0; border: 0; }
+.col { flex: 1 1 440px; min-width: 0; display: flex; flex-direction: column; gap: 20px; padding-top: 12px; border-top: 2px solid var(--ink); }
+.colFiles { gap: 12px; }
+.secHead { display: flex; flex-direction: column; gap: 2px; }
+.lock { margin-bottom: 16px; }
+
+/* 파일 목록 */
+.files { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.fl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding-block: 12px; border-bottom: 1px solid var(--line); }
+.doc { flex: none; }
+.fileName { flex: 1 1 200px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fileName a, .fileName b { font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
+.fileName a { display: inline-flex; align-items: center; align-self: flex-start; min-height: 40px; }
+.fileActs { display: flex; flex-wrap: wrap; gap: 8px; }
+.none { padding: 16px 0; border-block: 1px solid var(--line); color: var(--ink-sub); }
+.bad { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.bad li { display: flex; flex-direction: column; gap: 2px; }
+.bad b { overflow-wrap: anywhere; }
+
+/* 요약 칸 */
+.unit { display: flex; align-items: center; gap: 8px; max-width: 280px; }
+.unit input { text-align: right; }
+.unitS { max-width: 160px; }
+.rads { display: flex; flex-wrap: wrap; gap: 8px; }
+.rad { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 14px; border: 1px solid var(--line-strong); border-radius: var(--radius); cursor: pointer; }
+.rad input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
+.rad:has(input:checked) { padding: 7px 13px; border: 2px solid var(--accent); background: var(--surface); font-weight: 700; }
+.rad:has(input:disabled) { color: var(--ink-mute); cursor: not-allowed; }
+.cust { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding-block: 10px; border-block: 1px solid var(--line); }
+.cust[aria-busy="true"] .big { color: var(--ink-mute); }
+.chip { display: inline-flex; align-items: center; min-height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: var(--radius-s); font-size: var(--fs-xs); font-weight: 500; color: var(--ink-sub); white-space: nowrap; }
+.acts { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+
+/* 날짜 칸: 누르면 바로 아래에 달력 */
+.dateRow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
+.dateBtn { justify-content: flex-start; min-width: 180px; font-weight: 500; }
+.dateBtn[aria-invalid="true"] { border: 2px solid var(--danger); }
+.clear { font-size: var(--fs-sm); }
+.calBox { display: flex; max-width: 100%; }
+
+/* 보낸 견적서 */
+.sent { display: flex; flex-direction: column; gap: 16px; padding-top: 12px; border-top: 2px solid var(--ink); }
+.sentHead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 8px 24px; }
+.sentHead > p { white-space: normal; }
+.cg { display: flex; flex-wrap: wrap; gap: 16px 40px; align-items: flex-start; }
+.cg > * { flex: 1 1 300px; min-width: 0; }
+.sum { margin: 0; }
+.sum > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-block: 10px; border-bottom: 1px solid var(--line); }
+.sum > div:last-child { border-bottom: 0; }
+.sum dt { flex: none; color: var(--ink-sub); }
+.sum dd { margin: 0; min-width: 0; text-align: right; }
+
+/* 다시 올리기: 고치는 중 안내 · 보낸 버전 목록 */
+.reHead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: 16px; }
+.reHead > p { flex: 1 1 320px; }
+.vers { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+.verList { list-style: none; margin: 0; padding: 0; }
+.verList li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 16px; padding-block: 10px; border-bottom: 1px solid var(--line-soft); }
+.verNo { flex: 0 0 64px; }
+.verWhen { flex: 1 1 140px; }
+.verAmt { flex: 1 1 160px; font-weight: 700; }
+
+/* '견적서를 보낼까요?' 확인 창 */
+.dlg { width: min(560px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); padding: 28px 24px 24px; border: 0; border-radius: var(--radius-l); background: var(--bg); color: var(--ink); box-shadow: var(--shadow-pop); overflow-y: auto; overscroll-behavior: contain; }
+.dlg[open] { display: flex; flex-direction: column; gap: 16px; }
+.dlg::backdrop { background: var(--backdrop); }
+.dlg h2 { padding-right: 40px; }
+.dlg .cg > * { flex-basis: 100%; }
+.x { position: absolute; top: 10px; right: 10px; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: var(--radius); background: transparent; color: var(--ink-sub); cursor: pointer; }
+.x:hover { background: var(--surface); color: var(--ink); }
+.dlgBtns { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+@media (max-width: 400px) { .dlg { padding: 24px 16px 16px; } }

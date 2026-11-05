@@ -12,7 +12,10 @@ from app.account.router import router as account_router
 from app.auth.router import router as auth_router
 from app.config import settings
 from app.files.router import router as files_router
+from app.notify.router import router as notify_router
 from app.project.router import router as project_router
+from app.quote.router import router as quote_router
+from app.schedule.router import router as schedule_router
 from app.shared.errors import (
     AppError,
     app_error_handler,
@@ -22,6 +25,7 @@ from app.shared.errors import (
 )
 from app.shared.request_guards import BodyLimit, CatchAll
 from app.vendor.router import router as vendor_router
+from app.visit.router import router as visit_router
 
 
 @asynccontextmanager
@@ -52,8 +56,12 @@ ROUTERS = [
     account_router,
     auth_router,
     files_router,
+    notify_router,
     project_router,
+    quote_router,
+    schedule_router,
     vendor_router,
+    visit_router,
 ]
 for r in ROUTERS:
     app.include_router(r)

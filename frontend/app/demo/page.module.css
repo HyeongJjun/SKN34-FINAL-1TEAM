@@ -1,0 +1,15 @@
+/* 시연 순서 */
+.head { display: flex; flex-direction: column; gap: 6px; padding-top: 40px; }
+.body { display: flex; flex-direction: column; gap: 24px; padding-block: 28px 80px; }
+.body > * { max-width: 880px; }
+
+.login { display: flex; flex-direction: column; gap: 8px; padding: 20px clamp(16px, 2.5vw, 24px); border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.loginT { font-size: var(--fs-lg); font-weight: 700; }
+
+.steps { display: flex; flex-direction: column; gap: 16px; margin: 0; padding: 0; list-style: none; }
+.step { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px 16px; padding: 20px clamp(16px, 2.5vw, 24px); border: 1px solid var(--line); border-radius: 8px; }
+.no { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--accent-weak); color: var(--accent-ink); font-family: var(--font-mono); font-weight: 700; }
+.main { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.t { font-size: var(--fs-lg); font-weight: 700; line-height: 32px; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
+.none { color: var(--warn); }

@@ -1,0 +1,5 @@
+.box { display: flex; flex-direction: column; gap: 14px; padding-top: 14px; border-top: 2px solid var(--ink); }
+.field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.lab { font-size: var(--fs-sm); font-weight: 700; color: var(--ink); }
+.ckrow { display: flex; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; }
+.ck { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); flex: none; }

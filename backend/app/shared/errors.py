@@ -11,13 +11,19 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 class AppError(Exception):
     def __init__(
-        self, status: int, code: str, message: str, headers: dict[str, str] | None = None
+        self,
+        status: int,
+        code: str,
+        message: str,
+        headers: dict[str, str] | None = None,
+        fields: list[dict] | None = None,
     ) -> None:
         super().__init__(message)
         self.status = status
         self.code = code
         self.message = message
         self.headers = headers
+        self.fields = fields  # 칸별 오류 [{"loc": [칸 이름], "msg": 문장}] (빠진 칸 여러 개)
 
 
 def error_body(code: str, message: str, fields: list[dict] | None = None) -> dict:
@@ -29,7 +35,7 @@ def error_body(code: str, message: str, fields: list[dict] | None = None) -> dic
 
 async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:
     return JSONResponse(
-        error_body(exc.code, exc.message), status_code=exc.status, headers=exc.headers
+        error_body(exc.code, exc.message, exc.fields), status_code=exc.status, headers=exc.headers
     )
 
 

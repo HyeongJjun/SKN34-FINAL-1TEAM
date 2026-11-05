@@ -1,7 +1,7 @@
 "use client";
 // '쓰던 요청서가 있어요' 카드. 홈과 내 프로젝트에서 보인다. 질문 흐름이 답을 저장하면 바로 따라 바뀐다.
 import { useEffect, useState } from "react";
-import { QuoteButton } from "@/components/start/QuoteDialog";
+import Link from "next/link";
 import { DRAFT_EVENT, clearPhotoMemo, draftLine, readDraft, writeDraft } from "@/components/start/draft";
 
 export function DraftCard() {
@@ -35,7 +35,7 @@ export function DraftCard() {
         </div>
       ) : (
         <div className="mj-btn-row">
-          <QuoteButton label="이어서 쓰기" className="mj-btn mj-btn-pri mj-btn-sm" />
+          <Link href="/start" className="mj-btn mj-btn-pri mj-btn-sm">이어서 쓰기</Link>
           <button type="button" className="mj-btn mj-btn-ghost mj-btn-sm" onClick={() => setAsking(true)}>지우기</button>
         </div>
       )}

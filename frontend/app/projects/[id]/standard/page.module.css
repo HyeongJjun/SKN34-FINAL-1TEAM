@@ -1,0 +1,10 @@
+/* 표준견적서 화면: 서류 한 장 + 오른쪽 다음 할 일 (시안 WStandard) */
+.layout { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 40px 48px; padding-top: 12px; padding-bottom: 88px; }
+.done { flex: 1 1 100%; }
+.side { flex: 1 1 300px; min-width: 0; align-self: flex-start; position: sticky; top: 24px; display: flex; flex-direction: column; gap: 24px; }
+@media (max-height: 720px), (max-width: 960px) { .side { position: static; } }
+.next { display: flex; flex-direction: column; gap: 12px; }
+.change { display: flex; flex-direction: column; gap: 10px; padding-top: 20px; border-top: 1px solid var(--line); }
+.changeT { font-size: var(--fs-md); font-weight: 700; }
+.change ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; font-size: var(--fs-sm); }
+.small { font-size: var(--fs-sm); }

@@ -1,30 +1,18 @@
-import Link from "next/link";
+// 모든 화면 맨 위 머리. 로그인한 사람의 역할(비로그인 · 고객 · 업체 · 관리자)마다 머리 하나를 쓴다.
+// variant="admin"은 관리자 화면 레이아웃이 넘긴다. 고객 화면에는 오른쪽 아래 '묻기' 버튼(틀만)을 같이 붙인다.
 import { getSession } from "@/lib/session";
-import { NavLinks } from "./NavLinks";
-import { AccountMenu } from "./AccountMenu";
-import { QuoteButton } from "@/components/start/QuoteDialog";
-
-const NAV = {
-  customer: [{ href: "/my", label: "내 프로젝트" }, { href: "/faq", label: "자주 묻는 질문" }],
-  vendor: [{ href: "/vendor", label: "업체 홈" }],
-  admin: [{ href: "/admin/members", label: "회원관리" }, { href: "/admin/vendors", label: "업체관리" }],
-};
+import { getUnread } from "@/lib/api/notify";
+import { AskLauncher } from "./AskLauncher";
+import { HeaderBar } from "./HeaderBar";
 
 export async function SiteHeader({ variant = "user" }: { variant?: "user" | "admin" }) {
-  const session = await getSession();
-  const links = variant === "admin" ? NAV.admin : session?.role === "vendor" ? NAV.vendor : NAV.customer;
-  const home = variant === "admin" ? "/admin/members" : session?.role === "vendor" ? "/vendor" : "/";
+  const admin = variant === "admin";
+  // 알림 종은 고객 · 업체 머리에만 있다. 안 읽은 수는 못 읽으면 0(배지 없음).
+  const [session, unread] = await Promise.all([getSession(), admin ? 0 : getUnread()]);
   return (
-    <header className="mj-header">
-      <div className="mj-wrap mj-header-in">
-        <Link href={home} className="mj-logo">믿집{variant === "admin" ? <span className="mj-small" style={{ marginLeft: 8, fontWeight: 500 }}>관리자</span> : null}</Link>
-        <nav aria-label={variant === "admin" ? "관리자 메뉴" : "주 메뉴"} className="mj-nav"><NavLinks links={links} /></nav>
-        <div className="mj-user">
-          {session ? null : <Link href="/login" className="mj-btn mj-btn-sec mj-btn-sm">로그인 · 회원가입</Link>}
-          {variant === "user" && session?.role !== "vendor" && session?.role !== "admin" ? <QuoteButton /> : null}
-          {session ? <AccountMenu name={session.name} email={session.email} role={session.role} /> : null}
-        </div>
-      </div>
-    </header>
+    <>
+      <HeaderBar session={session} admin={admin} unread={session && session.role !== "admin" ? unread : 0} />
+      {session?.role === "customer" ? <AskLauncher /> : null}
+    </>
   );
 }

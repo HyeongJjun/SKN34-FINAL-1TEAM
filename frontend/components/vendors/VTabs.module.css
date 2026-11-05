@@ -1,0 +1,5 @@
+.tabs { display: flex; flex-wrap: wrap; gap: 0 28px; border-bottom: 1px solid var(--line); }
+.tabs a { display: inline-flex; align-items: center; gap: 8px; min-height: 52px; margin-bottom: -1px; border-bottom: 3px solid transparent; color: var(--ink); font-size: var(--fs-lg); font-weight: 500; text-decoration: none; }
+.tabs a:hover { color: var(--accent-ink); }
+.tabs a[aria-current="page"] { border-bottom-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.n { font-size: var(--fs-sm); font-weight: 400; color: var(--ink-sub); }

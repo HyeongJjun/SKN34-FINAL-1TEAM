@@ -1,0 +1,26 @@
+/* 예상 공정표 막대 · 날짜별 표 (시안 WPlan) */
+.scroll { position: relative; overflow-x: auto; max-width: 100%; border-top: 2px solid var(--ink); }
+.grid { display: grid; }
+.grid > * { min-width: 0; }
+.offCol { z-index: 0; background: var(--gantt-off); }
+.vline { z-index: 0; border-left: 1px solid var(--gantt-grid); }
+.hline { z-index: 0; grid-column: 1 / -1; border-bottom: 1px solid var(--line); }
+.head { grid-row: 1; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: var(--fs-sm); font-weight: 500; color: var(--ink-sub); }
+.head b { font-size: var(--fs-md); font-weight: 700; color: var(--ink); }
+.headOff b { color: var(--ink-mute); }
+.name { grid-column: 1; z-index: 2; position: sticky; left: 0; display: flex; flex-direction: column; justify-content: center; padding: 0 16px 0 0; line-height: 1.35; background: var(--bg); box-shadow: inset 0 -1px 0 var(--line), inset -1px 0 0 var(--line); }
+.name b { font-size: var(--fs-md); }
+.bar { z-index: 1; align-self: center; height: 30px; margin-inline: 3px; border-radius: 7px; }
+.strong { background: var(--accent); }
+.pastel { background: var(--accent-pastel); }
+.soft { background: var(--accent-weak); box-shadow: inset 0 0 0 1px var(--accent-pastel); }
+.offKey { background: var(--gantt-off); }
+
+.legend { list-style: none; margin: 0; padding: 14px 0 0; display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: var(--fs-sm); color: var(--ink-sub); }
+.legend li { display: inline-flex; align-items: center; gap: 8px; }
+.legend li > span { width: 24px; height: 12px; border-radius: 4px; }
+
+table.days tr > th, table.days tr > td { padding-left: 0; }
+.days th { white-space: nowrap; }
+.cap { font-weight: 700; color: var(--ink); }
+.offRow td, .offRow th { color: var(--ink-sub); }

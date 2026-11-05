@@ -1,0 +1,19 @@
+/* 업체 자세히 · 전체 화면 (시안 WVendorDetail) 배치. 조각 스타일은 components/vendors/Detail.module.css */
+.crumb { padding-top: 12px; padding-bottom: 8px; }
+.top { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 28px 56px; padding-top: 8px; padding-bottom: 48px; }
+.hd { flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.chip { display: inline-flex; align-items: center; min-height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: var(--radius-s); font-size: var(--fs-xs); font-weight: 500; color: var(--ink-sub); white-space: nowrap; }
+.cc { flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 12px; padding: 20px clamp(16px, 2.5vw, 24px); border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+.lock { display: flex; gap: 6px; align-items: flex-start; }
+.lock svg { flex: none; margin-top: 4px; }
+.was { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.sm { align-self: flex-start; font-size: var(--fs-sm); }
+
+.sec { padding-block: 40px; }
+
+.end { display: flex; flex-direction: column; gap: 12px; padding-block: 32px 88px; border-top: 1px solid var(--line); }
+.endRow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; }
+.pickEnd { flex: 0 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.gbtn { display: inline-flex; align-items: center; min-height: 44px; font-size: var(--fs-sm); font-weight: 500; color: var(--ink-sub); text-decoration: none; }
+.gbtn:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }

@@ -1,0 +1,33 @@
+/* 서류 모음 (시안 WDocs) */
+.head { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; }
+.body { display: flex; flex-direction: column; gap: 12px; padding-block: 28px 80px; }
+.box { max-width: 880px; }
+.note { max-width: 880px; font-size: var(--fs-sm); color: var(--ink-sub); }
+
+/* 표 */
+.tbl thead th:first-child { padding-left: 0; }
+.tbl thead th:last-child, .tbl tbody td:last-child { padding-right: 0; }
+.tbl tbody th { min-width: 200px; padding: 16px 12px 16px 0; }
+.tbl tbody td { padding-block: 16px; }
+.tbl .date { white-space: nowrap; }
+.tbl .amt { text-align: right; white-space: nowrap; }
+.doc { display: inline-flex; align-items: center; min-height: 40px; font-weight: 700; }
+.closed .doc { color: var(--ink-sub); }
+.sub { display: block; font-size: var(--fs-sm); font-weight: 400; color: var(--ink-sub); }
+
+/* 실측 견적서 파일 */
+.files { display: flex; flex-direction: column; margin: 4px 0 0; padding: 0; list-style: none; }
+.files a { display: inline-flex; align-items: center; min-height: 40px; font-size: var(--fs-sm); font-weight: 500; overflow-wrap: anywhere; }
+
+/* 지난 판 */
+.past { margin-top: 4px; }
+.past summary { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; font-size: var(--fs-sm); font-weight: 700; color: var(--accent-ink); cursor: pointer; list-style: none; }
+.past summary::-webkit-details-marker { display: none; }
+.chev { flex: none; transition: transform 0.15s; }
+.past[open] .chev { transform: rotate(90deg); }
+.past ul { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 0; padding: 0 0 0 12px; list-style: none; border-left: 2px solid var(--line); font-size: var(--fs-sm); font-weight: 400; color: var(--ink-sub); }
+.past .files { margin-top: 0; }
+
+/* 추가 금액: 확정 견적서 줄 아래 들여서 */
+.tbl tbody tr.extra th { padding-left: 16px; box-shadow: inset 3px 0 0 var(--line); }
+.exName { font-weight: 500; }

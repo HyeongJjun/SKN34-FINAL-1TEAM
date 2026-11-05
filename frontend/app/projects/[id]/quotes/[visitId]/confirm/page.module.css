@@ -1,0 +1,22 @@
+/* 업체 확정 (시안 WConfirm) */
+.crumb { padding-top: 12px; padding-bottom: 8px; }
+.layout { display: flex; flex-wrap: wrap; gap: 56px 80px; align-items: flex-start; padding-top: 20px; padding-bottom: 96px; }
+.main { flex: 1 1 560px; max-width: 720px; min-width: 0; display: flex; flex-direction: column; gap: 44px; }
+.aside { flex: 1 1 300px; max-width: 380px; min-width: 0; display: flex; flex-direction: column; gap: 40px; padding-top: 6px; }
+.head { display: flex; flex-direction: column; gap: 12px; }
+
+/* 확정하면 */
+.after { display: flex; flex-direction: column; gap: 14px; }
+.steps { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.steps > li { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.steps > li > :first-child { flex: none; width: 24px; padding-top: 2px; }
+.stepBody { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.stepT { font-weight: 700; }
+.stepSub { font-weight: 400; color: var(--ink-sub); }
+
+/* 업체를 바꿀 수 있는 때 */
+
+/* 고를 수 없을 때 */
+.shut { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; max-width: 720px; padding-top: 20px; padding-bottom: 96px; }
+.msg { display: flex; gap: 6px; align-items: flex-start; font-size: var(--fs-md); }
+.msg > svg { flex: none; margin-top: 4px; }

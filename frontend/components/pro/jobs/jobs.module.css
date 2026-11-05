@@ -1,0 +1,136 @@
+/* 공사 날짜 내기 (시안 WVCalendar) */
+.crumb { padding-top: 12px; padding-bottom: 8px; }
+.page { display: flex; flex-direction: column; gap: 24px; padding-block: 12px 72px; }
+.b { font-weight: 700; }
+.ink { color: var(--ink); }
+.ico { flex: none; }
+.code { font-family: var(--font-mono); font-size: var(--fs-sm); }
+.sel { user-select: all; }
+.big { font-size: var(--fs-lg); font-weight: 700; }
+.ok { color: var(--ok); }
+.bad { color: var(--danger); }
+.noteIco { display: inline-flex; flex: none; margin-top: 3px; }
+
+/* 머리: 고객 · 집 · 기한 */
+.top { display: flex; flex-direction: column; gap: 16px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.headRow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 8px 24px; }
+.head { flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.head h1 { overflow-wrap: anywhere; }
+.due { flex: 0 1 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
+@media (max-width: 600px) { .due { align-items: flex-start; text-align: left; } }
+
+/* 고객 연락처 줄 */
+.tel { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding-block: 10px; border-block: 1px solid var(--line); }
+.telLab { font-size: var(--fs-sm); font-weight: 700; }
+.btns { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* 확정 견적서 · 예상 공정표 요약 */
+.brief { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 4px 32px; }
+.brief > div { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+.brief dt { flex: 0 0 88px; color: var(--ink-sub); }
+.brief dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.inLnk { min-height: 40px; }
+
+/* 낸 날짜 · 확정 날짜 */
+.sent { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 2px solid var(--ink); }
+.sentHead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 16px; }
+.stH { font-size: var(--fs-md); }
+
+/* 고객이 다른 날짜를 원할 때 */
+.ask { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: var(--radius); background: var(--surface); }
+
+/* 날짜 내기: 칸 | 공정표 두 칸, 좁으면 위아래 */
+.formSec { display: flex; flex-direction: column; gap: 20px; padding-top: 12px; border-top: 2px solid var(--ink); }
+.cols { display: flex; flex-wrap: wrap; gap: 32px 48px; align-items: flex-start; }
+.left { flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+.right { flex: 999 1 480px; min-width: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.rads { display: flex; flex-wrap: wrap; gap: 8px; }
+.rad { flex: 1 1 170px; display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 8px 14px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--bg); cursor: pointer; }
+.rad input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
+.rad:has(input:checked) { padding: 7px 13px; border: 2px solid var(--accent); background: var(--surface); font-weight: 700; }
+.pair { display: flex; flex-wrap: wrap; gap: 12px 16px; }
+.pair > * { flex: 1 1 150px; min-width: 0; }
+.pairHint { margin-top: -10px; }
+.unit { display: flex; align-items: center; gap: 8px; max-width: 160px; }
+.unit input { text-align: right; }
+
+/* 날짜 칸: 누르면 바로 아래에 달력 */
+.dateField { min-width: 0; }
+.dateBtn { justify-content: flex-start; width: 100%; max-width: 240px; font-weight: 500; }
+.dateBtn[aria-invalid="true"] { border: 2px solid var(--danger); }
+.calBox { display: flex; max-width: 100%; }
+
+/* 믿집 계산 결과 */
+.calc { margin: 0; border-top: 1px solid var(--line); }
+.calc > div { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; padding-block: 10px; border-bottom: 1px solid var(--line); }
+.calc dt { color: var(--ink-sub); }
+.calc dd { margin: 0; display: flex; align-items: center; gap: 8px; }
+.calc[aria-busy="true"] b { color: var(--ink-mute); }
+.noteOk { background: var(--ok-weak); }
+
+/* 고객 공정표와 맞춰 보기 (하루 한 칸) */
+.chartBox { position: relative; overflow-x: auto; max-width: 100%; border-top: 2px solid var(--ink); }
+.chart { display: grid; }
+.chart > * { min-width: 0; }
+.cHead { grid-row: 1; position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: var(--fs-sm); font-weight: 500; color: var(--ink-sub); border-bottom: 1px solid var(--line); }
+.cHead b { font-size: var(--fs-md); font-weight: 700; color: var(--ink); }
+.cHeadOff b { color: var(--ink-mute); }
+.cGrid { border-left: 1px solid var(--gantt-grid); border-bottom: 1px solid var(--line); }
+.cOff { background: var(--gantt-off); }
+.cName { grid-column: 1; position: sticky; left: 0; z-index: 2; display: flex; flex-direction: column; justify-content: center; padding-right: 12px; line-height: 1.35; background: var(--bg); box-shadow: inset 0 -1px 0 var(--line), inset -1px 0 0 var(--line); }
+.cBar { position: relative; z-index: 1; align-self: center; height: 30px; margin-inline: 3px; border-radius: 7px; }
+.barA { background: var(--accent); }
+.barB { background: var(--accent-pastel); }
+.barClash { background: var(--bg); border: 2px solid var(--danger); }
+.legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: var(--fs-sm); color: var(--ink-sub); }
+.legend li { display: inline-flex; align-items: center; gap: 8px; }
+.sw { display: inline-block; flex: none; width: 24px; height: 12px; border-radius: 4px; }
+.swOff { background: var(--gantt-off); }
+
+/* 보내기 줄 */
+.acts { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.acts > p { flex: 1 1 280px; }
+.links { display: flex; flex-wrap: wrap; gap: 0 24px; }
+
+/* '공사 날짜를 낼까요?' 확인 창 */
+.dlg { width: min(520px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); padding: 28px 24px 24px; border: 0; border-radius: var(--radius-l); background: var(--bg); color: var(--ink); box-shadow: var(--shadow-pop); overflow-y: auto; overscroll-behavior: contain; }
+.dlg[open] { display: flex; flex-direction: column; gap: 16px; }
+.dlg::backdrop { background: var(--backdrop); }
+.dlg h2 { padding-right: 40px; }
+.x { position: absolute; top: 10px; right: 10px; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: var(--radius); background: transparent; color: var(--ink-sub); cursor: pointer; }
+.x:hover { background: var(--surface); color: var(--ink); }
+.sum { margin: 0; border-top: 1px solid var(--line); }
+.sum > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-block: 10px; border-bottom: 1px solid var(--line); }
+.sum dt { flex: none; color: var(--ink-sub); }
+.sum dd { margin: 0; min-width: 0; text-align: right; }
+.sumText { overflow-wrap: anywhere; white-space: pre-line; }
+.dlgBtns { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+@media (max-width: 400px) { .dlg { padding: 24px 16px 16px; } }
+
+/* 추가 금액 알리기 */
+.exHead { display: flex; flex-direction: column; gap: 4px; }
+.exCols { display: flex; flex-wrap: wrap; gap: 24px 40px; align-items: flex-start; }
+.exCol { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.exUnit { display: flex; align-items: center; gap: 8px; max-width: 240px; }
+.exUnit input { text-align: right; }
+.cust { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding-block: 10px; border-block: 1px solid var(--line); }
+.exPhotos { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 12px; }
+.exPhotos li { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.exPhotos a { display: block; border-radius: var(--radius); }
+.pic { display: block; width: 88px; height: 88px; object-fit: cover; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.upBad { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.upBad b { overflow-wrap: anywhere; }
+.exList { display: flex; flex-direction: column; gap: 12px; padding-top: 8px; }
+.exItems { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.exItems > li { display: flex; flex-direction: column; gap: 6px; padding-block: 14px; border-bottom: 1px solid var(--line); }
+.exTop { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 16px; }
+.exTitle { min-width: 0; overflow-wrap: anywhere; font-size: var(--fs-lg); }
+.exText { overflow-wrap: anywhere; white-space: pre-line; }
+.exSum { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 0 24px; border-top: 2px solid var(--ink); }
+.exSum > div { display: flex; flex-direction: column; gap: 2px; padding-block: 12px; border-bottom: 1px solid var(--line); min-width: 0; }
+.exSum dt { font-size: var(--fs-sm); color: var(--ink-sub); }
+.exSum dd { margin: 0; display: flex; flex-direction: column; }
+
+/* 공사 끝냈어요 · 남은 일 */
+.fix { flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: var(--fs-md); }
+.fixText { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }

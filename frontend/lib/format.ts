@@ -77,3 +77,37 @@ export function calendarSpan(days: string[]): string[] {
   }
   return out;
 }
+
+/** "2026-11-02" · "2026-11-02T…" → "2026.11.02" (서류의 날짜) */
+export function dotDate(iso: string): string {
+  return iso.slice(0, 10).replaceAll("-", ".");
+}
+
+/** 1189011 → "1,189,011" (단위를 표 머리에 둔 칸) */
+export function numText(n: number): string {
+  return n.toLocaleString("ko-KR");
+}
+
+/** API가 준 소수 문자열의 끝 0만 뺀다: "7.5" → "7.5", "32.0" → "32", "198.40" → "198.4" */
+export function decText(s: string): string {
+  return s.includes(".") ? s.replace(/\.?0+$/, "") : s;
+}
+
+/** 파일 크기: 3250000 → "3.1MB", 820000 → "801KB" */
+export function fileSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)}MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))}KB`;
+}
+
+/** "2026-11-16" → { m: 11, d: 16, w: "월" } (공정표 날짜 머리 칸) */
+export function dayParts(iso: string): { m: number; d: number; w: string } {
+  const [y, m, d] = iso.split("-").map(Number);
+  return { m, d, w: WEEK[new Date(y, m - 1, d).getDay()] };
+}
+
+const SEOUL_STAMP = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+/** 받은 시각 → 서울 "11.02(월) 14:20" (임시 저장 안내) */
+export function stampSeoul(t: Date): string {
+  const p = Object.fromEntries(SEOUL_STAMP.formatToParts(t).map((x) => [x.type, x.value]));
+  return `${md(`${p.year}-${p.month}-${p.day}`)} ${p.hour}:${p.minute}`;
+}

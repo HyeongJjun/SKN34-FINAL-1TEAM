@@ -1,0 +1,24 @@
+/* 내 정보 (시안 WAccount) */
+.head { display: flex; flex-direction: column; gap: 6px; padding-block: 12px 24px; }
+.rows { margin: 0; border-top: 1px solid var(--line-strong); }
+.ln { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; min-height: 68px; padding-block: 12px; border-bottom: 1px solid var(--line); }
+.ln > dt { flex: 0 0 140px; font-weight: 700; }
+.ln > dd { margin: 0; }
+.editing { align-items: flex-start; padding-block: 16px; }
+.editing > dt { padding-top: 10px; }
+.grow { flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.act { flex: none; }
+.editForm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.inp { flex: 1 1 220px; max-width: 320px; min-width: 0; width: auto; }
+.done { color: var(--ok); font-weight: 700; }
+.state { display: flex; flex-direction: column; gap: 2px; }
+.soon { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 4px; max-width: 280px; text-align: right; }
+@media (max-width: 600px) { .soon { align-items: flex-start; text-align: left; } }
+.logout { padding-top: 16px; }
+.end { padding-block: 8px 64px; }
+.endIn { padding-top: 20px; border-top: 1px solid var(--line); }
+.wd { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none; font-size: var(--fs-sm); color: var(--ink-sub); cursor: pointer; }
+.wd:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.del { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-sm); color: var(--ink-sub); }
+.wdForm { display: flex; flex-direction: column; gap: 20px; }
+.wdBtns { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }

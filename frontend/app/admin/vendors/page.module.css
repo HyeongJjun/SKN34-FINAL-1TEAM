@@ -1,0 +1,25 @@
+/* 업체 심사 (시안 WAdmin): 목록 · 서류 · 판단 세 열. 좁으면 차례로 쌓는다 */
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 8px 32px; padding-block: 32px 20px; border-bottom: 1px solid var(--line); }
+.saved { white-space: normal; align-items: flex-start; padding-top: 16px; }
+.saved svg { margin-top: 4px; }
+.cols { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 32px; padding-block: 24px 56px; }
+.none { flex: 999 1 560px; }
+
+.list { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.tabs { display: flex; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+.tab { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; min-width: 44px; padding: 0 12px; margin-bottom: -1px; border-bottom: 3px solid transparent; color: var(--ink); text-decoration: none; font-size: var(--fs-sm); white-space: nowrap; }
+.tab:hover { color: var(--accent-ink); }
+.tab[aria-current="page"] { border-bottom-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.find { display: flex; flex-direction: column; gap: 6px; }
+.findRow { display: flex; gap: 8px; }
+.findRow input { flex: 1 1 auto; min-width: 0; width: auto; }
+.findRow button { flex: none; min-height: 46px; }
+
+.queue { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.queue li { border-bottom: 1px solid var(--line-soft); }
+.qi { display: flex; flex-direction: column; gap: 3px; padding: 12px; color: var(--ink); text-decoration: none; }
+.qi:hover { background: var(--surface); color: var(--ink); }
+.qi[aria-current="true"] { background: var(--surface); }
+.qTop { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.qName { font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+.wrap { white-space: normal; }

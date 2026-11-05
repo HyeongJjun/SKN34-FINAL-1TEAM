@@ -1,0 +1,12 @@
+/* 자주 묻는 질문 (시안 WGuide) */
+.top { padding-top: 40px; }
+.head { display: flex; flex-direction: column; gap: 20px; max-width: 880px; padding-bottom: 32px; border-bottom: 1px solid var(--line); }
+.title { display: flex; flex-direction: column; gap: 6px; }
+.search { display: flex; flex-direction: column; gap: 10px; }
+.label { font-size: var(--fs-h2); font-weight: 700; }
+.searchRow { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; }
+.searchRow .input { flex: 999 1 360px; min-width: 0; width: auto; min-height: 56px; font-size: var(--fs-lg); }
+.searchRow .go { min-height: 56px; }
+.body { display: flex; flex-wrap: wrap; gap: 48px 64px; padding-block: 40px 72px; }
+.col { flex: 999 1 560px; min-width: 0; max-width: 760px; display: flex; flex-direction: column; gap: 48px; }
+.found { margin-bottom: -24px; }

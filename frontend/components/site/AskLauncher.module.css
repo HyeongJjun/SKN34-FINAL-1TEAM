@@ -1,0 +1,24 @@
+/* 오른쪽 아래 '묻기' 버튼 · 떠 있는 창 (시안 WProjectBChat .launch · .ask-win) */
+.launch { position: fixed; right: 24px; bottom: 24px; z-index: 30; display: inline-flex; align-items: center; gap: 8px; min-height: 52px; padding: 0 22px 0 18px; border: 1px solid var(--focus); border-radius: 26px; background: var(--focus); color: #fff; font-size: var(--fs-md); font-weight: 700; cursor: pointer; box-shadow: var(--shadow-sm); }
+.launch:hover { background: var(--accent-ink); }
+/* 업체 자세히 오른쪽 창이 열려 있으면 창 왼쪽으로 비킨다 */
+:global(body:has([data-vendor-panel])) .launch { right: calc(min(560px, 100%) + 24px); }
+
+.win { position: fixed; right: 24px; bottom: 92px; z-index: 31; display: flex; flex-direction: column; width: 380px; max-width: calc(100vw - 48px); height: min(560px, calc(100dvh - 120px)); border: 1px solid var(--line-paper); border-radius: 10px; background: var(--bg); overflow: hidden; box-shadow: var(--shadow-pop); }
+.hd { display: flex; align-items: center; gap: 4px; padding: 8px 8px 10px 16px; border-bottom: 1px solid var(--line); }
+.t { flex: 1 1 auto; min-width: 0; margin: 0; font-size: var(--fs-lg); font-weight: 700; }
+.t:focus { outline: none; }
+.t:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.x { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: var(--radius); background: transparent; color: var(--ink-sub); cursor: pointer; }
+.x:hover { background: var(--surface); color: var(--ink); }
+.log { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 16px; }
+.soon { margin: 0; font-weight: 700; }
+.fm { display: flex; align-items: flex-end; gap: 8px; padding: 10px 12px 12px 16px; border-top: 1px solid var(--line); }
+.q { flex: 1 1 auto; min-width: 0; min-height: 48px; padding: 11px 12px; resize: none; line-height: 1.5; }
+
+@media (max-width: 600px) {
+  .launch { right: 16px; bottom: 16px; }
+  /* 업체 고르기 아래 막대(담은 업체 · 실측 요청 보내기)가 있으면 그 위로 올린다 */
+  :global(body:has([data-pick-bar])) .launch { bottom: 88px; }
+  .win { left: 0; right: 0; bottom: 0; width: auto; max-width: none; height: 80dvh; border-radius: 12px 12px 0 0; }
+}

@@ -165,6 +165,9 @@ class PhotoOut(BaseModel):
 
 class ProjectOut(BaseModel):
     id: uuid.UUID
+    code: str
+    rev: int
+    locked: bool  # 실측을 요청해 집 정보를 더 고칠 수 없음
     sido: str
     sgg: str
     region: str
@@ -184,7 +187,40 @@ class ProjectOut(BaseModel):
 
 class ProjectListItem(BaseModel):
     id: uuid.UUID
+    code: str
     region: str
     size: SizeIn
     trades: list[str]
     created_at: datetime
+
+
+class ProjectBrief(BaseModel):
+    """다른 기능(실측 요청)이 업체 쪽 화면에 쓰는 집 요약. 고객 이름 · 휴대폰 · 동 · 호수는
+    보여도 되는지 부르는 쪽(visit.service)이 정한다."""
+
+    id: uuid.UUID
+    code: str
+    owner_id: uuid.UUID
+    owner_name: str
+    owner_phone: str | None
+    sido: str
+    sgg: str
+    region: str
+    occupied: bool
+    when: WhenIn
+    apt_name: str | None
+    dong: str | None
+    ho: str | None
+
+
+class ProjectCheckOut(BaseModel):
+    """공사 전에 할 일 한 줄"""
+
+    key: str
+    label: str
+    done: bool
+    done_at: datetime | None
+
+
+class ProjectCheckIn(BaseModel):
+    done: bool

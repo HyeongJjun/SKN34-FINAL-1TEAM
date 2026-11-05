@@ -1,0 +1,62 @@
+/* 한 공사 화면 (시안 WProjectB) */
+.crumb { padding-top: 20px; }
+.head { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; }
+
+/* 지금 할 일 */
+.todoSec { margin-top: 28px; }
+.todo { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 32px; padding-block: 20px; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--line); }
+.todoH { flex: 0 0 auto; min-width: 80px; font-size: var(--fs-sm); font-weight: 700; }
+.todoT { flex: 1 1 420px; min-width: 0; font-size: var(--fs-lg); font-weight: 700; }
+.todoActs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
+.lnkG { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink-sub); font-weight: 500; text-decoration: none; }
+.lnkG:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+
+/* 공정별 상태 */
+.trades { display: flex; flex-direction: column; gap: 12px; padding-top: 48px; }
+.lines { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line-strong); }
+.ln { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 20px; min-height: 76px; padding-block: 14px; border-bottom: 1px solid var(--line); }
+.lnName { flex: 0 0 64px; }
+.lnVendor { flex: 0 0 140px; min-width: 0; }
+.lnState { flex: 0 0 210px; min-width: 0; }
+.lnState > span { white-space: normal; }
+.lnDates { flex: 1 1 200px; min-width: 0; }
+.lnLink { flex: 0 0 110px; text-align: right; }
+.lnVendor:empty, .lnDates:empty { visibility: hidden; }
+@media (max-width: 600px) {
+  .lnVendor, .lnState { flex-basis: auto; }
+  .lnLink { flex-basis: auto; text-align: left; }
+  .lnLink:empty, .lnVendor:empty, .lnDates:empty { display: none; }
+}
+
+/* 진행 단계 자세히 */
+
+/* 금액과 날짜 · 업체 연락처 */
+.row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 40px 64px; padding-top: 48px; }
+.left { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 40px; }
+.md { display: flex; flex-wrap: wrap; gap: 32px 40px; }
+.box { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 4px; margin: 0; padding-top: 14px; border-top: 2px solid var(--ink); }
+.box dd { margin: 0; }
+.dt { font-size: var(--fs-sm); font-weight: 700; color: var(--ink); }
+.dt2 { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.big { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.bigV { font-size: var(--fs-h2); font-weight: 700; }
+.budget { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.budget > span { white-space: normal; }
+
+.contacts { flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 8px; scroll-margin-top: 16px; }
+.ctList { margin: 0; padding: 0; list-style: none; border-top: 2px solid var(--ink); }
+.ctList li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding-block: 12px; border-bottom: 1px solid var(--line); }
+.ctTrade { flex: 0 0 36px; font-size: var(--fs-sm); color: var(--ink-sub); }
+.ctMain { flex: 1 1 180px; min-width: 0; }
+.phone { font-size: var(--fs-lg); }
+.until { display: block; font-size: var(--fs-sm); color: var(--ink-sub); }
+.ctActs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ctBtn { padding: 0 14px; }
+.said:empty { display: none; }
+.said { flex: 1 1 100%; }
+
+/* 더 보기 */
+.moreNav { display: flex; flex-direction: column; gap: 4px; padding-block: 48px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 0 40px; border-bottom: 1px solid var(--line); }
+.tabs a { display: inline-flex; align-items: center; gap: 8px; min-height: 52px; color: var(--ink); font-weight: 700; text-decoration: none; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.tabs a:hover { color: var(--accent-ink); border-bottom-color: var(--line); }
