@@ -1,10 +1,10 @@
 name: Deploy staging
 
-# main의 기존 CI가 성공한 뒤에만 ECR 이미지 발행 및 SSM 배포를 수행한다.
+# main에 있는 이 워크플로가 dev의 CI 성공 커밋을 스테이징에 배포한다.
 on:
   workflow_run:
     workflows: [CI]
-    branches: [main]
+    branches: [dev]
     types: [completed]
   workflow_dispatch:
     inputs:
@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
   id-token: write
 
 concurrency:
@@ -27,30 +28,67 @@ jobs:
     name: Deploy staging
     if: >-
       github.repository == 'SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM' &&
-      (github.event_name == 'workflow_dispatch' ||
+      ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
       (github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_branch == 'dev' &&
       github.event.workflow_run.event == 'push'))
     runs-on: ubuntu-24.04
     timeout-minutes: 50
     env:
       AWS_REGION: ap-northeast-2
-      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
       ROLLBACK: ${{ github.event_name == 'workflow_dispatch' && inputs.rollback && 'true' || 'false' }}
     steps:
+      - name: 배포할 dev 커밋 확인
+        id: source
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TRIGGER_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          # 롤백 스크립트는 신뢰하는 main에서 가져온다. dev의 검사 실패와 무관하게 복구할 수 있다.
+          if [[ "$ROLLBACK" == true ]]; then
+            echo "sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          latest=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/dev" --jq .object.sha)
+          sha="$TRIGGER_SHA"
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            sha="$latest"
+            passed=$(gh api --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs" \
+              -f branch=dev -f head_sha="$sha" -f status=success \
+              --jq '[.workflow_runs[] | select(.event == "push" or .event == "workflow_dispatch")] | length')
+            if [[ "$passed" -eq 0 ]]; then
+              echo "::error::현재 dev 커밋의 CI 성공 기록이 없습니다."
+              exit 1
+            fi
+          fi
+          [[ "$sha" =~ ^[0-9a-f]{40}$ ]]
+          if [[ "$sha" != "$latest" ]]; then
+            echo "::notice::더 최신 dev 커밋이 있어 이전 커밋의 배포를 건너뜁니다."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "deploy=true" >> "$GITHUB_OUTPUT"
+
       - name: Fetch approved source
+        if: steps.source.outputs.deploy == 'true'
         uses: actions/checkout@v7
         with:
-          ref: ${{ env.DEPLOY_SHA }}
+          ref: ${{ steps.source.outputs.sha }}
           persist-credentials: false
 
       - name: Authenticate to AWS using GitHub OIDC
+        if: steps.source.outputs.deploy == 'true'
         uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
           role-to-assume: ${{ vars.MITJIP_AWS_DEPLOY_ROLE }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Read CloudFormation outputs
+        if: steps.source.outputs.deploy == 'true'
         id: stack
         shell: bash
         run: |
@@ -64,13 +102,14 @@ jobs:
           echo "instance=$(get_output InstanceId)" >> "$GITHUB_OUTPUT"
 
       - name: Login to private ECR
-        if: env.ROLLBACK != 'true'
+        if: steps.source.outputs.deploy == 'true' && env.ROLLBACK != 'true'
         uses: aws-actions/amazon-ecr-login@v2.1.7
 
       - name: Build and publish exact commit images
-        if: env.ROLLBACK != 'true'
+        if: steps.source.outputs.deploy == 'true' && env.ROLLBACK != 'true'
         shell: bash
         env:
+          DEPLOY_SHA: ${{ steps.source.outputs.sha }}
           API_REPO: ${{ steps.stack.outputs.api_repo }}
           WEB_REPO: ${{ steps.stack.outputs.web_repo }}
         run: |
@@ -96,8 +135,10 @@ jobs:
           done
 
       - name: Deploy by SSM and verify health
+        if: steps.source.outputs.deploy == 'true'
         shell: bash
         env:
+          DEPLOY_SHA: ${{ steps.source.outputs.sha }}
           INSTANCE_ID: ${{ steps.stack.outputs.instance }}
         run: |
           set -euo pipefail

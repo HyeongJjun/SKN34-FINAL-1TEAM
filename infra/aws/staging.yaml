@@ -325,7 +325,7 @@ Resources:
   GitHubDeployRole:
     Type: AWS::IAM::Role
     Properties:
-      Description: Only the official main branch can publish images and deploy Mitjip staging.
+      Description: The official main workflow deploys approved dev commits to Mitjip staging.
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:

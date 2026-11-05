@@ -3,9 +3,9 @@ name: Security
 # 새 보안 취약점과 위험한 의존성을 PR 단계에서 탐지한다. 배포는 수행하지 않는다.
 on:
   push:
-    branches: [main, integration]
+    branches: [main, dev, integration]
   pull_request:
-    branches: [main, integration]
+    branches: [main, dev, integration]
   merge_group:
   schedule:
     - cron: "42 0 * * 1"

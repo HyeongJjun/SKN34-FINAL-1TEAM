@@ -176,25 +176,27 @@ migrations/              Alembic. 0001(처음 표 12개)부터 하나씩 더한�
 ## 6. Git · 이슈 · PR
 
 - 팀 저장소(upstream)를 fork한 내 저장소(origin)에서 작업한다.
-- 순서: 이슈를 제목만 써서 만든다 → 브랜치에서 작업한다 → 끝나면 이슈 본문을 쓴다 → 최신화하고 rebase한다 → PR → 승인 1명 · squash 병합 → 이슈를 닫는다.
+- 기능 개발 기준은 `dev`이고, 기능 PR의 대상도 팀 `dev`다. `main`은 통합 테스트를 마친 안정 버전이다.
+- 순서: 이슈를 제목만 써서 만든다 → 브랜치에서 작업한다 → 끝나면 이슈 본문을 쓴다 → 최신화하고 rebase한다 → dev PR → 승인 1명 · squash 병합 → 이슈를 닫는다.
+- 검증된 `dev`를 `main`으로 올리는 PR은 승인 1명 뒤 merge commit으로 병합한다. 두 장기 브랜치의 공통 이력을 보존한다. `main` 긴급 수정은 `dev`로 다시 병합한다.
 - 브랜치: `작업유형-기능이름`. 영어 소문자를 하이픈으로 잇는다. 예: `feat-vendor-signup`, `fix-login-error`. 작업유형은 커밋 type과 같다.
 - 커밋 제목: `type: 한국어 요약`. type은 `feat · fix · docs · test · chore · refactor · prompt · eval`.
-- 이슈 제목도 커밋 제목 형식으로 쓴다. PR 제목은 이슈 제목과 같고, squash 병합 때 그대로 main의 커밋 제목이 된다.
+- 이슈 제목도 커밋 제목 형식으로 쓴다. 기능 PR 제목은 이슈 제목과 같고, squash 병합 때 그대로 dev의 커밋 제목이 된다.
 - 이슈 본문(작업이 끝난 뒤): 개요 / 호출 흐름(바뀐 경우) / 검증 결과(실제로 돌린 것만 `[x]`) / 못 한 것.
 - PR 본문: 바뀐 것만 짧은 목록으로 적는다.
 - PR 올리기 전에 최신화하고 rebase한다:
 
   ```bash
   git fetch upstream
-  git switch main && git merge --ff-only upstream/main && git push origin main
-  git switch <브랜치> && git rebase main && git push --force-with-lease origin <브랜치>
+  git switch dev && git merge --ff-only upstream/dev && git push origin dev
+  git switch <브랜치> && git rebase dev && git push --force-with-lease origin <브랜치>
   ```
 
 - PR은 400줄 이하(lock · 생성 파일 제외).
 - 충돌을 줄이고 풀 때:
   - 공용 목록(`backend/app/main.py`의 `ROUTERS`, `backend/migrations/env.py`의 models import)은 한 줄에 하나씩 이름 순으로 더한다.
-  - lock 파일(`uv.lock` · `pnpm-lock.yaml`)과 `schema.d.ts`가 충돌하면 손으로 고치지 않는다. main 쪽을 받고 `uv lock` · `pnpm install` · `pnpm gen:api`로 다시 만든다.
-  - rebase 뒤 migration head가 둘이면(CI가 잡는다) 내 revision의 번호와 `down_revision`을 main의 최신 head 다음으로 바꾼다.
+  - lock 파일(`uv.lock` · `pnpm-lock.yaml`)과 `schema.d.ts`가 충돌하면 손으로 고치지 않는다. dev 쪽을 받고 `uv lock` · `pnpm install` · `pnpm gen:api`로 다시 만든다.
+  - rebase 뒤 migration head가 둘이면(CI가 잡는다) 내 revision의 번호와 `down_revision`을 dev의 최신 head 다음으로 바꾼다.
 - 커밋 · PR에 `Co-Authored-By` 같은 공동 작성자 줄이나 도구 홍보 문구를 넣지 않는다.
 - 이슈 · PR · 커밋 · 문서 · 코드 주석은 한국어로 짧게 쓴다. 바뀐 것만 적고 과정 설명은 쓰지 않는다. 브랜치와 코드 이름은 영어로 쓴다.
 - `.env`는 커밋하지 않는다. 새 환경변수는 `.env.example`에 한국어 주석과 함께 더한다.
