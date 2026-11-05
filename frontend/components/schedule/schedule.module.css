@@ -1,0 +1,65 @@
+/* 공사 날짜 (시안 WSchedule) */
+.self { align-self: flex-start; }
+.stLine { white-space: normal; }
+.stBig { font-size: var(--fs-md); }
+.focusT:focus { outline: none; }
+.focusT:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+
+/* 공정 탭 */
+.tabs { display: flex; flex-wrap: wrap; gap: 0 28px; border-bottom: 1px solid var(--line); }
+.tabs a { display: inline-flex; align-items: center; gap: 8px; min-height: 52px; margin-bottom: -1px; border-bottom: 3px solid transparent; color: var(--ink); font-size: var(--fs-lg); font-weight: 500; text-decoration: none; }
+.tabs a:hover { color: var(--accent-ink); }
+.tabs a[aria-current="page"] { border-bottom-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.n { font-size: var(--fs-sm); font-weight: 400; color: var(--ink-sub); }
+.nBad { color: var(--danger); font-weight: 700; }
+
+/* 낸 날짜 칸 */
+.facts { display: flex; flex-direction: column; gap: 10px; }
+.dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)); gap: 0 24px; margin: 0; border-top: 1px solid var(--line); }
+.dl > div { display: flex; flex-direction: column; gap: 2px; padding: 14px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+.dl dd { margin: 0; }
+.big { font-size: var(--fs-lg); font-weight: 700; }
+.ddSub { display: block; font-size: var(--fs-sm); font-weight: 400; color: var(--ink-sub); }
+.ddTail { display: block; font-size: var(--fs-sm); font-weight: 400; color: var(--ink-sub); }
+
+/* 업체 연락처 */
+.contact { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.ctH { padding-top: 12px; font-size: var(--fs-sm); font-weight: 700; }
+.ctSub { font-weight: 400; color: var(--ink-sub); }
+.ctRow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 6px 0 12px; }
+.ctTrade { flex: 0 0 40px; font-size: var(--fs-sm); color: var(--ink-sub); }
+.ctMain { flex: 1 1 360px; min-width: 0; }
+.phone { font-size: var(--fs-lg); }
+.ctActs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* 내 공정표에 얹어 보기 */
+.ov { display: flex; flex-direction: column; gap: 14px; }
+.scroll { overflow-x: auto; max-width: 100%; border-top: 2px solid var(--ink); }
+.tbl th, .tbl td { overflow-wrap: anywhere; }
+.cur > th, .cur > td { background: var(--surface); font-weight: 700; }
+.note { font-size: var(--fs-md); padding: 16px 18px; }
+.note > span { flex: none; display: inline-flex; margin-top: 3px; }
+.noteBad { color: var(--danger); }
+.noteWarn { color: var(--warn); }
+.noteOk { background: var(--ok-weak); }
+.noteOkI { color: var(--ok); }
+
+/* 버튼 자리 · 요청 칸 */
+.box { display: flex; flex-direction: column; align-items: stretch; gap: 12px; }
+.btns { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; }
+.up { transform: rotate(180deg); }
+.busy, .busy[aria-disabled="true"] { cursor: progress; }
+.spin { animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.err { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.req { display: flex; flex-direction: column; gap: 20px; max-width: 760px; padding: 24px clamp(16px, 3vw, 24px); border: 1px solid var(--line); border-radius: var(--radius); }
+.legend { padding: 0; margin-bottom: 8px; }
+.opt { font-weight: 400; color: var(--ink-sub); }
+.pick { display: flex; gap: 12px; align-items: flex-start; min-height: 56px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer; }
+.pick:has(input:checked) { border: 2px solid var(--accent); background: var(--surface); padding: 13px 15px; }
+.pick input { flex: none; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--accent); }
+.pickT { display: flex; flex-direction: column; }
+
+/* 다른 날짜 요청 상태 */
+.reqLines { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.stSub { font-weight: 400; color: var(--ink-sub); }

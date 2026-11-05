@@ -1,0 +1,43 @@
+/* 표준견적서 한 장 (시안 WStandard) */
+.paper { flex: 999 1 640px; min-width: 0; padding: 48px clamp(20px, 4vw, 44px) 40px; display: flex; flex-direction: column; gap: 36px; }
+.docHead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px 32px; padding-bottom: 18px; border-bottom: 2px solid var(--ink); }
+.docName { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.docTitle { font-size: var(--fs-h1); font-weight: 700; letter-spacing: 0.45em; line-height: 1.2; }
+.meta { display: grid; grid-template-columns: auto auto; gap: 2px 16px; margin: 0; font-size: var(--fs-sm); }
+.meta dt { color: var(--ink-sub); }
+.meta dd { margin: 0; }
+
+/* 현장 정보 */
+.info { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 0 32px; margin: 0; border-top: 1px solid var(--line); }
+.info > div { display: flex; gap: 16px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.info dt { flex: none; width: 64px; padding-top: 2px; font-size: var(--fs-sm); color: var(--ink-sub); }
+.info dd { margin: 0; min-width: 0; }
+
+/* 합계 금액 한 줄 · 예산 */
+.sum { display: flex; flex-direction: column; gap: 2px; padding: 14px 0; border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); }
+.sumRow { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 24px; }
+.sumLab { flex: none; font-size: var(--fs-sm); font-weight: 700; }
+.sumVal { flex: 1 1 280px; font-size: var(--fs-h2); font-weight: 700; }
+.sumVal > span { font-weight: 400; }
+.ref { flex: none; font-size: var(--fs-sm); font-weight: 700; }
+.over { font-size: var(--fs-sm); font-weight: 700; }
+.overActs { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0 24px; }
+
+/* 공정별 줄 표 */
+.trade { display: flex; flex-direction: column; gap: 10px; }
+.tradeH { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.tradeSub { font-size: var(--fs-sm); font-weight: 400; color: var(--ink-sub); }
+.tbl tbody th { min-width: 9em; }
+.tbl td:global(.r) { white-space: nowrap; }
+.paren { color: var(--ink-sub); }
+.est { margin: 0; color: var(--ink-sub); }
+
+/* 맨 아래 합계 칸 */
+.totWrap { display: flex; justify-content: flex-end; }
+.totBox { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 6px; }
+.totBox > p { text-align: right; }
+.tot { display: grid; grid-template-columns: 1fr auto; gap: 0 24px; margin: 0; }
+.tot dt, .tot dd { margin: 0; padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
+.tot dd { text-align: right; }
+.tot .tt { padding-top: 14px; border-top: 2px solid var(--ink); border-bottom: 0; font-size: var(--fs-h2); font-weight: 700; }
+.tot .tt > span { font-weight: 400; }

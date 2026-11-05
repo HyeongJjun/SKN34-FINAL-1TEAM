@@ -1,4 +1,5 @@
 import io
+import zipfile
 
 import pillow_heif
 from PIL import ExifTags, Image, PngImagePlugin
@@ -99,3 +100,82 @@ def test_vendor_cannot_upload_customer_photos(api):
 
 def test_login_needed(api):
     assert upload(api).status_code == 401
+
+
+XLSX_MAIN = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"
+XLSM_MAIN = "application/vnd.ms-excel.sheet.macroEnabled.main+xml"
+
+
+def zip_bytes(parts: dict[str, str]) -> bytes:
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for name, text in parts.items():
+            z.writestr(name, text)
+    return buf.getvalue()
+
+
+def xlsx_bytes(main: str = XLSX_MAIN, **extra: str) -> bytes:
+    """엑셀이 만든 것과 같은 뼈대: 목차 · 관계 · 통합 문서 (합성 데이터)"""
+    types = (
+        '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/'
+        'content-types"><Default Extension="xml" ContentType="application/xml"/>'
+        f'<Override PartName="/xl/workbook.xml" ContentType="{main}"/></Types>'
+    )
+    return zip_bytes(
+        {
+            "[Content_Types].xml": types,
+            "_rels/.rels": "<Relationships/>",
+            "xl/workbook.xml": "<workbook/>",
+            **extra,
+        }
+    )
+
+
+def heic_bytes() -> bytes:
+    buf = io.BytesIO()
+    Image.new("RGB", (32, 16), "green").save(buf, "HEIF")
+    return buf.getvalue()
+
+
+def test_vendor_uploads_price_and_quote_docs(api):
+    vendor_signup(api)
+    sheet = xlsx_bytes()
+    x = upload(api, kind="price_doc", content=sheet, name="단가표_2026.xlsx")
+    assert x.status_code == 201, x.text
+    assert x.json()["content_type"] == service.XLSX and x.json()["filename"] == "단가표_2026.xlsx"
+    assert api.get(f"/files/{x.json()['id']}").content == sheet  # 엑셀은 그대로 둔다
+    assert upload(api, kind="quote_doc", content=PDF, name="견적서.pdf").status_code == 201
+    assert (
+        upload(api, kind="quote_doc", content=xlsx_bytes(), name="견적서.xlsx").status_code == 201
+    )
+    heic = upload(api, kind="price_doc", content=heic_bytes(), name="견적서.HEIC")
+    assert heic.json()["content_type"] == "image/jpeg"  # 사진은 위치 정보를 지우고 JPEG로
+    assert upload(api, kind="work_photo").status_code == 201
+    assert upload(api, kind="work_photo", content=PDF, name="a.pdf").status_code == 415
+    assert upload(api, kind="portfolio", content=xlsx_bytes(), name="a.xlsx").status_code == 415
+
+
+def test_only_real_xlsx_is_accepted(api):
+    vendor_signup(api)
+
+    def doc(content: bytes, name: str = "단가표.xlsx") -> int:
+        return upload(api, kind="price_doc", content=content, name=name).status_code
+
+    assert doc(zip_bytes({"a.txt": "hello"})) == 415  # 이름만 xlsx인 zip
+    assert doc(zip_bytes({"[Content_Types].xml": f"<x>{XLSX_MAIN}</x>"})) == 415  # xl/ 없음
+    assert doc(xlsx_bytes(XLSM_MAIN), "매크로.xlsm") == 415
+    assert doc(xlsx_bytes(**{"xl/vbaProject.bin": "macro"})) == 415
+    assert doc(xlsx_bytes(**{"xl/macrosheets/sheet1.xml": "<x/>"})) == 415
+    assert doc(xlsx_bytes(XLSX_MAIN.replace("sheet.main", "template.main")), "서식.xltx") == 415
+    assert doc(bytes.fromhex("d0cf11e0a1b11ae1") + b"0" * 64, "예전.xls") == 415
+    assert doc(bytes.fromhex("504b0304") + b"0" * 64) == 415  # 깨진 zip
+    assert doc(xlsx_bytes()) == 201
+
+
+def test_vendor_docs_are_vendor_only_and_limited(api, monkeypatch):
+    signup(api)
+    for kind in ("price_doc", "quote_doc", "work_photo"):
+        assert upload(api, kind=kind).status_code == 403
+    vendor_signup(api)
+    monkeypatch.setitem(service.RULES, "price_doc", (service.DOCS, 10))
+    assert upload(api, kind="price_doc", content=PDF, name="a.pdf").status_code == 413

@@ -1,0 +1,8 @@
+/* 상태 화면 본문 (시안 WStatus) */
+.main { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; padding-block: 56px 88px; }
+.main > p { max-width: 34em; }
+.acts { display: flex; flex-wrap: wrap; gap: 12px; }
+.kv { display: grid; grid-template-columns: minmax(0, 8em) minmax(0, 1fr); width: 100%; max-width: 520px; margin: 0; border-top: 1px solid var(--line); }
+.kv dt, .kv dd { margin: 0; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.kv dt { color: var(--ink-sub); }
+.kv .big { padding-block: 8px; font-size: var(--fs-h2); font-weight: 700; }

@@ -1,0 +1,4 @@
+/* 바로 아래 바닥글이 위 선을 그어서 아래 선은 두지 않는다 */
+.band { background: var(--surface); border-top: 1px solid var(--line); }
+.in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 24px; padding-block: 12px; }
+.t { font-size: var(--fs-md); font-weight: 700; }

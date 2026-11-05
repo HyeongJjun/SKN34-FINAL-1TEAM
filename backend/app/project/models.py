@@ -55,6 +55,7 @@ class Project(Base):
         CheckConstraint(
             "end_date is null or (start_kind = 'date' and end_date >= start_date)", name="end_date"
         ),
+        CheckConstraint("rev >= 1", name="rev"),
         CheckConstraint(
             "budget is null or budget in ('u300', '300-500', '500-700', '700-1000', 'o1000', 'undecided')",
             name="budget",
@@ -78,6 +79,16 @@ class Project(Base):
     end_date: Mapped[date | None] = mapped_column(Date)
     occupied: Mapped[bool] = mapped_column(Boolean)
     budget: Mapped[str | None] = mapped_column(String(10))
+    # 요청 번호(MJ-2611-0142). 표준견적서 번호 · 실측 요청 문구에 쓴다
+    code: Mapped[str] = mapped_column(String(16), unique=True)
+    # 집 정보를 고칠 때마다 1씩 오른다. 표준견적서 · 공정표가 만든 때의 값을 남긴다
+    rev: Mapped[int] = mapped_column(SmallInteger, default=1, server_default="1")
+    # 첫 실측 요청 때 찍는다. 그 뒤로는 집 정보를 고치지 않는다
+    locked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # 아파트 이름 · 동 · 호수: 고객이 업체에 연락처를 보내기로 할 때만 받는다
+    apt_name: Mapped[str | None] = mapped_column(String(40))
+    dong: Mapped[str | None] = mapped_column(String(10))
+    ho: Mapped[str | None] = mapped_column(String(10))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -158,3 +169,22 @@ class ProjectFile(Base):
     )
     role: Mapped[str] = mapped_column(String(10))
     sort: Mapped[int] = mapped_column(SmallInteger)
+
+
+# 공사 전에 할 일 (판 WSchedule · WPlanDone). 항목을 더하면 CHECK · migration도 같이 바꾼다
+CHECK_KEYS = ("office_report",)
+CHECK_LABELS = {"office_report": "관리사무소에 공사 신고를 했어요"}
+
+
+class ProjectCheck(Base):
+    """고객이 켠 공사 전 체크 한 줄 (끄면 행을 지운다)"""
+
+    __tablename__ = "project_checks"
+    __table_args__ = (CheckConstraint("key in ('office_report')", name="key"),)
+
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )
+    key: Mapped[str] = mapped_column(String(30), primary_key=True)
+    done_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    by_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))

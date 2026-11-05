@@ -1,0 +1,47 @@
+/* 업체 심사 판단 (시안 WAdmin) · 가운데 열과 오른쪽 열 */
+.detail { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 8px 24px; }
+.headL { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.cmp { display: flex; flex-direction: column; gap: 12px; }
+.cell { min-height: 40px; min-width: 160px; }
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
+.block { display: block; }
+.ink { color: var(--ink); }
+.b { font-weight: 700; }
+
+.side { flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 22px; }
+.sideHead { display: flex; flex-direction: column; gap: 2px; }
+.cks { display: flex; flex-direction: column; gap: 8px; }
+.ck { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer; }
+.ck input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
+.ck > span { display: flex; flex-direction: column; min-width: 0; }
+.ck:has(input:checked) { border-color: var(--accent); background: var(--surface); }
+.ck:has(input:disabled) { background: var(--surface); color: var(--ink-mute); cursor: not-allowed; }
+.preview { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); }
+.save { display: flex; flex-direction: column; gap: 8px; }
+.save > button { width: 100%; }
+.taken { flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; font-size: var(--fs-md); }
+.takenMsg { display: flex; gap: 8px; align-items: flex-start; color: var(--danger); font-weight: 500; }
+.takenMsg svg { flex: none; margin-top: 5px; }
+
+.decided { display: flex; flex-direction: column; gap: 10px; }
+.decLine { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.say { margin: 0; display: flex; flex-direction: column; gap: 6px; padding-block: 12px; border-block: 1px solid var(--line); }
+.say blockquote { margin: 0; font-weight: 500; }
+
+/* 처리 기록 */
+.log { display: flex; flex-direction: column; gap: 6px; padding-top: 18px; border-top: 1px solid var(--line); }
+.logH { font-size: var(--fs-md); font-weight: 700; }
+.logT { font-size: var(--fs-sm); }
+.logT th, .logT td { padding: 8px; }
+.logT tr > :first-child { padding-left: 0; white-space: nowrap; }
+.logT tr > :last-child { padding-right: 0; }
+
+/* 거절 확인 창 */
+.dlg { width: min(480px, calc(100vw - 32px)); max-width: none; padding: 28px 24px 24px; border: 0; border-radius: var(--radius-l); background: var(--bg); color: var(--ink); box-shadow: var(--shadow-pop); }
+.dlg[open] { display: flex; flex-direction: column; gap: 16px; }
+.dlg::backdrop { background: var(--backdrop); }
+.dlg h3 { padding-right: 40px; }
+.x { position: absolute; top: 10px; right: 10px; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 0; border-radius: var(--radius); background: transparent; color: var(--ink-sub); cursor: pointer; }
+.x:hover { background: var(--surface); color: var(--ink); }
+.dlgBtns { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }

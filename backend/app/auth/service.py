@@ -60,7 +60,9 @@ async def signup_limit(ip: str) -> None:
     await ratelimit.hit(ratelimit.key("signup", ip), SIGNUP_PER_IP, 3600, TOO_MANY)
 
 
-async def create_user(s: AsyncSession, *, email: str, name: str, password: str, role: str) -> User:
+async def create_user(
+    s: AsyncSession, *, email: str, name: str, password: str, role: str, phone: str | None = None
+) -> User:
     """회원 한 명을 만든다. 일반 · 업체 회원가입이 같이 쓴다. commit은 부르는 쪽이 한다.
     같은 이메일로 동시에 두 번 눌러도 DB 고유 제약이 막고, 그때도 409로 답한다."""
     if await repo.user_by_email(s, email):
@@ -68,6 +70,7 @@ async def create_user(s: AsyncSession, *, email: str, name: str, password: str, 
     user = User(
         email=email,
         name=name,
+        phone=phone,
         password_hash=await run_in_threadpool(_hash_sync, password),
         role=role,
     )
@@ -96,7 +99,12 @@ async def start_session(s: AsyncSession, user: User) -> str:
 async def signup_customer(s: AsyncSession, data: SignupIn, ip: str) -> tuple[User, str]:
     await signup_limit(ip)
     user = await create_user(
-        s, email=data.email, name=data.name, password=data.password, role="customer"
+        s,
+        email=data.email,
+        name=data.name,
+        password=data.password,
+        role="customer",
+        phone=data.phone,
     )
     token = await start_session(s, user)
     await s.commit()
@@ -163,7 +171,7 @@ async def user_from_token(s: AsyncSession, token: str) -> User | None:
 
 
 async def me(s: AsyncSession, user: User) -> MeOut:
-    status = reason = None
+    status = code = note = None
     if user.role == "vendor":
         from app.vendor.repository import (
             review_of,  # 업체 기능이 auth를 쓰므로 여기서만 늦게 읽는다 (D7 예외)
@@ -171,18 +179,25 @@ async def me(s: AsyncSession, user: User) -> MeOut:
 
         got = await review_of(s, user.id)
         if got:
-            status, reason = got
+            status, code, note = got
     return MeOut(
         id=user.id,
         email=user.email,
         name=user.name,
+        phone=user.phone,
         role=user.role,
+        created_at=user.created_at,
         vendor_status=status,
-        vendor_reject_reason=reason,
+        vendor_review_code=code,
+        vendor_review_note=note,
+        vendor_reject_reason=note if status == "rejected" else None,
     )
 
 
 async def update_me(s: AsyncSession, user: User, data: MePatch) -> MeOut:
-    user.name = data.name
+    if data.name is not None:
+        user.name = data.name
+    if data.phone is not None:
+        user.phone = data.phone
     await s.commit()
     return await me(s, user)

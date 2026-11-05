@@ -1,0 +1,14 @@
+/* 실측 요청한 업체 카드 (시안 WVisit .cc · WVendorDetail '요청한 뒤') */
+.head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 12px; }
+.vn { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent-ink); text-decoration: underline; text-underline-offset: 3px; }
+.phone { font-size: var(--fs-lg); }
+.acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.url { overflow-wrap: anywhere; }
+.ln { display: flex; gap: 6px; align-items: flex-start; }
+.ln svg { flex: none; margin-top: 4px; }
+.ok { display: inline-flex; color: var(--ok); }
+.foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 16px; margin-top: auto; padding-top: 4px; border-top: 1px solid var(--line-soft); }
+.sm { font-size: var(--fs-sm); align-self: flex-start; }
+.cmp { align-self: flex-start; }
+.ghost { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none; font-size: var(--fs-sm); font-weight: 500; color: var(--ink-sub); cursor: pointer; }
+.ghost:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }

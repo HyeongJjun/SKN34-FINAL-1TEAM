@@ -1,11 +1,12 @@
 from app.config import settings
 from tests.conftest import query
-from tests.helpers import PASSWORD, signup
+from tests.helpers import PASSWORD, PHONE, signup
 
 
 def test_signup_logs_in_and_stores_only_a_hash(api):
     r = api.post(
-        "/auth/signup", json={"name": "  고객  ", "email": "New@Mitjip.Test", "password": PASSWORD}
+        "/auth/signup",
+        json={"name": "  고객  ", "email": "New@Mitjip.Test", "password": PASSWORD, "phone": PHONE},
     )
     assert r.status_code == 201
     assert r.json()["email"] == "new@mitjip.test"
@@ -23,7 +24,8 @@ def test_same_email_cannot_sign_up_twice(api):
     signup(api, "dup@mitjip.test")
     api.cookies.clear()
     r = api.post(
-        "/auth/signup", json={"name": "또", "email": "DUP@mitjip.test", "password": PASSWORD}
+        "/auth/signup",
+        json={"name": "또", "email": "DUP@mitjip.test", "password": PASSWORD, "phone": PHONE},
     )
     assert r.status_code == 409
     assert r.json()["error"]["code"] == "email_taken"
@@ -31,7 +33,8 @@ def test_same_email_cannot_sign_up_twice(api):
 
 def test_short_password_uses_the_common_error_shape(api):
     r = api.post(
-        "/auth/signup", json={"name": "고객", "email": "a@mitjip.test", "password": "short"}
+        "/auth/signup",
+        json={"name": "고객", "email": "a@mitjip.test", "password": "short", "phone": PHONE},
     )
     assert r.status_code == 422
     body = r.json()["error"]
@@ -81,4 +84,20 @@ def test_change_my_name(api):
     signup(api, "rename@mitjip.test")
     r = api.patch("/me", json={"name": "새 이름"})
     assert r.status_code == 200 and r.json()["name"] == "새 이름"
+    assert r.json()["created_at"]  # 내 정보 화면의 가입일
     assert api.patch("/me", json={"name": "   "}).status_code == 422
+
+
+def test_signup_needs_a_mobile_number_and_me_shows_it(api):
+    bad = {"name": "고객", "email": "p@mitjip.test", "password": PASSWORD, "phone": "02-123-4567"}
+    assert api.post("/auth/signup", json=bad).status_code == 422
+    ok = api.post("/auth/signup", json=bad | {"phone": "010-2345-6789"})
+    assert ok.status_code == 201 and ok.json()["phone"] == "01023456789"
+
+
+def test_patch_me_changes_only_sent_fields(api):
+    signup(api)
+    r = api.patch("/me", json={"phone": "010 9876 5432"})
+    assert r.status_code == 200 and r.json()["phone"] == "01098765432"
+    assert r.json()["name"] == "고객"
+    assert api.patch("/me", json={"phone": "1234"}).status_code == 422

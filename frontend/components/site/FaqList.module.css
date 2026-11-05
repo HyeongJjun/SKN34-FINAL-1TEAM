@@ -1,0 +1,21 @@
+/* 자주 묻는 질문 목록 (시안 WGuide) */
+.grp { display: flex; flex-direction: column; gap: 10px; }
+.qs { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-strong); }
+.qs > li { border-bottom: 1px solid var(--line); scroll-margin-top: 24px; }
+.qh { margin: 0; font-size: inherit; font-weight: inherit; line-height: inherit; }
+.qb { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-height: 56px; padding: 8px 4px; border: 0; background: none; color: var(--ink); font-size: var(--fs-md); font-weight: 500; text-align: left; cursor: pointer; }
+.qb:hover { color: var(--accent-ink); }
+.qb svg { flex: none; color: var(--ink-sub); }
+.qb[aria-expanded="true"] { font-weight: 700; }
+.qb[aria-expanded="true"] svg { transform: rotate(180deg); }
+.qt { display: inline-flex; align-items: center; gap: 12px; flex: none; }
+.ans { display: flex; flex-direction: column; gap: 14px; padding: 4px 4px 24px; }
+.ans[hidden] { display: none; }
+.ans p { max-width: 40em; }
+.ink { color: var(--ink); font-weight: 700; }
+.body { font-size: var(--fs-lg); line-height: 1.75; }
+.body sup a { scroll-margin-top: 24px; }
+.ask { display: flex; flex-direction: column; gap: 2px; font-weight: 700; }
+.refs { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
+.refs p { scroll-margin-top: 24px; }
+.note { font-weight: 700; color: var(--ink); }

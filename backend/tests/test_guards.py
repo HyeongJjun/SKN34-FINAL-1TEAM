@@ -8,7 +8,7 @@ from app.auth import repository as auth_repo
 from app.config import settings
 from app.project import service as project_service
 from tests.conftest import query
-from tests.helpers import PASSWORD, make_admin, signup, upload, vendor_signup
+from tests.helpers import PASSWORD, PHONE, make_admin, signup, upload, vendor_signup
 from tests.test_project import body
 
 
@@ -60,7 +60,8 @@ def test_same_email_at_the_same_time_is_409_not_500(api, monkeypatch):
     monkeypatch.setattr(auth_repo, "user_by_email", not_found)
     api.cookies.clear()
     r = api.post(
-        "/auth/signup", json={"name": "고객", "email": "twice@mitjip.test", "password": PASSWORD}
+        "/auth/signup",
+        json={"name": "고객", "email": "twice@mitjip.test", "password": PASSWORD, "phone": PHONE},
     )
     assert r.status_code == 409 and r.json()["error"]["code"] == "email_taken"
 
@@ -70,7 +71,8 @@ def test_signups_from_one_place_are_limited(api):
         signup(api, f"many{i}@mitjip.test")
     api.cookies.clear()
     r = api.post(
-        "/auth/signup", json={"name": "고객", "email": "many10@mitjip.test", "password": PASSWORD}
+        "/auth/signup",
+        json={"name": "고객", "email": "many10@mitjip.test", "password": PASSWORD, "phone": PHONE},
     )
     assert r.status_code == 429 and int(r.headers["retry-after"]) > 0
 
@@ -85,11 +87,12 @@ def test_failed_vendor_signup_leaves_no_license_file(api):
     assert {str(p.relative_to(settings.files_dir)).replace("\\", "/") for p in on_disk} >= stored
 
 
-def test_blank_reject_reason_is_refused(api):
+def test_blank_reject_note_is_refused(api):
     vendor_signup(api)
     make_admin(api)
     vid = api.get("/admin/vendors").json()[0]["user_id"]
-    r = api.post(f"/admin/vendors/{vid}/reject", json={"reason": "   "})
+    body = {"action": "reject", "code": "other", "note": "   "}
+    r = api.post(f"/admin/vendors/{vid}/review", json=body)
     assert r.status_code == 422
 
 

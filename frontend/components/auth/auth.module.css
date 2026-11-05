@@ -1,0 +1,70 @@
+/* 가입 · 로그인 · 휴대폰 번호 · 비밀번호 찾기 (시안 WSignup · WLogin · WPhone · WResetPw) */
+.page { padding-block: 48px 96px; }
+.cols { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 56px 80px; }
+.col { flex: 999 1 460px; min-width: 0; max-width: 580px; display: flex; flex-direction: column; gap: 28px; }
+.single { max-width: 580px; display: flex; flex-direction: column; gap: 28px; }
+.head { display: flex; flex-direction: column; gap: 8px; }
+.form { display: flex; flex-direction: column; gap: 24px; }
+
+/* 가입 | 로그인 탭 */
+.tabs { display: flex; gap: 0 32px; border-bottom: 1px solid var(--line); }
+.tab { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 52px; margin-bottom: -1px; border-bottom: 3px solid transparent; font-size: var(--fs-h2); color: var(--ink-sub); text-decoration: none; }
+.tab:hover { color: var(--ink); }
+.tab[aria-current="page"] { border-bottom-color: var(--accent); font-weight: 700; color: var(--ink); }
+
+/* 카카오 버튼: 카카오 노란색은 아직 토큰이 없어 기본값을 둔다 */
+.kakao { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 52px; padding: 0 20px; border: 0; border-radius: var(--radius); background: var(--kakao); color: var(--kakao-ink); font-size: var(--fs-md); font-weight: 700; text-decoration: none; cursor: pointer; }
+.kakao:hover { background: var(--kakao-hover); color: var(--kakao-ink); }
+.or { display: flex; align-items: center; gap: 14px; font-size: var(--fs-sm); color: var(--ink-sub); }
+.or::before, .or::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--line); }
+
+/* 칸 */
+.req { font-weight: 500; color: var(--ink-sub); }
+.err { display: flex; align-items: flex-start; gap: 6px; }
+.err svg { flex: none; margin-top: 3px; }
+.submit { width: 100%; min-height: 52px; font-size: var(--fs-lg); }
+.foot { display: flex; flex-wrap: wrap; align-items: center; gap: 0 10px; }
+.foot .lnk { font-size: var(--fs-sm); }
+.plain { display: inline-flex; align-items: center; min-height: 44px; font-size: var(--fs-sm); }
+.plainSub { color: var(--ink-sub); text-decoration: none; }
+.plainSub:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+
+/* 약관 동의 */
+.terms { display: flex; flex-direction: column; }
+.terms legend { padding: 0 0 8px; }
+.ck { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); flex: none; }
+.all { display: flex; align-items: center; gap: 12px; min-height: 52px; padding-block: 4px; border-block: 1px solid var(--line); font-weight: 700; cursor: pointer; }
+.all .req { font-size: var(--fs-sm); }
+.termList { list-style: none; margin: 0; padding: 6px 0 0; }
+.termList li { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.term { display: flex; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; }
+.see { display: inline-flex; align-items: center; gap: 2px; flex: none; min-height: 44px; padding: 0 4px; font-size: var(--fs-sm); color: var(--ink-sub); text-decoration: none; }
+.see:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+
+/* 비밀번호 보기 버튼 */
+.pwbox { position: relative; }
+.pwbox input { padding-right: 52px; }
+.pwbtn { position: absolute; top: 3px; right: 3px; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 0; border-radius: var(--radius-s); background: transparent; color: var(--ink-sub); cursor: pointer; }
+.pwbtn:hover { background: var(--surface); color: var(--ink); }
+.pwbtn:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+/* 휴대폰 번호 + 인증번호 받기 */
+.pair { display: flex; flex-wrap: wrap; gap: 8px; }
+.pair input { flex: 999 1 220px; min-width: 0; width: auto; }
+.pair button { flex: 1 0 auto; }
+.codebox { position: relative; }
+.codebox input { padding-right: 128px; }
+.left { position: absolute; top: 0; right: 12px; display: flex; align-items: center; gap: 6px; height: 46px; font-size: var(--fs-sm); color: var(--ink-sub); }
+.left b { color: var(--ink); }
+
+/* 끝난 상태 · 안내 */
+.done { display: flex; flex-direction: column; gap: 12px; }
+.okLine { font-size: var(--fs-md); white-space: normal; }
+.notice { max-width: 580px; }
+
+/* 오른쪽 '작성 중인 집 정보' */
+.aside { flex: 1 1 320px; min-width: 0; max-width: 400px; padding-top: 8px; }
+.draft { display: flex; flex-direction: column; gap: 12px; padding-top: 14px; border-top: 2px solid var(--ink); }
+.dl { display: grid; grid-template-columns: minmax(0, 56px) minmax(0, 1fr); margin: 0; }
+.dl dt, .dl dd { margin: 0; padding: 9px 0; border-bottom: 1px solid var(--line-soft); }
+.dl dt { color: var(--ink-sub); }

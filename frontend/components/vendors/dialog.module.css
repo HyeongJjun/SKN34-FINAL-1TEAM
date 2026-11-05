@@ -1,0 +1,25 @@
+/* 실측 요청 · 요청 취소 확인 창 (시안 WVendors 메모의 확인 창) */
+.dlg { width: min(480px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); padding: 28px 24px 24px; border: 0; border-radius: var(--radius-l); background: var(--bg); color: var(--ink); box-shadow: var(--shadow-pop); overflow-y: auto; overscroll-behavior: contain; }
+.dlg[open] { display: flex; flex-direction: column; gap: 16px; }
+.form { display: contents; }
+.self { align-self: flex-start; }
+.dlg::backdrop { background: var(--backdrop); }
+.dlg h2 { padding-right: 36px; }
+@media (max-width: 480px) { .dlg { padding: 24px 16px 20px; } }
+.x { position: absolute; top: 10px; right: 10px; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: var(--radius); background: transparent; color: var(--ink-sub); cursor: pointer; }
+.x:hover { background: var(--surface); color: var(--ink); }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.cs { border: 0; margin: 0; padding: 12px 0 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; border-top: 1px solid var(--line-soft); }
+.cs legend { float: left; width: 100%; padding: 0; font-size: var(--fs-sm); font-weight: 700; }
+.ck { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding-top: 10px; font-weight: 700; cursor: pointer; }
+.ck input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--accent); }
+.note { padding-top: 6px; }
+.addr { border: 0; margin: 0; padding: 6px 0 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.addr legend { float: left; width: 100%; padding: 0; font-size: var(--fs-sm); font-weight: 700; }
+.addrRow { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+@media (max-width: 400px) { .addrRow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .addrRow > :first-child { grid-column: 1 / -1; } }
+.addrRow .lab { font-size: var(--fs-sm); color: var(--ink-sub); }
+.cell { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.noPhone { display: flex; flex-direction: column; gap: 6px; }
+.err { display: flex; gap: 6px; align-items: flex-start; }
+.err svg { flex: none; margin-top: 3px; }

@@ -1,0 +1,10 @@
+/* 예상 공정표 화면 (시안 WPlan) */
+.final { display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; }
+.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 32px; padding-top: 12px; }
+.topL { flex: 1 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 24px; }
+.line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: var(--fs-lg); }
+.views { padding-top: 28px; }
+.bottom { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 48px 64px; padding-block: 56px 96px; }
+.left { flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+.right { flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 40px; }

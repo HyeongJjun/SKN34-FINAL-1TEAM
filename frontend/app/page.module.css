@@ -1,0 +1,86 @@
+/* 첫 화면 (시안 WHome) */
+.bye { padding-top: 24px; }
+
+/* 큰 제목 + 견본 서류 두 장 */
+.hero { display: flex; flex-wrap: wrap; gap: 48px 64px; align-items: center; padding-block: 72px 88px; }
+.heroText { flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 22px; }
+.display { font-size: var(--fs-display); line-height: 1.3; font-weight: 700; letter-spacing: -0.02em; }
+.lead { font-size: var(--fs-lg); max-width: 30em; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; }
+.cta .start { min-height: 54px; padding: 0 28px; font-size: var(--fs-lg); }
+.docs { flex: 1 1 520px; min-width: 0; display: flex; flex-direction: column; }
+.doc { display: flex; flex-direction: column; gap: 16px; margin: 0; padding: 28px 28px 24px; }
+.docHead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; padding-bottom: 12px; border-bottom: 2px solid var(--ink); }
+.docTitle { font-size: var(--fs-h2); font-weight: 700; letter-spacing: 0.08em; }
+.meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 6px 24px; margin: 0; font-size: var(--fs-sm); }
+.meta > div { display: flex; gap: 10px; }
+.meta dt { flex: none; color: var(--ink-sub); }
+.meta dd { margin: 0; }
+.tbl .cellNote { display: block; }
+.tbl .withVat th, .tbl .withVat td { border-top: 1px solid var(--line-soft); }
+@media (max-width: 480px) { .doc { padding: 20px 16px 16px; } }
+
+/* 예상 공정표 견본: 앞 서류에 살짝 겹친다 */
+.gantt { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 10px; margin: -12px 0 0 min(64px, 8%); padding: 18px 20px 16px; }
+.gtTitle { font-size: var(--fs-sm); font-weight: 700; }
+.gtTitle span { font-weight: 400; color: var(--ink-sub); }
+.gt { display: grid; grid-template-columns: 52px repeat(8, minmax(0, 1fr)); align-items: center; }
+.gtDays { height: 26px; }
+.gtRow { height: 36px; border-top: 1px solid var(--gantt-grid); }
+.gtH { display: flex; align-items: center; justify-content: center; align-self: stretch; font-size: var(--fs-xs); color: var(--ink-sub); text-align: center; }
+.gtOff { align-self: stretch; background: var(--gantt-off); }
+.gtName { font-size: var(--fs-sm); font-weight: 700; }
+.gtBar { height: 20px; margin-inline: 2px; border-radius: 6px; }
+.barA { background: var(--accent); }
+.barB { background: var(--accent-pastel); }
+@media (max-width: 600px) { .gantt { margin: 16px 0 0; } }
+
+/* 01 단계 띠: 넓으면 가로 여섯 칸, 좁으면 세로 줄 */
+.steps { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; }
+.steps > li { position: relative; display: flex; flex-direction: column; padding-right: 20px; }
+.steps > li:not(:last-child)::after { content: ""; position: absolute; top: 16px; left: 44px; right: 12px; border-top: 1px solid var(--line-strong); }
+.n { position: relative; z-index: 1; display: inline-grid; place-items: center; width: 32px; height: 32px; margin-bottom: 16px; border: 1.5px solid var(--ink); border-radius: 50%; background: var(--bg); font-family: var(--font-mono); font-size: var(--fs-sm); font-weight: 500; line-height: 1; color: var(--ink); }
+.steps h3 { margin-bottom: 6px; }
+.d { margin-bottom: 10px; color: var(--ink-sub); }
+.get { display: flex; flex-wrap: wrap; align-items: center; align-content: flex-start; gap: 6px 8px; margin: 0; }
+.got { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; margin: 0; padding: 0 10px; border: 1px solid var(--line); border-radius: var(--radius-s); background: var(--surface); font-size: var(--fs-sm); font-weight: 500; color: var(--ink); white-space: nowrap; }
+.got svg { flex: none; color: var(--accent-ink); }
+@media (max-width: 959px) {
+  .steps { display: block; }
+  .steps > li { display: grid; grid-template-columns: 32px minmax(0, 1fr); align-content: start; column-gap: 16px; row-gap: 6px; padding: 0 0 28px; }
+  .steps > li:last-child { padding-bottom: 0; }
+  .steps > li:not(:last-child)::after { content: none; }
+  .steps > li:not(:last-child)::before { content: ""; position: absolute; left: 16px; top: 36px; bottom: 4px; border-left: 1px solid var(--line-strong); }
+  .n { grid-column: 1; grid-row: 1 / span 3; margin-bottom: 0; }
+  .steps h3, .d, .get { grid-column: 2; }
+  .steps h3 { display: flex; align-items: center; min-height: 32px; margin-bottom: 0; }
+  .d { margin-bottom: 0; }
+  .get { padding-top: 6px; }
+}
+
+/* 02 표준견적서 줄 견본 */
+.ex { display: flex; flex-direction: column; max-width: 640px; margin: 0; padding: 18px clamp(16px, 3vw, 28px) 4px; }
+.exHead { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 16px; padding-bottom: 10px; border-bottom: 2px solid var(--ink); font-size: var(--fs-sm); }
+.exHead > span:first-child { font-weight: 700; }
+.exList { margin: 0; padding: 0; list-style: none; }
+.exList > li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; padding: 14px 0; border-bottom: 1px solid var(--line-soft); }
+.exList > li:last-child { border-bottom: 0; }
+.exN { flex: 1 1 140px; min-width: 0; font-weight: 500; }
+.exA { flex: none; min-width: 6.5em; text-align: right; }
+.exS { flex: 0 1 232px; white-space: normal; }
+
+/* 03 자주 묻는 질문 미리 보기: 누르면 그 자리에서 답이 펼쳐진다 */
+.fq { max-width: 720px; border-top: 1px solid var(--line); }
+.fq details { border-bottom: 1px solid var(--line); }
+.fq summary { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 56px; padding: 8px 4px; color: var(--ink); font-weight: 500; list-style: none; cursor: pointer; }
+.fq summary::-webkit-details-marker { display: none; }
+.fq summary:hover { background: var(--surface); }
+.fq details[open] summary { font-weight: 700; }
+.fq details[open] .chev { transform: rotate(180deg); }
+.tg { display: inline-flex; flex: none; align-items: center; gap: 8px; color: var(--ink-sub); }
+.chip { display: inline-flex; align-items: center; min-height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: var(--radius-s); font-size: var(--fs-xs); font-weight: 500; color: var(--ink-sub); white-space: nowrap; }
+.an { display: flex; flex-direction: column; gap: 8px; max-width: 40em; padding: 2px 4px 20px; }
+.an p { margin: 0; }
+.ink { color: var(--ink); font-weight: 700; }
+.fqMore { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 56px; padding: 8px 4px; border-bottom: 1px solid var(--line); color: var(--ink); font-weight: 700; text-decoration: none; }
+.fqMore:hover { background: var(--surface); color: var(--ink); }

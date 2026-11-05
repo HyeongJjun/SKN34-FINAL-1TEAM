@@ -1,4 +1,5 @@
 import uuid
+from typing import Literal
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,7 +8,7 @@ from app.auth.deps import current_user, require_role
 from app.auth.models import User
 from app.db import get_session
 from app.project import service
-from app.project.schemas import ProjectCreate, ProjectListItem, ProjectOut
+from app.project.schemas import ProjectCheckIn, ProjectCheckOut, ProjectCreate, ProjectOut
 from app.shared import ratelimit
 from app.shared.clock import today_seoul
 from app.shared.regions import SIDO
@@ -48,13 +49,6 @@ async def create_project(
     return await service.create(s, user, data, today_seoul())
 
 
-@router.get("/projects", response_model=list[ProjectListItem], summary="내 인테리어 프로젝트")
-async def my_projects(
-    user: User = Depends(require_role("customer")), s: AsyncSession = Depends(get_session)
-) -> list[ProjectListItem]:
-    return await service.list_mine(s, user)
-
-
 @router.get(
     "/projects/{project_id}",
     response_model=ProjectOut,
@@ -66,3 +60,32 @@ async def get_project(
     s: AsyncSession = Depends(get_session),
 ) -> ProjectOut:
     return await service.get_for(s, user, project_id)
+
+
+@router.patch(
+    "/projects/{project_id}",
+    response_model=ProjectOut,
+    summary="집 정보 고치기 (실측 요청 전까지, 만든 사람만)",
+)
+async def update_project(
+    project_id: uuid.UUID,
+    data: ProjectCreate,
+    user: User = Depends(require_role("customer")),
+    s: AsyncSession = Depends(get_session),
+) -> ProjectOut:
+    return await service.update(s, user, project_id, data, today_seoul())
+
+
+@router.put(
+    "/projects/{project_id}/checks/{key}",
+    response_model=list[ProjectCheckOut],
+    summary="공사 전에 할 일 체크 켜기 · 끄기 (만든 고객만)",
+)
+async def set_check(
+    project_id: uuid.UUID,
+    key: Literal["office_report"],
+    data: ProjectCheckIn,
+    user: User = Depends(require_role("customer")),
+    s: AsyncSession = Depends(get_session),
+) -> list[ProjectCheckOut]:
+    return await service.set_check(s, user, project_id, key, data.done)

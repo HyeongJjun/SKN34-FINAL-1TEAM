@@ -1,0 +1,19 @@
+/* 사업자등록증 보기 (시안 WAdmin) */
+.fig { margin: 0; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius-paper); min-width: 0; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.bar figcaption { min-width: 0; overflow-wrap: anywhere; }
+.name { font-weight: 700; color: var(--ink); }
+.tools { display: flex; align-items: center; gap: 6px; }
+.ib { width: 40px; padding: 0; }
+.zoom { min-width: 48px; text-align: center; }
+
+/* 서류 칸: 크게 보면 칸 안에서 넘겨 본다. 작을 때만 가운데 (margin auto) */
+.stage { overflow: auto; max-height: 680px; padding: 32px 24px; background: var(--surface); }
+.frame { position: relative; margin: 0 auto; background: var(--bg); box-shadow: var(--shadow-paper); }
+.img { display: block; max-width: none; height: auto; }
+.turned { position: absolute; left: 50%; top: 50%; display: block; max-width: none; }
+.pdf { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 24px 8px; text-align: center; }
+
+@media (max-width: 479px) {
+  .stage { padding: 16px 12px; }
+}

@@ -1,0 +1,84 @@
+/* 작업함 · 요청 자세히 (시안 WVInbox) */
+.b { font-weight: 700; }
+.ico { flex: none; }
+.noteIco { margin-top: 3px; }
+
+.page { display: flex; flex-direction: column; gap: 28px; padding-block: 40px 72px; }
+.cols { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
+.main { flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.aside { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 36px; }
+
+/* 탭: 폰 너비에서도 네 개가 한 줄에 들어가게 옆 여백만 줄인다 */
+@media (max-width: 480px) { nav.tabs a { padding: 0 10px; } }
+.sec { display: flex; flex-direction: column; gap: 10px; }
+.empty { padding: 32px 16px; border-block: 1px solid var(--line); text-align: center; color: var(--ink-sub); }
+
+/* 표: 촘촘하게, 폰 너비에서는 줄마다 카드 */
+.dense thead th { padding: 10px 8px; }
+.dense td, .dense tbody th { padding: 12px 8px; vertical-align: middle; }
+.day { white-space: nowrap; }
+.ph { display: block; margin-top: 2px; font-size: var(--fs-sm); font-weight: 400; color: var(--ink-sub); white-space: nowrap; user-select: all; }
+.code { font-family: var(--font-mono); font-size: var(--fs-sm); }
+.hid { color: var(--ink-sub); font-weight: 400; }
+.acts { display: flex; flex-direction: column; align-items: flex-end; }
+.go { white-space: nowrap; }
+.goPri { min-height: 44px; }
+.no { display: inline-flex; align-items: center; min-height: 40px; padding: 0; border: 0; background: none; color: var(--ink-sub); font-size: var(--fs-sm); font-weight: 500; white-space: nowrap; cursor: pointer; }
+.no:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 600px) {
+  .cards thead { display: none; }
+  .cards.dense, .cards.dense tbody { display: block; width: 100%; }
+  .cards.dense tbody tr { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
+  .cards.dense td, .cards.dense tbody th { display: block; padding: 0; border: 0; text-align: left; }
+  .cards.dense .cx { display: none; }
+  .cards.dense tbody th { flex: 1 1 100%; }
+  .cards .acts { align-items: flex-start; }
+  .cards .mlab { display: inline; }
+}
+/* 폰 카드에서만 보이는 칸 이름 (표 머리가 숨을 때) */
+.mlab { display: none; font-size: var(--fs-sm); color: var(--ink-sub); }
+
+/* 오른쪽 카드 */
+.card { display: flex; flex-direction: column; gap: 4px; padding-top: 12px; border-top: 1px solid var(--line); }
+.cardFirst { border-top: 2px solid var(--ink); }
+.cardHead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; }
+.telNo { font-size: var(--fs-lg); font-weight: 700; }
+.kv { margin: 4px 0 0; }
+.kv > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-block: 12px; border-bottom: 1px solid var(--line); }
+.kv dd { margin: 0; }
+.big { font-size: var(--fs-h1); font-weight: 700; line-height: 1.2; }
+
+/* 요청 자세히 */
+.crumb { padding-top: 12px; padding-bottom: 8px; }
+.pageReq { padding-top: 12px; gap: 24px; }
+.head { display: flex; flex-direction: column; gap: 4px; }
+.headRow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 8px 24px; }
+.req { display: flex; flex-direction: column; gap: 14px; max-width: 880px; padding: 20px clamp(16px, 2.5vw, 24px); border: 1px solid var(--accent-pastel); border-radius: var(--radius); background: var(--surface); }
+.reqOff { border-color: var(--line); background: var(--bg); }
+.dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 8px 32px; }
+.dl > div { display: flex; gap: 12px; min-width: 0; }
+.dl dt { flex: 0 0 72px; color: var(--ink-sub); }
+.dl dd { margin: 0; min-width: 0; }
+.part { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--accent-pastel); }
+.reqOff .part { border-top-color: var(--line); }
+.sel { user-select: all; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.copied { align-self: center; }
+.foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding-top: 12px; border-top: 1px solid var(--accent-pastel); }
+.foot > p { flex: 1 1 240px; }
+
+/* '이 요청 못 받아요' 확인 창 */
+.dlg { width: min(480px, calc(100vw - 32px)); max-width: none; padding: 28px 24px 24px; border: 0; border-radius: var(--radius-l); background: var(--bg); color: var(--ink); box-shadow: var(--shadow-pop); }
+.dlg[open] { display: flex; flex-direction: column; gap: 16px; }
+.dlg::backdrop { background: var(--backdrop); }
+.dlg h2 { padding-right: 40px; }
+.x { position: absolute; top: 10px; right: 10px; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: var(--radius); background: transparent; color: var(--ink-sub); cursor: pointer; }
+.x:hover { background: var(--surface); color: var(--ink); }
+.rads { display: flex; flex-direction: column; gap: 8px; }
+.rad { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer; }
+.rad input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
+.rad:has(input:checked) { border-color: var(--accent); background: var(--surface); }
+.dlgBtns { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+/* 공사 탭: 고객이 적은 남은 일 */
+.say { display: block; max-width: 28em; margin-top: 2px; overflow-wrap: anywhere; white-space: pre-line; }
+.jobActs { gap: 6px; }

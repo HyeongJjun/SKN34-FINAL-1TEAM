@@ -1,0 +1,15 @@
+/* 사진 칸 · 한 줄 목록 (시안 WWizard '사진 · 도면') */
+.list { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding-block: 12px; border-bottom: 1px solid var(--line); }
+.over { background: var(--surface); box-shadow: inset 0 0 0 2px var(--accent); }
+.head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; min-height: 48px; }
+.title { font-size: var(--fs-md); font-weight: 700; }
+.title span { font-weight: 400; }
+.pick { position: relative; }
+.pick:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+.warn { font-size: var(--fs-sm); font-weight: 500; color: var(--danger); }
+.rows { list-style: none; margin: 0; padding: 0; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; min-height: 60px; padding-block: 6px; }
+.thumb { position: relative; flex: none; display: flex; align-items: center; justify-content: center; width: 64px; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--radius-paper); background: var(--surface-2); color: var(--ink-sub); }
+.thumb img, .thumb canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
+.name { flex: 1 1 160px; min-width: 0; overflow-wrap: anywhere; }
+.x { flex: none; }

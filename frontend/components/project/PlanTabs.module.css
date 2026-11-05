@@ -1,0 +1,8 @@
+.bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin-bottom: 16px; }
+.tabs { flex: 0 1 auto; }
+.barsPanel[hidden], .listPanel[hidden] { display: none; }
+@media (max-width: 720px) {
+  .tabs, .barsPanel { display: none; }
+  .bar { justify-content: flex-end; }
+  .listPanel[hidden] { display: block; }
+}

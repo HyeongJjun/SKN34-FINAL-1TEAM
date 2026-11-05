@@ -28,7 +28,7 @@ export function MemberTable({ initial }: { initial: Member[] }) {
           <select id="ms" className="mj-select" value={status} onChange={(e) => setStatus(e.target.value as typeof status)}><option value="all">전체</option><option value="active">사용 중</option><option value="suspended">정지</option></select>
         </div>
       </div>
-      <p className="mj-small" aria-live="polite">{list.length}명 · {msg}</p>
+      <p className="mj-small" aria-live="polite">{list.length}명{msg ? ` · ${msg}` : ""}</p>
       <div className="mj-table-box">
         <table className="mj-table" style={{ minWidth: 720 }}>
           <caption className="mj-sr">회원 목록</caption>

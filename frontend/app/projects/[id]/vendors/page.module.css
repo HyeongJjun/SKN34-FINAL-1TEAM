@@ -1,0 +1,8 @@
+/* 업체 고르기 (시안 WVendors) */
+.title { padding-top: 8px; padding-bottom: 28px; }
+.body { padding-bottom: 88px; }
+.std { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 16px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.sm { font-size: var(--fs-sm); }
+.none { max-width: 760px; display: flex; flex-direction: column; }
+.empty { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 32px 0; }
+.deal { padding-top: 12px; }

@@ -8,7 +8,8 @@ from app.db import Base
 from app.shared.ids import uuid7
 
 # photo: 공간 사진 · plan: 아파트 도면 (고객) / license: 사업자등록증 · portfolio: 시공 사진 (업체)
-KINDS = ("photo", "plan", "license", "portfolio")
+# price_doc: 가견적 근거 견적서 · 단가표 · quote_doc: 실측 견적서 · work_photo: 공사 사진 (업체)
+KINDS = ("photo", "plan", "license", "portfolio", "price_doc", "quote_doc", "work_photo")
 
 
 class File(Base):
@@ -16,7 +17,11 @@ class File(Base):
 
     __tablename__ = "files"
     __table_args__ = (
-        CheckConstraint("kind in ('photo', 'plan', 'license', 'portfolio')", name="kind"),
+        CheckConstraint(
+            "kind in ('photo', 'plan', 'license', 'portfolio', 'price_doc', 'quote_doc',"
+            " 'work_photo')",
+            name="kind",
+        ),
         CheckConstraint("size > 0", name="size"),
     )
 
@@ -27,7 +32,7 @@ class File(Base):
     kind: Mapped[str] = mapped_column(String(10))
     storage_key: Mapped[str] = mapped_column(String(100), unique=True)
     filename: Mapped[str] = mapped_column(String(200))
-    content_type: Mapped[str] = mapped_column(String(50))
+    content_type: Mapped[str] = mapped_column(String(100))  # 엑셀 MIME은 65자
     size: Mapped[int] = mapped_column(BigInteger)
     sha256: Mapped[str] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
