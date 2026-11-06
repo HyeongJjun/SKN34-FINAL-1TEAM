@@ -1,11 +1,8 @@
 name: Deploy staging
 
-# main에 있는 이 워크플로가 dev의 CI 성공 커밋을 스테이징에 배포한다.
+# main Push CI의 필수 검사 성공 뒤 호출한다. 기본 브랜치가 dev여도 실행 ref는 main이다.
 on:
-  workflow_run:
-    workflows: [CI]
-    branches: [dev]
-    types: [completed]
+  workflow_call:
   workflow_dispatch:
     inputs:
       rollback:
@@ -28,50 +25,24 @@ jobs:
     name: Deploy staging
     if: >-
       github.repository == 'SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM' &&
-      ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
-      (github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_branch == 'dev' &&
-      github.event.workflow_run.event == 'push'))
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-24.04
     timeout-minutes: 50
     env:
       AWS_REGION: ap-northeast-2
       ROLLBACK: ${{ github.event_name == 'workflow_dispatch' && inputs.rollback && 'true' || 'false' }}
     steps:
-      - name: 배포할 dev 커밋 확인
+      - name: 배포 검증 코드 가져오기
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: 배포할 main 커밋 확인
         id: source
-        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          TRIGGER_SHA: ${{ github.event.workflow_run.head_sha }}
-        run: |
-          set -euo pipefail
-          # 롤백 스크립트는 신뢰하는 main에서 가져온다. dev의 검사 실패와 무관하게 복구할 수 있다.
-          if [[ "$ROLLBACK" == true ]]; then
-            echo "sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
-            echo "deploy=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          latest=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/dev" --jq .object.sha)
-          sha="$TRIGGER_SHA"
-          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
-            sha="$latest"
-            passed=$(gh api --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs" \
-              -f branch=dev -f head_sha="$sha" -f status=success \
-              --jq '[.workflow_runs[] | select(.event == "push" or .event == "workflow_dispatch")] | length')
-            if [[ "$passed" -eq 0 ]]; then
-              echo "::error::현재 dev 커밋의 CI 성공 기록이 없습니다."
-              exit 1
-            fi
-          fi
-          [[ "$sha" =~ ^[0-9a-f]{40}$ ]]
-          if [[ "$sha" != "$latest" ]]; then
-            echo "::notice::더 최신 dev 커밋이 있어 이전 커밋의 배포를 건너뜁니다."
-            echo "deploy=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
-          echo "deploy=true" >> "$GITHUB_OUTPUT"
+        run: python3 .github/scripts/development_flow.py deploy
 
       - name: Fetch approved source
         if: steps.source.outputs.deploy == 'true'

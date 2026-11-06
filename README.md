@@ -403,10 +403,12 @@ docker compose up -d --build
 
 ## 🤝 개발 규칙
 
-1. 개인 fork의 `dev`를 팀 저장소 `dev`와 맞춘 뒤 기능 브랜치를 만듭니다. 예: `feat-login`, `fix-api-error`.
-2. 팀 `dev`로 PR을 올리고 CI와 리뷰를 통과하면 squash 병합합니다.
-3. `dev`의 Push CI가 성공하면 AWS 스테이징에 자동 배포됩니다.
-4. 통합 테스트를 마친 `dev`는 `main`으로 PR을 올리고 merge commit으로 병합합니다. `main`은 안정 버전이며 스테이징 자동배포를 하지 않습니다.
+1. 작업 이슈를 만들고, 개인 fork의 최신 `dev`에서 작업 브랜치를 만듭니다.
+2. 이슈를 연결한 PR을 팀 `dev`로 올리고 CI와 리뷰를 통과하면 squash 병합합니다.
+3. 로컬·CI에서 통합 검증 후 공식 저장소 `dev` → `main` PR을 만들고 merge commit으로 병합합니다.
+4. `main`의 Push CI가 성공하면 해당 main 커밋을 AWS에 자동배포하고 서버 상태를 확인합니다.
+
+`dev` 병합만으로 AWS에 배포되지는 않습니다. 기본 브랜치 목표는 `dev`이며, 실제 설정과 기존 CD를 바꾸는 순서는 [개발 흐름 전환 절차](docs/development-flow.md)에 있습니다. 별도 운영 환경(`prod`)은 아직 없습니다.
 
 작업 규칙은 [AGENTS.md](AGENTS.md), 팀 작업 방법은 [CONTRIBUTING.md](CONTRIBUTING.md)에 있습니다.
 
