@@ -84,7 +84,7 @@ print("LLM_LIVE=false")
 ' > .env.runtime.new
 chmod 600 .env.runtime.new
 
-# 공식 dev에서 CI가 통과한 커밋의 배포 파일만 가져온다.
+# 공식 main에서 CI가 통과한 커밋의 배포 파일만 가져온다.
 for f in compose.deploy.yaml Caddyfile; do
   curl -fLsS --retry 3 "https://raw.githubusercontent.com/$REPO/$SHA/deploy/aws/$f" -o "$f.new"
 done

@@ -5,6 +5,8 @@ on:
   push:
     branches: [main, dev, integration]
   pull_request:
+    # base 변경으로 의존성 비교 범위가 바뀌면 보안 검사도 다시 실행한다.
+    types: [opened, synchronize, reopened, edited]
     branches: [main, dev, integration]
   merge_group:
   schedule:
