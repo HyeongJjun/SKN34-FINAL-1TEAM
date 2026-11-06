@@ -51,7 +51,7 @@ from app.visit.schemas import VisitCreateIn
 
 log = logging.getLogger(__name__)
 
-CUSTOMER = ("demo@mitjip.test", "시연 고객", "01000000000")  # 실제로 없는 번호
+CUSTOMER = ("demo@mitjip.test", "시연", "01000000000")  # 실제로 없는 번호
 # 이메일 → (담당자, 상호, 대표, 사업자번호, 전화, 공정, 확인한 단가). 단가는 원 · 부가세 빼고
 VENDORS = {
     "demo-dobae1@mitjip.test": (
