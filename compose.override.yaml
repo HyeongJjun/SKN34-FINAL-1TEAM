@@ -49,6 +49,7 @@ services:
   # 화면은 폴더를 마운트하지 않는다. `docker compose watch`(또는 `docker compose up --watch`)가 바뀐 파일만 컨테이너 안으로 복사하고,
   # 컨테이너 안에서 파일이 바뀌니 변경 알림이 와서 폴링 없이 Turbopack(next dev 기본값)으로 바로 다시 컴파일한다.
   # watch 없이 `up`만 하면 이미지를 만든 때의 화면 코드로 뜬다. package.json · 잠금 파일이 바뀌면 이미지를 다시 만든다.
+  # watch는 켠 뒤에 바뀐 파일만 복사한다. 꺼 둔 동안 고친 화면 코드는 `docker compose up -d --build web`으로 이미지에 넣는다.
   # 컨테이너 안에서 만든 파일은 PC로 돌아오지 않으니 `pnpm gen:api`는 PC에서 돌린다.
   web:
     image: skn34-final/web:dev
@@ -60,7 +61,6 @@ services:
         - action: sync
           path: ./frontend
           target: /app
-          initial_sync: true
           ignore:
             - node_modules/
             - .next/
