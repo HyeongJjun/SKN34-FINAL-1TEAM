@@ -8,3 +8,6 @@
 *.png binary
 *.jpg binary
 *.pdf binary
+
+# 원본·전처리 파일은 해시 검증을 위해 줄바꿈을 포함한 바이트를 유지한다.
+data/** -text
