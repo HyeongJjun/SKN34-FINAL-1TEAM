@@ -1,0 +1,6 @@
+{"text": "처음인데 뭐부터 해야 돼요?", "label": "orchestrator", "kind": "guide", "novice": true}
+{"text": "벽이 누렇게 됐는데 뭐 해야 돼요?", "label": "consult", "kind": "symptom", "novice": true}
+{"text": "목공 견적이 왜 비싸요?", "label": "quote_explanation", "kind": "quote", "novice": false}
+{"text": "업체가 하루 미루자는데 어떻게 돼요?", "label": "schedule", "kind": "delay", "novice": false}
+{"text": "욕실 물 새는 것도 봐 주나요?", "label": "out_of_scope", "kind": "other_trade", "novice": true}
+{"text": "몰딩 견적이 왜 이런지랑 공사 기간도요", "label": "orchestrator", "kind": "multi", "novice": false}
