@@ -49,7 +49,7 @@ def parse_novice(value: object) -> bool:
 def load_examples(path: Path) -> list[Example]:
     """jsonl을 읽는다. 틀린 줄이 있으면 줄 번호와 이유를 알려 주고 멈춘다."""
     examples = []
-    with path.open(encoding="utf-8") as f:
+    with path.open(encoding="utf-8-sig") as f:  # 엑셀 · 메모장이 붙이는 BOM도 받음
         for no, line in enumerate(f, start=1):
             if not line.strip():
                 continue
@@ -70,9 +70,10 @@ def load_examples(path: Path) -> list[Example]:
                 novice = parse_novice(row.get("novice"))
             except ValueError as e:
                 raise ValueError(f"{where}: {e}") from e
-            examples.append(
-                Example(text=text, label=row["label"], novice=novice, kind=row.get("kind", ""))
-            )
+            kind = row.get("kind") or ""
+            if not isinstance(kind, str):
+                raise ValueError(f"{where}: kind는 글자여야 함")  # noqa: TRY004
+            examples.append(Example(text=text, label=row["label"], novice=novice, kind=kind))
     return examples
 
 
@@ -145,8 +146,11 @@ def evaluate(clf: Classifier, examples: list[Example], warmup: bool = True) -> R
         latencies.append((time.perf_counter() - start) * 1000)
         if label not in LABELS:
             raise ValueError(f"{clf.name}: 모르는 라벨을 냄")
+        if label not in probs:
+            # 번호 키 등으로 오면 신뢰도가 조용히 0이 되어 기준값 곡선이 틀어진다
+            raise ValueError(f"{clf.name}: 확률에 예측 라벨이 없음")
         preds.append(label)
-        confidences.append(float(probs.get(label, 0.0)))
+        confidences.append(float(probs[label]))
 
     gold = [ex.label for ex in examples]
     matrix = confusion_matrix(gold, preds)

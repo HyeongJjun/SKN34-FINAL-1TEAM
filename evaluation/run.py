@@ -30,8 +30,9 @@ CLASSIFIERS: dict[str, type] = {"all_orchestrator": AllOrchestrator}
 
 
 def is_heldout(path: Path) -> bool:
-    """--data로 직접 줘도 held-out 파일이면 막는다."""
-    return "heldout" in path.name.lower()
+    """--data로 직접 줘도 held-out 파일이면 막는다. held_out · held-out도 같이 본다."""
+    name = path.name.lower().replace("_", "").replace("-", "")
+    return "heldout" in name
 
 
 def run_intent(args: argparse.Namespace) -> int:
@@ -43,7 +44,11 @@ def run_intent(args: argparse.Namespace) -> int:
         print(f"eval 파일이 없어요: {path}")
         return 2
 
-    examples = load_examples(path)
+    try:
+        examples = load_examples(path)
+    except ValueError as e:
+        print(f"eval 파일을 읽지 못했어요: {e}")
+        return 2
     clf: Classifier = CLASSIFIERS[args.clf]()
     report = evaluate(clf, examples, warmup=not args.no_warmup)
     print(format_report(report, show_wrong=args.show_wrong))

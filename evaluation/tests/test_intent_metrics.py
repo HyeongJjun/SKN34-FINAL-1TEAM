@@ -85,6 +85,16 @@ class MetricsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             evaluate(Fixed({"a": "guide"}), [Example("a", "consult")], warmup=False)
 
+    def test_probs_without_predicted_label_stops(self):
+        class NumberKeys:
+            name = "number_keys"
+
+            def predict(self, text):
+                return "consult", {"1": 0.9}
+
+        with self.assertRaisesRegex(ValueError, "확률"):
+            evaluate(NumberKeys(), [Example("a", "consult")], warmup=False)
+
     def test_percentile_nearest_rank(self):
         self.assertEqual(percentile([], 50), 0.0)
         self.assertEqual(percentile([3.0, 1.0, 2.0, 4.0], 50), 2.0)
@@ -109,6 +119,19 @@ class LoadTest(unittest.TestCase):
             [json.dumps({"text": "몰딩이 뭐예요?", "label": "orchestrator", "novice": True}), ""]
         )
         self.assertEqual(load_examples(path), [Example("몰딩이 뭐예요?", "orchestrator", True)])
+
+    def test_bom_and_null_kind(self):
+        folder = Path(tempfile.mkdtemp())
+        path = folder / "bom.jsonl"
+        row = {"text": "벽이 누래요", "label": "consult", "kind": None}
+        path.write_text(json.dumps(row, ensure_ascii=False) + "\n", encoding="utf-8-sig")
+        self.addCleanup(lambda: (path.unlink(), folder.rmdir()))
+        self.assertEqual(load_examples(path), [Example("벽이 누래요", "consult")])
+
+    def test_kind_must_be_text(self):
+        path = self.write([{"text": "a", "label": "consult", "kind": 3}])
+        with self.assertRaisesRegex(ValueError, "1번째 줄.*kind"):
+            load_examples(path)
 
     def test_old_six_labels_rejected(self):
         path = self.write([{"text": "처음이에요", "label": "guide"}])
@@ -164,13 +187,26 @@ class RunnerTest(unittest.TestCase):
         self.assertIn("--final", out)
 
     def test_heldout_by_data_path_also_needs_final(self):
+        for name in ("heldout.jsonl", "held_out.jsonl", "Held-Out.jsonl"):
+            with self.subTest(name=name):
+                folder = Path(tempfile.mkdtemp())
+                path = folder / name
+                path.write_text(self.example.read_text(encoding="utf-8"), encoding="utf-8")
+                self.addCleanup(lambda p=path, d=folder: (p.unlink(), d.rmdir()))
+
+                self.assertEqual(self.run_quiet(["intent", "--data", str(path)])[0], 2)
+                argv = ["intent", "--data", str(path), "--final"]
+                self.assertEqual(self.run_quiet(argv)[0], 0)
+
+    def test_bad_eval_file_gives_message_not_traceback(self):
         folder = Path(tempfile.mkdtemp())
-        path = folder / "heldout.jsonl"
-        path.write_text(self.example.read_text(encoding="utf-8"), encoding="utf-8")
+        path = folder / "dev.jsonl"
+        path.write_text('{"text": "a", "label": "guide"}\n', encoding="utf-8")
         self.addCleanup(lambda: (path.unlink(), folder.rmdir()))
 
-        self.assertEqual(self.run_quiet(["intent", "--data", str(path)])[0], 2)
-        self.assertEqual(self.run_quiet(["intent", "--data", str(path), "--final"])[0], 0)
+        code, out = self.run_quiet(["intent", "--data", str(path)])
+        self.assertEqual(code, 2)
+        self.assertIn("1번째 줄", out)
 
     def test_example_runs_and_json_folder_is_made(self):
         with tempfile.TemporaryDirectory() as tmp:
