@@ -181,6 +181,9 @@ def discover(directory: Path, selected=None):
     if not directory.is_dir():
         raise ValueError("CSV 디렉터리를 찾을 수 없어요")
     files = [p for p in sorted(directory.glob("*.csv")) if not selected or p.stem in selected]
+    missing = set(selected or []) - {p.stem for p in files}
+    if missing:
+        raise ValueError(f"지정한 CSV를 찾을 수 없어요: {', '.join(sorted(missing))}")
     return [inspect_csv(p) for p in files]
 
 
@@ -393,6 +396,8 @@ async def load_dataset(factory, dataset, model, dimensions, profile):
 async def verify(
     session, datasets, model, dimensions, profile, require_embeddings=False, progress=None
 ):
+    if not datasets:
+        raise ValueError("검증할 CSV가 없어요")
     results = []
     total = sum(len(dataset.hashes) for dataset in datasets)
     completed = 0
@@ -703,13 +708,14 @@ async def run(args):
             finally:
                 if embedder:
                     await embedder.close()
-                if args.json:
-                    print(json.dumps({"embedding_usage": usage.report(price)}, ensure_ascii=False))
-                else:
+                report["embedding_usage"] = usage.report(price)
+                # JSON 성공 결과는 마지막에 한 번만 출력하고, 실패 사용량은 stderr에 남긴다.
+                if not args.json or sys.exception() is not None:
                     print(
                         f"임베딩 사용량 · API 시도 {usage.api_calls:,}회 | 신규 본문 {usage.generated:,}종 | "
                         f"재사용 행 {usage.reused:,}개 | 입력 {usage.input_tokens:,}토큰 | "
                         f"추정 비용 USD {usage.report(price)['estimated_usd']}",
+                        file=sys.stderr if args.json else sys.stdout,
                         flush=True,
                     )
         async with SessionLocal() as session:

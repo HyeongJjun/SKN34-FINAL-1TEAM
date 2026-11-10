@@ -2,6 +2,8 @@
 
 import asyncio
 import csv
+import json
+import sys
 from decimal import Decimal
 from pathlib import Path
 
@@ -845,3 +847,82 @@ def test_activation_rejects_stale_snapshot_and_serializes_repeat(tmp_path):
         assert (await db_query("select count(*) n from ref_dataset_events"))[0]["n"] == 4
 
     asyncio.run(run())
+
+
+@pytest.mark.parametrize("command", ["plan", "load", "embed", "verify"])
+@pytest.mark.parametrize("include_existing", [False, True])
+def test_cli_rejects_missing_selected_dataset(
+    tmp_path, monkeypatch, capsys, command, include_existing
+):
+    if include_existing:
+        sample(tmp_path, "unit_price")
+    arguments = [command, "--directory", str(tmp_path), "--dataset", "missing", "--json"]
+    if include_existing:
+        arguments += ["--dataset", "unit_price"]
+    if command in {"load", "embed"}:
+        arguments.append("--execute")
+    monkeypatch.setattr(sys, "argv", ["data_ingest", *arguments])
+    monkeypatch.setattr(rag, "token_counter", lambda: lambda _: 10)
+    assert ingest.main() == 1
+    captured = capsys.readouterr()
+    assert "missing" in captured.err and not captured.out
+    assert query("select count(*) n from ref_dataset_versions")[0]["n"] == 0
+
+
+def test_cli_verify_rejects_no_csv(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(
+        sys, "argv", ["data_ingest", "verify", "--directory", str(tmp_path), "--json"]
+    )
+    monkeypatch.setattr(rag, "token_counter", lambda: lambda _: 10)
+    assert ingest.main() == 1
+    assert not capsys.readouterr().out
+
+
+def test_cli_verify_accepts_empty_snapshot(tmp_path, monkeypatch, capsys):
+    path, rows = sample(tmp_path, "unit_price")
+    write(path, [], list(rows[0]))
+    asyncio.run(load(path))
+    monkeypatch.setattr(rag, "token_counter", lambda: lambda _: 10)
+    args = ingest.parser().parse_args(
+        ["verify", "--directory", str(tmp_path), "--dimensions", "3", "--json"]
+    )
+    asyncio.run(ingest.run(args))
+    report = json.loads(capsys.readouterr().out)
+    assert len(report["verified"]) == 1 and report["verified"][0]["rows"] == 0
+
+
+@pytest.mark.parametrize("fail", [False, True])
+def test_cli_embedding_json_has_single_result(tmp_path, monkeypatch, capsys, fail):
+    path, _ = sample(tmp_path, "knowledge")
+    asyncio.run(load(path))
+    monkeypatch.setattr(rag, "token_counter", lambda: lambda _: 10)
+
+    class StubEmbedder:
+        def __init__(self, key, model, dimensions, max_calls, usage):
+            self.usage = usage
+
+        async def __call__(self, texts):
+            self.usage.api_calls += 1
+            if fail:
+                raise ValueError("합성 API 실패")
+            self.usage.input_tokens += 20
+            return [[1, 2, 3] for _ in texts]
+
+        async def close(self):
+            pass
+
+    monkeypatch.setattr(rag, "OpenAIEmbedder", StubEmbedder)
+    arguments = ["embed", "--directory", str(tmp_path), "--dimensions", "3", "--execute", "--json"]
+    monkeypatch.setattr(sys, "argv", ["data_ingest", *arguments])
+    assert ingest.main() == (1 if fail else 0)
+    captured = capsys.readouterr()
+    if fail:
+        assert not captured.out
+        assert "API 시도 1회" in captured.err and "합성 API 실패" in captured.err
+    else:
+        report = json.loads(captured.out)
+        assert report["executed"] is True
+        assert report["embedding_usage"]["api_calls"] == 1
+        assert report["embedding_usage"]["input_tokens"] == 20
+        assert report["verified"][0]["embedding_missing"] == 0
+        assert not captured.err
