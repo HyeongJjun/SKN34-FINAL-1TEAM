@@ -1,3 +1,4 @@
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,6 +14,9 @@ class Settings(BaseSettings):
     api_root_path: str = ""
     # false면 LLM을 부르지 않고 스텁 응답을 쓴다 (유료 호출 0회)
     llm_live: bool = False
+    # 수동 임베딩 CLI에서만 사용한다. 키는 repr·오류에 표시하지 않는다.
+    openai_api_key: SecretStr = SecretStr("")
+    openai_embedding_model: str = "text-embedding-3-small"
     # 상태를 바꾸는 요청(POST 등)에서 허용할 브라우저 Origin, 쉼표로 구분
     allowed_origins: str = "http://localhost:3000,http://localhost:3100"
     # 로그인 세션 유지 기간(일)

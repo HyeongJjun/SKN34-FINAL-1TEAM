@@ -146,6 +146,10 @@ class FloorplanRow(Base):
         ),
     )
 
+    provenance: Mapped[dict[str, Any]] = mapped_column(
+        JSONB(), nullable=False, server_default=text("'{}'::jsonb")
+    )
+
     dataset_id: Mapped[uuid.UUID] = mapped_column(Uuid(), nullable=False, primary_key=True)
     dataset_kind: Mapped[str] = mapped_column(
         Text(), nullable=False, default="floorplan", server_default="floorplan"
@@ -201,6 +205,10 @@ class UnitPriceRow(Base):
             "parent_key",
             postgresql_where=text("parent_key is not null"),
         ),
+    )
+
+    provenance: Mapped[dict[str, Any]] = mapped_column(
+        JSONB(), nullable=False, server_default=text("'{}'::jsonb")
     )
 
     dataset_id: Mapped[uuid.UUID] = mapped_column(Uuid(), nullable=False, primary_key=True)
@@ -261,6 +269,10 @@ class ProductivityRow(Base):
             "parent_key",
             postgresql_where=text("parent_key is not null"),
         ),
+    )
+
+    provenance: Mapped[dict[str, Any]] = mapped_column(
+        JSONB(), nullable=False, server_default=text("'{}'::jsonb")
     )
 
     dataset_id: Mapped[uuid.UUID] = mapped_column(Uuid(), nullable=False, primary_key=True)
@@ -339,6 +351,10 @@ class WageRow(Base):
             "parent_key",
             postgresql_where=text("parent_key is not null"),
         ),
+    )
+
+    provenance: Mapped[dict[str, Any]] = mapped_column(
+        JSONB(), nullable=False, server_default=text("'{}'::jsonb")
     )
 
     dataset_id: Mapped[uuid.UUID] = mapped_column(Uuid(), nullable=False, primary_key=True)

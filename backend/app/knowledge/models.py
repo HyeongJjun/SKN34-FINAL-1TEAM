@@ -1,6 +1,7 @@
 """전처리 자료 저장 모델. 적재·계산·검색은 별도 기능에서 수행한다."""
 
 import uuid
+from typing import Any
 
 from pgvector.sqlalchemy import VECTOR
 from sqlalchemy import (
@@ -10,7 +11,9 @@ from sqlalchemy import (
     Integer,
     Text,
     Uuid,
+    text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -36,6 +39,10 @@ class RagChunk(Base):
             name="page_numbers",
         ),
         CheckConstraint("embedding is null or vector_norm(embedding) > 0", name="embedding"),
+    )
+
+    provenance: Mapped[dict[str, Any]] = mapped_column(
+        JSONB(), nullable=False, server_default=text("'{}'::jsonb")
     )
 
     dataset_id: Mapped[uuid.UUID] = mapped_column(Uuid(), nullable=False, primary_key=True)

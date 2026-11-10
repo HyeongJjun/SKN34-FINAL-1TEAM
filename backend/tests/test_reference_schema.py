@@ -47,11 +47,11 @@ def _wage(ident, key, code="1001", hours=8, amount=None):
 def test_schema_shape_and_vector_extension():
     tables = {
         "ref_dataset_versions": 18,
-        "ref_floorplan_rows": 14,
-        "ref_unit_price_rows": 14,
-        "ref_productivity_rows": 21,
-        "ref_wage_rows": 16,
-        "rag_chunks": 9,
+        "ref_floorplan_rows": 15,
+        "ref_unit_price_rows": 15,
+        "ref_productivity_rows": 22,
+        "ref_wage_rows": 17,
+        "rag_chunks": 10,
         "ref_dataset_events": 7,
     }
     rows = query(
