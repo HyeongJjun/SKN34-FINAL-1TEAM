@@ -64,6 +64,10 @@ def test_build_graph_needs_every_node():
         ("도배랑 몰딩 같이 하고 싶어요", ["dobae", "mokgong"]),
         ("집 좀 고치고 싶어요", ["dobae", "mokgong"]),
         ("실측 방문은 언제 오나요", ["dobae", "mokgong"]),  # 방문(visit)은 문이 아니다
+        # 다른 공정에도 쓰는 증상은 한 공정으로 좁히지 않는다
+        ("장판이 들떠요", ["dobae", "mokgong"]),
+        ("욕실 곰팡이 어떻게 해요", ["dobae", "mokgong"]),
+        ("싱크대 문짝 바꾸고 싶어요", ["dobae", "mokgong"]),
     ],
 )
 def test_match_trades_one_when_clear_else_both(text, trades):
@@ -71,7 +75,7 @@ def test_match_trades_one_when_clear_else_both(text, trades):
 
 
 def test_consult_passes_trades_to_interior_agent():
-    assert run(default_nodes(), "consult", "문짝 바꿀래요")["trades"] == ["mokgong"]
+    assert run(default_nodes(), "consult", "몰딩 바꿀래요")["trades"] == ["mokgong"]
 
 
 class Plan(BaseModel):
