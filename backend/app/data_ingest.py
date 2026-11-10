@@ -433,10 +433,12 @@ async def verify(
     return results
 
 
-async def activate_versions(factory, datasets, model, dimensions, profile):
+async def activate_versions(factory, datasets, model, dimensions, profile, allow_calculation=False):
     """검증한 스냅샷 전체의 상태·이력을 한 트랜잭션으로 전환한다."""
     if not datasets:
         raise ValueError("활성화할 CSV가 없어요")
+    if allow_calculation and not any(dataset.kind != "knowledge" for dataset in datasets):
+        raise ValueError("자동계산을 허용할 정형 자료를 선택해 주세요")
     async with factory.begin() as session:
         for dataset in sorted(datasets, key=lambda item: item.key):
             await session.execute(
@@ -496,6 +498,18 @@ async def activate_versions(factory, datasets, model, dimensions, profile):
             )
 
         for target, versions in targets:
+            if allow_calculation and target.kind != "knowledge":
+                if not target.provenance.get("row_count"):
+                    raise ValueError("빈 정형 자료는 자동계산을 허용할 수 없어요")
+                target.calculation_usable = True
+                target.provenance = {
+                    **target.provenance,
+                    "calculation_permission": {
+                        "actor": "manual-csv-cli",
+                        "processed_sha256": target.processed_sha256,
+                        "reason": "explicit_allow_calculation",
+                    },
+                }
             if target.status == "active":
                 continue
             for previous in versions:
@@ -506,6 +520,10 @@ async def activate_versions(factory, datasets, model, dimensions, profile):
             await transition(target, "approved", "active")
         for item in verified:
             item["status"] = "active"
+        if allow_calculation:
+            await session.flush()
+            for item, (target, _) in zip(verified, targets, strict=True):
+                item["calculation_usable"] = target.calculation_usable
         return verified
 
 
@@ -560,10 +578,16 @@ def show_report(report, command, as_json=False):
     else:
         if report.get("activated"):
             print("활성화 완료 · 새 버전은 사용 중, 이전 사용 버전은 사용 종료로 보존해요.")
+        if report.get("calculation_allowed"):
+            print("자동계산 허용 완료 · 정형 자료에만 적용하고 원본 검토 표시는 보존해요.")
         print("요청한 작업과 최종 검증이 끝났어요.")
 
 
 async def run(args):
+    if args.allow_calculation and not args.activate:
+        raise ValueError(
+            "--allow-calculation은 verify --require-embeddings --activate와 함께 사용해 주세요"
+        )
     if args.activate and (args.command != "verify" or not args.require_embeddings):
         raise ValueError("--activate는 verify --require-embeddings와 함께 사용해 주세요")
     rag.check_profile(args.model, args.dimensions)
@@ -605,10 +629,16 @@ async def run(args):
     if args.activate:
         async with execution_lock(engine):
             report["verified"] = await activate_versions(
-                SessionLocal, datasets, args.model, args.dimensions, args.build_profile
+                SessionLocal,
+                datasets,
+                args.model,
+                args.dimensions,
+                args.build_profile,
+                allow_calculation=args.allow_calculation,
             )
         report["executed"] = True
         report["activated"] = True
+        report["calculation_allowed"] = args.allow_calculation
         show_report(report, args.command, args.json)
         return
     if args.command in {"plan", "verify"} or not args.execute:
@@ -700,6 +730,11 @@ async def run(args):
 
 def parser():
     result = argparse.ArgumentParser(description="전처리 CSV 수동 적재·임베딩 (기본: 읽기 전용)")
+    result.add_argument(
+        "--allow-calculation",
+        action="store_true",
+        help="--activate와 함께 정형 자료의 자동계산 사용을 명시적으로 허용",
+    )
     result.add_argument(
         "--activate",
         action="store_true",

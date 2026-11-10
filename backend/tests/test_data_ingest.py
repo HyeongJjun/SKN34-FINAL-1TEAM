@@ -632,6 +632,46 @@ async def activate(paths):
         )
 
 
+def test_calculation_permission_is_explicit_and_preserves_source(tmp_path):
+    path, _ = sample(tmp_path, "unit_price")
+    original = path.read_bytes()
+
+    async def run():
+        version = await load(path)
+        await activate([path])
+        before = await db_query("select calculation_usable,provenance from ref_dataset_versions")
+        assert before[0]["calculation_usable"] is False
+        dataset = ingest.inspect_csv(path)
+        for _ in range(2):
+            result = await ingest.activate_versions(
+                SessionLocal, [dataset], MODEL, DIMS, PROFILE, allow_calculation=True
+            )
+            assert result[0]["calculation_usable"] is True
+        after = await db_query("select calculation_usable,provenance from ref_dataset_versions")
+        assert after[0]["calculation_usable"] is True
+        assert (
+            after[0]["provenance"]["calculation_permission"]["processed_sha256"] == dataset.sha256
+        )
+        assert (await contents(version, "unit_price"))["one"].provenance[
+            "automatic_calculation_usable"
+        ] == "false"
+        assert (await db_query("select count(*) n from ref_dataset_events"))[0]["n"] == 3
+        await activate([path])
+        assert (await db_query("select calculation_usable from ref_dataset_versions"))[0][
+            "calculation_usable"
+        ] is True
+
+    asyncio.run(run())
+    assert path.read_bytes() == original
+
+
+def test_calculation_option_requires_explicit_activation():
+    for command in ("plan", "load", "embed", "verify"):
+        args = ingest.parser().parse_args([command, "--allow-calculation"])
+        with pytest.raises(ValueError, match="--allow-calculation"):
+            asyncio.run(ingest.run(args))
+
+
 @pytest.mark.parametrize("kind", ["unit_price", "knowledge"])
 def test_activate_and_repeat_preserve_events(tmp_path, kind):
     path, _ = sample(tmp_path, kind)
