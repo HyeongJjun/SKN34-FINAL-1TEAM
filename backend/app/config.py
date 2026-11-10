@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     api_root_path: str = ""
     # false면 LLM을 부르지 않고 스텁 응답을 쓴다 (유료 호출 0회)
     llm_live: bool = False
-    # 수동 임베딩 CLI에서만 사용한다. 키는 repr·오류에 표시하지 않는다.
+    # 수동 임베딩 CLI와 에이전트 LLM(agent/llm.py)이 쓴다. 키는 repr·오류에 표시하지 않는다.
     openai_api_key: SecretStr = SecretStr("")
     openai_embedding_model: str = "text-embedding-3-small"
     # 상태를 바꾸는 요청(POST 등)에서 허용할 브라우저 Origin, 쉼표로 구분
@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     files_s3_bucket: str = ""
     # true면 worker가 시연 업체(app/demo.py) 일을 몇 초마다 대신 한다. 운영에서는 켜도 돌지 않는다
     demo_auto: bool = False
+    # 에이전트 LLM. agent/llm.py만 읽는다
+    openai_agent_model: str = "gpt-6.1-terra"
+    openai_reasoning_effort: str = "low"
 
     @property
     def is_https(self) -> bool:
