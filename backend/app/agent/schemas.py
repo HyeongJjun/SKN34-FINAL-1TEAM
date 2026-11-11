@@ -11,6 +11,14 @@ IntentSource = Literal["rule", "model", "jev", "button"]
 Trade = Literal["dobae", "mokgong"]
 
 FAILED_TEXT = "설명을 만들지 못했어요"
+HISTORY_LIMIT = 6  # 지난 메시지를 몇 개까지 넣을지. 고객 · 답 3번씩
+
+
+class Turn(BaseModel):
+    """지난 메시지 하나. 답은 Section의 제목 · 문장만 이어 붙인 글이다 (카드는 뺀다)."""
+
+    role: Literal["user", "assistant"]
+    text: str
 
 
 class TurnContext(BaseModel):
@@ -65,6 +73,7 @@ class ChatState(TypedDict, total=False):
 
     ctx: TurnContext
     message: str
+    history: list[Turn]  # 지난 메시지, 오래된 것부터. 이번 문장은 빼고 HISTORY_LIMIT개까지
     waiting: IntentLabel | None  # 고객 답을 기다리는 담당. 다른 의도가 확실할 때만 옮긴다
     intent: Intent | None  # 관문 결과. None이면 되묻기
     trades: list[Trade]  # 공종 전문가가 match_trades로 고른 공정
