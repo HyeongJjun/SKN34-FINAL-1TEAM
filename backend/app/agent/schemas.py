@@ -65,6 +65,7 @@ class ChatState(TypedDict, total=False):
 
     ctx: TurnContext
     message: str
+    waiting: IntentLabel | None  # 고객 답을 기다리는 담당. 다른 의도가 확실할 때만 옮긴다
     intent: Intent | None  # 관문 결과. None이면 되묻기
     trades: list[Trade]  # 공종 전문가가 match_trades로 고른 공정
     answer: AgentAnswer | None
