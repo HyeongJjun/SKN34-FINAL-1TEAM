@@ -46,6 +46,7 @@ async def trade(state: ChatState) -> dict:
 - 받는 값: `state["ctx"]`(사용자 · 대화 · 프로젝트, 서버가 정함), `state["message"]`.
 - 공정은 공종 전문가가 `match_trades`로 직접 고르고 `trades`로 돌려준다. 미리 채워져 오지 않는다.
 - 돌려주는 값: `{"answer": AgentAnswer}`. 새 상태 키가 필요하면 `ChatState`(공용)에 더한다.
+- 되묻고 고객 답을 기다리면 `{"waiting": "<자기 라벨>"}`도 돌려준다. 관문이 턴마다 지난 값을 비우므로, 안 돌려주면 다음 턴은 다시 분류한다.
 - `ctx`의 `user_id` · `project_id`를 LLM 출력으로 바꾸지 않는다.
 - 문장에 금액 · 수량 · 날짜를 쓰지 않는다. 숫자는 계산 엔진 결과를 카드로 붙인다.
 - LLM 실패(`llm.LLMError`)는 잡아서 `AgentAnswer(failed=True)`로 돌려준다. 규칙으로 만든 가짜 설명으로 채우지 않는다.
@@ -102,7 +103,7 @@ async def trade(state: ChatState) -> dict:
 **받는 값**
 
 - `answer`: 항상 있다. 출력 검사를 거쳤으므로 그대로 보낸다. 실패면 `FAILED_TEXT` 한 문장
-- `waiting`: 다음 턴에 넣을 값으로 저장한다
+- `waiting`: 다음 턴에 넣을 값으로 저장한다. 관문이 지난 값을 비우므로, 이번 턴에 되물은 에이전트가 있을 때만 값이 있다
 - `intent`: 기록용으로 저장한다(라벨 · 신뢰도 · 출처). 의도 eval 재료
 - `trades`: 브리프가 정해지면 같이 저장한다
 
@@ -131,9 +132,8 @@ async def trade(state: ChatState) -> dict:
 ## 9. 아직 정할 것
 
 - 견적 설명 전문가 담당
-- 대화 API(`chat/router` · `service`, SSE, 대화 잠금) 담당. 화면 연결과 맞물린다. 순서와 넣고 받는 값은 8절
-- `waiting`을 누가 비우는지: 지금은 에이전트가 안 돌려주면 지난 값이 남는다. 관문이 읽고 비우고(`gate.py`), 되묻는 에이전트만 `{"waiting": "<자기 라벨>"}`을 돌려주는 안
+- 대화 API(`chat/router` · `service`, SSE, 대화 잠금) 담당(#86). 화면 연결과 맞물린다. 순서와 넣고 받는 값은 8절
 - 대화 기록을 `ChatState`에 넣을지: 지금은 이번 문장만 들어간다. 되묻고 답 받기("두 개요")에는 최근 몇 턴이 필요하다(`schemas.py`, 공용 PR)
 - 사용자별 일일 토큰 제한을 어디서 셀지(`chat.service` 또는 `llm.py`)
-- 공종 전문가가 넘기는 브리프 모양과 저장 자리(`chat.service`)
+- 공종 전문가가 넘기는 브리프 모양과 저장 자리(`chat.service`, #85)
 - 도구 부르는 방식: LLM이 도구를 고르게 할지(`llm.py`에 도구 호출 추가, 첫 공용 PR), 코드가 먼저 도구를 불러 결과만 넘길지
