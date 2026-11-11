@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
 
-LABELS = ("orchestrator", "consult", "quote_explanation", "schedule", "out_of_scope")
+LABELS = ("orchestrator", "trade", "quote_explanation", "schedule", "out_of_scope")
 
 
 @dataclass(frozen=True)

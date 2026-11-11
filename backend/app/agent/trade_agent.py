@@ -1,4 +1,4 @@
-"""인테리어 에이전트: 공정별 설정(trades/)을 불러 조건을 묻고 주의점을 안내한다."""
+"""공종 에이전트: 공정별 설정(trades/)을 불러 조건을 묻고 주의점을 안내한다."""
 
 from app.agent.schemas import AgentAnswer, ChatState
 from app.agent.trades import match_trades

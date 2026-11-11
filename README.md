@@ -371,7 +371,7 @@ SKN34-FINAL-1TEAM/
 │   │   └── worker.py        # arq worker
 │   ├── migrations/          # Alembic
 │   └── tests/
-├── evaluation/              # 에이전트별 eval (intent · orchestrator · guide · consult · quote_explanation · schedule · rag)
+├── evaluation/              # 에이전트별 eval (intent · orchestrator · guide · trade · quote_explanation · schedule · rag)
 ├── deploy/aws/              # 스테이징 배포 (compose · Caddyfile)
 ├── infra/aws/               # 인프라 정의
 ├── compose.yaml
@@ -429,7 +429,7 @@ docker compose watch web   # 화면 코드를 고치면 바로 반영한다 (이
 | RAG (`rag`) | 30 |
 | 오케스트레이터 (`orchestrator`) | 30 |
 | 공정표 (`schedule`) | 15 |
-| 상담 (`consult`) | 10 |
+| 공종 (`trade`) | 10 |
 | 견적 설명 (`quote_explanation`) | 문제 행 시나리오 |
 
 <!-- TODO: evaluation/run.py 실행 방법 기입 (아직 비어 있음) -->
