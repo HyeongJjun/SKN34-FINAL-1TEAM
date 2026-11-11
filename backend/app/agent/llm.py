@@ -1,5 +1,6 @@
 """LLM SDK 호출은 이 파일 한 곳 (AGENTS.md 4절). LLM_LIVE=false면 스텁만 써서 유료 호출 0회."""
 
+import math
 from typing import Literal
 
 import httpx
@@ -57,12 +58,14 @@ async def jev_choice(text: str, instructions: str, criteria: dict[str, str]) -> 
             r.raise_for_status()
             answer = r.json()["answers"]["intent"]
         choice = answer["choice"]
-        confidence = min(max(float(answer.get("confidence") or 0), 0.0), 1.0)
+        confidence = float(answer.get("confidence") or 0)
     except Exception as e:
         raise LLMError("jev 호출 실패") from e
-    if choice not in criteria:
+    if not isinstance(choice, str) or choice not in criteria:
         raise LLMError("jev 모르는 답")
-    return choice, confidence
+    if not math.isfinite(confidence):
+        raise LLMError("jev 신뢰도 이상")
+    return choice, min(max(confidence, 0.0), 1.0)
 
 
 async def structured[T: BaseModel](

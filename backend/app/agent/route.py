@@ -16,7 +16,9 @@ def keep_waiting(
         return None
     if model is not None and model.label != waiting and model.confidence >= threshold:
         return None
-    return Intent(label=waiting, confidence=model.confidence if model else 0.0, source="rule")
+    # 모델이 다른 라벨을 골랐으면 그 신뢰도는 기다리던 담당의 것이 아니므로 0으로 둔다
+    same = model is not None and model.label == waiting
+    return Intent(label=waiting, confidence=model.confidence if same else 0.0, source="rule")
 
 
 def need_project(intent: Intent, ctx: TurnContext) -> Intent:
