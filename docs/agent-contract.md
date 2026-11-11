@@ -43,7 +43,7 @@ async def trade(state: ChatState) -> dict:
 
 - 답 모양: 전문가 하나가 `Section` 하나(제목 → 결론 → 주의 → 팁)를 낸다. "주의:" · "팁:"은 화면이 붙인다.
 - 예상 비용은 문장에 쓰지 않고 `Card(kind="standard_quote")`로 붙인다. 화면이 표준견적서 금액으로 채운다.
-- 받는 값: `state["ctx"]`(사용자 · 대화 · 프로젝트, 서버가 정함), `state["message"]`.
+- 받는 값: `state["ctx"]`(사용자 · 대화 · 프로젝트, 서버가 정함), `state["message"]`, `state.get("history", [])`(지난 메시지, 오래된 것부터).
 - 공정은 공종 전문가가 `match_trades`로 직접 고르고 `trades`로 돌려준다. 미리 채워져 오지 않는다.
 - 돌려주는 값: `{"answer": AgentAnswer}`. 새 상태 키가 필요하면 `ChatState`(공용)에 더한다.
 - 되묻고 고객 답을 기다리면 `{"waiting": "<자기 라벨>"}`도 돌려준다. 관문이 턴마다 지난 값을 비우므로, 안 돌려주면 다음 턴은 다시 분류한다.
@@ -97,6 +97,7 @@ async def trade(state: ChatState) -> dict:
 | --- | --- | --- |
 | `ctx` | `user_id`는 로그인 세션, `chat_id` · `project_id`는 대화 행 | 남의 대화면 404. 요청 본문 · LLM 출력으로 받지 않는다 |
 | `message` | 요청 본문 | 본문 한도는 `BodyLimit` |
+| `history` | 메시지 행의 최근 `HISTORY_LIMIT`개 | 이번 문장은 빼고 오래된 것부터 `Turn`으로. 답은 `Section`의 제목 · 문장만 이어 붙이고 카드는 뺀다 |
 | `waiting` | 대화 행에 저장해 둔 지난 턴 값 | 없으면 `None` |
 | `intent` | 버튼(`Choice.intent`)을 눌렀을 때만 | `Intent(label, confidence=1.0, source="button")`. 관문이 다시 분류하지 않는다 |
 
@@ -133,7 +134,6 @@ async def trade(state: ChatState) -> dict:
 
 - 견적 설명 전문가 담당
 - 대화 API(`chat/router` · `service`, SSE, 대화 잠금) 담당(#86). 화면 연결과 맞물린다. 순서와 넣고 받는 값은 8절
-- 대화 기록을 `ChatState`에 넣을지: 지금은 이번 문장만 들어간다. 되묻고 답 받기("두 개요")에는 최근 몇 턴이 필요하다(`schemas.py`, 공용 PR)
 - 사용자별 일일 토큰 제한을 어디서 셀지(`chat.service` 또는 `llm.py`)
 - 공종 전문가가 넘기는 브리프 모양과 저장 자리(`chat.service`, #85)
 - 도구 부르는 방식: LLM이 도구를 고르게 할지(`llm.py`에 도구 호출 추가, 첫 공용 PR), 코드가 먼저 도구를 불러 결과만 넘길지

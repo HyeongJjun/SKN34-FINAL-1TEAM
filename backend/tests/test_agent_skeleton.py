@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from app.agent import llm
 from app.agent.graph import AGENT_NODES, NODES, ROUTE, build_graph, default_nodes
-from app.agent.schemas import FAILED_TEXT, AgentAnswer, Intent, Section, TurnContext
+from app.agent.schemas import FAILED_TEXT, AgentAnswer, Intent, Section, Turn, TurnContext
 from app.agent.trades import match_trades
 
 CTX = TurnContext(user_id=uuid.uuid4(), chat_id=uuid.uuid4())
@@ -61,6 +61,20 @@ def test_output_check_replaces_empty_section(sentences):
     assert out.sections[0].sentences == [FAILED_TEXT] and out.failed
 
 
+def test_failed_answer_clears_waiting():
+    async def ask_then_fail(state):
+        return {"answer": AgentAnswer(failed=True), "waiting": "trade"}
+
+    async def ask(state):
+        return {
+            "answer": AgentAnswer(sections=[Section(sentences=["몇 개예요?"])]),
+            "waiting": "trade",
+        }
+
+    assert run({**default_nodes(), "trade": ask_then_fail}, "trade")["waiting"] is None
+    assert run({**default_nodes(), "trade": ask}, "trade")["waiting"] == "trade"
+
+
 def test_build_graph_needs_every_node():
     nodes = default_nodes()
     del nodes["schedule"]
@@ -88,6 +102,23 @@ def test_match_trades_one_when_clear_else_both(text, trades):
 
 def test_trade_intent_passes_trades_to_trade_agent():
     assert run(default_nodes(), "trade", "몰딩 바꿀래요")["trades"] == ["mokgong"]
+
+
+def test_history_reaches_agent():
+    history = [
+        Turn(role="user", text="몰딩 바꿀래요"),
+        Turn(role="assistant", text="방이 몇 개예요?"),
+    ]
+    seen = []
+
+    async def trade(state):
+        seen.append(state.get("history"))
+        return {"answer": AgentAnswer(sections=[Section(sentences=["네"])])}
+
+    state = {"ctx": CTX, "message": "두 개요", "history": history}
+    state["intent"] = Intent(label="trade", confidence=0.9, source="model")
+    asyncio.run(build_graph({**default_nodes(), "trade": trade}).ainvoke(state))
+    assert seen == [history]
 
 
 class Plan(BaseModel):
