@@ -2,6 +2,7 @@
 
 from typing import Literal
 
+import httpx
 from pydantic import BaseModel, ValidationError
 
 from app.config import settings
@@ -42,8 +43,6 @@ async def jev_choice(text: str, instructions: str, criteria: dict[str, str]) -> 
         if not _jev_stub:
             raise LLMError("jev 스텁 없음")
         return _jev_stub[0]
-    import httpx
-
     body = {
         "model": settings.jev_model,
         "state": text,
