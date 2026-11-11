@@ -36,7 +36,7 @@ def route_after_gate(state: ChatState) -> str:
 async def output_check(state: ChatState) -> dict:
     """뼈대: 답이 없거나 비었거나 실패면 FAILED_TEXT만 보낸다. 숫자 대조는 #73에서."""
     answer = state.get("answer")
-    has_text = any(s.sentences for s in answer.sections) if answer else False
+    has_text = any(t.strip() for s in answer.sections for t in s.sentences) if answer else False
     if answer is None or answer.failed or not (has_text or answer.cards):
         return {"answer": AgentAnswer(sections=[Section(sentences=[FAILED_TEXT])], failed=True)}
     return {"answer": answer}
