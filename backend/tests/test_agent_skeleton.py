@@ -61,6 +61,20 @@ def test_output_check_replaces_empty_section(sentences):
     assert out.sections[0].sentences == [FAILED_TEXT] and out.failed
 
 
+def test_failed_answer_clears_waiting():
+    async def ask_then_fail(state):
+        return {"answer": AgentAnswer(failed=True), "waiting": "trade"}
+
+    async def ask(state):
+        return {
+            "answer": AgentAnswer(sections=[Section(sentences=["몇 개예요?"])]),
+            "waiting": "trade",
+        }
+
+    assert run({**default_nodes(), "trade": ask_then_fail}, "trade")["waiting"] is None
+    assert run({**default_nodes(), "trade": ask}, "trade")["waiting"] == "trade"
+
+
 def test_build_graph_needs_every_node():
     nodes = default_nodes()
     del nodes["schedule"]
