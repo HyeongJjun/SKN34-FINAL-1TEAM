@@ -1,8 +1,10 @@
 """입구 관문: 학습 모델 계산, 코드 라우터, Jev 한 번, 되묻기, 가림 (LLM_LIVE=false, 유료 호출 0회)."""
 
 import asyncio
+import json
 import uuid
 
+import httpx
 import pytest
 
 from app.agent import gate as gate_module
@@ -126,3 +128,42 @@ def test_jev_question_covers_every_label():
     from app.agent.graph import ROUTE
 
     assert set(gate_module.JEV_CRITERIA) == set(ROUTE)
+
+
+@pytest.mark.parametrize(
+    ("reply", "expected"),
+    [
+        (
+            httpx.Response(
+                200, json={"answers": {"intent": {"choice": "trade", "confidence": 1.7}}}
+            ),
+            ("trade", 1.0),
+        ),
+        (httpx.Response(200, json={"answers": {"intent": {"choice": "bathroom"}}}), None),
+        (httpx.Response(200, text="not json"), None),
+        (httpx.Response(500), None),
+    ],
+)
+def test_jev_live_reply_is_read_or_failed(monkeypatch, reply, expected):
+    """실호출 경로를 가짜 응답으로 확인한다. 모르는 답 · 깨진 응답 · 오류는 LLMError(→ 되묻기)."""
+    sent = []
+
+    def answer(request):
+        sent.append(request)
+        return reply
+
+    real_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        httpx, "AsyncClient", lambda **kw: real_client(transport=httpx.MockTransport(answer), **kw)
+    )
+    monkeypatch.setattr(llm.settings, "llm_live", True)
+    call = llm.jev_choice("<전화> 음", "지시", gate_module.JEV_CRITERIA)
+    if expected is None:
+        with pytest.raises(llm.LLMError):
+            asyncio.run(call)
+    else:
+        assert asyncio.run(call) == expected
+    assert str(sent[0].url) == llm.JEV_URL
+    assert (
+        json.loads(sent[0].content)["state"] == "<\uc804\ud654> \uc74c"
+    )  # \uac00\ub9b0 \ubb38\uc7a5\ub9cc \ub098\uac04\ub2e4
