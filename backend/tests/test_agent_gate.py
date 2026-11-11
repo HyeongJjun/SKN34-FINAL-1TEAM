@@ -9,7 +9,7 @@ from app.agent import gate as gate_module
 from app.agent import intent, llm
 from app.agent.gate import OUT_OF_SCOPE_TEXT, classify, gate
 from app.agent.graph import build_graph, default_nodes
-from app.agent.schemas import TurnContext
+from app.agent.schemas import AgentAnswer, Section, TurnContext
 
 NO_PROJECT = TurnContext(user_id=uuid.uuid4(), chat_id=uuid.uuid4())
 WITH_PROJECT = TurnContext(user_id=uuid.uuid4(), chat_id=uuid.uuid4(), project_id=uuid.uuid4())
@@ -69,6 +69,24 @@ def test_jev_failure_asks_back():
 def test_short_answer_stays_with_waiting_agent(jev_calls):
     found = gate_of("네 두 개요", waiting="schedule")
     assert (found.label, found.source) == ("schedule", "rule") and jev_calls == []
+
+
+def test_waiting_is_cleared_unless_agent_asks_again():
+    def turn(nodes, message):
+        state = {"ctx": WITH_PROJECT, "message": message, "waiting": "trade"}
+        return asyncio.run(build_graph(nodes).ainvoke(state))
+
+    # 다른 담당으로 넘어가면 지난 waiting이 남지 않는다
+    assert turn(default_nodes(), "공사 날짜 언제로 잡혔어요?")["waiting"] is None
+
+    async def ask_again(state):
+        return {
+            "answer": AgentAnswer(sections=[Section(sentences=["몇 개예요?"])]),
+            "waiting": "trade",
+        }
+
+    # 되묻는 에이전트가 돌려준 waiting만 다음 턴으로 간다
+    assert turn({**default_nodes(), "trade": ask_again}, "네 두 개요")["waiting"] == "trade"
 
 
 def test_clear_other_intent_leaves_waiting_agent():

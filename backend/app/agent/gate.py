@@ -32,9 +32,12 @@ OUT_OF_SCOPE_TEXT = "지금은 아파트 도배와 목공만 도와드려요."
 
 
 async def gate(state: ChatState) -> dict:
-    """버튼처럼 의도가 정해져 오면 그대로 쓰고, 아니면 분류한다. 끝에 프로젝트 유무를 본다."""
+    """버튼처럼 의도가 정해져 오면 그대로 쓰고, 아니면 분류한다. 끝에 프로젝트 유무를 본다.
+
+    waiting은 읽고 비운다. 이번 턴에 되묻는 에이전트만 {"waiting": 자기 라벨}로 다시 넣는다.
+    """
     found = state.get("intent") or await classify(state.get("message", ""), state.get("waiting"))
-    return {"intent": found and route.need_project(found, state["ctx"])}
+    return {"intent": found and route.need_project(found, state["ctx"]), "waiting": None}
 
 
 async def classify(message: str, waiting: IntentLabel | None = None) -> Intent | None:
