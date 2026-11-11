@@ -6,7 +6,7 @@ from typing import Literal, TypedDict
 from pydantic import BaseModel, ConfigDict, Field
 
 # 입구 관문 의도: 공정이 아니라 보낼 곳으로 나눈다 (AGENTS.md 4절)
-IntentLabel = Literal["orchestrator", "consult", "quote_explanation", "schedule", "out_of_scope"]
+IntentLabel = Literal["orchestrator", "trade", "quote_explanation", "schedule", "out_of_scope"]
 IntentSource = Literal["rule", "model", "jev", "button"]
 Trade = Literal["dobae", "mokgong"]
 
@@ -66,5 +66,5 @@ class ChatState(TypedDict, total=False):
     ctx: TurnContext
     message: str
     intent: Intent | None  # 관문 결과. None이면 되묻기
-    trades: list[Trade]  # 인테리어 전문가가 match_trades로 고른 공정
+    trades: list[Trade]  # 공종 전문가가 match_trades로 고른 공정
     answer: AgentAnswer | None

@@ -5,7 +5,7 @@ from app.agent.schemas import AgentAnswer, Card, ChatState, Choice, Section
 # 되묻기 선택지. 화면에는 쉬운 말만 보이고, 누르면 의도가 같이 와서 다시 분류하지 않는다
 ASK_CHOICES = (
     Choice(text="처음이라 순서를 알고 싶어요", intent="orchestrator"),
-    Choice(text="우리 집에 뭘 해야 할지 모르겠어요", intent="consult"),
+    Choice(text="우리 집에 뭘 해야 할지 모르겠어요", intent="trade"),
     Choice(text="금액이 왜 이런지 궁금해요", intent="quote_explanation"),
     Choice(text="공사 날짜가 궁금해요", intent="schedule"),
 )

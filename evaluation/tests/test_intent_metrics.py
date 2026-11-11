@@ -39,61 +39,61 @@ class Fixed:
 
 class MetricsTest(unittest.TestCase):
     def test_scores_by_hand(self):
-        gold = ["consult", "consult", "schedule", "orchestrator"]
-        pred = ["consult", "schedule", "schedule", "orchestrator"]
+        gold = ["trade", "trade", "schedule", "orchestrator"]
+        pred = ["trade", "schedule", "schedule", "orchestrator"]
         matrix = confusion_matrix(gold, pred)
         scores = per_label_scores(matrix)
 
-        self.assertEqual(matrix["consult"]["schedule"], 1)
-        self.assertAlmostEqual(scores["consult"]["precision"], 1.0)
-        self.assertAlmostEqual(scores["consult"]["recall"], 0.5)
+        self.assertEqual(matrix["trade"]["schedule"], 1)
+        self.assertAlmostEqual(scores["trade"]["precision"], 1.0)
+        self.assertAlmostEqual(scores["trade"]["recall"], 0.5)
         self.assertAlmostEqual(scores["schedule"]["precision"], 0.5)
-        # consult 2/3, schedule 2/3, orchestrator 1 → 평균 7/9. 안 나온 라벨은 빼고 평균
+        # trade 2/3, schedule 2/3, orchestrator 1 → 평균 7/9. 안 나온 라벨은 빼고 평균
         self.assertAlmostEqual(macro_f1(scores, matrix), 7 / 9)
 
     def test_evaluate_counts_novice_wrong_and_confidence(self):
         examples = [
-            Example("a", "consult", novice=True),
+            Example("a", "trade", novice=True),
             Example("b", "schedule", novice=True),
             Example("c", "out_of_scope"),
         ]
-        clf = Fixed({"a": "consult", "b": "consult", "c": "out_of_scope"}, confidence=0.7)
+        clf = Fixed({"a": "trade", "b": "trade", "c": "out_of_scope"}, confidence=0.7)
         report = evaluate(clf, examples)
 
         self.assertAlmostEqual(report.accuracy, 2 / 3)
         self.assertEqual(report.novice_count, 2)
         self.assertAlmostEqual(report.novice_accuracy, 0.5)
         self.assertEqual(
-            report.wrong, [{"text": "b", "gold": "schedule", "pred": "consult", "kind": ""}]
+            report.wrong, [{"text": "b", "gold": "schedule", "pred": "trade", "kind": ""}]
         )
         self.assertEqual(len(report.predictions), 3)
-        self.assertEqual(report.predictions[1]["pred"], "consult")
+        self.assertEqual(report.predictions[1]["pred"], "trade")
         self.assertAlmostEqual(report.predictions[1]["confidence"], 0.7)
         self.assertNotIn("text", report.predictions[0])
 
     def test_warmup_calls_once_more_and_can_be_off(self):
-        examples = [Example("a", "consult"), Example("b", "consult")]
-        with_warmup = Fixed({"a": "consult", "b": "consult"})
+        examples = [Example("a", "trade"), Example("b", "trade")]
+        with_warmup = Fixed({"a": "trade", "b": "trade"})
         evaluate(with_warmup, examples)
         self.assertEqual(with_warmup.calls, 3)
 
-        without = Fixed({"a": "consult", "b": "consult"})
+        without = Fixed({"a": "trade", "b": "trade"})
         evaluate(without, examples, warmup=False)
         self.assertEqual(without.calls, 2)
 
     def test_unknown_label_from_classifier_stops(self):
         with self.assertRaises(ValueError):
-            evaluate(Fixed({"a": "guide"}), [Example("a", "consult")], warmup=False)
+            evaluate(Fixed({"a": "guide"}), [Example("a", "trade")], warmup=False)
 
     def test_probs_without_predicted_label_stops(self):
         class NumberKeys:
             name = "number_keys"
 
             def predict(self, text):
-                return "consult", {"1": 0.9}
+                return "trade", {"1": 0.9}
 
         with self.assertRaisesRegex(ValueError, "확률"):
-            evaluate(NumberKeys(), [Example("a", "consult")], warmup=False)
+            evaluate(NumberKeys(), [Example("a", "trade")], warmup=False)
 
     def test_percentile_nearest_rank(self):
         self.assertEqual(percentile([], 50), 0.0)
@@ -123,13 +123,13 @@ class LoadTest(unittest.TestCase):
     def test_bom_and_null_kind(self):
         folder = Path(tempfile.mkdtemp())
         path = folder / "bom.jsonl"
-        row = {"text": "벽이 누래요", "label": "consult", "kind": None}
+        row = {"text": "벽이 누래요", "label": "trade", "kind": None}
         path.write_text(json.dumps(row, ensure_ascii=False) + "\n", encoding="utf-8-sig")
         self.addCleanup(lambda: (path.unlink(), folder.rmdir()))
-        self.assertEqual(load_examples(path), [Example("벽이 누래요", "consult")])
+        self.assertEqual(load_examples(path), [Example("벽이 누래요", "trade")])
 
     def test_kind_must_be_text(self):
-        path = self.write([{"text": "a", "label": "consult", "kind": 3}])
+        path = self.write([{"text": "a", "label": "trade", "kind": 3}])
         with self.assertRaisesRegex(ValueError, "1번째 줄.*kind"):
             load_examples(path)
 
@@ -144,26 +144,26 @@ class LoadTest(unittest.TestCase):
         self.assertFalse(parse_novice(None))
         self.assertTrue(parse_novice("TRUE"))
         self.assertTrue(parse_novice(True))
-        path = self.write([{"text": "벽이 누래요", "label": "consult", "novice": "false"}])
+        path = self.write([{"text": "벽이 누래요", "label": "trade", "novice": "false"}])
         self.assertFalse(load_examples(path)[0].novice)
 
     def test_bad_novice_value_has_line_number(self):
         path = self.write(
             [
-                {"text": "a", "label": "consult"},
-                {"text": "b", "label": "consult", "novice": "maybe"},
+                {"text": "a", "label": "trade"},
+                {"text": "b", "label": "trade", "novice": "maybe"},
             ]
         )
         with self.assertRaisesRegex(ValueError, "2번째 줄"):
             load_examples(path)
 
     def test_broken_line_has_line_number(self):
-        ok = json.dumps({"text": "a", "label": "consult"})
+        ok = json.dumps({"text": "a", "label": "trade"})
         cases = [
-            ('{"text": "b", "label": "consult"', "JSON"),
-            ('["b", "consult"]', "한 줄"),
-            ('{"txt": "b", "label": "consult"}', "text"),
-            ('{"text": "  ", "label": "consult"}', "text"),
+            ('{"text": "b", "label": "trade"', "JSON"),
+            ('["b", "trade"]', "한 줄"),
+            ('{"txt": "b", "label": "trade"}', "text"),
+            ('{"text": "  ", "label": "trade"}', "text"),
         ]
         for line, reason in cases:
             with self.subTest(line=line):

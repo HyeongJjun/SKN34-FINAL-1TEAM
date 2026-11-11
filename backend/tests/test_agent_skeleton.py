@@ -77,8 +77,8 @@ def test_match_trades_one_when_clear_else_both(text, trades):
     assert match_trades(text) == trades
 
 
-def test_consult_passes_trades_to_interior_agent():
-    assert run(default_nodes(), "consult", "몰딩 바꿀래요")["trades"] == ["mokgong"]
+def test_trade_intent_passes_trades_to_trade_agent():
+    assert run(default_nodes(), "trade", "몰딩 바꿀래요")["trades"] == ["mokgong"]
 
 
 class Plan(BaseModel):

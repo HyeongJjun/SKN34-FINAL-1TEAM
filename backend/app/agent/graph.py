@@ -19,7 +19,7 @@ Node = Callable[[ChatState], Awaitable[dict]]
 # 관문 의도 → 노드. 범위 밖과 의도 못 정함(None)은 LLM 없는 고정 응답
 ROUTE: dict[IntentLabel, str] = {
     "orchestrator": "orchestrator",
-    "consult": "trade",
+    "trade": "trade",
     "quote_explanation": "quote_explanation",
     "schedule": "schedule",
     "out_of_scope": "fixed",
