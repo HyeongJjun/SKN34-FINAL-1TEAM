@@ -140,6 +140,13 @@ def test_jev_question_covers_every_label():
             ("trade", 1.0),
         ),
         (httpx.Response(200, json={"answers": {"intent": {"choice": "bathroom"}}}), None),
+        (httpx.Response(200, json={"answers": {"intent": {"choice": ["trade"]}}}), None),
+        (
+            httpx.Response(
+                200, text='{"answers": {"intent": {"choice": "trade", "confidence": NaN}}}'
+            ),
+            None,
+        ),
         (httpx.Response(200, text="not json"), None),
         (httpx.Response(500), None),
     ],
