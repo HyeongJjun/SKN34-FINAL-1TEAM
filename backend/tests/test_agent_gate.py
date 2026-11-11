@@ -164,6 +164,5 @@ def test_jev_live_reply_is_read_or_failed(monkeypatch, reply, expected):
     else:
         assert asyncio.run(call) == expected
     assert str(sent[0].url) == llm.JEV_URL
-    assert (
-        json.loads(sent[0].content)["state"] == "<\uc804\ud654> \uc74c"
-    )  # \uac00\ub9b0 \ubb38\uc7a5\ub9cc \ub098\uac04\ub2e4
+    # 가린 문장만 나간다
+    assert json.loads(sent[0].content)["state"] == "<전화> 음"
