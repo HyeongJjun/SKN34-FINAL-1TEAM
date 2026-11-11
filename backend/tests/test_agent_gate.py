@@ -8,10 +8,10 @@ import httpx
 import pytest
 
 from app.agent import gate as gate_module
-from app.agent import intent, llm
+from app.agent import intent, llm, route
 from app.agent.gate import OUT_OF_SCOPE_TEXT, classify, gate
 from app.agent.graph import build_graph, default_nodes
-from app.agent.schemas import AgentAnswer, Section, TurnContext
+from app.agent.schemas import AgentAnswer, Intent, Section, TurnContext
 
 NO_PROJECT = TurnContext(user_id=uuid.uuid4(), chat_id=uuid.uuid4())
 WITH_PROJECT = TurnContext(user_id=uuid.uuid4(), chat_id=uuid.uuid4(), project_id=uuid.uuid4())
@@ -71,6 +71,13 @@ def test_jev_failure_asks_back():
 def test_short_answer_stays_with_waiting_agent(jev_calls):
     found = gate_of("네 두 개요", waiting="schedule")
     assert (found.label, found.source) == ("schedule", "rule") and jev_calls == []
+
+
+def test_kept_waiting_does_not_borrow_other_label_confidence():
+    other = Intent(label="trade", confidence=0.4, source="model")
+    same = Intent(label="schedule", confidence=0.4, source="model")
+    assert route.keep_waiting("schedule", other, 0.7).confidence == 0.0
+    assert route.keep_waiting("schedule", same, 0.7).confidence == 0.4
 
 
 def test_waiting_is_cleared_unless_agent_asks_again():
