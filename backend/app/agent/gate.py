@@ -1,6 +1,6 @@
 """입구 관문과 LLM 없는 고정 응답. 순서(#72): route.py → intent.py → 낮으면 Jev → 되묻기."""
 
-from app.agent.schemas import AgentAnswer, Card, ChatState, Choice
+from app.agent.schemas import AgentAnswer, Card, ChatState, Choice, Section
 
 # 되묻기 선택지. 화면에는 쉬운 말만 보이고, 누르면 의도가 같이 와서 다시 분류하지 않는다
 ASK_CHOICES = (
@@ -21,10 +21,10 @@ async def fixed_reply(state: ChatState) -> dict:
     """범위 밖이면 안내 문구, 의도를 못 정했으면 되묻기. LLM을 부르지 않는다."""
     intent = state.get("intent")
     if intent is not None and intent.label == "out_of_scope":
-        return {"answer": AgentAnswer(sentences=[OUT_OF_SCOPE_TEXT])}
+        return {"answer": AgentAnswer(sections=[Section(sentences=[OUT_OF_SCOPE_TEXT])])}
     return {
         "answer": AgentAnswer(
-            sentences=["어떤 걸 물어보신 건지 골라 주세요."],
+            sections=[Section(sentences=["어떤 걸 물어보신 건지 골라 주세요."])],
             cards=[Card(kind="choices", title="궁금한 것", options=list(ASK_CHOICES))],
         )
     }

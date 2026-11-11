@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from app.agent import llm
 from app.agent.graph import AGENT_NODES, NODES, ROUTE, build_graph, default_nodes
-from app.agent.schemas import FAILED_TEXT, AgentAnswer, Intent, TurnContext
+from app.agent.schemas import FAILED_TEXT, AgentAnswer, Intent, Section, TurnContext
 from app.agent.trades import match_trades
 
 CTX = TurnContext(user_id=uuid.uuid4(), chat_id=uuid.uuid4())
@@ -28,13 +28,14 @@ def test_gate_sends_each_intent_to_one_agent(label, node):
     def make(name):
         async def fake(state):
             visited.append(name)
-            return {"answer": AgentAnswer(sentences=[name])} if name in AGENT_NODES else {}
+            answer = AgentAnswer(sections=[Section(sentences=[name])])
+            return {"answer": answer} if name in AGENT_NODES else {}
 
         return fake
 
     out = run({name: make(name) for name in NODES}, label)
     assert visited == ["gate", node, "output_check"]
-    assert out["answer"].sentences == [node]
+    assert out["answer"].sections[0].sentences == [node]
 
 
 def test_default_nodes_reply_without_llm():
@@ -43,10 +44,12 @@ def test_default_nodes_reply_without_llm():
     # 선택지를 누르면 의도가 같이 와서 다시 분류하지 않는다. 범위 밖만 빼고 모두
     assert [c.intent for c in ask.cards[0].options] == list(ROUTE)[:-1]
     out = run(default_nodes(), "out_of_scope")["answer"]
-    assert out.sentences == ["지금은 아파트 도배와 목공만 도와드려요."] and not out.cards
+    assert (
+        out.sections[0].sentences == ["지금은 아파트 도배와 목공만 도와드려요."] and not out.cards
+    )
     # 아직 답을 만들지 않는 에이전트는 실패 문구로 알린다
     out = run(default_nodes(), "orchestrator")["answer"]
-    assert out.sentences == [FAILED_TEXT] and out.failed
+    assert out.sections[0].sentences == [FAILED_TEXT] and out.failed
 
 
 def test_build_graph_needs_every_node():
