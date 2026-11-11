@@ -14,9 +14,8 @@ from functools import cache
 from pathlib import Path
 
 from app.agent.schemas import Intent
-from app.config import settings
 
-DEFAULT_MODEL = Path(__file__).with_name("intent_lr_v1.json.gz")
+MODEL = Path(__file__).with_name("intent_lr_v1.json.gz")
 
 PHONE = re.compile(r"0\d{1,2}[-\s.]?\d{3,4}[-\s.]?\d{4}")  # 휴대폰 · 일반 전화
 DONGHO = re.compile(r"(\d{1,4}\s?동\s?)?\d{3,4}\s?호(?!선)")  # 105동 1203호 · 1503호 (3호선은 뺌)
@@ -32,10 +31,9 @@ def clean(text: str) -> str:
 
 @cache
 def _model() -> dict | None:
-    path = Path(settings.intent_model_path) if settings.intent_model_path else DEFAULT_MODEL
-    if not path.exists():
+    if not MODEL.exists():
         return None  # 모델이 없으면 분류하지 않는다 → Jev → 되묻기
-    return json.loads(gzip.decompress(path.read_bytes()))
+    return json.loads(gzip.decompress(MODEL.read_bytes()))
 
 
 def _grams(text: str, lo: int, hi: int) -> Counter[str]:

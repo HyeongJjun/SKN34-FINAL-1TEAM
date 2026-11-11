@@ -30,9 +30,7 @@ class Settings(BaseSettings):
     # 에이전트 LLM. agent/llm.py만 읽는다
     openai_agent_model: str = "gpt-6.1-terra"
     openai_reasoning_effort: str = "low"
-    # 입구 관문. 모델 경로를 비우면 저장소의 agent/intent_lr_v1.json.gz를 쓴다
-    intent_model_path: str = ""
-    # 학습 모델 신뢰도가 이보다 낮으면 Jev에 한 번 묻는다 (#70에서 0.7로 정함)
+    # 입구 관문. 학습 모델 신뢰도가 이보다 낮으면 Jev에 한 번 묻는다 (#70에서 0.7로 정함)
     intent_confidence_threshold: float = 0.7
     # Jev는 입구 분류에만 쓴다. 키는 repr·오류에 표시하지 않는다
     openrouter_api_key: SecretStr = SecretStr("")

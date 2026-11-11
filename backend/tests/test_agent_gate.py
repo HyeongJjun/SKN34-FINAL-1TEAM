@@ -10,7 +10,6 @@ from app.agent import intent, llm
 from app.agent.gate import OUT_OF_SCOPE_TEXT, classify, gate
 from app.agent.graph import build_graph, default_nodes
 from app.agent.schemas import TurnContext
-from app.config import settings
 
 NO_PROJECT = TurnContext(user_id=uuid.uuid4(), chat_id=uuid.uuid4())
 WITH_PROJECT = TurnContext(user_id=uuid.uuid4(), chat_id=uuid.uuid4(), project_id=uuid.uuid4())
@@ -95,7 +94,7 @@ def test_phone_and_unit_are_masked_before_jev(jev_calls):
 
 
 def test_missing_model_falls_back_to_jev(monkeypatch, jev_calls):
-    monkeypatch.setattr(settings, "intent_model_path", "없는/모델.json.gz")
+    monkeypatch.setattr(intent, "MODEL", intent.MODEL.with_name("없는_모델.json.gz"))
     intent._model.cache_clear()
     try:
         llm.set_jev_stub("trade")
