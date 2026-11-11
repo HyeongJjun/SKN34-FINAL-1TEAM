@@ -52,6 +52,14 @@ def test_default_nodes_reply_without_llm():
     assert out.sections[0].sentences == [FAILED_TEXT] and out.failed
 
 
+def test_output_check_replaces_empty_section():
+    async def empty(state):
+        return {"answer": AgentAnswer(sections=[Section(title="[도배]")])}
+
+    out = run({**default_nodes(), "trade": empty}, "trade")["answer"]
+    assert out.sections[0].sentences == [FAILED_TEXT] and out.failed
+
+
 def test_build_graph_needs_every_node():
     nodes = default_nodes()
     del nodes["schedule"]
