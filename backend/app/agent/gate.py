@@ -46,6 +46,7 @@ async def classify(message: str, waiting: IntentLabel | None = None) -> Intent |
         return kept
     if model is not None and model.confidence >= threshold:
         return model
+    # Jev 신뢰도로는 되묻지 않는다: #70에서 되묻기 기준으로 약했음 (conf<0.5 9개 중 5개 정답)
     try:
         label, confidence = await llm.jev_choice(
             intent_model.clean(message), JEV_INSTRUCTIONS, JEV_CRITERIA
