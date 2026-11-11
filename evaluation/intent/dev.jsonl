@@ -1,0 +1,133 @@
+{"text": "안녕하세요~ 처음 와봤어요", "label": "orchestrator", "kind": "greeting", "novice": true, "split": "dev"}
+{"text": "집 전체 몰딩 교체하면 평균적으로 비용이 어느 정도인지 궁금합니다.", "label": "orchestrator", "kind": "price", "novice": false, "split": "dev"}
+{"text": "실크벽지로 하면 합지보다 보통 얼마나 더 비싸요?", "label": "orchestrator", "kind": "price", "novice": false, "split": "dev"}
+{"text": "합지 벽지랑 실크 벽지는 뭐가 다른가요?", "label": "orchestrator", "kind": "term", "novice": false, "split": "dev"}
+{"text": "집 정보 넣을때 뭐 준비해야돼요 등기부 같은거 있어야 되나", "label": "orchestrator", "kind": "guide", "novice": true, "split": "dev"}
+{"text": "천장 벽지 처진 것도 봐 주시고 그 부분 비용이 견적에서 왜 빠졌는지도 알려주세요", "label": "orchestrator", "kind": "multi", "novice": false, "split": "dev"}
+{"text": "하이", "label": "orchestrator", "kind": "greeting", "novice": true, "split": "dev"}
+{"text": "여기 올라온 업체들은 검증된 곳인가요? 어떤 기준으로 받는지 궁금합니다", "label": "orchestrator", "kind": "guide", "novice": false, "split": "dev"}
+{"text": "반갑습니다 ^^", "label": "orchestrator", "kind": "greeting", "novice": false, "split": "dev"}
+{"text": "부가세 별도라는 말이 정확히 무슨 의미인가요?", "label": "orchestrator", "kind": "term", "novice": false, "split": "dev"}
+{"text": "작은방 벽지에 곰팡이 핀 거 상담하고 싶은데 지금 받은 견적서 금액도 설명해 주세요", "label": "orchestrator", "kind": "multi", "novice": false, "split": "dev"}
+{"text": "목공이랑 도배 다 하면 보통 몇백 나와?", "label": "orchestrator", "kind": "price", "novice": true, "split": "dev"}
+{"text": "공급면적이랑 전용면적 중에 어떤 걸 넣어야 맞는 건가요?", "label": "orchestrator", "kind": "term", "novice": false, "split": "dev"}
+{"text": "가입만 하면 바로 견적 나와?", "label": "orchestrator", "kind": "guide", "novice": true, "split": "dev"}
+{"text": "업체 견적 금액이랑 공정표 날짜가 둘 다 처음 들은 거랑 달라요", "label": "orchestrator", "kind": "multi", "novice": false, "split": "dev"}
+{"text": "도배 상담도 하고 싶고 우리집 공사 순서도 보고 싶어", "label": "orchestrator", "kind": "multi", "novice": true, "split": "dev"}
+{"text": "걸레받이가 뭐에요?", "label": "orchestrator", "kind": "term", "novice": true, "split": "dev"}
+{"text": "구축 아파트 34평이면 도배 목공 합쳐서 천만원 안쪽으로 가능한가요?", "label": "orchestrator", "kind": "price", "novice": false, "split": "dev"}
+{"text": "실측견적서랑 가견적 차이 설명해주고 공사 언제 시작하는지도", "label": "orchestrator", "kind": "multi", "novice": true, "split": "dev"}
+{"text": "처음인데 여기서 뭐부터 하면 돼요?", "label": "orchestrator", "kind": "guide", "novice": true, "split": "dev"}
+{"text": "다음달에 결혼식이라 그 전에 공사를 꼭 끝내야 되거든요 근데 받은 견적 금액이 왜 이렇게 나왔는지도 모르겠고 날짜도 맞출 수 있는지 걱정이에요", "label": "orchestrator", "kind": "multi", "novice": true, "split": "dev"}
+{"text": "24평 아파트 전체 도배 시세 대충 얼마쯤 해요?", "label": "orchestrator", "kind": "price", "novice": true, "split": "dev"}
+{"text": "표준견적서에서 줄 하나가 이해가 안 가고, 목공 끝나는 날도 궁금해요", "label": "orchestrator", "kind": "multi", "novice": false, "split": "dev"}
+{"text": "도배 상담하면서 지금 확정된 공사 일정 안에 넣을 수 있는지도 같이 봐주세요", "label": "orchestrator", "kind": "multi", "novice": false, "split": "dev"}
+{"text": "견적 설명이랑 일정 조정 둘 다 부탁드려요", "label": "orchestrator", "kind": "multi", "novice": false, "split": "dev"}
+{"text": "가견적 왜 이렇게 나왔는지랑 공사 날짜도 같이 알려줘요", "label": "orchestrator", "kind": "multi", "novice": true, "split": "dev"}
+{"text": "저기요 누구 있어요?", "label": "orchestrator", "kind": "greeting", "novice": true, "split": "dev"}
+{"text": "방문 하나 갈면 보통 얼마 줘야되요", "label": "orchestrator", "kind": "price", "novice": true, "split": "dev"}
+{"text": "요즘 도배사 하루 인건비가 평균 얼마정도에요?", "label": "orchestrator", "kind": "price", "novice": true, "split": "dev"}
+{"text": "가견적 보니까 도배가 좀 비싼데 공사 날짜를 바꾸면 더 싸지나요?", "label": "orchestrator", "kind": "multi", "novice": false, "split": "dev"}
+{"text": "목공 업체 연기 승인했는데 그 다음 도배 날짜랑 비용 변동 있나요", "label": "orchestrator", "kind": "multi", "novice": false, "split": "dev"}
+{"text": "일정 미뤄진 거 승인하기 전에 견적서도 다시 한번 짚어 주실 수 있나요?", "label": "orchestrator", "kind": "multi", "novice": false, "split": "dev"}
+{"text": "업체가 연기한다는데 그러면 견적 금액도 바뀌는 거예요?", "label": "orchestrator", "kind": "multi", "novice": false, "split": "dev"}
+{"text": "실측 견적서 금액 설명 듣고 나서 확정하면 공사는 언제 들어오나요?", "label": "orchestrator", "kind": "multi", "novice": false, "split": "dev"}
+{"text": "집 전체 도배를 기본형으로 진행하고 싶습니다", "label": "trade", "kind": "trade_name", "novice": false, "split": "dev"}
+{"text": "작은방에 선반 짜 넣고 싶어 목공으로", "label": "trade", "kind": "trade_name", "novice": true, "split": "dev"}
+{"text": "방문이 내려앉아서 열때마다 바닥 긁혀 ㅠ", "label": "trade", "kind": "symptom", "novice": true, "split": "dev"}
+{"text": "안방만 실크로 도배하려고 하는데요", "label": "trade", "kind": "trade_name", "novice": false, "split": "dev"}
+{"text": "거실 벽지 새로 붙이고 싶은데여", "label": "trade", "kind": "trade_name", "novice": true, "split": "dev"}
+{"text": "우물천장 없애고 평천장으로 목공 하고싶어요", "label": "trade", "kind": "trade_name", "novice": true, "split": "dev"}
+{"text": "문고리 말고 문짝 통째로 갈고 싶어", "label": "trade", "kind": "trade_name", "novice": true, "split": "dev"}
+{"text": "방 모서리 벽지에 까만 점들이 퍼져 있어요", "label": "trade", "kind": "symptom", "novice": false, "split": "dev"}
+{"text": "아기방 벽지에 얼룩이 너무 많아서 신경 쓰여요", "label": "trade", "kind": "symptom", "novice": false, "split": "dev"}
+{"text": "벽지 뒤로 공기 들어간 것처럼 볼록하게 부풀었어요", "label": "trade", "kind": "symptom", "novice": false, "split": "dev"}
+{"text": "천장이랑 벽 사이에 붙은 나무띠 끝이 떨어져서 덜렁거려요", "label": "trade", "kind": "symptom", "novice": true, "split": "dev"}
+{"text": "공급 32평, 전용 84㎡인데 전체 도배 상담 받고 싶습니다", "label": "trade", "kind": "trade_name", "novice": false, "split": "dev"}
+{"text": "방문이 잘 안 닫히고 열 때마다 끼익 소리가 나요", "label": "trade", "kind": "symptom", "novice": false, "split": "dev"}
+{"text": "몰딩 무몰딩으로 할수잇나", "label": "trade", "kind": "trade_name", "novice": true, "split": "dev"}
+{"text": "거실에 가벽 하나 세워서 방을 나누고 싶은데요", "label": "trade", "kind": "trade_name", "novice": false, "split": "dev"}
+{"text": "도배할 때 기존 벽지 다 뜯어내고 하는 걸로 하고 싶어요", "label": "trade", "kind": "trade_name", "novice": false, "split": "dev"}
+{"text": "벽지에서 꿉꿉한 곰팡이 냄새 나", "label": "trade", "kind": "symptom", "novice": true, "split": "dev"}
+{"text": "벽지 이음매가 다 벌어졌어", "label": "trade", "kind": "symptom", "novice": true, "split": "dev"}
+{"text": "거실 TV 뒤쪽에 아트월을 목공으로 하나 만들 수 있을까요?", "label": "trade", "kind": "trade_name", "novice": false, "split": "dev"}
+{"text": "벽 만지면 벽지가 바스락거리면서 부스러짐", "label": "trade", "kind": "symptom", "novice": true, "split": "dev"}
+{"text": "현관에서 거실 들어오는 복도 벽만 도배 새로 하고 싶은데 그런 것도 받아줘요?", "label": "trade", "kind": "trade_name", "novice": true, "split": "dev"}
+{"text": "전에 살던 분이 담배를 많이 피웠는지 벽에 냄새가 배어 있어요", "label": "trade", "kind": "symptom", "novice": false, "split": "dev"}
+{"text": "신혼집 들어가기 전에 도배랑 몰딩 싹 바꾸고 싶어요", "label": "trade", "kind": "trade_name", "novice": false, "split": "dev"}
+{"text": "안방 창가 쪽에 커튼박스 만들고 싶어요", "label": "trade", "kind": "trade_name", "novice": false, "split": "dev"}
+{"text": "고양이가 벽지를 다 긁어놨어요 ㅠㅠ", "label": "trade", "kind": "symptom", "novice": true, "split": "dev"}
+{"text": "문틀 교체도 목공으로 가능한가요?", "label": "trade", "kind": "trade_name", "novice": false, "split": "dev"}
+{"text": "20년 넘은 아파트라 벽지가 너무 낡고 칙칙해요", "label": "trade", "kind": "symptom", "novice": false, "split": "dev"}
+{"text": "방문 3개 교체하고 싶습니다", "label": "trade", "kind": "trade_name", "novice": false, "split": "dev"}
+{"text": "벽 맨 아래 붙어있는 띠 같은게 들떠서 틈이 생겼어요", "label": "trade", "kind": "symptom", "novice": true, "split": "dev"}
+{"text": "시아버님이 혼자 오래 사시던 집인데 벽지 색이 다 바래고 테이프 붙였던 자국이 여기저기 있어서 이번에 손을 좀 봐야 할 것 같아요", "label": "trade", "kind": "symptom", "novice": true, "split": "dev"}
+{"text": "표준견적서 합계가 생각보다 높은데 어느 항목에서 많이 나온 거예요?", "label": "quote_explanation", "kind": "standard_quote", "novice": false, "split": "dev"}
+{"text": "두번째 업체 가견적 혼자 싼데 뭐 빠진 거 있는 거 아님?", "label": "quote_explanation", "kind": "estimate", "novice": true, "split": "dev"}
+{"text": "실측 견적서 올라온 거에 유효기간 적혀 있던데 그게 무슨 의미예요?", "label": "quote_explanation", "kind": "vendor_quote", "novice": false, "split": "dev"}
+{"text": "실측 견적서에 공사 기간이 5일로 돼 있는데 인건비는 며칠치로 들어간 거예요?", "label": "quote_explanation", "kind": "vendor_quote", "novice": false, "split": "dev"}
+{"text": "표준견적서에 '실측 후'라고 적힌 줄은 왜 금액이 비어 있어요?", "label": "quote_explanation", "kind": "standard_quote", "novice": false, "split": "dev"}
+{"text": "실측 견적서에 부가세 별도라고 돼 있는데 그럼 실제로 내는 총액은 얼마인 거예요", "label": "quote_explanation", "kind": "vendor_quote", "novice": false, "split": "dev"}
+{"text": "표준견적서보다 실측 견적서가 오히려 싸게 나왔는데 이래도 괜찮은 건가요", "label": "quote_explanation", "kind": "compare", "novice": false, "split": "dev"}
+{"text": "표준견적서에 초배 줄이 따로 있던데 이게 왜 들어갔나요", "label": "quote_explanation", "kind": "standard_quote", "novice": false, "split": "dev"}
+{"text": "내 표준견적서에 몰딩이 선택으로 되있는 이유가 뭐에요", "label": "quote_explanation", "kind": "standard_quote", "novice": true, "split": "dev"}
+{"text": "표준견적서에서 도배 품이 4.5로 나왔는데 이게 어떻게 계산된 건가요", "label": "quote_explanation", "kind": "standard_quote", "novice": false, "split": "dev"}
+{"text": "실측 견적서 사진 보니까 폐기물 처리비가 있던데 이것도 원래 들어가는 거예요?", "label": "quote_explanation", "kind": "vendor_quote", "novice": false, "split": "dev"}
+{"text": "표준견적서랑 가견적 차이가 왜 이렇게 커요?", "label": "quote_explanation", "kind": "compare", "novice": false, "split": "dev"}
+{"text": "견적이 세개나 있는데 금액이 다 달라서 헷갈려요 어느게 진짜예요", "label": "quote_explanation", "kind": "compare", "novice": true, "split": "dev"}
+{"text": "표준견적서에 문짝 교체가 '안 함'으로 돼 있는데 왜 그런 거죠?", "label": "quote_explanation", "kind": "standard_quote", "novice": false, "split": "dev"}
+{"text": "업체가 준 대충 견적 그거 금액 어케 나온거에요", "label": "quote_explanation", "kind": "estimate", "novice": true, "split": "dev"}
+{"text": "실측 견적서 칸에 적힌 금액이랑 첨부 파일 안 금액이 서로 달라요", "label": "quote_explanation", "kind": "vendor_quote", "novice": false, "split": "dev"}
+{"text": "제 표준견적서에 '묶음 포함'이라고 된 줄이 있는데 무슨 뜻이에요?", "label": "quote_explanation", "kind": "standard_quote", "novice": false, "split": "dev"}
+{"text": "가견젹 숫자가 너무 커서 놀랐어요 이거 맞는 거예요?", "label": "quote_explanation", "kind": "estimate", "novice": true, "split": "dev"}
+{"text": "표준견적서 면적이 실제 집이랑 다른 것 같은데 공급면적으로 계산한 거예요?", "label": "quote_explanation", "kind": "standard_quote", "novice": false, "split": "dev"}
+{"text": "가견적은 300이었는데 실측 견적서는 380이에요 뭐가 늘어난 거죠", "label": "quote_explanation", "kind": "compare", "novice": true, "split": "dev"}
+{"text": "가견적에 걸레받이 철거비가 왜 들어가 있죠", "label": "quote_explanation", "kind": "estimate", "novice": false, "split": "dev"}
+{"text": "실측하고 온 견적서 금액 왜 이래", "label": "quote_explanation", "kind": "vendor_quote", "novice": true, "split": "dev"}
+{"text": "A업체 가견적에서 몰딩 단가만 유독 높네요", "label": "quote_explanation", "kind": "estimate", "novice": false, "split": "dev"}
+{"text": "우리 공정표 확정 다 된 건지 확인하고 싶어요", "label": "schedule", "kind": "view", "novice": false, "split": "dev"}
+{"text": "업체 연기 요청 승인하면 뒤에 도배 날짜도 같이 밀려요?", "label": "schedule", "kind": "delay", "novice": false, "split": "dev"}
+{"text": "공사날 일주일 뒤로 바꿔주세여", "label": "schedule", "kind": "change", "novice": true, "split": "dev"}
+{"text": "업체가 공사 날짜 올렸다고 알림 왔는데 어디서 확인해요", "label": "schedule", "kind": "date", "novice": false, "split": "dev"}
+{"text": "공정표상 전체 공사 끝나는 날이 언제로 돼 있나요", "label": "schedule", "kind": "view", "novice": false, "split": "dev"}
+{"text": "도배날 하루만 미뤄주세요", "label": "schedule", "kind": "change", "novice": true, "split": "dev"}
+{"text": "목공이 연기되면 입주 전까지 공사가 다 끝날 수 있을지 걱정돼요", "label": "schedule", "kind": "delay", "novice": false, "split": "dev"}
+{"text": "도배 업체가 갑자기 다음주로 미룬대", "label": "schedule", "kind": "delay", "novice": true, "split": "dev"}
+{"text": "공정표 보면 목공 끝나고 바로 다음날 도배 들어가는 거 맞아요?", "label": "schedule", "kind": "view", "novice": false, "split": "dev"}
+{"text": "아이 시험 기간이랑 겹쳐서 공사를 다음달로 옮기고 싶은데 가능할까요", "label": "schedule", "kind": "change", "novice": false, "split": "dev"}
+{"text": "공사 날짜 수락했는데 그거 취소하고 다시 정할수 있나", "label": "schedule", "kind": "change", "novice": true, "split": "dev"}
+{"text": "제 공정표에 반나절이라고 되어 있는 건 오전만 작업한다는 뜻이에요?", "label": "schedule", "kind": "view", "novice": false, "split": "dev"}
+{"text": "공정표에서 목공이랑 도배 순서를 바꿔도 되나요?", "label": "schedule", "kind": "change", "novice": false, "split": "dev"}
+{"text": "목공 공사하는 날 몇 시쯤 오세요?", "label": "schedule", "kind": "date", "novice": false, "split": "dev"}
+{"text": "업체가 미룬다는거 싫다고 해도 돼?", "label": "schedule", "kind": "delay", "novice": true, "split": "dev"}
+{"text": "공사 순서 어떻게 잡혔어?", "label": "schedule", "kind": "view", "novice": true, "split": "dev"}
+{"text": "울집 공사 일정표 보여줘", "label": "schedule", "kind": "view", "novice": true, "split": "dev"}
+{"text": "나무작업하는 업체가 이틀 미룬다는데 어캐해요", "label": "schedule", "kind": "delay", "novice": true, "split": "dev"}
+{"text": "도배 시작 날짜 언제야", "label": "schedule", "kind": "date", "novice": true, "split": "dev"}
+{"text": "또 연기래요 ㅡㅡ 벌써 두번째인데", "label": "schedule", "kind": "delay", "novice": true, "split": "dev"}
+{"text": "공사비 할부로 나눠서 낼 수 있나요?", "label": "out_of_scope", "kind": "service", "novice": false, "split": "dev"}
+{"text": "믿집에서 전자계약서도 작성할 수 있어요?", "label": "out_of_scope", "kind": "service", "novice": false, "split": "dev"}
+{"text": "부엌 씽크대 통째로 바꿀라고요", "label": "out_of_scope", "kind": "other_trade", "novice": true, "split": "dev"}
+{"text": "로또 번호 좀 찍어줘", "label": "out_of_scope", "kind": "chitchat", "novice": true, "split": "dev"}
+{"text": "마루 긁힌 데 보수 되나여", "label": "out_of_scope", "kind": "other_trade", "novice": true, "split": "dev"}
+{"text": "계약서 도장 찍으러 어디로 가야 돼요", "label": "out_of_scope", "kind": "service", "novice": true, "split": "dev"}
+{"text": "보일러 교체 견적도 받을 수 있나요", "label": "out_of_scope", "kind": "other_trade", "novice": false, "split": "dev"}
+{"text": "안방 콘센트 위치 옮길 수 있나요", "label": "out_of_scope", "kind": "other_trade", "novice": false, "split": "dev"}
+{"text": "현관 바닥 타일에 금이 갔어요", "label": "out_of_scope", "kind": "other_trade", "novice": false, "split": "dev"}
+{"text": "스위치랑 콘센트 커버만 교체해 주시나요", "label": "out_of_scope", "kind": "other_trade", "novice": false, "split": "dev"}
+{"text": "간편결제로 낼수 있어?", "label": "out_of_scope", "kind": "service", "novice": true, "split": "dev"}
+{"text": "심심하다", "label": "out_of_scope", "kind": "chitchat", "novice": true, "split": "dev"}
+{"text": "계좌이체로 선금 보내면 돼요?", "label": "out_of_scope", "kind": "service", "novice": true, "split": "dev"}
+{"text": "잔금은 공사 끝나고 어디로 입금하면 되나요", "label": "out_of_scope", "kind": "service", "novice": false, "split": "dev"}
+{"text": "계약금은 얼마 넣어야 해요", "label": "orchestrator", "kind": "service", "novice": false, "split": "dev"}
+{"text": "거실 바닥을 강마루로 바꾸려고요", "label": "out_of_scope", "kind": "other_trade", "novice": false, "split": "dev"}
+{"text": "장판 들떠서 새로 깔고 싶어", "label": "out_of_scope", "kind": "other_trade", "novice": true, "split": "dev"}
+{"text": "집값 오를까 내릴까", "label": "out_of_scope", "kind": "chitchat", "novice": true, "split": "dev"}
+{"text": "점심 뭐 먹지", "label": "out_of_scope", "kind": "chitchat", "novice": true, "split": "dev"}
+{"text": "샷시 교체도 해줘요?", "label": "out_of_scope", "kind": "other_trade", "novice": true, "split": "dev"}
+{"text": "앱 안에서 계약 체결까지 바로 되는 거죠?", "label": "out_of_scope", "kind": "service", "novice": false, "split": "dev"}
+{"text": "에어컨 매립 배관 공사도 같이 하나요", "label": "out_of_scope", "kind": "other_trade", "novice": false, "split": "dev"}
+{"text": "욕조 철거하고 샤워부스로 바꾸고 싶어요", "label": "out_of_scope", "kind": "other_trade", "novice": false, "split": "dev"}
+{"text": "강아지 산책은 하루에 몇 번 시켜야 돼요?", "label": "out_of_scope", "kind": "chitchat", "novice": false, "split": "dev"}
+{"text": "화장실 타일 싹 다 깨고 새로 하고싶음", "label": "out_of_scope", "kind": "other_trade", "novice": true, "split": "dev"}
+{"text": "주방 벽 타일 위에 덧방하려고 하는데요", "label": "out_of_scope", "kind": "other_trade", "novice": false, "split": "dev"}

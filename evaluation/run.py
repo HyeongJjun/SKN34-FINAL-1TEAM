@@ -2,6 +2,7 @@
 
     python evaluation/run.py intent --split dev --clf all_orchestrator
     python evaluation/run.py intent --data evaluation/intent/example.jsonl
+    cd backend && uv run python ../evaluation/run.py intent --clf intent_lr   # 서비스 학습 모델 (Jev 없이)
 
 held-out은 마지막에 한 번만 본다. 이름에 heldout이 든 파일은 --final을 같이 줘야 돈다.
 """
@@ -26,7 +27,25 @@ class AllOrchestrator:
         return "orchestrator", {"orchestrator": 1.0}
 
 
-CLASSIFIERS: dict[str, type] = {"all_orchestrator": AllOrchestrator}
+class IntentLR:
+    """서비스 입구 관문의 학습 모델(backend/app/agent/intent.py). backend 환경에서 돌린다."""
+
+    name = "intent_lr"
+
+    def __init__(self) -> None:
+        sys.path.insert(0, str(Path(__file__).parent.parent / "backend"))
+        from app.agent import intent
+
+        self.probs = intent.probs
+
+    def predict(self, text: str) -> tuple[str, dict[str, float]]:
+        probs = self.probs(text)
+        if probs is None:
+            raise ValueError("모델 파일이 없어요: backend/app/agent/intent_lr_v1.json.gz")
+        return max(probs, key=probs.__getitem__), probs
+
+
+CLASSIFIERS: dict[str, type] = {"all_orchestrator": AllOrchestrator, "intent_lr": IntentLR}
 
 
 def is_heldout(path: Path) -> bool:
