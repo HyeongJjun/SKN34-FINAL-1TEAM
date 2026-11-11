@@ -17,7 +17,10 @@ from app.agent.schemas import Intent
 
 MODEL = Path(__file__).with_name("intent_lr_v1.json.gz")
 
-PHONE = re.compile(r"0\d{1,2}[-\s.]?\d{3,4}[-\s.]?\d{4}")  # 휴대폰 · 일반 전화
+# 하이픈 · 공백 · 점 · 여러 대시(유니코드 2010~2015, 2212, 전각 ff0d)
+SEP = r"[-\s.\u2010-\u2015\u2212\uff0d]?"
+# 휴대폰 · 일반 전화. 전각 숫자도 가린다
+PHONE = re.compile(rf"[0\uff10]\d{{1,2}}{SEP}\d{{3,4}}{SEP}\d{{4}}")
 DONGHO = re.compile(r"(\d{1,4}\s?동\s?)?\d{3,4}\s?호(?!선)")  # 105동 1203호 · 1503호 (3호선은 뺌)
 
 

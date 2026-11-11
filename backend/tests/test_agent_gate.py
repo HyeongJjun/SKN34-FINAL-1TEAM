@@ -113,6 +113,13 @@ def test_phone_and_unit_are_masked_before_jev(jev_calls):
     assert jev_calls == ["<전화> <동호수> 음"]
 
 
+@pytest.mark.parametrize(
+    "phone", ["010\u20131234\u20135678", "010\u20141234\u20145678", "\uff10\uff11\uff10-1234-5678"]
+)
+def test_phone_with_other_dashes_is_masked(phone):
+    assert intent.clean(f"{phone} 음") == "<전화> 음"
+
+
 def test_missing_model_falls_back_to_jev(monkeypatch, jev_calls):
     monkeypatch.setattr(intent, "MODEL", intent.MODEL.with_name("없는_모델.json.gz"))
     intent._model.cache_clear()
