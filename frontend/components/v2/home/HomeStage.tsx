@@ -52,7 +52,7 @@ export function HomeStage() {
             className="btn btn-sm hs-more"
             onClick={() => {
               stop();
-              F.openLooks?.(st, { onPick: (lk: Look) => startWithLook(st, lk) });
+              F.openLooks?.(st, { onPick: (lk: Look) => startWithLook(st, lk), pickLabel: "이 느낌으로 상담 시작" });
             }}
           >
             {`사진 ${lookPhotos(st.id).length}장 보기`}

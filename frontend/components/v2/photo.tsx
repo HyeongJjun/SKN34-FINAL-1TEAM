@@ -16,7 +16,7 @@ export function pickSrc(srcs: Srcs, mode: string, broken: Set<string>) {
   return null;
 }
 
-export function Photo({ srcs, alt, cls = "", children }: { srcs: Srcs; alt: string; cls?: string; children?: ReactNode }) {
+export function Photo({ srcs, alt, cls = "", eager = false, children }: { srcs: Srcs; alt: string; cls?: string; eager?: boolean; children?: ReactNode }) {
   const st = useV2();
   const [broken, setBroken] = useState<Set<string>>(() => new Set());
   const got = pickSrc(srcs, st.imgMode, broken);
@@ -28,7 +28,7 @@ export function Photo({ srcs, alt, cls = "", children }: { srcs: Srcs; alt: stri
           key={got.src}
           src={asset(got.src) ?? undefined}
           alt={alt}
-          loading="lazy"
+          loading={eager ? "eager" : "lazy"}
           decoding="async"
           onError={() => setBroken((b) => new Set(b).add(got.m))}
         />

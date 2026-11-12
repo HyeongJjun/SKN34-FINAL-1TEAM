@@ -20,7 +20,7 @@ function Tile({ lk, dup }: { lk: L; dup: boolean }) {
       className="ls-tile"
       aria-hidden={dup || undefined}
       tabIndex={dup ? -1 : undefined}
-      onClick={() => F.openLooks?.(st, { start: lk.id, onPick: (x: Look) => startWithLook(st, x) })}
+      onClick={() => F.openLooks?.(st, { start: lk.id, onPick: (x: Look) => startWithLook(st, x), pickLabel: "이 느낌으로 상담 시작" })}
     >
       <Photo srcs={lookSrcs(lk)} alt={`${st.ko} · ${lk.ko}`} cls="ls-ph" />
       <span>
