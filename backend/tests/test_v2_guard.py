@@ -28,3 +28,15 @@ def test_counts_hangul_money_banned_and_masking():
 def test_citation_marks_stay_with_sentence():
     r = check("공사 1주일 전에 신고해요. [K12]", "1주일")
     assert r.text == "공사 1주일 전에 신고해요. [K12]"
+
+
+def test_periods_only_from_calc():
+    """공사 기간(일 · 주 · 개월)은 계산 결과에 있어야 통과한다. 자료 · 고객 글에 있어도 안 된다."""
+    calc = '{"work_days": 6, "blocks": [{"start": "2026-12-03", "days": 2}]}'
+    r = check("목공은 3~5일 걸려요. 일하는 날은 6일이에요.", "목공 3~5일", calc)
+    assert r.text == "일하는 날은 6일이에요." and len(r.dropped) == 1
+    assert check("보통 9주 걸려요.", "9주", calc).dropped
+    assert check("12월 3일에 시작해요.", calc, calc).dropped == []  # 날짜는 기간이 아니다
+    assert check("12월 3일에 시작해요.", "12월 3일", "").dropped == []  # 고객이 쓴 날짜도 된다
+    assert check("목공은 7일 걸려요.", "7", "").dropped  # 계산 결과가 없으면 기간은 못 말한다
+    assert check("목공은 7일 걸려요.", "7").dropped == []  # calc_text를 안 주면 예전처럼

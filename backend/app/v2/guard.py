@@ -1,6 +1,7 @@
 """AI 답 출력 검사 (화면 guard.ts를 서버로 옮긴 것). 고객에게 보내기 전에 문장마다 본다.
 
 - 계산 결과 · 자료 · 고객이 쓴 글에 없는 숫자가 든 문장은 뺀다.
+- 공사 기간(일 · 주 · 개월)은 계산 엔진 결과에 있는 숫자만 허용한다.
 - 한글로 쓴 금액 · 면적, 쓰면 안 되는 표현이 든 문장도 뺀다.
 - 전화번호 · 동호수는 가린다.
 """
@@ -23,6 +24,9 @@ BANNED = re.compile(
     r"사기꾼|바가지|양아치|업체가\s*속이|법적으로\s*(?:아무\s*)?문제(?:가)?\s*없|무조건\s*(?:승소|이겨)"
     r"|하자가\s*확실히\s*아니|(?:이|그)\s*금액으로\s*확정|금액을\s*보장|100\s*%\s*(?:보장|안전)"
 )
+PERIOD_UNITS = frozenset({"일", "주", "개월"})
+RANGE_TO_PERIOD = re.compile(r"^\s*[~\-–]\s*\d+(?:\.\d+)?\s*(?:일|주|개월)")  # 3~5일의 3
+DATE_BEFORE = re.compile(r"\d{1,2}\s*월\s*$")  # 12월 3일: 기간이 아니라 날짜
 SENT = re.compile(r"(?<=[.!?。요])\s+")
 CITE_ONLY = re.compile(r"^\[K\d+\]")
 
@@ -69,10 +73,25 @@ def _small_count(v: float, unit: str | None, rest: str) -> bool:
     return bool(COUNT_WORDS.match(rest)) or not rest.strip() or rest[0] in ".)"
 
 
-def _bad_number(sentence: str, allowed: set[float]) -> str | None:
+def _is_period(sentence: str, m: re.Match) -> bool:
+    unit = m.group(2)
+    if unit in PERIOD_UNITS:
+        return unit != "일" or not DATE_BEFORE.search(sentence[: m.start()])
+    return unit is None and bool(RANGE_TO_PERIOD.match(sentence[m.end() :]))
+
+
+def _bad_number(
+    sentence: str, allowed: set[float], periods: set[float] | None = None
+) -> str | None:
     for m in NUM.finditer(sentence):
         v = _val(m.group(1), m.group(2))
-        if v is None or round(v, 4) in allowed:
+        if v is None:
+            continue
+        if periods is not None and _is_period(sentence, m):
+            if round(v, 4) not in periods:
+                return m.group(0).strip()  # 기간은 계산 결과에 있는 숫자만
+            continue
+        if round(v, 4) in allowed:
             continue
         if _small_count(v, m.group(2), sentence[m.end() :]):
             continue
@@ -80,10 +99,10 @@ def _bad_number(sentence: str, allowed: set[float]) -> str | None:
     return None
 
 
-def _why(s: str, allowed: set[float]) -> str | None:
+def _why(s: str, allowed: set[float], periods: set[float] | None = None) -> str | None:
     if HANGUL_MONEY.search(s) or HANGUL_AREA.search(s):
         return "한글로 쓴 금액 · 면적"
-    bad = _bad_number(s, allowed)
+    bad = _bad_number(s, allowed, periods)
     if bad:
         return f"계산 결과 · 자료에 없는 숫자({bad})"
     if BANNED.search(s):
@@ -91,9 +110,13 @@ def _why(s: str, allowed: set[float]) -> str | None:
     return None
 
 
-def check(text: str, allowed_text: str) -> Checked:
-    """text: AI 글, allowed_text: 계산 결과 · 자료 · 고객 글을 이은 글. 줄 바꿈은 그대로 둔다."""
+def check(text: str, allowed_text: str, calc_text: str | None = None) -> Checked:
+    """text: AI 글, allowed_text: 계산 결과 · 자료 · 고객 글을 이은 글. 줄 바꿈은 그대로 둔다.
+
+    calc_text를 주면 공사 기간(일 · 주 · 개월) 숫자는 그 글(계산 엔진 결과)에 있어야만 통과한다.
+    """
     allowed = numbers(allowed_text)
+    periods = None if calc_text is None else numbers(calc_text)
     out_lines: list[str] = []
     dropped: list[str] = []
     for line in mask(text).split("\n"):
@@ -110,7 +133,7 @@ def check(text: str, allowed_text: str) -> Checked:
                 parts.append(s)
         kept = []
         for s in parts:
-            why = _why(s, allowed)
+            why = _why(s, allowed, periods)
             if why:
                 dropped.append(why)
             else:

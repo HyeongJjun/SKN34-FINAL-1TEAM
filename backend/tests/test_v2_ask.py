@@ -211,3 +211,24 @@ def test_hourly_limit_except_local(api, fake, monkeypatch):
     assert api.post("/v2/ask", json=body).status_code == 429
     monkeypatch.setattr(ask.settings, "app_env", "local")  # 로컬에서는 세지 않는다
     assert api.post("/v2/ask", json=body).status_code == 200
+
+
+def test_periods_need_calc_not_prompt(api, fake):
+    """지시문(공정 순서 글) 숫자는 근거가 아니다. 일반 상담은 계산한 공정표가 없어 기간 문장을 뺀다."""
+    text = "목공은 보통 3~5일 걸려요. 도배는 1~2일이에요.\n공정표에서 날짜를 볼 수 있어요."
+    f = fake({"text": text})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": "목공 얼마나 걸려요?"}).json()
+    assert out["text"] == "공정표에서 날짜를 볼 수 있어요." and len(out["dropped"]) == 2
+    system = f.seen[0]["system"]
+    assert "목공: 천장" in system and "3~5일" not in system  # 손으로 적은 기간은 지시문에서도 뺀다
+
+
+def test_schedule_periods_from_server_plan(api, fake):
+    """공정표 설명은 서버가 계산한 공정표의 기간만 말할 수 있다."""
+    signup(api)
+    days = api.post("/v2/plan", json={"quote": QUOTE}).json()["work_days"]
+    fake({"text": f"일하는 날은 {days}일이에요. 목공만 37일 걸려요."})
+    body = {"kind": "schedule", "message": "얼마나 걸려요?", "plan": {"quote": QUOTE}}
+    out = api.post("/v2/ask", json=body).json()
+    assert out["text"] == f"일하는 날은 {days}일이에요." and len(out["dropped"]) == 1

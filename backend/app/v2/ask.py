@@ -43,7 +43,7 @@ FAILED = {
     "schedule": "설명을 만들지 못했어요. 공정표는 화면에서 그대로 볼 수 있어요.",
 }
 NUDGE = "(위 도구 결과로 고객 질문에 대한 답 글을 해요체로 써 주세요.)"
-QUOTE_CONSTS = "10% 2.5 3.3058 1.2 0.25 0.8 1.08 0.85 0.96 2.4 1.8 1.1 1.04 10.2 0.3 2일 1일"
+QUOTE_CONSTS = "10% 2.5 3.3058 1.2 0.25 0.8 1.08 0.85 0.96 2.4 1.8 1.1 1.04 10.2 0.3"
 
 # 팀 의도 라벨 → 지시문에 붙이는 힌트 (확신할 때만)
 HINTS = {
@@ -56,19 +56,20 @@ IMAGE_RULE = (
     "고객이 올린 사진을 함께 보냈어. 사진에서 보이는 것만 말하고, 확실하지 않은 상태(누수 · 곰팡이 등)는 "
     "'실측 때 확인'으로 안내해."
 )
+# 공정 순서만 적는다. 공사 기간은 계산 엔진 공정표에서만 말한다
 GUIDE = (
-    ("철거", "2~3일", "기존 마감 · 가구 · 욕실을 떼어 내요"),
-    ("설비 · 창호", "2~4일", "배관 · 방수를 하고 샷시 · 현관문을 바꿔요"),
-    ("전기 배선", "1~2일", "콘센트 · 조명 자리를 옮겨요"),
-    ("목공", "3~5일", "천장 · 벽을 잡고 몰딩 · 문틀 · 방문을 달아요"),
-    ("욕실 · 타일", "3~5일", "타일을 붙이고 변기 · 세면대 · 수전을 달아요"),
-    ("필름 · 도장", "2~3일", "문 · 몰딩에 필름을 붙이고 칠해요"),
-    ("도배", "1~2일", "벽 · 천장에 벽지를 붙여요"),
-    ("바닥재", "1~2일", "마루 · 장판을 깔아요"),
-    ("가구", "1~2일", "주방 · 붙박이장 · 신발장을 설치해요"),
-    ("중문", "1일", "현관 중문을 달아요"),
-    ("조명 · 마감", "1~2일", "조명 · 스위치 · 도어록을 달고 실리콘을 쏴요"),
-    ("입주 청소", "1일", "공사 먼지를 치워요"),
+    ("철거", "기존 마감 · 가구 · 욕실을 떼어 내요"),
+    ("설비 · 창호", "배관 · 방수를 하고 샷시 · 현관문을 바꿔요"),
+    ("전기 배선", "콘센트 · 조명 자리를 옮겨요"),
+    ("목공", "천장 · 벽을 잡고 몰딩 · 문틀 · 방문을 달아요"),
+    ("욕실 · 타일", "타일을 붙이고 변기 · 세면대 · 수전을 달아요"),
+    ("필름 · 도장", "문 · 몰딩에 필름을 붙이고 칠해요"),
+    ("도배", "벽 · 천장에 벽지를 붙여요"),
+    ("바닥재", "마루 · 장판을 깔아요"),
+    ("가구", "주방 · 붙박이장 · 신발장을 설치해요"),
+    ("중문", "현관 중문을 달아요"),
+    ("조명 · 마감", "조명 · 스위치 · 도어록을 달고 실리콘을 쏴요"),
+    ("입주 청소", "공사 먼지를 치워요"),
 )
 STATE_KO = {
     "included": "포함",
@@ -254,7 +255,9 @@ def _set_cons(turn: dict, args: dict, today: date) -> dict:
         return {"error": "조건으로 공정표를 계산하지 못했어요. 날짜를 다시 확인해 달라고 해."}
     turn["plan"] = plan_in.model_dump(mode="json")
     turn["cons"] = plan_in.cons.model_dump(mode="json")
-    turn["allowed"].append(json.dumps(p.model_dump(mode="json"), ensure_ascii=False))
+    out = json.dumps(p.model_dump(mode="json"), ensure_ascii=False)
+    turn["allowed"].append(out)
+    turn.setdefault("calc", []).append(out)  # 서버 계산 결과라 공사 기간 근거가 된다
     return _plan_summary(p)
 
 
@@ -298,7 +301,9 @@ async def start(user_id: str, b: v2.V2AskIn, today: date) -> v2.V2AskOut:
         if intent is not None and intent.label == "out_of_scope":
             return v2.V2AskOut(done=True, text=OUT_TEXT, gate="out", intent=_intent_out(intent))
     sure = intent is not None and intent.confidence >= settings.intent_confidence_threshold
-    system, allowed = _system(b, today, HINTS.get(intent.label, "") if sure and intent else "")
+    system, allowed, calc = _system(
+        b, today, HINTS.get(intent.label, "") if sure and intent else ""
+    )
     content: list[dict] = [{"type": "image", "data": d} for d in b.images]
     content.append({"type": "text", "text": b.message})
     turn = {
@@ -308,6 +313,7 @@ async def start(user_id: str, b: v2.V2AskIn, today: date) -> v2.V2AskOut:
         "system": system,
         "messages": [{"role": "user", "content": content}],
         "allowed": [*allowed, b.message],
+        "calc": calc,
         "text": "",
         "calls": 0,
         "rounds": 0,
@@ -337,8 +343,11 @@ def _intent_out(i: Intent) -> v2.V2IntentOut:
     return v2.V2IntentOut(label=i.label, confidence=i.confidence, source=i.source)
 
 
-def _system(b: v2.V2AskIn, today: date, hint: str) -> tuple[str, list[str]]:
-    """지시문과, 숫자 검사에서 허용할 글(계산 결과 · 자료 · 지시문)."""
+def _system(b: v2.V2AskIn, today: date, hint: str) -> tuple[str, list[str], list[str]]:
+    """지시문, 숫자 검사에서 허용할 글(계산 결과 · 자료), 계산 엔진 결과(공사 기간 근거).
+
+    지시문(규칙 · 공정 순서 글)은 숫자 검사 근거에 넣지 않는다.
+    """
     refs = _refs_text(b.refs, b.refs_enough)
     if b.kind == "quote_explanation":
         if b.quote is None:
@@ -346,7 +355,8 @@ def _system(b: v2.V2AskIn, today: date, hint: str) -> tuple[str, list[str]]:
         q = service.quote(b.quote, today)
         facts = _quote_facts(q, b.profile.budget_manwon)
         system = "\n".join([PROMPTS["quote_explanation"], "## 표준견적서 데이터", facts, "", refs])
-        return system, [system, json.dumps(q.model_dump(mode="json")), QUOTE_CONSTS]
+        calc = [facts, json.dumps(q.model_dump(mode="json"))]
+        return system, [*calc, QUOTE_CONSTS, refs], calc
     if b.kind == "schedule":
         if b.plan is None:
             raise AppError(422, "invalid", "공정표 정보가 필요해요.")
@@ -357,19 +367,16 @@ def _system(b: v2.V2AskIn, today: date, hint: str) -> tuple[str, list[str]]:
         system = "\n".join(
             [PROMPTS["schedule"].replace("{today}", today.isoformat()), now, "", refs]
         )
-        return system, [system, json.dumps(p.model_dump(mode="json"))]
-    guide = "\n".join(f"{i}. {n}({d}): {t}" for i, (n, d, t) in enumerate(GUIDE, 1))
+        calc = [now, json.dumps(p.model_dump(mode="json"))]
+        return system, [*calc, f"오늘 {today.isoformat()}", refs], calc
+    guide = "\n".join(f"{i}. {n}: {t}" for i, (n, t) in enumerate(GUIDE, 1))
     rules = "\n".join(
         x for x in (PROMPTS["chat"].strip(), hint, IMAGE_RULE if b.images else "") if x
     )
-    data = [
-        _profile_text(b.profile, b.quote),
-        "## 공정 순서\n" + guide,
-        _materials_text(b.materials),
-        refs,
-    ]
+    profile, materials = _profile_text(b.profile, b.quote), _materials_text(b.materials)
+    data = [profile, "## 공정 순서\n" + guide, materials, refs]
     system = rules + "\n\n" + "\n\n".join(data)
-    return system, [system]
+    return system, [profile, materials, refs], []
 
 
 async def _run(turn_id: str, turn: dict) -> v2.V2AskOut:
@@ -414,6 +421,8 @@ async def _run(turn_id: str, turn: dict) -> v2.V2AskOut:
             content = json.dumps(out, ensure_ascii=False)
             turn["messages"].append({"role": "tool", "tool_call_id": c["id"], "content": content})
             turn["allowed"].append(content)
+            if c["name"] in SERVER_TOOLS:
+                turn.setdefault("calc", []).append(content)  # 서버 계산 엔진 결과
         if client:
             turn["pending"] = [c["id"] for c in client]
             await _save(turn_id, turn)
@@ -433,7 +442,8 @@ def _done(turn: dict, failed: bool = False) -> v2.V2AskOut:
     cons = v2.V2ConsIn.model_validate(turn["cons"]) if turn.get("cons") else None
     if failed or not turn["text"].strip():
         return v2.V2AskOut(done=True, text=FAILED[kind], failed=True, intent=intent, cons=cons)
-    g = guard.check(turn["text"], "\n".join(turn["allowed"]))
+    # 공사 기간 숫자는 계산 엔진 결과(calc)에 있어야만 통과한다
+    g = guard.check(turn["text"], "\n".join(turn["allowed"]), "\n".join(turn.get("calc") or []))
     if not g.text:
         return v2.V2AskOut(
             done=True, text=FAILED[kind], failed=True, intent=intent, dropped=g.dropped, cons=cons
