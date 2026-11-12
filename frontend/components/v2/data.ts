@@ -17,6 +17,8 @@ export type Material = {
   url: string;
   img_mfg: string | null;
   img_mfg_src: string | null;
+  /** 사진이 같은 제품이 아닐 때 알리는 말 (예: 같은 방식 예시) */
+  img_note?: string | null;
   img_free: string | null;
   img_free_credit: string | null;
   img_free_src: string | null;

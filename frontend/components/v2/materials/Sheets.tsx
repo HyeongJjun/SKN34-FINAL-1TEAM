@@ -41,7 +41,7 @@ function MatSheet({ m, close }: { m: MatMore; close: () => void }) {
   const x = useRef<HTMLButtonElement>(null);
   const on = S.picks[m.cat] === m.id;
   const inC = (CMP[m.cat] || []).includes(m.id);
-  const credit = [m.img_free_credit ? `무료 사진 ${m.img_free_credit}` : null, m.img_mfg ? `제조사 사진 ${m.brand}` : null, m.img_ai ? "AI 이미지는 참고용" : null].filter(Boolean).join(" · ");
+  const credit = [m.img_free_credit ? `무료 사진 ${m.img_free_credit}` : null, m.img_mfg ? (m.img_note ?? `제조사 사진 ${m.brand}`) : null, m.img_ai ? "AI 이미지는 참고용" : null].filter(Boolean).join(" · ");
   const opt = optText(m);
   return (
     <Sheet close={close} label={m.name} x={x}>

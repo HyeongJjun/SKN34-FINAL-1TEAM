@@ -77,6 +77,7 @@ function MokCard({ id, on, onPick, label }: { id: string; on: boolean; onPick: (
       <div className="in">
         <span className="brand">{m.brand}</span>
         <span className="nm">{m.name}</span>
+        {m.img_note ? <span className="flag">{m.img_note}</span> : null}
         <div className="meta">
           <span className="price">{won10(p.price)}</span>
           <span className="flag">{label || `/ ${perOf(p.kind, p.len_m)}`}</span>
