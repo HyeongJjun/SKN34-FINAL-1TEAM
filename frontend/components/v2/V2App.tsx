@@ -3,17 +3,28 @@
 // 첫 화면(#)과 상담 화면(#chat)을 주소 뒤 #으로 나눈다. 단계 화면은 F 표의 함수가 대화에 카드로 붙인다.
 import { useEffect, useRef, useState } from "react";
 import { Board, BoardBand } from "./Board";
-import { CAT, type Material, MODE_LABEL, STEP_INDEX, STEPS, type StyleData } from "./data";
+import { type Material, MODE_LABEL, STEP_INDEX, STEPS, type StyleData } from "./data";
 import { bot, busy, closeAllOverlays, F, Feed, me, Overlays, Quick, quick, resetFeed, Toast, useFeed } from "./engine";
 import { stepFn } from "./flow";
 import { Home } from "./home/Home";
 import "./modules";
 import { setImgMode, view } from "./photo";
-import { chat, DATA, LEGACY_SAVE_KEY, loadSaved, resetState, S, saveCfg, store, touch, useV2, V3 } from "./store";
+import { errorText } from "@/lib/backend/client";
+import { flush, importLocal, newCase, openCase } from "./cases";
+import { chat, DATA, LEGACY_SAVE_KEY, resetState, S, saveCfg, store, touch, useV2 } from "./store";
 import s from "./v2.module.css";
 
-/** 첫 화면에서 상담을 어떻게 시작할지 (v10 startMode · pendingAsk · pendingTool · pendingLook) */
-export const start = { mode: null as null | "resume" | "quick" | "ask" | "tool" | "look", ask: "", tool: "", look: "", style: "" };
+/** 첫 화면에서 상담을 어떻게 시작할지 (v10 startMode · pendingAsk · pendingTool · pendingLook).
+    new: 새 인테리어, resume: 저장된 건(caseId) 열기, open: 연 뒤 바로 볼 문서 */
+export const start = {
+  mode: null as null | "new" | "resume" | "quick" | "ask" | "tool" | "look",
+  ask: "",
+  tool: "",
+  look: "",
+  style: "",
+  caseId: "",
+  open: "" as "" | "quote" | "plan",
+};
 export function goChat(mode: typeof start.mode = null, extra: Partial<typeof start> = {}) {
   Object.assign(start, { mode }, extra);
   // v10처럼 새로 시작하면 대화를 새로 그린다(고른 값 S는 그대로)
@@ -33,20 +44,37 @@ function useHash() {
   return hash;
 }
 
+/** 새 인테리어: 고른 값을 비우고 다음 진행 때 새 건으로 저장한다 (전에 하던 건은 목록에 남는다) */
+function freshCase() {
+  resetState();
+  F.resetLocal?.();
+  F.resetMaterials?.();
+  F.resetDoc?.();
+  newCase();
+}
+
 async function startFlow() {
   const mode = start.mode;
-  start.mode = null;
-  if (mode === "resume") {
-    const saved = loadSaved();
-    if (saved) {
-      const { v3, savedAt: _at, ...v } = saved;
-      Object.assign(S, v, { photos: [], refs: [], imgMode: S.imgMode });
-      if (v3) Object.assign(V3, v3, { quote: null, plan: null });
-      S.scope.cats = (S.scope.cats || []).filter((c) => CAT[c]);
-      S.picks = Object.fromEntries(Object.entries(S.picks || {}).filter(([c, id]) => CAT[c] && DATA.materials.some((m) => m.id === id && m.cat === c)));
-      touch();
-      await bot("지난번에 고른 걸 불러왔어요. 이어서 할게요.");
+  const { caseId, open } = start;
+  Object.assign(start, { mode: null, caseId: "", open: "" });
+  await flush(); // 하던 건의 남은 저장부터 보낸다
+  if (mode === "new" || mode === "quick" || mode === "look") freshCase();
+  if (mode === "resume" && caseId) {
+    try {
+      const c = await openCase(caseId);
+      await bot(`'${c.title}' 건을 불러왔어요. 이어서 할게요.`);
+      if (open === "quote" && S.far >= 6) {
+        await F.quoteStep();
+        return F.openQuoteDoc();
+      }
+      if (open === "plan" && S.far >= 7) {
+        await F.schedStep();
+        return F.openPlanDoc();
+      }
       return S.far >= 5 ? F.matStep() : stepFn(STEPS[S.far][0])();
+    } catch (e) {
+      await bot(`저장된 인테리어를 불러오지 못했어요. ${errorText(e)}`);
+      freshCase();
     }
   }
   if (mode === "quick") {
@@ -115,14 +143,14 @@ function ResetCtl({ onReset }: { onReset: () => void }) {
   if (!ask)
     return (
       <span>
-        <button type="button" className="btn-text gray" onClick={() => setAsk(true)}>처음부터</button>
+        <button type="button" className="btn-text gray" onClick={() => setAsk(true)}>새로 시작</button>
       </span>
     );
   return (
     <span>
       <span className="reset-ask">
-        모두 지울까요?
-        <button type="button" className="btn-text" style={{ color: "var(--danger)" }} onClick={onReset}>지우기</button>
+        새 인테리어로 시작할까요? 지금 것은 첫 화면에 남아요.
+        <button type="button" className="btn-text" onClick={onReset}>새로 시작</button>
         <button type="button" className="btn-text gray" onClick={() => setAsk(false)}>취소</button>
       </span>
     </span>
@@ -204,12 +232,10 @@ function ChatView() {
     chat.built = true;
     startFlow();
   }, [key]);
-  const reset = () => {
+  const reset = async () => {
+    await flush(); // 지금 건은 그대로 남기고
     resetFeed();
-    resetState();
-    F.resetLocal?.();
-    F.resetMaterials?.();
-    F.resetDoc?.();
+    freshCase(); // 새 건으로 시작한다
     chat.built = false;
     window.scrollTo(0, 0);
     setKey((k) => k + 1);
@@ -264,6 +290,7 @@ export function V2App({ userId }: { userId: string }) {
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   useEffect(() => {
     store.del(LEGACY_SAVE_KEY); // 예전 공용 키(다른 계정에도 보이던 것)는 지운다
+    void importLocal(); // 이 브라우저에만 남긴 예전 상담은 한 건으로 옮긴다
     const saved = store.get("mj-imgmode");
     if (saved && MODE_LABEL[saved]) S.imgMode = saved as typeof S.imgMode;
     view.empty = store.get("mj-empty") === "1";

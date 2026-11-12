@@ -3,12 +3,13 @@ import uuid
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.deps import current_user
+from app.auth.deps import current_user, require_role
 from app.auth.models import User
 from app.calc.plan_qty import SpaceKind
 from app.db import get_session
 from app.shared.clock import today_seoul
-from app.v2 import ask, preview_service, service
+from app.v2 import ask, case_service, preview_service, service
+from app.v2 import case_schemas as cs
 from app.v2 import schemas as v2
 from app.v2.preview_schemas import (
     V2MaterialsOut,
@@ -124,3 +125,61 @@ async def v2_ask_resume(
 @router.get("/ask/health", response_model=v2.V2AskHealthOut, summary="v2 AI 상태")
 async def v2_ask_health(_: User = Depends(current_user)) -> v2.V2AskHealthOut:
     return ask.health()
+
+
+# ---- 인테리어 한 건 저장 (고객만, 본인 것만) ----
+customer = require_role("customer")
+
+
+@router.get("/cases", response_model=list[cs.V2CaseItemOut], summary="내 인테리어 목록")
+async def cases(
+    user: User = Depends(customer), s: AsyncSession = Depends(get_session)
+) -> list[cs.V2CaseItemOut]:
+    return await case_service.list_mine(s, user)
+
+
+@router.post(
+    "/cases", response_model=cs.V2CaseOut, status_code=201, summary="인테리어 한 건 만들기"
+)
+async def case_create(
+    body: cs.V2CaseSaveIn, user: User = Depends(customer), s: AsyncSession = Depends(get_session)
+) -> cs.V2CaseOut:
+    return await case_service.create(s, user, body, today_seoul())
+
+
+@router.get("/cases/{case_id}", response_model=cs.V2CaseOut, summary="인테리어 한 건 열기")
+async def case_get(
+    case_id: uuid.UUID, user: User = Depends(customer), s: AsyncSession = Depends(get_session)
+) -> cs.V2CaseOut:
+    return await case_service.get(s, user, case_id)
+
+
+@router.put(
+    "/cases/{case_id}",
+    response_model=cs.V2CaseItemOut,
+    summary="인테리어 한 건 저장 (견적서 · 공정표는 서버가 다시 계산)",
+)
+async def case_save(
+    case_id: uuid.UUID,
+    body: cs.V2CaseSaveIn,
+    user: User = Depends(customer),
+    s: AsyncSession = Depends(get_session),
+) -> cs.V2CaseItemOut:
+    return await case_service.save(s, user, case_id, body, today_seoul())
+
+
+@router.patch("/cases/{case_id}", response_model=cs.V2CaseItemOut, summary="인테리어 이름 바꾸기")
+async def case_rename(
+    case_id: uuid.UUID,
+    body: cs.V2CaseTitleIn,
+    user: User = Depends(customer),
+    s: AsyncSession = Depends(get_session),
+) -> cs.V2CaseItemOut:
+    return await case_service.rename(s, user, case_id, body.title)
+
+
+@router.delete("/cases/{case_id}", status_code=204, summary="인테리어 한 건 지우기")
+async def case_delete(
+    case_id: uuid.UUID, user: User = Depends(customer), s: AsyncSession = Depends(get_session)
+) -> None:
+    await case_service.delete(s, user, case_id)

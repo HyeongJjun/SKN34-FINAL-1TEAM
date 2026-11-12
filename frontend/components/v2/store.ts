@@ -1,5 +1,5 @@
 // v2 상태: v10의 S(상담 상태) · V3(견적서 · 공정표 상태)를 그대로 옮겼다.
-// 흐름 코드는 S를 직접 고치고 touch()를 부르면 화면이 다시 그려진다(useV2). 저장은 이 브라우저에만 한다.
+// 흐름 코드는 S를 직접 고치고 touch()를 부르면 화면이 다시 그려진다(useV2). 저장은 인테리어 한 건마다 서버에 한다(cases.ts).
 import { useSyncExternalStore } from "react";
 import type { Material, StyleData } from "./data";
 
@@ -115,22 +115,28 @@ export const store = {
   },
 };
 
-/* 진행 저장(이 브라우저에만). 사진 · 올린 도면은 저장하지 않는다.
-   키는 로그인한 사람마다 따로 둔다(같은 브라우저의 다른 계정에 지난 상담이 보이지 않게). V2App이 사용자 id로 정한다 */
+/* 진행 저장: 인테리어 한 건마다 서버에 한다(cases.ts가 saveHook을 채운다). 사진 · 올린 도면은 저장하지 않는다.
+   saveCfg.key는 예전에 이 브라우저에만 남긴 상담(사람마다 키)을 한 번 옮길 때만 쓴다 */
 export const LEGACY_SAVE_KEY = "mj-v2-state";
 export const saveCfg = { key: "" };
 export const chat = { built: false };
+export const saveHook = { fn: null as null | (() => void) };
 type V3Saved = Partial<Omit<typeof V3, "quote" | "plan" | "role">>;
 /** V3에서 이어 하기에 남길 값: 발코니 · 일정 조건 · 업체 날짜 · 받은 견적 · 기록. 계산 결과(quote · plan)는 다시 계산하고, 업체 보기(role)는 시연용이라 뺀다 */
 function v3Saved(): V3Saved {
   const { quote: _q, plan: _p, role: _r, ...rest } = V3;
   return rest;
 }
-export function saveState() {
-  if (!chat.built || !saveCfg.key || S.step === "welcome") return;
+/** 저장할 고른 값: 사진 · 올린 도면(파일)은 뺀다 */
+export function snapshot() {
   const { photos: _p, refs: _r, plan, ...rest } = S;
-  store.set(saveCfg.key, JSON.stringify({ ...rest, plan: plan && (plan.kind === "type" || plan.kind === "apt") ? plan : null, v3: v3Saved(), savedAt: Date.now() }));
+  return { ...rest, plan: plan && (plan.kind === "type" || plan.kind === "apt") ? plan : null, v3: { ...v3Saved(), log: V3.log.slice(-100) } };
 }
+export function saveState() {
+  if (!chat.built || S.step === "welcome") return;
+  saveHook.fn?.();
+}
+/** 예전에 이 브라우저에만 남긴 상담 (한 번 서버로 옮긴다) */
 export function loadSaved(): (Partial<State> & { savedAt?: number; v3?: V3Saved }) | null {
   if (!saveCfg.key) return null;
   try {
@@ -140,15 +146,13 @@ export function loadSaved(): (Partial<State> & { savedAt?: number; v3?: V3Saved 
     return null;
   }
 }
-export const clearSaved = () => saveCfg.key && store.del(saveCfg.key);
 
-/** 상태를 처음으로 (사진 종류는 그대로) */
+/** 상태를 처음으로 (사진 종류는 그대로). 저장된 건은 지우지 않는다 */
 export function resetState() {
   [...S.photos, ...S.refs].forEach((p) => URL.revokeObjectURL(p.url));
   if (S.plan?.url) URL.revokeObjectURL(S.plan.url);
   Object.assign(S, freshState(), { imgMode: S.imgMode });
   Object.assign(V3, { role: "customer", balcony: false, vp: {}, vpState: {}, vq: {}, props: {}, cons: { weekendWork: false, endBy: "", startAfter: "", avoid: [] }, accepted: {}, changes: {}, log: [], quote: null, plan: null });
-  clearSaved();
 }
 
 /** 움직임 줄이기 설정이면 기다리지 않는다 */

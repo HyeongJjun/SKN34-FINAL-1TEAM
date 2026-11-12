@@ -15,6 +15,7 @@ import app.project.models
 import app.quote.models
 import app.refprice.models
 import app.schedule.models
+import app.v2.models
 import app.vendor.models
 import app.visit.models  # noqa: F401
 from app.config import settings

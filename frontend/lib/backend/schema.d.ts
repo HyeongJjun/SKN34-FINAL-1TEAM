@@ -892,6 +892,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v2/cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 내 인테리어 목록 */
+        get: operations["cases_v2_cases_get"];
+        put?: never;
+        /** 인테리어 한 건 만들기 */
+        post: operations["case_create_v2_cases_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/cases/{case_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 인테리어 한 건 열기 */
+        get: operations["case_get_v2_cases__case_id__get"];
+        /** 인테리어 한 건 저장 (견적서 · 공정표는 서버가 다시 계산) */
+        put: operations["case_save_v2_cases__case_id__put"];
+        post?: never;
+        /** 인테리어 한 건 지우기 */
+        delete: operations["case_delete_v2_cases__case_id__delete"];
+        options?: never;
+        head?: never;
+        /** 인테리어 이름 바꾸기 */
+        patch: operations["case_rename_v2_cases__case_id__patch"];
+        trace?: never;
+    };
     "/auth/vendor-signup": {
         parameters: {
             query?: never;
@@ -4635,6 +4673,129 @@ export interface components {
              */
             cover: number;
         };
+        /** V2CaseItemOut */
+        V2CaseItemOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Style */
+            style: string | null;
+            /** Pyeong */
+            pyeong: number | null;
+            /** Region */
+            region: string;
+            /** Picks */
+            picks: number;
+            /** Far */
+            far: number;
+            /** Quote Total */
+            quote_total: number | null;
+            /** Quote Code */
+            quote_code: string | null;
+            /** Cost Lo */
+            cost_lo: number | null;
+            /** Cost Hi */
+            cost_hi: number | null;
+            /** Trades */
+            trades: number;
+            /** Plan Start */
+            plan_start: string | null;
+            /** Plan End */
+            plan_end: string | null;
+            /** Work Days */
+            work_days: number | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** V2CaseOut */
+        V2CaseOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Style */
+            style: string | null;
+            /** Pyeong */
+            pyeong: number | null;
+            /** Region */
+            region: string;
+            /** Picks */
+            picks: number;
+            /** Far */
+            far: number;
+            /** Quote Total */
+            quote_total: number | null;
+            /** Quote Code */
+            quote_code: string | null;
+            /** Cost Lo */
+            cost_lo: number | null;
+            /** Cost Hi */
+            cost_hi: number | null;
+            /** Trades */
+            trades: number;
+            /** Plan Start */
+            plan_start: string | null;
+            /** Plan End */
+            plan_end: string | null;
+            /** Work Days */
+            work_days: number | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** State */
+            state: {
+                [key: string]: unknown;
+            };
+            /** Quote */
+            quote: {
+                [key: string]: unknown;
+            } | null;
+            /** Plan */
+            plan: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
+         * V2CaseSaveIn
+         * @description state: 화면이 고른 값(사진 · 올린 파일은 빼고). quote_in · plan_in이 있으면 서버가 다시 계산해 남긴다.
+         */
+        V2CaseSaveIn: {
+            /** Title */
+            title?: string | null;
+            /** State */
+            state: {
+                [key: string]: unknown;
+            };
+            quote_in?: components["schemas"]["V2QuoteIn"] | null;
+            plan_in?: components["schemas"]["V2PlanIn"] | null;
+        };
+        /** V2CaseTitleIn */
+        V2CaseTitleIn: {
+            /** Title */
+            title: string;
+        };
         /** V2CasingIn */
         V2CasingIn: {
             /** Doors */
@@ -8260,6 +8421,189 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["V2AskHealthOut"];
+                };
+            };
+        };
+    };
+    cases_v2_cases_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2CaseItemOut"][];
+                };
+            };
+        };
+    };
+    case_create_v2_cases_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2CaseSaveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2CaseOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    case_get_v2_cases__case_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2CaseOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    case_save_v2_cases__case_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2CaseSaveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2CaseItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    case_delete_v2_cases__case_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    case_rename_v2_cases__case_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2CaseTitleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2CaseItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
