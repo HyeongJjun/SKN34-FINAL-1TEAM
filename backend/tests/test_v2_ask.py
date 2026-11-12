@@ -200,3 +200,14 @@ def test_input_limits(api, fake):
     assert api.post("/v2/ask", json={"message": "가" * 1001}).status_code == 422
     big = {"message": "사진", "images": ["A" * 600_000] * 4}
     assert api.post("/v2/ask", json=big).status_code == 413
+
+
+def test_hourly_limit_except_local(api, fake, monkeypatch):
+    fake(*[{"text": "답이에요."}] * 4)
+    signup(api)
+    monkeypatch.setattr(ask, "ASK_PER_HOUR", 1)
+    body = {"message": "합지랑 실크 차이요?"}
+    assert api.post("/v2/ask", json=body).status_code == 200
+    assert api.post("/v2/ask", json=body).status_code == 429
+    monkeypatch.setattr(ask.settings, "app_env", "local")  # 로컬에서는 세지 않는다
+    assert api.post("/v2/ask", json=body).status_code == 200

@@ -34,7 +34,7 @@ PROMPTS = {k: (_DIR / f"{v}.md").read_text(encoding="utf-8") for k, v in PROMPT_
 MAX_TOOL_ROUNDS = 4  # 에이전트별 도구 호출 상한 (AGENTS.md 4장)
 MAX_CALLS = 6  # 턴당 LLM 호출 (도구 4번 + 답 쓰기 + 다시 쓰라는 부탁 한 번)
 TURN_TTL = 600
-ASK_PER_HOUR = 60  # 사용자별 질문 수
+ASK_PER_HOUR = 60  # 사용자별 시간당 질문 수 (APP_ENV=local이면 세지 않는다)
 TOO_MANY = "AI에게 너무 많이 물었어요. 잠시 뒤에 다시 해 주세요."
 OUT_TEXT = "지금은 아파트 도배와 목공만 도와드려요. 견적 · 공정표 · 업체 고르기는 물어봐 주세요."
 FAILED = {
@@ -290,7 +290,8 @@ async def _drop(turn_id: str) -> None:
 
 # ---- 한 턴 ----
 async def start(user_id: str, b: v2.V2AskIn, today: date) -> v2.V2AskOut:
-    await ratelimit.hit(ratelimit.key("v2-ask", user_id), ASK_PER_HOUR, 3600, TOO_MANY)
+    if settings.app_env != "local":  # 로컬 개발 · 시연에서는 손으로 여러 번 물어봐도 막지 않는다
+        await ratelimit.hit(ratelimit.key("v2-ask", user_id), ASK_PER_HOUR, 3600, TOO_MANY)
     intent: Intent | None = None
     if b.kind == "chat" and not b.images:
         intent = await agent_gate.classify(b.message)
