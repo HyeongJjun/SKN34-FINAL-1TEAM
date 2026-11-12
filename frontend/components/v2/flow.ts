@@ -63,10 +63,12 @@ export function fillPicks() {
   if (scopeCats().some((c) => c.id === "carpentry")) F.mok10Sync?.();
 }
 /** 예산 → 등급. 평당 예산(만 원)으로 나눈다 (v10과 같은 경계). 금액을 만들지 않고 고르기만 한다 */
-export function tierFromBudget(): "economy" | "basic" | "premium" {
-  if (S.budgetUnknown || !S.budget) return "basic";
+/** 예산으로 추천 등급. budget을 주면 그 값으로(저장하지 않고) 본다 */
+export function tierFromBudget(budget?: number | null): "economy" | "basic" | "premium" {
+  const b = budget === undefined ? (S.budgetUnknown ? null : S.budget) : budget;
+  if (!b) return "basic";
   const share = S.scope.kind === "part" ? Math.max(S.scope.cats.length / CATS.length, 0.3) : 1;
-  const per = S.budget / ((S.info.pyeong || 32) * share);
+  const per = b / ((S.info.pyeong || 32) * share);
   return per < 130 ? "economy" : per < 220 ? "basic" : "premium";
 }
 export function priceFlags(m: Material) {

@@ -2,7 +2,7 @@
 // 2. 집 정보 · 3. 범위 · 4. 예산 · 등급 · 5. 사진 (v10 infoStep · scopeStep · budgetStep · uploader · photoStep)
 // 카드는 제출하면 done이 되어 잠긴다(v10 doneCard). 금액은 만들지 않는다: 예산은 고객이 넣은 값, 등급은 고르기만.
 import { DateCalendar } from "@/components/start/DateCalendar";
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { flashBoard } from "../Board";
 import { CATS, manwon, SPACES, TIER_NOTE, TIER_ORDER, TIERS } from "../data";
 import { md, moveDay, moveLabel, todaySeoul } from "../dates";
@@ -152,15 +152,11 @@ function ScopeCard() {
   const [done, setDone] = useState(false);
   const [kind, setKind] = useState(S.scope.kind);
   const [spaces, setSpaces] = useState<string[]>(() => SPACES.filter((s) => S.scope.spaces.includes(s.id)).map((s) => s.id));
-  const [cats, setCats] = useState<string[]>(() => (S.scope.kind === "part" ? catsOfSpaces(S.scope.spaces) : S.scope.cats));
+  // 다시 열면 고객이 줄여 둔 공정을 그대로 보인다. 고르는 동안은 카드 안에만 두고 [다음]에서 저장한다
+  const [cats, setCats] = useState<string[]>(() =>
+    S.scope.kind === "part" ? (S.scope.cats.length ? S.scope.cats : catsOfSpaces(S.scope.spaces)) : S.scope.cats,
+  );
   const [err, setErr] = useState(false);
-  // v10처럼 고르는 동안 S.scope에 바로 적는다 (보드는 [다음]에서 다시 그림)
-  useEffect(() => {
-    if (done) return;
-    S.scope.kind = kind;
-    S.scope.spaces = kind === "part" ? spaces : [];
-    S.scope.cats = kind === "part" ? cats : [];
-  }, [kind, spaces, cats, done]);
   const shown = catsOfSpaces(spaces);
   const sync = (next: string[]) => {
     const on = SPACES.filter((s) => next.includes(s.id)).map((s) => s.id);
@@ -264,7 +260,8 @@ function BudgetCard({ tier0, start }: { tier0: string; start: number }) {
   const [done, setDone] = useState(false);
   const [num, setNum] = useState(String(start));
   const [range, setRange] = useState(String(start));
-  const [rec, setRec] = useState(() => tierFromBudget());
+  // 고르는 동안은 카드 안에만 두고, [다음]을 눌러야 고객 값에 쓴다 (열기만 해도 값이 바뀌지 않게)
+  const [rec, setRec] = useState(() => tierFromBudget(clampBudget(String(start))));
   const upd = (raw: string, fromNum: boolean) => {
     const v = clampBudget(raw);
     if (fromNum) {
@@ -274,14 +271,15 @@ function BudgetCard({ tier0, start }: { tier0: string; start: number }) {
       setRange(raw);
       setNum(String(v));
     }
-    setRec(applyBudget(v));
+    setRec(tierFromBudget(v));
   };
+  const shownTier = S.tierBy === "me" ? S.tier : rec;
   const finish = (unknown: boolean) => {
     if (unknown) {
       S.budgetUnknown = true;
       S.budget = null;
       if (S.tierBy !== "me") S.tier = "basic";
-    }
+    } else applyBudget(clampBudget(num));
     if (S.tier !== tier0 && S.far >= 5) autoPick();
     setDone(true);
     touch();
@@ -311,7 +309,7 @@ function BudgetCard({ tier0, start }: { tier0: string; start: number }) {
             <button
               key={t}
               type="button"
-              aria-pressed={S.tier === t}
+              aria-pressed={shownTier === t}
               disabled={done}
               onClick={() => {
                 S.tier = t;
@@ -338,7 +336,6 @@ export async function budgetStep() {
   setStep("budget");
   const tier0 = S.tier;
   const start = S.budget || (S.scope.kind === "part" ? 2000 : 5000);
-  applyBudget(clampBudget(String(start)));
   await bot("예산은 어느 정도예요?", <BudgetCard tier0={tier0} start={start} />);
 }
 
