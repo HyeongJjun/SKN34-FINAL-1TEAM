@@ -3,10 +3,10 @@
 // 계산은 API(quote · plan)가 하고, AI 설명은 F.agentAnswer → 서버(/v2/ask)가 지시문 · 계산 · 숫자 검사까지 맡는다.
 import { useEffect, useState } from "react";
 import { errorText } from "@/lib/backend/client";
-import { bot, F, me, openOverlay, quick } from "../engine";
+import { bot, F, feedEpoch, me, openOverlay, quick, stillHere } from "../engine";
 import { setStep } from "../flow";
 import { V3 } from "../store";
-import { type Plan, planBody, type Quote, quoteBody } from "./api";
+import { cachedQuote, type Plan, planBody, type Quote, quoteBody } from "./api";
 import { ensureQuote, GanttEl, loadPlan, PlanDocBody } from "./PlanDoc";
 import { QuoteCheck } from "./QuoteCheck";
 import { loadQuote, QuoteDocBody } from "./QuoteDoc";
@@ -67,14 +67,17 @@ function QuoteSumCard({ q }: { q: Quote }) {
 
 export async function quoteStep() {
   setStep("quote");
+  const ep = feedEpoch.n;
   let q: Quote;
   try {
     q = await loadQuote();
   } catch (e) {
+    if (!stillHere(ep)) return;
     await bot(`표준견적서를 계산하지 못했어요. ${errorText(e)}`);
     quick([["다시 해 보기", () => quoteStep()]]);
     return;
   }
+  if (!stillHere(ep)) return;
   await bot("표준견적서가 나왔어요.", <QuoteSumCard q={q} />);
   quick([
     ["공정표 보기", () => schedStep()],
@@ -90,12 +93,15 @@ export function openQuoteDoc() {
 
 /** 견적 설명 에이전트: 저장된 금액을 풀이만 한다. 서버가 같은 입력으로 견적을 다시 계산해 설명하고 숫자를 검사한다 */
 export async function explainQuote(question?: string) {
+  const ep = feedEpoch.n;
   try {
-    if (!V3.quote) await loadQuote();
+    if (!cachedQuote()) await loadQuote();
   } catch (e) {
+    if (!stillHere(ep)) return;
     await bot(`표준견적서를 계산하지 못했어요. ${errorText(e)}`);
     return;
   }
+  if (!stillHere(ep)) return;
   const ask = question || "이 표준견적서 금액이 어떻게 나왔는지 쉽게 풀어 주세요. 가장 큰 줄 두세 개와 실측 뒤 바뀔 수 있는 것을 알려 주세요.";
   if (!F.agentAnswer) {
     if (!question) me("금액 풀이");
@@ -107,12 +113,14 @@ export async function explainQuote(question?: string) {
 
 /** '왜 달라요?' 대화 카드: 공정마다 가장 큰 이유 3개 (v5) */
 export async function bandWhy() {
+  const ep = feedEpoch.n;
   let q: Quote;
   try {
-    q = (V3.quote as Quote | null) ?? (await loadQuote());
+    q = cachedQuote() ?? (await loadQuote());
   } catch {
     return;
   }
+  if (!stillHere(ep)) return;
   if (!q.band) return;
   me("왜 달라요?");
   const cards = q.precise.map((t) => {
@@ -140,7 +148,7 @@ export async function bandWhy() {
 
 /** 받은 견적 맞춰 보기를 다른 곳(체크리스트 · 계산기)에서 열 때. 견적이 없으면 받아 온다 */
 function QuoteCheckCard({ q: given }: { q?: Quote }) {
-  const [q, setQ] = useState<Quote | null>(given ?? (V3.quote as Quote | null) ?? null);
+  const [q, setQ] = useState<Quote | null>(given ?? cachedQuote());
   const [err, setErr] = useState("");
   useEffect(() => {
     if (!q) loadQuote().then(setQ, (e) => setErr(errorText(e)));
@@ -188,14 +196,17 @@ function PlanCard({ p, title }: { p: Plan; title?: boolean }) {
 
 export async function schedStep() {
   setStep("sched");
+  const ep = feedEpoch.n;
   let p: Plan;
   try {
     p = await loadPlan();
   } catch (e) {
+    if (!stillHere(ep)) return;
     await bot(`공정표를 계산하지 못했어요. ${errorText(e)}`);
     quick([["다시 해 보기", () => schedStep()]]);
     return;
   }
+  if (!stillHere(ep)) return;
   await bot("공사 순서대로 예상 날짜를 잡았어요.", <PlanCard p={p} title />);
   quick([
     ["공사 전 체크리스트", () => F.checkStep?.("before")],
@@ -220,9 +231,11 @@ export async function schedAgent(text?: string) {
     }
     return;
   }
+  const ep = feedEpoch.n;
   try {
     await loadPlan();
   } catch (e) {
+    if (!stillHere(ep)) return;
     me(say);
     await bot(`공정표를 계산하지 못했어요. ${errorText(e)}`);
     return;
@@ -234,6 +247,7 @@ export async function schedAgent(text?: string) {
   }
   // 조건 바꾸기(set_schedule_constraints)와 날짜 계산은 서버가 한다. 바뀐 조건만 받아 V3.cons에 둔다
   const r = await F.agentAnswer({ label: say, ask: say, kind: "schedule", plan: planBody() });
+  if (!stillHere(ep)) return r;
   if (r?.cons) V3.cons = { ...r.cons, avoid: [...r.cons.avoid] };
   let p: Plan;
   try {
@@ -241,6 +255,7 @@ export async function schedAgent(text?: string) {
   } catch {
     return r;
   }
+  if (!stillHere(ep)) return r;
   await bot(null, <PlanCard p={p} />);
   return r;
 }

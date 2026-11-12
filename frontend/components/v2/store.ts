@@ -115,23 +115,32 @@ export const store = {
   },
 };
 
-/* 진행 저장(이 브라우저에만). 사진 · 올린 도면은 저장하지 않는다 */
-const SAVE_KEY = "mj-v2-state";
+/* 진행 저장(이 브라우저에만). 사진 · 올린 도면은 저장하지 않는다.
+   키는 로그인한 사람마다 따로 둔다(같은 브라우저의 다른 계정에 지난 상담이 보이지 않게). V2App이 사용자 id로 정한다 */
+export const LEGACY_SAVE_KEY = "mj-v2-state";
+export const saveCfg = { key: "" };
 export const chat = { built: false };
-export function saveState() {
-  if (!chat.built || S.step === "welcome") return;
-  const { photos: _p, refs: _r, plan, ...rest } = S;
-  store.set(SAVE_KEY, JSON.stringify({ ...rest, plan: plan && (plan.kind === "type" || plan.kind === "apt") ? plan : null, savedAt: Date.now() }));
+type V3Saved = Partial<Omit<typeof V3, "quote" | "plan" | "role">>;
+/** V3에서 이어 하기에 남길 값: 발코니 · 일정 조건 · 업체 날짜 · 받은 견적 · 기록. 계산 결과(quote · plan)는 다시 계산하고, 업체 보기(role)는 시연용이라 뺀다 */
+function v3Saved(): V3Saved {
+  const { quote: _q, plan: _p, role: _r, ...rest } = V3;
+  return rest;
 }
-export function loadSaved(): (Partial<State> & { savedAt?: number }) | null {
+export function saveState() {
+  if (!chat.built || !saveCfg.key || S.step === "welcome") return;
+  const { photos: _p, refs: _r, plan, ...rest } = S;
+  store.set(saveCfg.key, JSON.stringify({ ...rest, plan: plan && (plan.kind === "type" || plan.kind === "apt") ? plan : null, v3: v3Saved(), savedAt: Date.now() }));
+}
+export function loadSaved(): (Partial<State> & { savedAt?: number; v3?: V3Saved }) | null {
+  if (!saveCfg.key) return null;
   try {
-    const v = JSON.parse(store.get(SAVE_KEY) || "null");
+    const v = JSON.parse(store.get(saveCfg.key) || "null");
     return v && (v.far > 0 || Object.keys(v.picks || {}).length) ? v : null;
   } catch {
     return null;
   }
 }
-export const clearSaved = () => store.del(SAVE_KEY);
+export const clearSaved = () => saveCfg.key && store.del(saveCfg.key);
 
 /** 상태를 처음으로 (사진 종류는 그대로) */
 export function resetState() {

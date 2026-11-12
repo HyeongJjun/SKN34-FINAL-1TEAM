@@ -107,6 +107,10 @@ function droppedNote(el: MsgHandle, dropped: string[]) {
 
 export async function askClaude(q: string, { label, images, withPhotos }: { label?: string; images?: boolean; withPhotos?: boolean } = {}) {
   if (busy.asking) return;
+  // 기다리기 전에 먼저 잡아 둔다: 빠르게 두 번 보내도 질문이 겹치지 않게
+  const ctl = new AbortController();
+  busy.asking = ctl;
+  refreshFeed();
   if (label) {
     if (!S.typed) {
       S.typed = true;
@@ -116,15 +120,15 @@ export async function askClaude(q: string, { label, images, withPhotos }: { labe
   }
   const local = await localClaude();
   if (!local) {
-    await bot("지금은 AI 답변을 쓸 수 없어요. 버튼으로 이어서 진행해 주세요.");
+    if (busy.asking === ctl) busy.asking = null;
+    refreshFeed();
+    if (!ctl.signal.aborted) await bot("지금은 AI 답변을 쓸 수 없어요. 버튼으로 이어서 진행해 주세요.");
     return;
   }
+  if (ctl.signal.aborted) return;
   const lv = live<Bub>({ text: "", typing: true });
   const el = addMsg("bot", <AiBubble lv={lv} />);
   scrollLast();
-  const ctl = new AbortController();
-  busy.asking = ctl;
-  refreshFeed();
   const applied: string[] = [], after: After = {};
   let out: AskOut | null = null, shown = "";
   const show = (t: string) => {
@@ -147,9 +151,10 @@ export async function askClaude(q: string, { label, images, withPhotos }: { labe
   } catch (err) {
     show(errMsg(err as AskErr));
   } finally {
-    busy.asking = null;
+    if (busy.asking === ctl) busy.asking = null;
     refreshFeed();
   }
+  if (ctl.signal.aborted) return; // '처음부터'로 끊긴 질문은 새 대화에 아무것도 붙이지 않는다
   if (out?.gate === "out") {
     quick([
       ["표준견적서 받기", () => stepFn("quote")()],
@@ -202,19 +207,22 @@ export async function agentAnswer({ label, ask, kind, quote, plan }: {
   plan?: unknown;
 }) {
   if (busy.asking) return;
+  const ctl = new AbortController();
+  busy.asking = ctl;
+  refreshFeed();
   if (label) me(label);
   const local = await localClaude();
+  if (ctl.signal.aborted) return;
   const lv = live<Bub>({ text: "", typing: true });
   const el = addMsg("bot", <AiBubble lv={lv} />);
   scrollLast();
   const fail = "설명을 만들지 못했어요. 계산 결과는 견적서에서 그대로 볼 수 있어요.";
   if (!local) {
+    if (busy.asking === ctl) busy.asking = null;
+    refreshFeed();
     lv.set({ text: fail, typing: false });
     return;
   }
-  const ctl = new AbortController();
-  busy.asking = ctl;
-  refreshFeed();
   const after: After = {};
   let out: AskOut | null = null;
   try {
@@ -223,9 +231,10 @@ export async function agentAnswer({ label, ask, kind, quote, plan }: {
   } catch {
     out = null;
   } finally {
-    busy.asking = null;
+    if (busy.asking === ctl) busy.asking = null;
     refreshFeed();
   }
+  if (ctl.signal.aborted) return;
   lv.set({ text: out ? cleanMarks(out.text) : fail, typing: false });
   if (out) droppedNote(el, out.dropped);
   const src = ragSources(out?.text || "");

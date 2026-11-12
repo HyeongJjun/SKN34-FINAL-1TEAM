@@ -41,6 +41,9 @@ export function register(fns: Record<string, (...a: any[]) => any>) {
 }
 /** AI 답을 만드는 중이면 그 요청 (v10 asking) */
 export const busy = { asking: null as AbortController | null };
+/** 대화 번호. '처음부터' · 새로 시작하면 올라간다. 서버를 기다린 단계는 번호가 바뀌었으면 말을 붙이지 않는다 */
+export const feedEpoch = { n: 0 };
+export const stillHere = (ep: number) => ep === feedEpoch.n;
 
 export type MsgHandle = {
   id: number;
@@ -141,6 +144,7 @@ export const closeAllOverlays = () => {
 
 /** 대화를 처음으로 */
 export function resetFeed() {
+  feedEpoch.n++;
   busy.asking?.abort();
   busy.asking = null;
   feed.msgs = [];
@@ -222,7 +226,9 @@ export function Quick() {
           key={label}
           type="button"
           className="chip"
+          disabled={!!busy.asking}
           onClick={() => {
+            if (busy.asking) return; // AI가 답하는 중에는 누르지 못한다 (내 말만 남지 않게)
             clearQuick();
             me(label);
             fn();

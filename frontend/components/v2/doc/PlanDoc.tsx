@@ -5,13 +5,12 @@ import { useEffect, useState } from "react";
 import { errorText } from "@/lib/backend/client";
 import { toast } from "../engine";
 import { V3 } from "../store";
-import { accepted, type Block, fetchPlan, fetchQuote, type Plan, type PlanTrade, props, type Quote, type Trial } from "./api";
+import { accepted, type Block, cachedQuote, fetchPlan, fetchQuote, type Plan, type PlanTrade, props, type Trial } from "./api";
 import { DateField, Fld, log, md0, mdw, TCOLOR, wdOf } from "./shared";
 
 /** 견적이 없으면 받아 둔다 */
 export async function ensureQuote() {
-  if (!V3.quote) V3.quote = await fetchQuote();
-  return V3.quote as Quote;
+  return cachedQuote() ?? (await fetchQuote());
 }
 /** 공정표를 다시 받는다 (v10 buildPlan). 공정 단계 · 기간은 서버가 견적을 다시 계산해서 쓴다 */
 export async function loadPlan() {

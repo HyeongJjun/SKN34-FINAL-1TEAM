@@ -13,8 +13,10 @@ import {
   schedAgent,
   schedStep,
 } from "./steps";
+import { resetEstimates } from "./QuoteDoc";
 
 register({
+  resetDoc: resetEstimates,
   quoteStep,
   schedStep,
   openQuoteDoc,

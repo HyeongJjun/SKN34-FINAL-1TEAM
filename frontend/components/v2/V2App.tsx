@@ -4,12 +4,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Board, BoardBand } from "./Board";
 import { CAT, type Material, MODE_LABEL, STEP_INDEX, STEPS, type StyleData } from "./data";
-import { bot, busy, F, Feed, me, Overlays, Quick, quick, resetFeed, Toast, useFeed } from "./engine";
+import { bot, busy, closeAllOverlays, F, Feed, me, Overlays, Quick, quick, resetFeed, Toast, useFeed } from "./engine";
 import { stepFn } from "./flow";
 import { Home } from "./home/Home";
 import "./modules";
 import { setImgMode, view } from "./photo";
-import { chat, DATA, loadSaved, resetState, S, store, touch, useV2 } from "./store";
+import { chat, DATA, LEGACY_SAVE_KEY, loadSaved, resetState, S, saveCfg, store, touch, useV2, V3 } from "./store";
 import s from "./v2.module.css";
 
 /** 첫 화면에서 상담을 어떻게 시작할지 (v10 startMode · pendingAsk · pendingTool · pendingLook) */
@@ -37,9 +37,11 @@ async function startFlow() {
   const mode = start.mode;
   start.mode = null;
   if (mode === "resume") {
-    const v = loadSaved();
-    if (v) {
+    const saved = loadSaved();
+    if (saved) {
+      const { v3, savedAt: _at, ...v } = saved;
       Object.assign(S, v, { photos: [], refs: [], imgMode: S.imgMode });
+      if (v3) Object.assign(V3, v3, { quote: null, plan: null });
       S.scope.cats = (S.scope.cats || []).filter((c) => CAT[c]);
       S.picks = Object.fromEntries(Object.entries(S.picks || {}).filter(([c, id]) => CAT[c] && DATA.materials.some((m) => m.id === id && m.cat === c)));
       touch();
@@ -207,6 +209,7 @@ function ChatView() {
     resetState();
     F.resetLocal?.();
     F.resetMaterials?.();
+    F.resetDoc?.();
     chat.built = false;
     window.scrollTo(0, 0);
     setKey((k) => k + 1);
@@ -255,10 +258,12 @@ function Header({ inChat }: { inChat: boolean }) {
   );
 }
 
-export function V2App() {
+export function V2App({ userId }: { userId: string }) {
+  saveCfg.key = `${LEGACY_SAVE_KEY}:${userId}`; // 지난 상담은 로그인한 사람마다 따로 둔다
   const hash = useHash();
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   useEffect(() => {
+    store.del(LEGACY_SAVE_KEY); // 예전 공용 키(다른 계정에도 보이던 것)는 지운다
     const saved = store.get("mj-imgmode");
     if (saved && MODE_LABEL[saved]) S.imgMode = saved as typeof S.imgMode;
     view.empty = store.get("mj-empty") === "1";
@@ -277,8 +282,12 @@ export function V2App() {
       .catch(() => setState("error"));
   }, []);
   const inChat = hash === "chat";
+  const wasChat = useRef(false);
   useEffect(() => {
     if (!inChat) window.scrollTo(0, 0);
+    // 대화에서 첫 화면으로 돌아오면(뒤로 가기) 대화에서 연 견적서 · 공정표 겹창을 닫는다
+    if (wasChat.current && !inChat) closeAllOverlays();
+    wasChat.current = inChat;
   }, [inChat]);
   return (
     <div className={s.root}>

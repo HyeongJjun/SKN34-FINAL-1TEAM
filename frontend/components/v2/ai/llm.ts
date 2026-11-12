@@ -56,14 +56,28 @@ export async function toImageBlock(file: Blob): Promise<string> {
   return c.toDataURL("image/jpeg", 0.8).split(",")[1];
 }
 
+const abortErr = () => Object.assign(new Error("질문을 멈췄어요."), { name: "AbortError" });
 const aborted = (signal?: AbortSignal) => {
-  if (signal?.aborted) throw Object.assign(new Error("질문을 멈췄어요."), { name: "AbortError" });
+  if (signal?.aborted) throw abortErr();
 };
+/** 끊으면(처음부터) 서버 답을 기다리지 않고 바로 끝낸다. 늦게 온 답은 버린다 */
+function race<T>(p: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return p;
+  return new Promise<T>((res, rej) => {
+    if (signal.aborted) return rej(abortErr());
+    const on = () => rej(abortErr());
+    signal.addEventListener("abort", on, { once: true });
+    p.then(
+      (v) => (signal.removeEventListener("abort", on), res(v)),
+      (e) => (signal.removeEventListener("abort", on), rej(e)),
+    );
+  });
+}
 
 /** 한 턴: 서버가 화면 도구를 부르면 실행하고 결과를 보낸다 (서버가 도구 4번까지로 막는다) */
 export async function runAsk(body: AskBody, tools: AiTool[], signal?: AbortSignal): Promise<AskOut> {
   aborted(signal);
-  let out = await v2Post<AskOut>("ask", body);
+  let out = await race(v2Post<AskOut>("ask", body), signal);
   for (let i = 0; i < 6 && !out.done && out.turn; i++) {
     aborted(signal);
     const results = [];
@@ -78,7 +92,7 @@ export async function runAsk(body: AskBody, tools: AiTool[], signal?: AbortSigna
       }
       results.push({ id: c.id, content: content.slice(0, 20000) });
     }
-    out = await v2Post<AskOut>(`ask/${encodeURIComponent(out.turn)}`, { results });
+    out = await race(v2Post<AskOut>(`ask/${encodeURIComponent(out.turn)}`, { results }), signal);
   }
   aborted(signal);
   return out;

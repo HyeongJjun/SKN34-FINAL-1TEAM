@@ -8,7 +8,7 @@ import { todaySeoul } from "../dates";
 import { F, toast } from "../engine";
 import { scopeCats } from "../flow";
 import { S, touch, V3 } from "../store";
-import { type Band, type Entered, type Estimate, fetchEntered, fetchEstimate, fetchQuote, materials, type Precise, type Quote, type RefTrade, type VatMode } from "./api";
+import { type Band, cachedQuote, type Entered, type Estimate, fetchEntered, fetchEstimate, fetchQuote, materials, type Precise, type Quote, type RefTrade, type VatMode } from "./api";
 import { QuoteCheck } from "./QuoteCheck";
 import { BASIS_KO, DateField, Fld, fmt, log, signWon, STATE_KO } from "./shared";
 
@@ -21,6 +21,10 @@ const vps = () => V3.vpState as Record<string, "draft" | "confirmed" | undefined
 const vq = () => V3.vq as Record<string, VqEntry>;
 /** 확인한 단가로 받은 가견적 (공정별) */
 const EST: Record<string, Estimate> = {};
+/** '처음부터': 업체 가견적 계산을 비운다 */
+export function resetEstimates() {
+  for (const k of Object.keys(EST)) delete EST[k];
+}
 const priceKey = (t: Precise, key: string) => (key === "paper" ? `paper_${t.grade || "basic"}` : key);
 
 /** 견적을 다시 받는다 (v10 buildQuote). 확인한 단가의 가견적도 새 수량으로 다시 받는다 */
@@ -45,7 +49,7 @@ export async function loadQuote() {
 
 /** 문서 겹창 안 본문 (v10 openQuoteDoc의 body.refresh · rerenderDoc) */
 export function QuoteDocBody() {
-  const [q, setQ] = useState<Quote | null>((V3.quote as Quote | null) ?? null);
+  const [q, setQ] = useState<Quote | null>(cachedQuote());
   const [err, setErr] = useState("");
   const [, setN] = useState(0);
   const bump = () => setN((n) => n + 1);

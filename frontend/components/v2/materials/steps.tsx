@@ -2,15 +2,17 @@
 // 자재 단계 · 정리 (v10 matStep · setMatFull · summaryText · copySummary · finish).
 import { useEffect, useRef, useState } from "react";
 import { type Cat, manwon, priceText, STYLES, TIERS } from "@/components/v2/data";
-import { bot, F, quick, toast } from "@/components/v2/engine";
+import { bot, F, feedEpoch, quick, stillHere, toast } from "@/components/v2/engine";
 import { autoPick, fillPicks, matOf, scopeCats, setStep } from "@/components/v2/flow";
 import { matSrcs, Photo } from "@/components/v2/photo";
 import { DATA, S, useV2 } from "@/components/v2/store";
 import { MatCard } from "./MatCard";
-import { listReset, loadMok, M, redraw } from "./state";
+import { listReset, loadMok, M, redraw, resetMatState } from "./state";
 
 export async function matStep() {
+  const ep = feedEpoch.n;
   await loadMok(); // 목공 처음 자재(등급별)를 알아야 추천을 맞출 수 있다
+  if (!stillHere(ep)) return;
   setStep("materials");
   if (!M.cardId) autoPick();
   else fillPicks();
@@ -37,6 +39,7 @@ export function setMatFull(on: boolean) {
 
 /** 자재 화면 모듈 변수를 처음으로 (처음부터 누를 때) */
 export function resetMaterials() {
+  resetMatState();
   M.cardId = 0;
   M.cat = null;
   M.full = false;

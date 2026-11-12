@@ -91,7 +91,17 @@ export function quoteBody() {
   };
 }
 export type QuoteIn = ReturnType<typeof quoteBody>;
-export const fetchQuote = () => v2Post<Quote>("quote", quoteBody());
+/** 마지막으로 받은 견적의 입력. 자재 · 평형 등이 바뀌면 V3.quote를 쓰지 않고 다시 받는다 */
+let quoteFor = "";
+export async function fetchQuote() {
+  const body = quoteBody();
+  const q = await v2Post<Quote>("quote", body);
+  V3.quote = q;
+  quoteFor = JSON.stringify(body);
+  return q;
+}
+/** 지금 입력으로 받은 견적이면 그대로, 입력이 바뀌었거나 없으면 null */
+export const cachedQuote = () => (V3.quote && quoteFor === JSON.stringify(quoteBody()) ? (V3.quote as Quote) : null);
 
 /* ---------- 공정표 (POST /v2/plan = v10 buildPlan: planTrades · defaultStart · fixPlan) ---------- */
 export type PlanTrade = { trade: string; ko: string; steps: Step[]; crew: number; fixed: { start: string } | null; state: "confirmed" | "pending" | "expected"; need: number };

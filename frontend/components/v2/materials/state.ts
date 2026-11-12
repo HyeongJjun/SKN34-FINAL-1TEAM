@@ -153,6 +153,15 @@ export const mokQuote = live<{ key: string; data: QuoteOut | null; err: boolean 
 let qTimer: ReturnType<typeof setTimeout> | undefined;
 let qSeq = 0;
 
+/** '처음부터': 비교 바구니 · 추천 자리 기억 · 목공 견적을 비운다. 기다리던 목공 견적 응답은 버린다 */
+export function resetMatState() {
+  for (const k of Object.keys(CMP)) delete CMP[k];
+  for (const k of Object.keys(REC_SLOTS)) delete REC_SLOTS[k];
+  clearTimeout(qTimer);
+  qSeq++;
+  mokQuote.set({ key: "", data: null, err: false });
+}
+
 /** 목공 패널이 보일 때 견적 API에 목공만 보낸다 (같은 입력이면 다시 부르지 않음) */
 export function mokQuoteBody() {
   const plan = S.plan?.kind === "apt" && S.plan.id ? { id: S.plan.id, expanded: S.plan.expanded !== false, kinds: (F.pp9Kinds?.() as string[] | null | undefined) ?? null } : null;
