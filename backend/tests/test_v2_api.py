@@ -87,6 +87,30 @@ def test_plan_and_trial(api):
     assert api.post("/v2/plan", json=bad).status_code == 422
 
 
+def test_plan_rejects_dates_not_on_calendar(api):
+    """모양만 맞고 달력에 없는 날짜(2월 30일 · 13월)는 500이 아니라 422."""
+    signup(api)
+    body = {
+        "quote": QUOTE,
+        "cons": {"weekendWork": False, "endBy": "", "startAfter": "", "avoid": []},
+    }
+    wrong = [
+        {"cons": body["cons"] | {"startAfter": "2030-02-30"}},
+        {"cons": body["cons"] | {"endBy": "2030-13-01"}},
+        {"cons": body["cons"] | {"avoid": ["2030-04-31"]}},
+        {"move": "2030-02-30"},
+        {"move": "2030-13"},
+        {"trial": {"trade": "mokgong", "start": "2030-02-30", "end": "2030-03-02"}},
+        {"props": {"mokgong": {"start": "2030-02-29", "end": "2030-03-02"}}},  # 2030년은 평년
+        {"accepted": {"mokgong": {"start": "2030-03-01", "end": "2030-00-02"}}},
+    ]
+    for over in wrong:
+        r = api.post("/v2/plan", json=body | over)
+        assert r.status_code == 422, (over, r.status_code)
+    ok = body | {"cons": body["cons"] | {"startAfter": "2028-02-29"}, "move": "2028-03"}
+    assert api.post("/v2/plan", json=ok).status_code == 200  # 윤년 2월 29일은 맞는 날짜
+
+
 def test_check_and_small_calcs(api):
     signup(api)
     c = {"quote": QUOTE, "trade": "dobae", "amount": 3_000_000, "mode": "included", "scope": {}}

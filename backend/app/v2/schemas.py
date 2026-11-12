@@ -3,17 +3,32 @@
 스키마 이름은 모두 V2 접두어(팀 스키마 이름과 겹치면 OpenAPI가 덮어쓴다).
 """
 
+from datetime import date
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, StrictBool
+from pydantic import AfterValidator, BaseModel, Field, StrictBool
 
 from app.calc.plan_qty import SpaceKind
 from app.calc.precise_mokgong import DoorMode, MoldingType
 
 Id = Annotated[str, Field(max_length=80)]
-Day = Annotated[str, Field(pattern=r"^\d{4}-\d{2}-\d{2}$")]
-DayOrEmpty = Annotated[str, Field(pattern=r"^(\d{4}-\d{2}-\d{2})?$")]
+
+
+def _real_day(v: str) -> str:
+    """모양(YYYY-MM-DD)만 맞고 달력에 없는 날짜(2월 30일 · 13월)는 422로 막는다."""
+    if v:
+        try:
+            date.fromisoformat(v if len(v) == 10 else f"{v}-01")
+        except ValueError as e:
+            raise ValueError("달력에 없는 날짜예요") from e
+    return v
+
+
+Day = Annotated[str, Field(pattern=r"^\d{4}-\d{2}-\d{2}$"), AfterValidator(_real_day)]
+DayOrEmpty = Annotated[str, Field(pattern=r"^(\d{4}-\d{2}-\d{2})?$"), AfterValidator(_real_day)]
+# 입주 희망: 연-월 또는 연-월-일
+MoveDay = Annotated[str, Field(pattern=r"^(\d{4}-\d{2}(-\d{2})?)?$"), AfterValidator(_real_day)]
 Qty = Annotated[Decimal, Field(ge=0, le=10_000, max_digits=8, decimal_places=1)]
 Cat = Literal[
     "wallpaper",
@@ -304,7 +319,7 @@ class V2TrialIn(BaseModel):
 
 class V2PlanIn(BaseModel):
     quote: V2QuoteIn
-    move: str = Field(default="", pattern=r"^(\d{4}-\d{2}(-\d{2})?)?$")
+    move: MoveDay = ""
     cons: V2ConsIn = V2ConsIn()
     props: dict[Trade, V2PropIn] = Field(default={}, max_length=12)
     accepted: dict[Trade, V2AcceptedIn] = Field(default={}, max_length=12)
