@@ -82,8 +82,8 @@ export async function quoteStep() {
   quick([
     ["공정표 보기", () => schedStep()],
     ["계약 전 점검", () => F.checkStep?.("contract")],
-    ["왜 이 금액이에요?", () => explainQuote()],
-    ...(q.band ? ([["왜 달라요?", () => bandWhy()]] as [string, () => void][]) : []),
+    ["왜 이 금액이에요?", () => explainQuote(undefined, "왜 이 금액이에요?"), true],
+    ...(q.band ? ([["왜 달라요?", () => bandWhy(), true]] as [string, () => void, boolean][]) : []),
   ]);
 }
 
@@ -92,7 +92,7 @@ export function openQuoteDoc() {
 }
 
 /** 견적 설명 에이전트: 저장된 금액을 풀이만 한다. 서버가 같은 입력으로 견적을 다시 계산해 설명하고 숫자를 검사한다 */
-export async function explainQuote(question?: string) {
+export async function explainQuote(question?: string, label = "금액 풀이") {
   const ep = feedEpoch.n;
   try {
     if (!cachedQuote()) await loadQuote();
@@ -104,11 +104,11 @@ export async function explainQuote(question?: string) {
   if (!stillHere(ep)) return;
   const ask = question || "이 표준견적서 금액이 어떻게 나왔는지 쉽게 풀어 주세요. 가장 큰 줄 두세 개와 실측 뒤 바뀔 수 있는 것을 알려 주세요.";
   if (!F.agentAnswer) {
-    if (!question) me("금액 풀이");
+    if (!question) me(label);
     await bot(FAIL);
     return;
   }
-  await F.agentAnswer({ label: question ? null : "금액 풀이", ask, kind: "quote_explanation", quote: quoteBody() });
+  await F.agentAnswer({ label: question ? null : label, ask, kind: "quote_explanation", quote: quoteBody() });
 }
 
 /** '왜 달라요?' 대화 카드: 공정마다 가장 큰 이유 3개 (v5) */
@@ -210,8 +210,8 @@ export async function schedStep() {
   await bot("공사 순서대로 예상 날짜를 잡았어요.", <PlanCard p={p} title />);
   quick([
     ["공사 전 체크리스트", () => F.checkStep?.("before")],
-    ["12월 안에 끝내고 싶어요", () => schedAgent("12월 안에 끝내고 싶어요")],
-    ["주말에도 공사해도 돼요", () => schedAgent("주말에도 공사해도 돼요")],
+    ["12월 안에 끝내고 싶어요", () => schedAgent("12월 안에 끝내고 싶어요"), true],
+    ["주말에도 공사해도 돼요", () => schedAgent("주말에도 공사해도 돼요"), true],
     ["견적서 다시 보기", () => openQuoteDoc()],
   ]);
 }

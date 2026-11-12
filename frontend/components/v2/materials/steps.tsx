@@ -24,7 +24,7 @@ export async function matStep() {
   await bot(`${TIERS[S.tier]}으로 골라 뒀어요. 바꿀 것만 눌러 주세요.`, <MatCard key={`mat${id}`} id={id} />);
   quick([
     ["다 골랐어요", () => finish()],
-    ["추천 비교해 주세요", () => F.askCompare(M.cat)],
+    ["추천 비교해 주세요", () => F.askCompare(M.cat), true],
     ["자재 크게 보기", () => setMatFull(true)],
   ]);
   if (matchMedia("(max-width: 760px)").matches) setMatFull(true);

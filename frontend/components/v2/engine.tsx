@@ -7,7 +7,8 @@ import { wait } from "./store";
 
 type Part = ReactNode;
 type Msg = { id: number; who: "bot" | "me"; parts: Part[]; typing?: boolean; scroll?: "start" | "nearest" };
-type QuickItem = [string, () => void];
+/** [글, 할 일, 할 일이 고객 말을 직접 남기는지]. 셋째가 true면 칩은 고객 말을 따로 남기지 않는다(두 번 찍히지 않게) */
+type QuickItem = [string, () => void, boolean?];
 type Overlay = { id: number; node: ReactNode };
 
 const feed = {
@@ -221,7 +222,7 @@ export function Quick() {
   const f = useFeed();
   return (
     <div className="quick">
-      {f.quick.map(([label, fn]) => (
+      {f.quick.map(([label, fn, selfEcho]) => (
         <button
           key={label}
           type="button"
@@ -230,7 +231,7 @@ export function Quick() {
           onClick={() => {
             if (busy.asking) return; // AI가 답하는 중에는 누르지 못한다 (내 말만 남지 않게)
             clearQuick();
-            me(label);
+            if (!selfEcho) me(label);
             fn();
           }}
         >
