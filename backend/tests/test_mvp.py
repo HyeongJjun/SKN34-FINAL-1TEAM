@@ -38,7 +38,10 @@ def test_plans_and_plan_qty(api):
 def test_materials(api):
     signup(api)
     m = api.get("/mvp/materials").json()
-    assert len(m["products"]) == 21 and len(m["extras"]) == 18
+    assert len(m["products"]) == 17 and len(m["extras"]) == 18
+    # 천장 몰딩 · 걸레받이는 자주 쓰는 3가지씩만
+    kinds = [p["kind"] for p in m["products"]]
+    assert kinds.count("molding") == 3 and kinds.count("base") == 3
     assert set(m["grades"]) == {"economy", "basic", "premium"}
 
 

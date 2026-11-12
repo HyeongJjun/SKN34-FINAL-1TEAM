@@ -55,7 +55,6 @@ export type MokExtra = { key: string; group: string; ko: string; what: string; u
 export type MokGrade = { molding_type: string; molding: string; base: string; leaf: string; door_set: string };
 export type MokData = { version: string; products: MokProduct[]; extras: MokExtra[]; grades: Record<string, MokGrade> };
 
-export const MOLDING_TYPES: [MokSt["molding"]["type"], string][] = [["flat", "평몰딩"], ["step", "계단몰딩"], ["minus", "무몰딩(마이너스)"], ["none", "안 함"]];
 export const DOOR_MODES: [MokSt["door"]["mode"], string][] = [["none", "안 함"], ["replace", "문틀까지 교체"], ["overlay", "문틀 덧방"], ["leaf", "문짝만 교체"]];
 
 export const MOK = { data: null as MokData | null, prod: {} as Record<string, MokProduct>, err: false };
@@ -97,6 +96,13 @@ export function mok10St(): MokSt {
     blank.molding = { type: g.molding_type as MokSt["molding"]["type"], pick: g.molding };
     blank.base = { pick: g.base };
     S.mok10 = blank;
+  }
+  // 저장된 상담에 이제 목록에 없는 자재가 있으면 등급 기본값으로 돌린다
+  const g = MOK.data && (MOK.data.grades[S.tier] || MOK.data.grades.basic);
+  if (g) {
+    const m = S.mok10;
+    if (m.molding.pick && !MOK.prod[m.molding.pick]) m.molding = { type: g.molding_type as MokSt["molding"]["type"], pick: g.molding };
+    if (m.base.pick && !MOK.prod[m.base.pick]) m.base = { pick: g.base };
   }
   return S.mok10;
 }

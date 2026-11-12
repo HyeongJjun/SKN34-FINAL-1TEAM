@@ -82,36 +82,12 @@ _PRODUCTS = {
         len_m=Decimal("2.4"),
         type="step",
     ),
-    "molding-youngrim-step3-casing": Product(
-        kind="molding",
-        name="영림 3계단몰딩(문선몰딩) 70x15 · 48x15",
-        price=6_000,
-        why="3계단 70 × 15 2.4m 1개",
-        len_m=Decimal("2.4"),
-        type="step",
-    ),
     "molding-youngrim-minus": Product(
         kind="molding",
         name="영림 천장 마이너스몰딩 25x15 래핑몰딩",
         price=3_400,
         why="25 × 15 2.4m 1개",
         len_m=Decimal("2.4"),
-        type="minus",
-    ),
-    "molding-dc-alu-minus": Product(
-        kind="molding",
-        name="DC 알루미늄 몰딩(제조사 표기 없음) 알루미늄 마이너스 몰딩 DC-2314",
-        price=7_700,
-        why="알루미늄 3m 1개",
-        len_m=Decimal(3),
-        type="minus",
-    ),
-    "molding-dc-picture-rail": Product(
-        kind="molding",
-        name="DC 알루미늄 몰딩(제조사 표기 없음) 알루미늄 픽처(액자)레일 몰딩 DC-2066",
-        price=11_000,
-        why="알루미늄 픽처레일 3m 1개",
-        len_m=Decimal(3),
         type="minus",
     ),
     "molding-youngrim-pvc-baseboard80": Product(
@@ -127,13 +103,6 @@ _PRODUCTS = {
         price=4_500,
         why="래핑 801 2.4m 1개",
         len_m=Decimal("2.4"),
-    ),
-    "molding-namuman-mdf-baseboard": Product(
-        kind="base",
-        name="나무맨 MDF 걸레받이 몰딩 80mm 백색",
-        price=6_400,
-        why="MDF 80mm 2.44m 1개",
-        len_m=Decimal("2.44"),
     ),
     "molding-dc-hidden-baseboard": Product(
         kind="base",
@@ -394,5 +363,5 @@ _INIT = {
 }
 
 MOK_2026_11 = MokBook(
-    version="mok10-2026.11-1", products=_PRODUCTS, fixed=_FIXED, extras=_EXTRAS, init=_INIT
+    version="mok10-2026.11-2", products=_PRODUCTS, fixed=_FIXED, extras=_EXTRAS, init=_INIT
 )

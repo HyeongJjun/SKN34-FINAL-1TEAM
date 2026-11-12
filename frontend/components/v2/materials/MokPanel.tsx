@@ -15,7 +15,6 @@ import {
   mok10Doors,
   mok10Set,
   mok10St,
-  MOLDING_TYPES,
   mokQuote,
   mokQuoteBody,
   type MokExtra,
@@ -199,21 +198,31 @@ export function MokPanel() {
     );
   };
 
-  /* 천장 몰딩 */
-  const moldBody =
-    s.molding.type === "none" ? null : (
-      <div className="mk-sub">
-        <div className="mgrid">
-          {idsOf("molding", s.molding.type).map((id) => (
-            <MokCard key={id} id={id} on={s.molding.pick === id} onPick={() => mok10Set((x) => void (x.molding.pick = id))} />
-          ))}
-        </div>
-        <p className="muted mk-note">
-          {len("molding")}
-          {s.molding.type === "minus" ? " · 무몰딩은 석고 마감 손이 더 가서 시공 단가를 2배로 잡았어요." : ""}
-        </p>
+  /* 천장 몰딩: 평몰딩 · 계단몰딩 · 무몰딩 중 하나. 고른 것을 다시 누르면 안 함 */
+  const moldOn = s.molding.type !== "none" && s.molding.pick;
+  const moldBody = (
+    <div className="mk-sub">
+      <div className="mgrid">
+        {idsOf("molding").map((id) => (
+          <MokCard
+            key={id}
+            id={id}
+            on={moldOn === id}
+            onPick={() =>
+              mok10Set((x) => {
+                const off = x.molding.type !== "none" && x.molding.pick === id;
+                x.molding = off ? { type: "none", pick: null } : { type: (MOK.prod[id]?.type as MokSt["molding"]["type"]) || "flat", pick: id };
+              })
+            }
+          />
+        ))}
       </div>
-    );
+      <p className="muted mk-note">
+        {moldOn ? len("molding") : "천장 몰딩을 하지 않아요. 고르려면 자재를 눌러 주세요."}
+        {moldOn && s.molding.type === "minus" ? " · 무몰딩은 석고 마감 손이 더 가서 시공 단가를 2배로 잡았어요." : ""}
+      </p>
+    </div>
+  );
 
   /* 걸레받이 */
   const baseBody = (
@@ -293,11 +302,6 @@ export function MokPanel() {
         if (!x.door.pick || MOK.prod[x.door.pick]?.kind !== want) x.door.pick = mok10DefaultPick(k);
       }
     });
-  const setMold = (k: MokSt["molding"]["type"]) =>
-    mok10Set((x) => {
-      x.molding.type = k;
-      if (k !== "none" && (!x.molding.pick || MOK.prod[x.molding.pick]?.type !== k)) x.molding.pick = idsOf("molding", k)[0] ?? null;
-    });
 
   return (
     <div className="mat-body mk" role="tabpanel">
@@ -313,7 +317,6 @@ export function MokPanel() {
       </section>
       <section className="mk-sec">
         <h4>천장 몰딩<small>천장과 벽이 만나는 곳</small></h4>
-        <Seg items={MOLDING_TYPES} cur={s.molding.type} on={setMold} label="천장 몰딩 종류" />
         {moldBody}
       </section>
       <section className="mk-sec">
