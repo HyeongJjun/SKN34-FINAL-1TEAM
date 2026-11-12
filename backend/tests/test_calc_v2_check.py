@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from app.calc import market_band as mb
 from app.calc.v2_check import CheckScope, check, estimate_for, percent_vs
-from app.refprice.mvp_market import MARKET_2026_11 as M
+from app.refprice.market import MARKET_2026_11 as M
 
 D = Decimal
 # 공급 100㎡ 실크: 도배 면적 224㎡ → 천장 82.9 · 벽 141.1, 시장 기준 2,444,204원 → 범위 218만 ~ 310만

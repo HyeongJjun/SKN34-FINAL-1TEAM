@@ -1,4 +1,4 @@
-// 셀프 계산기 수량 계산은 백엔드 POST /mvp/v2/calc7 (v10 CALC7). 부르는 곳은 이 파일 하나.
+// 셀프 계산기 수량 계산은 백엔드 POST /v2/calc7 (v10 CALC7). 부르는 곳은 이 파일 하나.
 // 입력 · 출력은 v10 CALC7 함수 그대로라고 가정한다: { kind, ...입력 } → 결과 객체
 import { v2Post } from "../api";
 

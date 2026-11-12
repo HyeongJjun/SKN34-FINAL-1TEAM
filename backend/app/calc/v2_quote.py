@@ -1,6 +1,6 @@
 """v2 표준견적서: v10 v3Inputs · buildQuote를 옮긴 것. 정밀 공정마다 시장 범위(band)와 공공 → 시장 차이(gap)를 붙인다.
 
-정밀 공정(목공 · 도배)은 mvp_mokgong · mvp_dobae, 시장 기준은 market_band, 참고 공정은 v2_ref_trade가 계산한다.
+정밀 공정(목공 · 도배)은 precise_mokgong · precise_dobae, 시장 기준은 market_band, 참고 공정은 v2_ref_trade가 계산한다.
 결과는 v10 객체와 같은 키의 dict. 오늘 날짜는 인자로 받는다(견적 번호 · 날짜).
 """
 
@@ -9,12 +9,12 @@ from dataclasses import dataclass, replace
 from datetime import date
 from decimal import Decimal
 
-from app.calc import market_band, mvp_dobae, mvp_mokgong
+from app.calc import market_band, precise_dobae, precise_mokgong
 from app.calc.common import Line, m2, pyeong_to_m2
 from app.calc.dobae import DobaePrices
 from app.calc.mokgong import MokgongPrices
-from app.calc.mvp_common import MvpLine, num
 from app.calc.plan_qty import PlanQty
+from app.calc.precise_common import V2Line, num
 from app.calc.v2_ref_trade import RefMaterial, ref_trade
 
 TRADE_OF = {"wallpaper": "dobae", "carpentry": "mokgong"}
@@ -38,7 +38,7 @@ class V2Plan:
 @dataclass(frozen=True)
 class V2Books:
     dobae: DobaePrices
-    mok: mvp_mokgong.MokBook
+    mok: precise_mokgong.MokBook
     mokgong: MokgongPrices
     market: market_band.MarketBook
     public_eq_dobae: market_band.MarketDobae
@@ -59,7 +59,7 @@ class V2QuoteInput:
     picks: dict[str, str]
     plan: V2Plan | None
     balcony: bool
-    mok: mvp_mokgong.MokSel
+    mok: precise_mokgong.MokSel
     door_count_set: bool  # 고객이 방문 개수를 넣었는지 (S.mok10.door.count != null)
     door_removal: bool = (
         False  # v10: 문틀까지 교체 · 덧방을 고르면 문 수 · 자재와 상관없이 철거 줄을 둔다
@@ -90,7 +90,7 @@ def baths_for(py: Decimal) -> int:
     return 1 if py < 28 else 2
 
 
-def mok_items(sel: mvp_mokgong.MokSel) -> tuple[str, ...]:
+def mok_items(sel: precise_mokgong.MokSel) -> tuple[str, ...]:
     """v10 mok10Items: 시장 기준 · 화면에 쓰는 목공 항목."""
     it = []
     if sel.molding_type != "none" and sel.molding:
@@ -146,7 +146,7 @@ def inputs(q: V2QuoteInput, books: V2Books) -> V2Inputs:
 
 
 def _line(ln: Line, calc: str | None = None) -> dict:
-    basis = ln.price_basis if isinstance(ln, MvpLine) else ln.basis
+    basis = ln.price_basis if isinstance(ln, V2Line) else ln.basis
     return {
         "key": ln.key,
         "name": ln.name,
@@ -157,7 +157,7 @@ def _line(ln: Line, calc: str | None = None) -> dict:
         "state": ln.state,
         "source": ln.source,
         "basis": basis,
-        "calc": calc if calc is not None else (ln.calc if isinstance(ln, MvpLine) else ""),
+        "calc": calc if calc is not None else (ln.calc if isinstance(ln, V2Line) else ""),
     }
 
 
@@ -165,7 +165,7 @@ def _steps(steps) -> list[dict]:
     return [{"key": s.key, "name": s.name, "half_days": s.half_days} for s in steps]
 
 
-def _mok_md_raw(lines: list[dict], sel: mvp_mokgong.MokSel, books: V2Books) -> float:
+def _mok_md_raw(lines: list[dict], sel: precise_mokgong.MokSel, books: V2Books) -> float:
     """v10 md.door + md.trim + md.ceil (JS 소수 계산 그대로, 화면 표시에 쓰지 않음)."""
     mg, f = books.mokgong, books.mok.fixed
     by = {ln["key"]: ln for ln in lines}
@@ -205,8 +205,8 @@ def _mokgong(q: V2QuoteInput, inp: V2Inputs, books: V2Books) -> dict | None:
                 extras[x.key] = ceil
                 auto_fix.add(x.key)
         sel = replace(sel, extras=extras)
-    r = mvp_mokgong.quote(
-        mvp_mokgong.MvpMokgongInput(
+    r = precise_mokgong.quote(
+        precise_mokgong.V2MokgongInput(
             area_m2=inp.area_m2,
             sel=sel,
             occupied=inp.occupied,
@@ -258,8 +258,8 @@ def _mokgong(q: V2QuoteInput, inp: V2Inputs, books: V2Books) -> dict | None:
 
 def _dobae(q: V2QuoteInput, inp: V2Inputs, books: V2Books) -> dict:
     plan, p = q.plan, books.dobae
-    r = mvp_dobae.quote(
-        mvp_dobae.MvpDobaeInput(
+    r = precise_dobae.quote(
+        precise_dobae.V2DobaeInput(
             area_m2=inp.area_m2,
             grade=inp.grade,  # type: ignore[arg-type]
             occupied=inp.occupied,

@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
 
 from app.calc.common import m2, won
-from app.calc.mvp_common import num
+from app.calc.precise_common import num
 
 COUNT_UNITS = ("개", "세트", "짝", "식", "곳", "자")
 PUBLIC_SRC = re.compile(r"표준시장단가|조달청|품셈")

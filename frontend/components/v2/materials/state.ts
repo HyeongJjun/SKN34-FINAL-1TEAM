@@ -1,6 +1,6 @@
 // 자재 단계 상태: 고르는 화면의 모듈 변수(v10 matCard · matCat · matFilter …) · 비교 바구니 · 추천 자리 고정 · 목공 자재.
-// 금액은 만들지 않는다. 목공 자재 · 정해진 단가 항목은 백엔드(/mvp/materials), 목공 금액 · 길이는 견적 API(/mvp/v2/quote)가 준다.
-import { mvpGet, v2Post } from "@/components/v2/api";
+// 금액은 만들지 않는다. 목공 자재 · 정해진 단가 항목은 백엔드(/v2/materials), 목공 금액 · 길이는 견적 API(/v2/quote)가 준다.
+import { v2Get, v2Post } from "@/components/v2/api";
 import { DATA, type MokSt, S, touch, V3 } from "@/components/v2/store";
 import { F, live } from "@/components/v2/engine";
 import { flashBoard } from "@/components/v2/Board";
@@ -49,7 +49,7 @@ export function redraw(flash = false) {
   touch();
 }
 
-/* ---------- 목공 자재 (백엔드 /mvp/materials = v10 MOK10 prod · extras · init) ---------- */
+/* ---------- 목공 자재 (백엔드 /v2/materials = v10 MOK10 prod · extras · init) ---------- */
 export type MokProduct = { id: string; kind: string; name: string; price: number; why: string; len_m: string | number | null; type: string | null };
 export type MokExtra = { key: string; group: string; ko: string; what: string; unit: string; price: number; basis: string; src: string; auto: string | null };
 export type MokGrade = { molding_type: string; molding: string; base: string; leaf: string; door_set: string };
@@ -62,7 +62,7 @@ let mokLoading: Promise<void> | null = null;
 /** 목공 자재를 한 번만 받아 둔다. 실패하면 다음에 다시 받는다 */
 export function loadMok() {
   if (MOK.data) return Promise.resolve();
-  mokLoading ??= mvpGet<MokData>("materials")
+  mokLoading ??= v2Get<MokData>("materials")
     .then((d) => {
       MOK.data = d;
       MOK.prod = Object.fromEntries(d.products.map((p) => [p.id, p]));

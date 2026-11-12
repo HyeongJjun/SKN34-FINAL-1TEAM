@@ -1,6 +1,6 @@
 "use client";
 // 5-2. 도면 (v10 planStep · openPlanPicker · pp9Apply · qtyCard · pickInFlow · 보드 '도면으로 수량').
-// 평면도 목록과 수량은 백엔드(/mvp/plans · /mvp/plans/{id}/qty)가 만든다. 화면은 받은 값을 보여 주기만 한다.
+// 평면도 목록과 수량은 백엔드(/v2/floor-plans · /v2/floor-plans/{id}/qty)가 만든다. 화면은 받은 값을 보여 주기만 한다.
 import { errorText } from "@/lib/backend/client";
 import { useEffect, useRef, useState } from "react";
 import { flashBoard } from "../Board";

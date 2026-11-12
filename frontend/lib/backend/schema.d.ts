@@ -124,244 +124,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/mvp/plans": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 예시 평면도 목록 */
-        get: operations["plans_mvp_plans_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/mvp/plans/{plan_id}/qty": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 평면도 수량 */
-        get: operations["plan_qty_mvp_plans__plan_id__qty_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/mvp/materials": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 목공 자재 · 정해진 단가 항목 */
-        get: operations["materials_mvp_materials_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/mvp/projects/{project_id}/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 견적 미리 보기 (도면 · 목공 자재 · 시장 범위, 저장하지 않음) */
-        post: operations["preview_mvp_projects__project_id__preview_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/mvp/v2/quote": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** v2 표준견적서 */
-        post: operations["v2_quote_mvp_v2_quote_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/mvp/v2/market-extras": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** v2 받은 견적 맞춰 보기 목공 추가 항목 */
-        get: operations["v2_market_extras_mvp_v2_market_extras_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/mvp/v2/plan": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** v2 예상 공정표 */
-        post: operations["v2_plan_mvp_v2_plan_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/mvp/v2/check": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** v2 받은 견적 맞춰 보기 */
-        post: operations["v2_check_mvp_v2_check_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/mvp/v2/estimate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** v2 업체 가견적 */
-        post: operations["v2_estimate_mvp_v2_estimate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/mvp/v2/entered": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** v2 실측 견적서 금액 */
-        post: operations["v2_entered_mvp_v2_entered_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/mvp/v2/calc7": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** v2 셀프 계산기 */
-        post: operations["v2_calc7_mvp_v2_calc7_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/mvp/v2/extras-range": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** v2 추가 항목 범위 */
-        post: operations["v2_extras_mvp_v2_extras_range_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/mvp/v2/llm": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** v2 AI 한 번 부르기 */
-        post: operations["v2_llm_mvp_v2_llm_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/mvp/v2/llm/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** v2 AI 상태 */
-        get: operations["v2_llm_health_mvp_v2_llm_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/notifications": {
         parameters: {
             query?: never;
@@ -867,6 +629,244 @@ export interface paths {
         };
         /** 서류 모음: 표준견적서 · 공정표 버전 · 받은 실측 견적서 · 확정 견적서 · 추가 금액 */
         get: operations["docs_projects__project_id__docs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/floor-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 예시 평면도 목록 */
+        get: operations["plans_v2_floor_plans_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/floor-plans/{plan_id}/qty": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 평면도 수량 */
+        get: operations["plan_qty_v2_floor_plans__plan_id__qty_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/materials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 목공 자재 · 정해진 단가 항목 */
+        get: operations["materials_v2_materials_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/projects/{project_id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 견적 미리 보기 (도면 · 목공 자재 · 시장 범위, 저장하지 않음) */
+        post: operations["preview_v2_projects__project_id__preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v2 표준견적서 */
+        post: operations["v2_quote_v2_quote_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/market-extras": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** v2 받은 견적 맞춰 보기 목공 추가 항목 */
+        get: operations["v2_market_extras_v2_market_extras_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v2 예상 공정표 */
+        post: operations["v2_plan_v2_plan_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v2 받은 견적 맞춰 보기 */
+        post: operations["v2_check_v2_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v2 업체 가견적 */
+        post: operations["v2_estimate_v2_estimate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/entered": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v2 실측 견적서 금액 */
+        post: operations["v2_entered_v2_entered_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/calc7": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v2 셀프 계산기 */
+        post: operations["v2_calc7_v2_calc7_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/extras-range": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v2 추가 항목 범위 */
+        post: operations["v2_extras_v2_extras_range_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/llm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v2 AI 한 번 부르기 */
+        post: operations["v2_llm_v2_llm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/llm/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** v2 AI 상태 */
+        get: operations["v2_llm_health_v2_llm_health_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2562,1539 +2562,6 @@ export interface components {
             /** @description 넣은 예산과 견줌 (예산을 안 넣었으면 비어 있다) */
             budget: components["schemas"]["BudgetOut"] | null;
         };
-        /** MvpCountIn */
-        MvpCountIn: {
-            /**
-             * N
-             * @default 0
-             */
-            n: number;
-            /** Pick */
-            pick?: string | null;
-        };
-        /** MvpDoorIn */
-        MvpDoorIn: {
-            /**
-             * Mode
-             * @default none
-             * @enum {string}
-             */
-            mode: "none" | "replace" | "overlay" | "leaf";
-            /** Pick */
-            pick?: string | null;
-            /** Count */
-            count?: number | null;
-        };
-        /** MvpExtraOut */
-        MvpExtraOut: {
-            /** Key */
-            key: string;
-            /** Group */
-            group: string;
-            /** Ko */
-            ko: string;
-            /** What */
-            what: string;
-            /** Unit */
-            unit: string;
-            /** Price */
-            price: number;
-            /** Basis */
-            basis: string;
-            /** Src */
-            src: string;
-            /** Auto */
-            auto: string | null;
-        };
-        /** MvpGapStepOut */
-        MvpGapStepOut: {
-            /** Key */
-            key: string;
-            /** Name */
-            name: string;
-            /** Why */
-            why: string;
-            /** D */
-            d: number;
-        };
-        /** MvpGradeInitOut */
-        MvpGradeInitOut: {
-            /** Molding Type */
-            molding_type: string;
-            /** Molding */
-            molding: string;
-            /** Base */
-            base: string;
-            /** Leaf */
-            leaf: string;
-            /** Door Set */
-            door_set: string;
-        };
-        /** MvpLineOut */
-        MvpLineOut: {
-            /** Key */
-            key: string;
-            /** Name */
-            name: string;
-            /** Qty */
-            qty: string | null;
-            /** Unit */
-            unit: string;
-            /** Unit Price */
-            unit_price: number | null;
-            /** Amount */
-            amount: number | null;
-            /** State */
-            state: string;
-            /** Source */
-            source: string;
-            /** Price Basis */
-            price_basis: string;
-            /** Calc */
-            calc: string;
-        };
-        /** MvpMarketLineOut */
-        MvpMarketLineOut: {
-            /** Key */
-            key: string;
-            /** Name */
-            name: string;
-            /** Qty */
-            qty: string | null;
-            /** Unit */
-            unit: string;
-            /** Unit Price */
-            unit_price: number | null;
-            /** Amount */
-            amount: number;
-            /** Note */
-            note: string;
-        };
-        /** MvpMarketOut */
-        MvpMarketOut: {
-            /** Version */
-            version: string;
-            /** Supply */
-            supply: number;
-            /** Lo */
-            lo: number;
-            /** Hi */
-            hi: number;
-            /** Band Lo */
-            band_lo: string;
-            /** Band Hi */
-            band_hi: string;
-            /** N */
-            n: number;
-            /** Lines */
-            lines: components["schemas"]["MvpMarketLineOut"][];
-            /** Gap Start */
-            gap_start: number;
-            /** Gap */
-            gap: components["schemas"]["MvpGapStepOut"][];
-        };
-        /** MvpMaterialsOut */
-        MvpMaterialsOut: {
-            /** Version */
-            version: string;
-            /** Products */
-            products: components["schemas"]["MvpProductOut"][];
-            /** Extras */
-            extras: components["schemas"]["MvpExtraOut"][];
-            /** Grades */
-            grades: {
-                [key: string]: components["schemas"]["MvpGradeInitOut"];
-            };
-            fixed?: components["schemas"]["MvpMokFixedOut"] | null;
-        };
-        /**
-         * MvpMokFixedOut
-         * @description 화면 문구에 쓰는 정해진 값 (v10 MOK10.fixed).
-         */
-        MvpMokFixedOut: {
-            /** Minus Mult */
-            minus_mult: string;
-            /** Hidden Mult */
-            hidden_mult: string;
-            /** Molding Per Py */
-            molding_per_py: string;
-            /** Base Per Py */
-            base_per_py: string;
-        };
-        /** MvpMokSelIn */
-        MvpMokSelIn: {
-            /**
-             * @default {
-             *       "mode": "none"
-             *     }
-             */
-            door: components["schemas"]["MvpDoorIn"];
-            /**
-             * @default {
-             *       "n": 0
-             *     }
-             */
-            slide: components["schemas"]["MvpCountIn"];
-            /**
-             * @default {
-             *       "n": 0
-             *     }
-             */
-            hidden: components["schemas"]["MvpCountIn"];
-            /**
-             * Molding Type
-             * @default none
-             * @enum {string}
-             */
-            molding_type: "flat" | "step" | "minus" | "none";
-            /** Molding */
-            molding?: string | null;
-            /** Base */
-            base?: string | null;
-            /**
-             * Extras
-             * @default {}
-             */
-            extras: {
-                [key: string]: boolean | number | string;
-            };
-        };
-        /** MvpPlanBriefOut */
-        MvpPlanBriefOut: {
-            /** Id */
-            id: string;
-            /** Name */
-            name: string;
-            /** Region */
-            region: string;
-            /** Type */
-            type: string;
-            /** Supply M2 */
-            supply_m2: string;
-            /** Excl M2 */
-            excl_m2: string | null;
-            /** Supply Py */
-            supply_py: number;
-            /** Rooms */
-            rooms: number;
-            /** Baths */
-            baths: number;
-            /** Layout */
-            layout: string;
-            /** Year */
-            year: number | null;
-            /** Stage */
-            stage: string | null;
-            /** Src */
-            src: string;
-            /** Src Url */
-            src_url: string;
-            /** Img */
-            img: string;
-            /** Drawn */
-            drawn: string;
-            /** Has Ext */
-            has_ext: boolean;
-            /** Sup Note */
-            sup_note: string | null;
-        };
-        /**
-         * MvpPlanEstOut
-         * @description 평형으로 어림한 값 (v10 CALC9 est): 도면 수량과 비교용.
-         */
-        MvpPlanEstOut: {
-            /** Py */
-            py: string;
-            /** Wall M2 */
-            wall_m2: string;
-            /** Ceiling M2 */
-            ceiling_m2: string;
-            /** Molding M */
-            molding_m: string;
-            /** Base M */
-            base_m: string;
-        };
-        /** MvpPlanQtyOut */
-        MvpPlanQtyOut: {
-            /** Plan Id */
-            plan_id: string;
-            /** Rules Version */
-            rules_version: string;
-            /** Expanded */
-            expanded: boolean;
-            /** Ceiling */
-            ceiling: boolean;
-            /** Kinds */
-            kinds: string[] | null;
-            /** Spaces */
-            spaces: components["schemas"]["MvpPlanSpaceOut"][];
-            /** Wall M2 */
-            wall_m2: string;
-            /** Ceiling M2 */
-            ceiling_m2: string;
-            /** Paper M2 */
-            paper_m2: string;
-            /** Primer M2 */
-            primer_m2: string;
-            /** Rolls */
-            rolls: components["schemas"]["MvpRollOut"][];
-            /** Molding M */
-            molding_m: string;
-            /** Molding Pcs */
-            molding_pcs: number;
-            /** Base M */
-            base_m: string;
-            /** Base Pcs */
-            base_pcs: number;
-            /** Doors */
-            doors: number;
-            /** Casing M */
-            casing_m: string;
-            /** Windows M */
-            windows_m: string;
-            /** Low */
-            low: string[];
-            /** Assumptions */
-            assumptions: string[];
-            est?: components["schemas"]["MvpPlanEstOut"] | null;
-        };
-        /** MvpPlanSpaceOut */
-        MvpPlanSpaceOut: {
-            /** Id */
-            id: string;
-            /** Ko */
-            ko: string;
-            /** Kind */
-            kind: string;
-            /** W M */
-            w_m: string;
-            /** D M */
-            d_m: string;
-            /** Floor M2 */
-            floor_m2: string;
-            /** Wall M2 */
-            wall_m2: string;
-            /** Ceiling M2 */
-            ceiling_m2: string;
-            /** Molding M */
-            molding_m: string;
-            /** Base M */
-            base_m: string;
-            /** Own Door */
-            own_door: boolean;
-            /** Papered */
-            papered: boolean;
-            /** Sure */
-            sure: string;
-            /** Ext */
-            ext: boolean;
-            /** Plan W M */
-            plan_w_m?: string | null;
-            /** Plan D M */
-            plan_d_m?: string | null;
-        };
-        /** MvpPreviewIn */
-        MvpPreviewIn: {
-            /** Plan Id */
-            plan_id?: string | null;
-            /**
-             * Expanded
-             * @default true
-             */
-            expanded: boolean;
-            /** Kinds */
-            kinds?: ("room" | "living" | "kitchen" | "entry" | "hall" | "dress" | "bath" | "balcony" | "utility")[] | null;
-            /** Grade */
-            grade?: ("economy" | "basic" | "premium") | null;
-            mok?: components["schemas"]["MvpMokSelIn"] | null;
-        };
-        /** MvpPreviewOut */
-        MvpPreviewOut: {
-            /**
-             * Project Id
-             * Format: uuid
-             */
-            project_id: string;
-            /** Project Rev */
-            project_rev: number;
-            /** Area M2 */
-            area_m2: string;
-            /** Area Basis */
-            area_basis: string;
-            /**
-             * Grade
-             * @enum {string}
-             */
-            grade: "economy" | "basic" | "premium";
-            plan: components["schemas"]["MvpPlanBriefOut"] | null;
-            plan_qty: components["schemas"]["MvpPlanQtyOut"] | null;
-            /** Trades */
-            trades: components["schemas"]["MvpTradePreviewOut"][];
-            /** Supply */
-            supply: number;
-            /** Vat */
-            vat: number;
-            /** Total */
-            total: number;
-        };
-        /** MvpProductOut */
-        MvpProductOut: {
-            /** Id */
-            id: string;
-            /** Kind */
-            kind: string;
-            /** Name */
-            name: string;
-            /** Price */
-            price: number;
-            /** Why */
-            why: string;
-            /** Len M */
-            len_m: string | null;
-            /** Type */
-            type: string | null;
-            /** Per */
-            per?: string | null;
-        };
-        /** MvpRollOut */
-        MvpRollOut: {
-            /** Kind */
-            kind: string;
-            /** Ko */
-            ko: string;
-            /** Size */
-            size: string;
-            /** Per Roll */
-            per_roll: number;
-            /** Rolls */
-            rolls: number;
-        };
-        /** MvpStepOut */
-        MvpStepOut: {
-            /** Key */
-            key: string;
-            /** Name */
-            name: string;
-            /** Half Days */
-            half_days: number;
-        };
-        /** MvpTradePreviewOut */
-        MvpTradePreviewOut: {
-            /**
-             * Trade
-             * @enum {string}
-             */
-            trade: "dobae" | "mokgong";
-            /** Version */
-            version: string;
-            /** Grade */
-            grade: string | null;
-            /** Lines */
-            lines: components["schemas"]["MvpLineOut"][];
-            /** Supply */
-            supply: number;
-            /** Vat */
-            vat: number;
-            /** Total */
-            total: number;
-            /** Man Day */
-            man_day: string;
-            /** Days */
-            days: string;
-            /** Steps */
-            steps: components["schemas"]["MvpStepOut"][];
-            /** Notes */
-            notes: string[];
-            market: components["schemas"]["MvpMarketOut"];
-        };
-        /** MvpV2AcceptedIn */
-        MvpV2AcceptedIn: {
-            /** Start */
-            start: string;
-            /** End */
-            end: string;
-        };
-        /** MvpV2BandOut */
-        MvpV2BandOut: {
-            /** Lo */
-            lo: number;
-            /** Hi */
-            hi: number;
-            /** N */
-            n: number;
-            /** P */
-            p: number[];
-            mk: components["schemas"]["MvpV2MarketOut"];
-        };
-        /** MvpV2BandRatioOut */
-        MvpV2BandRatioOut: {
-            /** Lo */
-            lo: number;
-            /** Hi */
-            hi: number;
-            /** Lo80 */
-            lo80: number;
-            /** Hi80 */
-            hi80: number;
-            /** N */
-            n: number | null;
-        };
-        /** MvpV2BarOut */
-        MvpV2BarOut: {
-            /** Band Left */
-            band_left: number;
-            /** Band Width */
-            band_width: number;
-            /** Me */
-            me: number;
-        };
-        /** MvpV2BaseIn */
-        MvpV2BaseIn: {
-            /** Pick */
-            pick?: string | null;
-        };
-        /** MvpV2BlockOut */
-        MvpV2BlockOut: {
-            /** Trade */
-            trade: string;
-            /** Ko */
-            ko: string;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "work" | "dry" | "clean";
-            /** Start */
-            start: string;
-            /** End */
-            end: string;
-            /** Days */
-            days: number;
-            /** Crew */
-            crew: number | null;
-            /** State */
-            state: string;
-        };
-        /**
-         * MvpV2Calc7In
-         * @description v10 CALC7 입력 그대로 (+ kind). 빈 칸 기본값은 v10 calcCard처럼 화면이 넣는다.
-         */
-        MvpV2Calc7In: {
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "wallpaper" | "trim" | "paint";
-            /**
-             * W
-             * @default 0
-             */
-            w: number;
-            /**
-             * D
-             * @default 0
-             */
-            d: number;
-            /**
-             * Hgt
-             * @default 2.3
-             */
-            hgt: number;
-            /**
-             * Doors
-             * @default 0
-             */
-            doors: number;
-            /**
-             * Windows
-             * @default 0
-             */
-            windows: number;
-            /**
-             * Ceiling
-             * @default false
-             */
-            ceiling: boolean;
-            /**
-             * Rollw
-             * @default 0.53
-             */
-            rollW: number;
-            /**
-             * Rolllen
-             * @default 12.5
-             */
-            rollLen: number;
-            /**
-             * Repeat
-             * @default 0
-             */
-            repeat: number;
-            /**
-             * Loss
-             * @default 10
-             */
-            loss: number;
-            /**
-             * Doorw
-             * @default 0.9
-             */
-            doorW: number;
-            /**
-             * Piecelen
-             * @default 2.4
-             */
-            pieceLen: number;
-            /**
-             * Coats
-             * @default 2
-             */
-            coats: number;
-            /**
-             * Cover
-             * @default 10
-             */
-            cover: number;
-        };
-        /** MvpV2CasingIn */
-        MvpV2CasingIn: {
-            /** Doors */
-            doors: number;
-            /**
-             * With Door
-             * @default false
-             */
-            with_door: boolean;
-        };
-        /** MvpV2CheckIn */
-        MvpV2CheckIn: {
-            quote: components["schemas"]["MvpV2QuoteIn"];
-            /**
-             * Trade
-             * @enum {string}
-             */
-            trade: "dobae" | "mokgong";
-            /** Amount */
-            amount: number | string;
-            /**
-             * Mode
-             * @default unknown
-             * @enum {string}
-             */
-            mode: "unknown" | "excluded" | "included";
-            /**
-             * @default {
-             *       "ceiling": true,
-             *       "removal": false,
-             *       "moving": false,
-             *       "casing9": false,
-             *       "etc": false,
-             *       "extras": {}
-             *     }
-             */
-            scope: components["schemas"]["MvpV2CheckScopeIn"];
-        };
-        /** MvpV2CheckOut */
-        MvpV2CheckOut: {
-            /** Warn */
-            warn: string | null;
-            /** Trade */
-            trade?: string | null;
-            /** Supply */
-            supply?: number | null;
-            /** Lo */
-            lo?: number | null;
-            /** Hi */
-            hi?: number | null;
-            /** Where */
-            where?: ("low" | "in" | "high") | null;
-            /** Pct */
-            pct?: number | null;
-            /** Head */
-            head?: string | null;
-            /**
-             * Notes
-             * @default []
-             */
-            notes: string[];
-            /**
-             * Why
-             * @default []
-             */
-            why: string[];
-            /**
-             * Vat Unknown
-             * @default false
-             */
-            vat_unknown: boolean;
-            bar?: components["schemas"]["MvpV2BarOut"] | null;
-        };
-        /** MvpV2CheckScopeIn */
-        MvpV2CheckScopeIn: {
-            /**
-             * Ceiling
-             * @default true
-             */
-            ceiling: boolean;
-            /**
-             * Removal
-             * @default false
-             */
-            removal: boolean;
-            /**
-             * Moving
-             * @default false
-             */
-            moving: boolean;
-            /**
-             * Casing9
-             * @default false
-             */
-            casing9: boolean;
-            /**
-             * Etc
-             * @default false
-             */
-            etc: boolean;
-            /**
-             * Extras
-             * @default {}
-             */
-            extras: {
-                [key: string]: number;
-            };
-        };
-        /** MvpV2ConsIn */
-        MvpV2ConsIn: {
-            /**
-             * Weekendwork
-             * @default false
-             */
-            weekendWork: boolean;
-            /**
-             * Endby
-             * @default
-             */
-            endBy: string;
-            /**
-             * Startafter
-             * @default
-             */
-            startAfter: string;
-            /**
-             * Avoid
-             * @default []
-             */
-            avoid: string[];
-        };
-        /** MvpV2CountIn */
-        MvpV2CountIn: {
-            /**
-             * N
-             * @default 0
-             */
-            n: number;
-            /** Pick */
-            pick?: string | null;
-        };
-        /** MvpV2DayItemOut */
-        MvpV2DayItemOut: {
-            /** Trade */
-            trade: string;
-            /** Ko */
-            ko: string;
-            /** Todo */
-            todo: string[];
-        };
-        /** MvpV2DayOut */
-        MvpV2DayOut: {
-            /** Date */
-            date: string;
-            /** Off */
-            off: boolean;
-            /** Holiday */
-            holiday: string | null;
-            /** Items */
-            items: components["schemas"]["MvpV2DayItemOut"][];
-        };
-        /** MvpV2DoorIn */
-        MvpV2DoorIn: {
-            /**
-             * Mode
-             * @default none
-             * @enum {string}
-             */
-            mode: "none" | "replace" | "overlay" | "leaf";
-            /** Pick */
-            pick?: string | null;
-            /** Count */
-            count?: number | null;
-        };
-        /** MvpV2DoorsAutoOut */
-        MvpV2DoorsAutoOut: {
-            /** N */
-            n: number;
-            /** How */
-            how: string;
-        };
-        /** MvpV2EnteredIn */
-        MvpV2EnteredIn: {
-            /** Amount */
-            amount: number;
-            /**
-             * Mode
-             * @enum {string}
-             */
-            mode: "excluded" | "included" | "exempt";
-            /** Std Total */
-            std_total?: number | null;
-        };
-        /** MvpV2EnteredOut */
-        MvpV2EnteredOut: {
-            /** Supply */
-            supply: number;
-            /** Vat */
-            vat: number;
-            /** Total */
-            total: number;
-            /** Pct */
-            pct: number | null;
-        };
-        /** MvpV2EstLineIn */
-        MvpV2EstLineIn: {
-            /** Key */
-            key: string;
-            /** Name */
-            name: string;
-            /** Qty */
-            qty: number | string | null;
-            /** State */
-            state: string;
-        };
-        /** MvpV2EstimateIn */
-        MvpV2EstimateIn: {
-            /**
-             * Trade
-             * @enum {string}
-             */
-            trade: "dobae" | "mokgong";
-            /** Grade */
-            grade?: ("economy" | "basic") | null;
-            /** Lines */
-            lines: components["schemas"]["MvpV2EstLineIn"][];
-            /**
-             * Prices
-             * @default {}
-             */
-            prices: {
-                [key: string]: number | string | null;
-            };
-            /** Std Total */
-            std_total: number;
-        };
-        /** MvpV2EstimateOut */
-        MvpV2EstimateOut: {
-            /** Ok */
-            ok: boolean;
-            /** Supply */
-            supply?: number | null;
-            /** Vat */
-            vat?: number | null;
-            /** Total */
-            total?: number | null;
-            /** Pct */
-            pct?: number | null;
-            /** Why */
-            why?: string | null;
-        };
-        /** MvpV2ExtrasIn */
-        MvpV2ExtrasIn: {
-            /**
-             * Picks
-             * @default {}
-             */
-            picks: {
-                [key: string]: number;
-            };
-            casing?: components["schemas"]["MvpV2CasingIn"] | null;
-        };
-        /** MvpV2ExtrasOut */
-        MvpV2ExtrasOut: {
-            /** Lo */
-            lo: number;
-            /** Hi */
-            hi: number;
-            /** Notes */
-            notes: string[];
-        };
-        /** MvpV2FixedOut */
-        MvpV2FixedOut: {
-            /** Start */
-            start: string;
-        };
-        /** MvpV2GapOut */
-        MvpV2GapOut: {
-            /** From */
-            from: number;
-            /** Steps */
-            steps: components["schemas"]["MvpV2GapStepOut"][];
-            /** To */
-            to: number;
-        };
-        /** MvpV2GapStepOut */
-        MvpV2GapStepOut: {
-            /** Key */
-            key: string;
-            /** Name */
-            name: string;
-            /** Why */
-            why: string;
-            /** D */
-            d: number;
-        };
-        /** MvpV2ImagePart */
-        MvpV2ImagePart: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "image";
-            /** Data */
-            data: string;
-        };
-        /** MvpV2InpOut */
-        MvpV2InpOut: {
-            /** Py */
-            py: number;
-            /** Area M2 */
-            area_m2: number;
-            measured: components["schemas"]["MvpV2MeasuredOut"] | null;
-            /** Occupied */
-            occupied: boolean;
-            /** Balcony */
-            balcony: boolean;
-            /** Grade */
-            grade: string;
-            /** Mok */
-            mok: string[];
-            /** Doors */
-            doors: number;
-            doors_auto: components["schemas"]["MvpV2DoorsAutoOut"];
-            /** Assumed */
-            assumed: string[];
-        };
-        /** MvpV2LineOut */
-        MvpV2LineOut: {
-            /** Key */
-            key: string;
-            /** Name */
-            name: string;
-            /** Qty */
-            qty: number | null;
-            /** Unit */
-            unit: string;
-            /** Unit Price */
-            unit_price: number | null;
-            /** Amount */
-            amount: number | null;
-            /** State */
-            state: string;
-            /** Source */
-            source: string;
-            /** Basis */
-            basis: string;
-            /** Calc */
-            calc: string;
-        };
-        /** MvpV2LlmHealthOut */
-        MvpV2LlmHealthOut: {
-            /** Ok */
-            ok: boolean;
-            /** Live */
-            live: boolean;
-        };
-        /** MvpV2LlmIn */
-        MvpV2LlmIn: {
-            /**
-             * System
-             * @default
-             */
-            system: string;
-            /** Messages */
-            messages: components["schemas"]["MvpV2MessageIn"][];
-            /**
-             * Tools
-             * @default []
-             */
-            tools: components["schemas"]["MvpV2ToolIn"][];
-        };
-        /** MvpV2LlmOut */
-        MvpV2LlmOut: {
-            /** Text */
-            text: string;
-            /** Tool Calls */
-            tool_calls: components["schemas"]["MvpV2ToolCallOut"][];
-            /**
-             * Stop
-             * @enum {string}
-             */
-            stop: "tool_calls" | "stop" | "refusal";
-        };
-        /** MvpV2MarketExtraOut */
-        MvpV2MarketExtraOut: {
-            /** Key */
-            key: string;
-            /** Name */
-            name: string;
-            /**
-             * Per
-             * @enum {string}
-             */
-            per: "곳" | "식";
-            /** Lo */
-            lo: number;
-            /** Hi */
-            hi: number;
-            /** N */
-            n: number;
-        };
-        /** MvpV2MarketLineOut */
-        MvpV2MarketLineOut: {
-            /** Key */
-            key: string;
-            /** Name */
-            name: string;
-            /** Qty */
-            qty: number | null;
-            /** Unit */
-            unit: string;
-            /** Unit Price */
-            unit_price: number | null;
-            /** Amount */
-            amount: number;
-            /** Note */
-            note: string;
-        };
-        /** MvpV2MarketOut */
-        MvpV2MarketOut: {
-            /** Trade */
-            trade: string;
-            /** Grade */
-            grade: string | null;
-            /** Lines */
-            lines: components["schemas"]["MvpV2MarketLineOut"][];
-            /** Supply */
-            supply: number;
-            /** Lo */
-            lo: number;
-            /** Hi */
-            hi: number;
-            band: components["schemas"]["MvpV2BandRatioOut"];
-            /** Version */
-            version: string;
-        };
-        /** MvpV2MeasuredOut */
-        MvpV2MeasuredOut: {
-            /** Name */
-            name: string;
-            /** Wall M2 */
-            wall_m2: number;
-            /** Ceiling M2 */
-            ceiling_m2: number;
-            /** Molding M */
-            molding_m: number;
-            /** Base M */
-            base_m: number;
-            /** Doors */
-            doors: number;
-        };
-        /** MvpV2MessageIn */
-        MvpV2MessageIn: {
-            /**
-             * Role
-             * @enum {string}
-             */
-            role: "user" | "assistant" | "tool";
-            /** Content */
-            content: string | (components["schemas"]["MvpV2TextPart"] | components["schemas"]["MvpV2ImagePart"])[];
-            /** Tool Calls */
-            tool_calls?: components["schemas"]["MvpV2ToolCallIn"][] | null;
-            /** Tool Call Id */
-            tool_call_id?: string | null;
-        };
-        /**
-         * MvpV2MokIn
-         * @description v10 S.mok10 (frontend store.ts MokSt).
-         */
-        MvpV2MokIn: {
-            /**
-             * @default {
-             *       "mode": "none"
-             *     }
-             */
-            door: components["schemas"]["MvpV2DoorIn"];
-            /**
-             * @default {
-             *       "n": 0
-             *     }
-             */
-            slide: components["schemas"]["MvpV2CountIn"];
-            /**
-             * @default {
-             *       "n": 0
-             *     }
-             */
-            hidden: components["schemas"]["MvpV2CountIn"];
-            /**
-             * @default {
-             *       "type": "none"
-             *     }
-             */
-            molding: components["schemas"]["MvpV2MoldingIn"];
-            /** @default {} */
-            base: components["schemas"]["MvpV2BaseIn"];
-            /**
-             * Extras
-             * @default {}
-             */
-            extras: {
-                [key: string]: boolean | number | string;
-            };
-        };
-        /** MvpV2MoldingIn */
-        MvpV2MoldingIn: {
-            /**
-             * Type
-             * @default none
-             * @enum {string}
-             */
-            type: "flat" | "step" | "minus" | "none";
-            /** Pick */
-            pick?: string | null;
-        };
-        /** MvpV2MovedOut */
-        MvpV2MovedOut: {
-            /** Trade */
-            trade: string;
-            /** Ko */
-            ko: string;
-            /** Start */
-            start: string;
-        };
-        /** MvpV2PaintOut */
-        MvpV2PaintOut: {
-            /** Area M2 */
-            area_m2: number;
-            /** Liters */
-            liters: number;
-            /** N18 */
-            n18: number;
-            /** N4 */
-            n4: number;
-        };
-        /** MvpV2PlanIn */
-        MvpV2PlanIn: {
-            quote: components["schemas"]["MvpV2QuoteIn"];
-            /**
-             * Move
-             * @default
-             */
-            move: string;
-            /**
-             * @default {
-             *       "weekendWork": false,
-             *       "endBy": "",
-             *       "startAfter": "",
-             *       "avoid": []
-             *     }
-             */
-            cons: components["schemas"]["MvpV2ConsIn"];
-            /**
-             * Props
-             * @default {}
-             */
-            props: {
-                [key: string]: components["schemas"]["MvpV2PropIn"];
-            };
-            /**
-             * Accepted
-             * @default {}
-             */
-            accepted: {
-                [key: string]: components["schemas"]["MvpV2AcceptedIn"];
-            };
-            trial?: components["schemas"]["MvpV2TrialIn"] | null;
-        };
-        /** MvpV2PlanOut */
-        MvpV2PlanOut: {
-            /** Start */
-            start: string;
-            /** End */
-            end: string;
-            /** Work Days */
-            work_days: number;
-            /** Blocks */
-            blocks: components["schemas"]["MvpV2BlockOut"][];
-            /** Days */
-            days: components["schemas"]["MvpV2DayOut"][];
-            /** Trades */
-            trades: components["schemas"]["MvpV2PlanTradeOut"][];
-            /** Warn */
-            warn: string[];
-            /** Today */
-            today: string;
-            /** Tomorrow */
-            tomorrow: string;
-            /** Due Next */
-            due_next: string;
-            /** Weeks */
-            weeks: components["schemas"]["MvpV2WeekOut"][];
-            trial: components["schemas"]["MvpV2TrialOut"] | null;
-        };
-        /** MvpV2PlanSelIn */
-        MvpV2PlanSelIn: {
-            /** Id */
-            id: string;
-            /**
-             * Expanded
-             * @default true
-             */
-            expanded: boolean;
-            /** Kinds */
-            kinds?: ("room" | "living" | "kitchen" | "entry" | "hall" | "dress" | "bath" | "balcony" | "utility")[] | null;
-            /** Spaces */
-            spaces?: ("room" | "kitchen" | "bath" | "entry" | "window")[] | null;
-        };
-        /** MvpV2PlanTradeOut */
-        MvpV2PlanTradeOut: {
-            /** Trade */
-            trade: string;
-            /** Ko */
-            ko: string;
-            /** Steps */
-            steps: components["schemas"]["MvpV2StepOut"][];
-            /** Crew */
-            crew: number;
-            fixed: components["schemas"]["MvpV2FixedOut"] | null;
-            /**
-             * State
-             * @enum {string}
-             */
-            state: "expected" | "pending" | "confirmed";
-            /** Need */
-            need: number;
-        };
-        /** MvpV2PreciseOut */
-        MvpV2PreciseOut: {
-            /**
-             * Trade
-             * @enum {string}
-             */
-            trade: "dobae" | "mokgong";
-            /** Ko */
-            ko: string;
-            /** Lines */
-            lines: components["schemas"]["MvpV2LineOut"][];
-            /** Supply */
-            supply: number;
-            /** Vat */
-            vat: number;
-            /** Total */
-            total: number;
-            /** Man Days */
-            man_days: number;
-            /** Md Raw */
-            md_raw: number;
-            /** Crew */
-            crew: number;
-            /** Steps */
-            steps: components["schemas"]["MvpV2StepOut"][];
-            /** Days */
-            days: number;
-            /** Notes */
-            notes: string[];
-            /** Grade */
-            grade: string | null;
-            /** Extra Amount */
-            extra_amount: number | null;
-            /** Ver */
-            ver: string | null;
-            band: components["schemas"]["MvpV2BandOut"];
-            gap: components["schemas"]["MvpV2GapOut"];
-        };
-        /** MvpV2PropIn */
-        MvpV2PropIn: {
-            /** Start */
-            start: string;
-            /** End */
-            end: string;
-            /** Crew */
-            crew?: number | null;
-        };
-        /** MvpV2PubOut */
-        MvpV2PubOut: {
-            /** Unit Price */
-            unit_price: number;
-            /** Amount */
-            amount: number;
-            /** Source */
-            source: string;
-        };
-        /** MvpV2QuoteIn */
-        MvpV2QuoteIn: {
-            /** Pyeong */
-            pyeong?: number | string | null;
-            /** Living */
-            living?: ("living" | "vacant") | null;
-            /**
-             * Cats
-             * @default []
-             */
-            cats: ("wallpaper" | "floor" | "tile" | "bath" | "furniture" | "carpentry" | "film" | "paint" | "middoor" | "light" | "window" | "finish")[];
-            /**
-             * Picks
-             * @default {}
-             */
-            picks: {
-                [key: string]: string;
-            };
-            plan?: components["schemas"]["MvpV2PlanSelIn"] | null;
-            /**
-             * Balcony
-             * @default false
-             */
-            balcony: boolean;
-            mok?: components["schemas"]["MvpV2MokIn"] | null;
-            /**
-             * Tier
-             * @default basic
-             * @enum {string}
-             */
-            tier: "economy" | "basic" | "premium";
-        };
-        /** MvpV2QuoteOut */
-        MvpV2QuoteOut: {
-            inp: components["schemas"]["MvpV2InpOut"];
-            /** Precise */
-            precise: components["schemas"]["MvpV2PreciseOut"][];
-            /** Ref */
-            ref: components["schemas"]["MvpV2RefOut"][];
-            /** Missing */
-            missing: string[];
-            /** Supply */
-            supply: number;
-            /** Vat */
-            vat: number;
-            /** Total */
-            total: number;
-            /** Rlo */
-            rlo: number;
-            /** Rhi */
-            rhi: number;
-            /** All Lo */
-            all_lo: number;
-            /** All Hi */
-            all_hi: number;
-            /** Code */
-            code: string;
-            /** At */
-            at: string;
-            band: components["schemas"]["MvpV2SumOut"] | null;
-            /** Formula Version */
-            formula_version: string;
-            /** Price Ver */
-            price_ver: string;
-        };
-        /** MvpV2RefLineOut */
-        MvpV2RefLineOut: {
-            /** Key */
-            key: string;
-            /** Name */
-            name: string;
-            /** Qty */
-            qty: number;
-            /** Unit */
-            unit: string;
-            /** Lo */
-            lo: number | null;
-            /** Hi */
-            hi: number | null;
-            /** State */
-            state: string;
-            /** Basis */
-            basis: string;
-            /** Source */
-            source: string;
-            /** Calc */
-            calc: string;
-            pub: components["schemas"]["MvpV2PubOut"] | null;
-            /** Note */
-            note: string | null;
-        };
-        /** MvpV2RefOut */
-        MvpV2RefOut: {
-            /** Cat */
-            cat: string;
-            /** Ko */
-            ko: string;
-            /** Level */
-            level: string;
-            /** Lines */
-            lines: components["schemas"]["MvpV2RefLineOut"][];
-            /** Lo */
-            lo: number;
-            /** Hi */
-            hi: number;
-            /** Vlo */
-            vlo: number;
-            /** Vhi */
-            vhi: number;
-            /** Days */
-            days: number;
-            /** Crew */
-            crew: number;
-            /** Steps */
-            steps: components["schemas"]["MvpV2StepOut"][];
-            /** Notes */
-            notes: string[];
-        };
-        /** MvpV2StepOut */
-        MvpV2StepOut: {
-            /** Key */
-            key: string;
-            /** Name */
-            name: string;
-            /** Half Days */
-            half_days: number;
-        };
-        /** MvpV2SumOut */
-        MvpV2SumOut: {
-            /** Lo */
-            lo: number;
-            /** Hi */
-            hi: number;
-        };
-        /** MvpV2TextPart */
-        MvpV2TextPart: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "text";
-            /** Text */
-            text: string;
-        };
-        /** MvpV2ToolCallIn */
-        MvpV2ToolCallIn: {
-            /** Id */
-            id: string;
-            /** Name */
-            name: string;
-            /**
-             * Arguments
-             * @default {}
-             */
-            arguments: {
-                [key: string]: unknown;
-            };
-        };
-        /** MvpV2ToolCallOut */
-        MvpV2ToolCallOut: {
-            /** Id */
-            id: string;
-            /** Name */
-            name: string;
-            /** Arguments */
-            arguments: {
-                [key: string]: unknown;
-            };
-        };
-        /** MvpV2ToolIn */
-        MvpV2ToolIn: {
-            /** Name */
-            name: string;
-            /**
-             * Description
-             * @default
-             */
-            description: string;
-            /**
-             * Parameters
-             * @default {}
-             */
-            parameters: {
-                [key: string]: unknown;
-            };
-        };
-        /** MvpV2TrialIn */
-        MvpV2TrialIn: {
-            /** Trade */
-            trade: string;
-            /** Start */
-            start: string;
-            /** End */
-            end: string;
-        };
-        /** MvpV2TrialOut */
-        MvpV2TrialOut: {
-            /** Trade */
-            trade: string;
-            /** Start */
-            start: string;
-            /** End */
-            end: string;
-            /** Moved */
-            moved: components["schemas"]["MvpV2MovedOut"][];
-            /** Clash */
-            clash: boolean;
-            /** Error */
-            error: string | null;
-            /** Work Days */
-            work_days: number;
-            /** Need */
-            need: number | null;
-            /** Short */
-            short: boolean;
-        };
-        /** MvpV2TrimOut */
-        MvpV2TrimOut: {
-            /** Molding M */
-            molding_m: number;
-            /** Molding Pcs */
-            molding_pcs: number;
-            /** Base M */
-            base_m: number;
-            /** Base Pcs */
-            base_pcs: number;
-        };
-        /** MvpV2WallOut */
-        MvpV2WallOut: {
-            /** Wall M2 */
-            wall_m2: number;
-            /** Ceiling M2 */
-            ceiling_m2: number;
-            /** Strips */
-            strips: number;
-            /** Cstrips */
-            cStrips: number;
-            /** Per Roll */
-            per_roll: number;
-            /** Rolls Raw */
-            rolls_raw: number;
-            /** Rolls */
-            rolls: number;
-        };
-        /** MvpV2WeekOut */
-        MvpV2WeekOut: {
-            /** N */
-            n: number;
-            /** Start */
-            start: string;
-            /** End */
-            end: string;
-            /** Blocks */
-            blocks: components["schemas"]["MvpV2BlockOut"][];
-        };
         /**
          * MyProjectOut
          * @description 내 공사 목록 한 줄 (WMy)
@@ -5767,6 +4234,1539 @@ export interface components {
             dobae?: components["schemas"]["DobaeOut"] | null;
             mokgong?: components["schemas"]["MokgongOut"] | null;
         };
+        /** V2AcceptedIn */
+        V2AcceptedIn: {
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
+        };
+        /** V2BandOut */
+        V2BandOut: {
+            /** Lo */
+            lo: number;
+            /** Hi */
+            hi: number;
+            /** N */
+            n: number;
+            /** P */
+            p: number[];
+            mk: components["schemas"]["V2MarketOut"];
+        };
+        /** V2BandRatioOut */
+        V2BandRatioOut: {
+            /** Lo */
+            lo: number;
+            /** Hi */
+            hi: number;
+            /** Lo80 */
+            lo80: number;
+            /** Hi80 */
+            hi80: number;
+            /** N */
+            n: number | null;
+        };
+        /** V2BarOut */
+        V2BarOut: {
+            /** Band Left */
+            band_left: number;
+            /** Band Width */
+            band_width: number;
+            /** Me */
+            me: number;
+        };
+        /** V2BaseIn */
+        V2BaseIn: {
+            /** Pick */
+            pick?: string | null;
+        };
+        /** V2BlockOut */
+        V2BlockOut: {
+            /** Trade */
+            trade: string;
+            /** Ko */
+            ko: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "work" | "dry" | "clean";
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
+            /** Days */
+            days: number;
+            /** Crew */
+            crew: number | null;
+            /** State */
+            state: string;
+        };
+        /**
+         * V2Calc7In
+         * @description v10 CALC7 입력 그대로 (+ kind). 빈 칸 기본값은 v10 calcCard처럼 화면이 넣는다.
+         */
+        V2Calc7In: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "wallpaper" | "trim" | "paint";
+            /**
+             * W
+             * @default 0
+             */
+            w: number;
+            /**
+             * D
+             * @default 0
+             */
+            d: number;
+            /**
+             * Hgt
+             * @default 2.3
+             */
+            hgt: number;
+            /**
+             * Doors
+             * @default 0
+             */
+            doors: number;
+            /**
+             * Windows
+             * @default 0
+             */
+            windows: number;
+            /**
+             * Ceiling
+             * @default false
+             */
+            ceiling: boolean;
+            /**
+             * Rollw
+             * @default 0.53
+             */
+            rollW: number;
+            /**
+             * Rolllen
+             * @default 12.5
+             */
+            rollLen: number;
+            /**
+             * Repeat
+             * @default 0
+             */
+            repeat: number;
+            /**
+             * Loss
+             * @default 10
+             */
+            loss: number;
+            /**
+             * Doorw
+             * @default 0.9
+             */
+            doorW: number;
+            /**
+             * Piecelen
+             * @default 2.4
+             */
+            pieceLen: number;
+            /**
+             * Coats
+             * @default 2
+             */
+            coats: number;
+            /**
+             * Cover
+             * @default 10
+             */
+            cover: number;
+        };
+        /** V2CasingIn */
+        V2CasingIn: {
+            /** Doors */
+            doors: number;
+            /**
+             * With Door
+             * @default false
+             */
+            with_door: boolean;
+        };
+        /** V2CheckIn */
+        V2CheckIn: {
+            quote: components["schemas"]["V2QuoteIn"];
+            /**
+             * Trade
+             * @enum {string}
+             */
+            trade: "dobae" | "mokgong";
+            /** Amount */
+            amount: number | string;
+            /**
+             * Mode
+             * @default unknown
+             * @enum {string}
+             */
+            mode: "unknown" | "excluded" | "included";
+            /**
+             * @default {
+             *       "ceiling": true,
+             *       "removal": false,
+             *       "moving": false,
+             *       "casing9": false,
+             *       "etc": false,
+             *       "extras": {}
+             *     }
+             */
+            scope: components["schemas"]["V2CheckScopeIn"];
+        };
+        /** V2CheckOut */
+        V2CheckOut: {
+            /** Warn */
+            warn: string | null;
+            /** Trade */
+            trade?: string | null;
+            /** Supply */
+            supply?: number | null;
+            /** Lo */
+            lo?: number | null;
+            /** Hi */
+            hi?: number | null;
+            /** Where */
+            where?: ("low" | "in" | "high") | null;
+            /** Pct */
+            pct?: number | null;
+            /** Head */
+            head?: string | null;
+            /**
+             * Notes
+             * @default []
+             */
+            notes: string[];
+            /**
+             * Why
+             * @default []
+             */
+            why: string[];
+            /**
+             * Vat Unknown
+             * @default false
+             */
+            vat_unknown: boolean;
+            bar?: components["schemas"]["V2BarOut"] | null;
+        };
+        /** V2CheckScopeIn */
+        V2CheckScopeIn: {
+            /**
+             * Ceiling
+             * @default true
+             */
+            ceiling: boolean;
+            /**
+             * Removal
+             * @default false
+             */
+            removal: boolean;
+            /**
+             * Moving
+             * @default false
+             */
+            moving: boolean;
+            /**
+             * Casing9
+             * @default false
+             */
+            casing9: boolean;
+            /**
+             * Etc
+             * @default false
+             */
+            etc: boolean;
+            /**
+             * Extras
+             * @default {}
+             */
+            extras: {
+                [key: string]: number;
+            };
+        };
+        /** V2ConsIn */
+        V2ConsIn: {
+            /**
+             * Weekendwork
+             * @default false
+             */
+            weekendWork: boolean;
+            /**
+             * Endby
+             * @default
+             */
+            endBy: string;
+            /**
+             * Startafter
+             * @default
+             */
+            startAfter: string;
+            /**
+             * Avoid
+             * @default []
+             */
+            avoid: string[];
+        };
+        /** V2CountIn */
+        V2CountIn: {
+            /**
+             * N
+             * @default 0
+             */
+            n: number;
+            /** Pick */
+            pick?: string | null;
+        };
+        /** V2DayItemOut */
+        V2DayItemOut: {
+            /** Trade */
+            trade: string;
+            /** Ko */
+            ko: string;
+            /** Todo */
+            todo: string[];
+        };
+        /** V2DayOut */
+        V2DayOut: {
+            /** Date */
+            date: string;
+            /** Off */
+            off: boolean;
+            /** Holiday */
+            holiday: string | null;
+            /** Items */
+            items: components["schemas"]["V2DayItemOut"][];
+        };
+        /** V2DoorIn */
+        V2DoorIn: {
+            /**
+             * Mode
+             * @default none
+             * @enum {string}
+             */
+            mode: "none" | "replace" | "overlay" | "leaf";
+            /** Pick */
+            pick?: string | null;
+            /** Count */
+            count?: number | null;
+        };
+        /** V2DoorsAutoOut */
+        V2DoorsAutoOut: {
+            /** N */
+            n: number;
+            /** How */
+            how: string;
+        };
+        /** V2EnteredIn */
+        V2EnteredIn: {
+            /** Amount */
+            amount: number;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "excluded" | "included" | "exempt";
+            /** Std Total */
+            std_total?: number | null;
+        };
+        /** V2EnteredOut */
+        V2EnteredOut: {
+            /** Supply */
+            supply: number;
+            /** Vat */
+            vat: number;
+            /** Total */
+            total: number;
+            /** Pct */
+            pct: number | null;
+        };
+        /** V2EstLineIn */
+        V2EstLineIn: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Qty */
+            qty: number | string | null;
+            /** State */
+            state: string;
+        };
+        /** V2EstimateIn */
+        V2EstimateIn: {
+            /**
+             * Trade
+             * @enum {string}
+             */
+            trade: "dobae" | "mokgong";
+            /** Grade */
+            grade?: ("economy" | "basic") | null;
+            /** Lines */
+            lines: components["schemas"]["V2EstLineIn"][];
+            /**
+             * Prices
+             * @default {}
+             */
+            prices: {
+                [key: string]: number | string | null;
+            };
+            /** Std Total */
+            std_total: number;
+        };
+        /** V2EstimateOut */
+        V2EstimateOut: {
+            /** Ok */
+            ok: boolean;
+            /** Supply */
+            supply?: number | null;
+            /** Vat */
+            vat?: number | null;
+            /** Total */
+            total?: number | null;
+            /** Pct */
+            pct?: number | null;
+            /** Why */
+            why?: string | null;
+        };
+        /** V2ExtraOut */
+        V2ExtraOut: {
+            /** Key */
+            key: string;
+            /** Group */
+            group: string;
+            /** Ko */
+            ko: string;
+            /** What */
+            what: string;
+            /** Unit */
+            unit: string;
+            /** Price */
+            price: number;
+            /** Basis */
+            basis: string;
+            /** Src */
+            src: string;
+            /** Auto */
+            auto: string | null;
+        };
+        /** V2ExtrasIn */
+        V2ExtrasIn: {
+            /**
+             * Picks
+             * @default {}
+             */
+            picks: {
+                [key: string]: number;
+            };
+            casing?: components["schemas"]["V2CasingIn"] | null;
+        };
+        /** V2ExtrasOut */
+        V2ExtrasOut: {
+            /** Lo */
+            lo: number;
+            /** Hi */
+            hi: number;
+            /** Notes */
+            notes: string[];
+        };
+        /** V2FixedOut */
+        V2FixedOut: {
+            /** Start */
+            start: string;
+        };
+        /** V2GapOut */
+        V2GapOut: {
+            /** From */
+            from: number;
+            /** Steps */
+            steps: components["schemas"]["V2GapStepOut"][];
+            /** To */
+            to: number;
+        };
+        /** V2GapStepOut */
+        V2GapStepOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Why */
+            why: string;
+            /** D */
+            d: number;
+        };
+        /** V2GradeInitOut */
+        V2GradeInitOut: {
+            /** Molding Type */
+            molding_type: string;
+            /** Molding */
+            molding: string;
+            /** Base */
+            base: string;
+            /** Leaf */
+            leaf: string;
+            /** Door Set */
+            door_set: string;
+        };
+        /** V2ImagePart */
+        V2ImagePart: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "image";
+            /** Data */
+            data: string;
+        };
+        /** V2InpOut */
+        V2InpOut: {
+            /** Py */
+            py: number;
+            /** Area M2 */
+            area_m2: number;
+            measured: components["schemas"]["V2MeasuredOut"] | null;
+            /** Occupied */
+            occupied: boolean;
+            /** Balcony */
+            balcony: boolean;
+            /** Grade */
+            grade: string;
+            /** Mok */
+            mok: string[];
+            /** Doors */
+            doors: number;
+            doors_auto: components["schemas"]["V2DoorsAutoOut"];
+            /** Assumed */
+            assumed: string[];
+        };
+        /** V2LineOut */
+        V2LineOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Qty */
+            qty: number | null;
+            /** Unit */
+            unit: string;
+            /** Unit Price */
+            unit_price: number | null;
+            /** Amount */
+            amount: number | null;
+            /** State */
+            state: string;
+            /** Source */
+            source: string;
+            /** Basis */
+            basis: string;
+            /** Calc */
+            calc: string;
+        };
+        /** V2LlmHealthOut */
+        V2LlmHealthOut: {
+            /** Ok */
+            ok: boolean;
+            /** Live */
+            live: boolean;
+        };
+        /** V2LlmIn */
+        V2LlmIn: {
+            /**
+             * System
+             * @default
+             */
+            system: string;
+            /** Messages */
+            messages: components["schemas"]["V2MessageIn"][];
+            /**
+             * Tools
+             * @default []
+             */
+            tools: components["schemas"]["V2ToolIn"][];
+        };
+        /** V2LlmOut */
+        V2LlmOut: {
+            /** Text */
+            text: string;
+            /** Tool Calls */
+            tool_calls: components["schemas"]["V2ToolCallOut"][];
+            /**
+             * Stop
+             * @enum {string}
+             */
+            stop: "tool_calls" | "stop" | "refusal";
+        };
+        /** V2MarketExtraOut */
+        V2MarketExtraOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /**
+             * Per
+             * @enum {string}
+             */
+            per: "곳" | "식";
+            /** Lo */
+            lo: number;
+            /** Hi */
+            hi: number;
+            /** N */
+            n: number;
+        };
+        /** V2MarketLineOut */
+        V2MarketLineOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Qty */
+            qty: number | null;
+            /** Unit */
+            unit: string;
+            /** Unit Price */
+            unit_price: number | null;
+            /** Amount */
+            amount: number;
+            /** Note */
+            note: string;
+        };
+        /** V2MarketOut */
+        V2MarketOut: {
+            /** Trade */
+            trade: string;
+            /** Grade */
+            grade: string | null;
+            /** Lines */
+            lines: components["schemas"]["V2MarketLineOut"][];
+            /** Supply */
+            supply: number;
+            /** Lo */
+            lo: number;
+            /** Hi */
+            hi: number;
+            band: components["schemas"]["V2BandRatioOut"];
+            /** Version */
+            version: string;
+        };
+        /** V2MaterialsOut */
+        V2MaterialsOut: {
+            /** Version */
+            version: string;
+            /** Products */
+            products: components["schemas"]["V2ProductOut"][];
+            /** Extras */
+            extras: components["schemas"]["V2ExtraOut"][];
+            /** Grades */
+            grades: {
+                [key: string]: components["schemas"]["V2GradeInitOut"];
+            };
+            fixed?: components["schemas"]["V2MokFixedOut"] | null;
+        };
+        /** V2MeasuredOut */
+        V2MeasuredOut: {
+            /** Name */
+            name: string;
+            /** Wall M2 */
+            wall_m2: number;
+            /** Ceiling M2 */
+            ceiling_m2: number;
+            /** Molding M */
+            molding_m: number;
+            /** Base M */
+            base_m: number;
+            /** Doors */
+            doors: number;
+        };
+        /** V2MessageIn */
+        V2MessageIn: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "user" | "assistant" | "tool";
+            /** Content */
+            content: string | (components["schemas"]["V2TextPart"] | components["schemas"]["V2ImagePart"])[];
+            /** Tool Calls */
+            tool_calls?: components["schemas"]["V2ToolCallIn"][] | null;
+            /** Tool Call Id */
+            tool_call_id?: string | null;
+        };
+        /**
+         * V2MokFixedOut
+         * @description 화면 문구에 쓰는 정해진 값 (v10 MOK10.fixed).
+         */
+        V2MokFixedOut: {
+            /** Minus Mult */
+            minus_mult: string;
+            /** Hidden Mult */
+            hidden_mult: string;
+            /** Molding Per Py */
+            molding_per_py: string;
+            /** Base Per Py */
+            base_per_py: string;
+        };
+        /**
+         * V2MokIn
+         * @description v10 S.mok10 (frontend store.ts MokSt).
+         */
+        V2MokIn: {
+            /**
+             * @default {
+             *       "mode": "none"
+             *     }
+             */
+            door: components["schemas"]["V2DoorIn"];
+            /**
+             * @default {
+             *       "n": 0
+             *     }
+             */
+            slide: components["schemas"]["V2CountIn"];
+            /**
+             * @default {
+             *       "n": 0
+             *     }
+             */
+            hidden: components["schemas"]["V2CountIn"];
+            /**
+             * @default {
+             *       "type": "none"
+             *     }
+             */
+            molding: components["schemas"]["V2MoldingIn"];
+            /** @default {} */
+            base: components["schemas"]["V2BaseIn"];
+            /**
+             * Extras
+             * @default {}
+             */
+            extras: {
+                [key: string]: boolean | number | string;
+            };
+        };
+        /** V2MokSelIn */
+        V2MokSelIn: {
+            /**
+             * @default {
+             *       "mode": "none"
+             *     }
+             */
+            door: components["schemas"]["V2PreviewDoorIn"];
+            /**
+             * @default {
+             *       "n": 0
+             *     }
+             */
+            slide: components["schemas"]["V2PreviewCountIn"];
+            /**
+             * @default {
+             *       "n": 0
+             *     }
+             */
+            hidden: components["schemas"]["V2PreviewCountIn"];
+            /**
+             * Molding Type
+             * @default none
+             * @enum {string}
+             */
+            molding_type: "flat" | "step" | "minus" | "none";
+            /** Molding */
+            molding?: string | null;
+            /** Base */
+            base?: string | null;
+            /**
+             * Extras
+             * @default {}
+             */
+            extras: {
+                [key: string]: boolean | number | string;
+            };
+        };
+        /** V2MoldingIn */
+        V2MoldingIn: {
+            /**
+             * Type
+             * @default none
+             * @enum {string}
+             */
+            type: "flat" | "step" | "minus" | "none";
+            /** Pick */
+            pick?: string | null;
+        };
+        /** V2MovedOut */
+        V2MovedOut: {
+            /** Trade */
+            trade: string;
+            /** Ko */
+            ko: string;
+            /** Start */
+            start: string;
+        };
+        /** V2PaintOut */
+        V2PaintOut: {
+            /** Area M2 */
+            area_m2: number;
+            /** Liters */
+            liters: number;
+            /** N18 */
+            n18: number;
+            /** N4 */
+            n4: number;
+        };
+        /** V2PlanBriefOut */
+        V2PlanBriefOut: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Region */
+            region: string;
+            /** Type */
+            type: string;
+            /** Supply M2 */
+            supply_m2: string;
+            /** Excl M2 */
+            excl_m2: string | null;
+            /** Supply Py */
+            supply_py: number;
+            /** Rooms */
+            rooms: number;
+            /** Baths */
+            baths: number;
+            /** Layout */
+            layout: string;
+            /** Year */
+            year: number | null;
+            /** Stage */
+            stage: string | null;
+            /** Src */
+            src: string;
+            /** Src Url */
+            src_url: string;
+            /** Img */
+            img: string;
+            /** Drawn */
+            drawn: string;
+            /** Has Ext */
+            has_ext: boolean;
+            /** Sup Note */
+            sup_note: string | null;
+        };
+        /**
+         * V2PlanEstOut
+         * @description 평형으로 어림한 값 (v10 CALC9 est): 도면 수량과 비교용.
+         */
+        V2PlanEstOut: {
+            /** Py */
+            py: string;
+            /** Wall M2 */
+            wall_m2: string;
+            /** Ceiling M2 */
+            ceiling_m2: string;
+            /** Molding M */
+            molding_m: string;
+            /** Base M */
+            base_m: string;
+        };
+        /** V2PlanIn */
+        V2PlanIn: {
+            quote: components["schemas"]["V2QuoteIn"];
+            /**
+             * Move
+             * @default
+             */
+            move: string;
+            /**
+             * @default {
+             *       "weekendWork": false,
+             *       "endBy": "",
+             *       "startAfter": "",
+             *       "avoid": []
+             *     }
+             */
+            cons: components["schemas"]["V2ConsIn"];
+            /**
+             * Props
+             * @default {}
+             */
+            props: {
+                [key: string]: components["schemas"]["V2PropIn"];
+            };
+            /**
+             * Accepted
+             * @default {}
+             */
+            accepted: {
+                [key: string]: components["schemas"]["V2AcceptedIn"];
+            };
+            trial?: components["schemas"]["V2TrialIn"] | null;
+        };
+        /** V2PlanOut */
+        V2PlanOut: {
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
+            /** Work Days */
+            work_days: number;
+            /** Blocks */
+            blocks: components["schemas"]["V2BlockOut"][];
+            /** Days */
+            days: components["schemas"]["V2DayOut"][];
+            /** Trades */
+            trades: components["schemas"]["V2PlanTradeOut"][];
+            /** Warn */
+            warn: string[];
+            /** Today */
+            today: string;
+            /** Tomorrow */
+            tomorrow: string;
+            /** Due Next */
+            due_next: string;
+            /** Weeks */
+            weeks: components["schemas"]["V2WeekOut"][];
+            trial: components["schemas"]["V2TrialOut"] | null;
+        };
+        /** V2PlanQtyOut */
+        V2PlanQtyOut: {
+            /** Plan Id */
+            plan_id: string;
+            /** Rules Version */
+            rules_version: string;
+            /** Expanded */
+            expanded: boolean;
+            /** Ceiling */
+            ceiling: boolean;
+            /** Kinds */
+            kinds: string[] | null;
+            /** Spaces */
+            spaces: components["schemas"]["V2PlanSpaceOut"][];
+            /** Wall M2 */
+            wall_m2: string;
+            /** Ceiling M2 */
+            ceiling_m2: string;
+            /** Paper M2 */
+            paper_m2: string;
+            /** Primer M2 */
+            primer_m2: string;
+            /** Rolls */
+            rolls: components["schemas"]["V2RollOut"][];
+            /** Molding M */
+            molding_m: string;
+            /** Molding Pcs */
+            molding_pcs: number;
+            /** Base M */
+            base_m: string;
+            /** Base Pcs */
+            base_pcs: number;
+            /** Doors */
+            doors: number;
+            /** Casing M */
+            casing_m: string;
+            /** Windows M */
+            windows_m: string;
+            /** Low */
+            low: string[];
+            /** Assumptions */
+            assumptions: string[];
+            est?: components["schemas"]["V2PlanEstOut"] | null;
+        };
+        /** V2PlanSelIn */
+        V2PlanSelIn: {
+            /** Id */
+            id: string;
+            /**
+             * Expanded
+             * @default true
+             */
+            expanded: boolean;
+            /** Kinds */
+            kinds?: ("room" | "living" | "kitchen" | "entry" | "hall" | "dress" | "bath" | "balcony" | "utility")[] | null;
+            /** Spaces */
+            spaces?: ("room" | "kitchen" | "bath" | "entry" | "window")[] | null;
+        };
+        /** V2PlanSpaceOut */
+        V2PlanSpaceOut: {
+            /** Id */
+            id: string;
+            /** Ko */
+            ko: string;
+            /** Kind */
+            kind: string;
+            /** W M */
+            w_m: string;
+            /** D M */
+            d_m: string;
+            /** Floor M2 */
+            floor_m2: string;
+            /** Wall M2 */
+            wall_m2: string;
+            /** Ceiling M2 */
+            ceiling_m2: string;
+            /** Molding M */
+            molding_m: string;
+            /** Base M */
+            base_m: string;
+            /** Own Door */
+            own_door: boolean;
+            /** Papered */
+            papered: boolean;
+            /** Sure */
+            sure: string;
+            /** Ext */
+            ext: boolean;
+            /** Plan W M */
+            plan_w_m?: string | null;
+            /** Plan D M */
+            plan_d_m?: string | null;
+        };
+        /** V2PlanTradeOut */
+        V2PlanTradeOut: {
+            /** Trade */
+            trade: string;
+            /** Ko */
+            ko: string;
+            /** Steps */
+            steps: components["schemas"]["V2StepOut"][];
+            /** Crew */
+            crew: number;
+            fixed: components["schemas"]["V2FixedOut"] | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "expected" | "pending" | "confirmed";
+            /** Need */
+            need: number;
+        };
+        /** V2PreciseOut */
+        V2PreciseOut: {
+            /**
+             * Trade
+             * @enum {string}
+             */
+            trade: "dobae" | "mokgong";
+            /** Ko */
+            ko: string;
+            /** Lines */
+            lines: components["schemas"]["V2LineOut"][];
+            /** Supply */
+            supply: number;
+            /** Vat */
+            vat: number;
+            /** Total */
+            total: number;
+            /** Man Days */
+            man_days: number;
+            /** Md Raw */
+            md_raw: number;
+            /** Crew */
+            crew: number;
+            /** Steps */
+            steps: components["schemas"]["V2StepOut"][];
+            /** Days */
+            days: number;
+            /** Notes */
+            notes: string[];
+            /** Grade */
+            grade: string | null;
+            /** Extra Amount */
+            extra_amount: number | null;
+            /** Ver */
+            ver: string | null;
+            band: components["schemas"]["V2BandOut"];
+            gap: components["schemas"]["V2GapOut"];
+        };
+        /** V2PreviewCountIn */
+        V2PreviewCountIn: {
+            /**
+             * N
+             * @default 0
+             */
+            n: number;
+            /** Pick */
+            pick?: string | null;
+        };
+        /** V2PreviewDoorIn */
+        V2PreviewDoorIn: {
+            /**
+             * Mode
+             * @default none
+             * @enum {string}
+             */
+            mode: "none" | "replace" | "overlay" | "leaf";
+            /** Pick */
+            pick?: string | null;
+            /** Count */
+            count?: number | null;
+        };
+        /** V2PreviewGapStepOut */
+        V2PreviewGapStepOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Why */
+            why: string;
+            /** D */
+            d: number;
+        };
+        /** V2PreviewIn */
+        V2PreviewIn: {
+            /** Plan Id */
+            plan_id?: string | null;
+            /**
+             * Expanded
+             * @default true
+             */
+            expanded: boolean;
+            /** Kinds */
+            kinds?: ("room" | "living" | "kitchen" | "entry" | "hall" | "dress" | "bath" | "balcony" | "utility")[] | null;
+            /** Grade */
+            grade?: ("economy" | "basic" | "premium") | null;
+            mok?: components["schemas"]["V2MokSelIn"] | null;
+        };
+        /** V2PreviewLineOut */
+        V2PreviewLineOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Qty */
+            qty: string | null;
+            /** Unit */
+            unit: string;
+            /** Unit Price */
+            unit_price: number | null;
+            /** Amount */
+            amount: number | null;
+            /** State */
+            state: string;
+            /** Source */
+            source: string;
+            /** Price Basis */
+            price_basis: string;
+            /** Calc */
+            calc: string;
+        };
+        /** V2PreviewMarketLineOut */
+        V2PreviewMarketLineOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Qty */
+            qty: string | null;
+            /** Unit */
+            unit: string;
+            /** Unit Price */
+            unit_price: number | null;
+            /** Amount */
+            amount: number;
+            /** Note */
+            note: string;
+        };
+        /** V2PreviewMarketOut */
+        V2PreviewMarketOut: {
+            /** Version */
+            version: string;
+            /** Supply */
+            supply: number;
+            /** Lo */
+            lo: number;
+            /** Hi */
+            hi: number;
+            /** Band Lo */
+            band_lo: string;
+            /** Band Hi */
+            band_hi: string;
+            /** N */
+            n: number;
+            /** Lines */
+            lines: components["schemas"]["V2PreviewMarketLineOut"][];
+            /** Gap Start */
+            gap_start: number;
+            /** Gap */
+            gap: components["schemas"]["V2PreviewGapStepOut"][];
+        };
+        /** V2PreviewOut */
+        V2PreviewOut: {
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Project Rev */
+            project_rev: number;
+            /** Area M2 */
+            area_m2: string;
+            /** Area Basis */
+            area_basis: string;
+            /**
+             * Grade
+             * @enum {string}
+             */
+            grade: "economy" | "basic" | "premium";
+            plan: components["schemas"]["V2PlanBriefOut"] | null;
+            plan_qty: components["schemas"]["V2PlanQtyOut"] | null;
+            /** Trades */
+            trades: components["schemas"]["V2TradePreviewOut"][];
+            /** Supply */
+            supply: number;
+            /** Vat */
+            vat: number;
+            /** Total */
+            total: number;
+        };
+        /** V2PreviewStepOut */
+        V2PreviewStepOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Half Days */
+            half_days: number;
+        };
+        /** V2ProductOut */
+        V2ProductOut: {
+            /** Id */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Name */
+            name: string;
+            /** Price */
+            price: number;
+            /** Why */
+            why: string;
+            /** Len M */
+            len_m: string | null;
+            /** Type */
+            type: string | null;
+            /** Per */
+            per?: string | null;
+        };
+        /** V2PropIn */
+        V2PropIn: {
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
+            /** Crew */
+            crew?: number | null;
+        };
+        /** V2PubOut */
+        V2PubOut: {
+            /** Unit Price */
+            unit_price: number;
+            /** Amount */
+            amount: number;
+            /** Source */
+            source: string;
+        };
+        /** V2QuoteIn */
+        V2QuoteIn: {
+            /** Pyeong */
+            pyeong?: number | string | null;
+            /** Living */
+            living?: ("living" | "vacant") | null;
+            /**
+             * Cats
+             * @default []
+             */
+            cats: ("wallpaper" | "floor" | "tile" | "bath" | "furniture" | "carpentry" | "film" | "paint" | "middoor" | "light" | "window" | "finish")[];
+            /**
+             * Picks
+             * @default {}
+             */
+            picks: {
+                [key: string]: string;
+            };
+            plan?: components["schemas"]["V2PlanSelIn"] | null;
+            /**
+             * Balcony
+             * @default false
+             */
+            balcony: boolean;
+            mok?: components["schemas"]["V2MokIn"] | null;
+            /**
+             * Tier
+             * @default basic
+             * @enum {string}
+             */
+            tier: "economy" | "basic" | "premium";
+        };
+        /** V2QuoteOut */
+        V2QuoteOut: {
+            inp: components["schemas"]["V2InpOut"];
+            /** Precise */
+            precise: components["schemas"]["V2PreciseOut"][];
+            /** Ref */
+            ref: components["schemas"]["V2RefOut"][];
+            /** Missing */
+            missing: string[];
+            /** Supply */
+            supply: number;
+            /** Vat */
+            vat: number;
+            /** Total */
+            total: number;
+            /** Rlo */
+            rlo: number;
+            /** Rhi */
+            rhi: number;
+            /** All Lo */
+            all_lo: number;
+            /** All Hi */
+            all_hi: number;
+            /** Code */
+            code: string;
+            /** At */
+            at: string;
+            band: components["schemas"]["V2SumOut"] | null;
+            /** Formula Version */
+            formula_version: string;
+            /** Price Ver */
+            price_ver: string;
+        };
+        /** V2RefLineOut */
+        V2RefLineOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Qty */
+            qty: number;
+            /** Unit */
+            unit: string;
+            /** Lo */
+            lo: number | null;
+            /** Hi */
+            hi: number | null;
+            /** State */
+            state: string;
+            /** Basis */
+            basis: string;
+            /** Source */
+            source: string;
+            /** Calc */
+            calc: string;
+            pub: components["schemas"]["V2PubOut"] | null;
+            /** Note */
+            note: string | null;
+        };
+        /** V2RefOut */
+        V2RefOut: {
+            /** Cat */
+            cat: string;
+            /** Ko */
+            ko: string;
+            /** Level */
+            level: string;
+            /** Lines */
+            lines: components["schemas"]["V2RefLineOut"][];
+            /** Lo */
+            lo: number;
+            /** Hi */
+            hi: number;
+            /** Vlo */
+            vlo: number;
+            /** Vhi */
+            vhi: number;
+            /** Days */
+            days: number;
+            /** Crew */
+            crew: number;
+            /** Steps */
+            steps: components["schemas"]["V2StepOut"][];
+            /** Notes */
+            notes: string[];
+        };
+        /** V2RollOut */
+        V2RollOut: {
+            /** Kind */
+            kind: string;
+            /** Ko */
+            ko: string;
+            /** Size */
+            size: string;
+            /** Per Roll */
+            per_roll: number;
+            /** Rolls */
+            rolls: number;
+        };
+        /** V2StepOut */
+        V2StepOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Half Days */
+            half_days: number;
+        };
+        /** V2SumOut */
+        V2SumOut: {
+            /** Lo */
+            lo: number;
+            /** Hi */
+            hi: number;
+        };
+        /** V2TextPart */
+        V2TextPart: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "text";
+            /** Text */
+            text: string;
+        };
+        /** V2ToolCallIn */
+        V2ToolCallIn: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Arguments
+             * @default {}
+             */
+            arguments: {
+                [key: string]: unknown;
+            };
+        };
+        /** V2ToolCallOut */
+        V2ToolCallOut: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Arguments */
+            arguments: {
+                [key: string]: unknown;
+            };
+        };
+        /** V2ToolIn */
+        V2ToolIn: {
+            /** Name */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Parameters
+             * @default {}
+             */
+            parameters: {
+                [key: string]: unknown;
+            };
+        };
+        /** V2TradePreviewOut */
+        V2TradePreviewOut: {
+            /**
+             * Trade
+             * @enum {string}
+             */
+            trade: "dobae" | "mokgong";
+            /** Version */
+            version: string;
+            /** Grade */
+            grade: string | null;
+            /** Lines */
+            lines: components["schemas"]["V2PreviewLineOut"][];
+            /** Supply */
+            supply: number;
+            /** Vat */
+            vat: number;
+            /** Total */
+            total: number;
+            /** Man Day */
+            man_day: string;
+            /** Days */
+            days: string;
+            /** Steps */
+            steps: components["schemas"]["V2PreviewStepOut"][];
+            /** Notes */
+            notes: string[];
+            market: components["schemas"]["V2PreviewMarketOut"];
+        };
+        /** V2TrialIn */
+        V2TrialIn: {
+            /** Trade */
+            trade: string;
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
+        };
+        /** V2TrialOut */
+        V2TrialOut: {
+            /** Trade */
+            trade: string;
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
+            /** Moved */
+            moved: components["schemas"]["V2MovedOut"][];
+            /** Clash */
+            clash: boolean;
+            /** Error */
+            error: string | null;
+            /** Work Days */
+            work_days: number;
+            /** Need */
+            need: number | null;
+            /** Short */
+            short: boolean;
+        };
+        /** V2TrimOut */
+        V2TrimOut: {
+            /** Molding M */
+            molding_m: number;
+            /** Molding Pcs */
+            molding_pcs: number;
+            /** Base M */
+            base_m: number;
+            /** Base Pcs */
+            base_pcs: number;
+        };
+        /** V2WallOut */
+        V2WallOut: {
+            /** Wall M2 */
+            wall_m2: number;
+            /** Ceiling M2 */
+            ceiling_m2: number;
+            /** Strips */
+            strips: number;
+            /** Cstrips */
+            cStrips: number;
+            /** Per Roll */
+            per_roll: number;
+            /** Rolls Raw */
+            rolls_raw: number;
+            /** Rolls */
+            rolls: number;
+        };
+        /** V2WeekOut */
+        V2WeekOut: {
+            /** N */
+            n: number;
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
+            /** Blocks */
+            blocks: components["schemas"]["V2BlockOut"][];
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -6613,420 +6613,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    plans_mvp_plans_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MvpPlanBriefOut"][];
-                };
-            };
-        };
-    };
-    plan_qty_mvp_plans__plan_id__qty_get: {
-        parameters: {
-            query?: {
-                expanded?: boolean;
-                kinds?: ("room" | "living" | "kitchen" | "entry" | "hall" | "dress" | "bath" | "balcony" | "utility")[] | null;
-                ceiling?: boolean;
-            };
-            header?: never;
-            path: {
-                plan_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MvpPlanQtyOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    materials_mvp_materials_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MvpMaterialsOut"];
-                };
-            };
-        };
-    };
-    preview_mvp_projects__project_id__preview_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MvpPreviewIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MvpPreviewOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    v2_quote_mvp_v2_quote_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MvpV2QuoteIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MvpV2QuoteOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    v2_market_extras_mvp_v2_market_extras_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MvpV2MarketExtraOut"][];
-                };
-            };
-        };
-    };
-    v2_plan_mvp_v2_plan_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MvpV2PlanIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MvpV2PlanOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    v2_check_mvp_v2_check_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MvpV2CheckIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MvpV2CheckOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    v2_estimate_mvp_v2_estimate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MvpV2EstimateIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MvpV2EstimateOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    v2_entered_mvp_v2_entered_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MvpV2EnteredIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MvpV2EnteredOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    v2_calc7_mvp_v2_calc7_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MvpV2Calc7In"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MvpV2WallOut"] | components["schemas"]["MvpV2TrimOut"] | components["schemas"]["MvpV2PaintOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    v2_extras_mvp_v2_extras_range_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MvpV2ExtrasIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MvpV2ExtrasOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    v2_llm_mvp_v2_llm_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MvpV2LlmIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MvpV2LlmOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    v2_llm_health_mvp_v2_llm_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MvpV2LlmHealthOut"];
                 };
             };
         };
@@ -8063,6 +7649,420 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    plans_v2_floor_plans_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2PlanBriefOut"][];
+                };
+            };
+        };
+    };
+    plan_qty_v2_floor_plans__plan_id__qty_get: {
+        parameters: {
+            query?: {
+                expanded?: boolean;
+                kinds?: ("room" | "living" | "kitchen" | "entry" | "hall" | "dress" | "bath" | "balcony" | "utility")[] | null;
+                ceiling?: boolean;
+            };
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2PlanQtyOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    materials_v2_materials_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2MaterialsOut"];
+                };
+            };
+        };
+    };
+    preview_v2_projects__project_id__preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2PreviewIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2PreviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_quote_v2_quote_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2QuoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2QuoteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_market_extras_v2_market_extras_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2MarketExtraOut"][];
+                };
+            };
+        };
+    };
+    v2_plan_v2_plan_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2PlanIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2PlanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_check_v2_check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2CheckIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2CheckOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_estimate_v2_estimate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2EstimateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2EstimateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_entered_v2_entered_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2EnteredIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2EnteredOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_calc7_v2_calc7_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2Calc7In"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2WallOut"] | components["schemas"]["V2TrimOut"] | components["schemas"]["V2PaintOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_extras_v2_extras_range_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2ExtrasIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2ExtrasOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_llm_v2_llm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2LlmIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2LlmOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_llm_health_v2_llm_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2LlmHealthOut"];
                 };
             };
         };

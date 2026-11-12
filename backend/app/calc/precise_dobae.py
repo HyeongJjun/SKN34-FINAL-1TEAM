@@ -1,4 +1,4 @@
-"""MVP 도배: 팀 도배 계산(dobae.quote)과 같은 공공 기준에 도면 면적과 줄마다 수량 풀이를 더한다.
+"""정밀 도배: 팀 도배 계산(dobae.quote)과 같은 공공 기준에 도면 면적과 줄마다 수량 풀이를 더한다.
 
 단가 · 가정값은 팀 DobaePrices를 그대로 쓴다. 도면(PlanQty)이 있으면 벽 · 천장 면적을 도면에서 읽고,
 없으면 팀 계산과 같이 평형에서 어림한다. 프리미엄 등급은 벽지가 실크라 basic 단가로 계산한다.
@@ -20,12 +20,12 @@ from app.calc.common import (
 )
 from app.calc.dobae import GRADE_PAPER, DobaePrices
 from app.calc.dobae import Grade as PaperGrade
-from app.calc.mvp_common import Grade, MvpLine, PriceBasis, num, team_basis
 from app.calc.plan_qty import PlanQty
+from app.calc.precise_common import Grade, PriceBasis, V2Line, num, team_basis
 
 
 @dataclass(frozen=True)
-class MvpDobaeInput:
+class V2DobaeInput:
     area_m2: Decimal
     grade: Grade
     area_basis: AreaBasis = "supply"
@@ -37,7 +37,7 @@ class MvpDobaeInput:
 
 
 @dataclass(frozen=True)
-class MvpDobaeQuote:
+class V2DobaeQuote:
     version: str
     paper_grade: PaperGrade  # 실제 계산에 쓴 벽지 (economy = 합지, basic = 실크)
     paper_m2: Decimal
@@ -57,7 +57,7 @@ def paper_grade(grade: Grade) -> PaperGrade:
     return "economy" if grade == "economy" else "basic"
 
 
-def quote(inp: MvpDobaeInput, p: DobaePrices) -> MvpDobaeQuote:
+def quote(inp: V2DobaeInput, p: DobaePrices) -> V2DobaeQuote:
     if inp.area_m2 <= 0:
         raise ValueError("면적은 0보다 커야 해요")
     g, src, plan = paper_grade(inp.grade), p.sources, inp.plan
@@ -78,7 +78,7 @@ def quote(inp: MvpDobaeInput, p: DobaePrices) -> MvpDobaeQuote:
 
     def add(key, name, qty, unit, price, amount, state, s, basis: PriceBasis = "public", calc=""):
         lines.append(
-            MvpLine(key, name, qty, unit, price, amount, state, s, team_basis(basis), basis, calc)
+            V2Line(key, name, qty, unit, price, amount, state, s, team_basis(basis), basis, calc)
         )
 
     if plan:
@@ -201,7 +201,7 @@ def quote(inp: MvpDobaeInput, p: DobaePrices) -> MvpDobaeQuote:
     if inp.balcony_ext and not plan:
         notes.append(f"발코니 확장은 도배 면적을 {num(p.balcony_factor)}배로 잡았어요.")
 
-    return MvpDobaeQuote(
+    return V2DobaeQuote(
         version=p.version,
         paper_grade=g,
         paper_m2=paper_area,

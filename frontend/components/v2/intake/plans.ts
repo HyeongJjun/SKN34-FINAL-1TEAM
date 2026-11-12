@@ -1,13 +1,13 @@
-// 예시 평면도(백엔드 /mvp/plans)와 도면 수량(/mvp/plans/{id}/qty) 읽기 · 기억 (v10 PLANS9 · CALC9.fromPlan 자리).
+// 예시 평면도(백엔드 /v2/floor-plans)와 도면 수량(/v2/floor-plans/{id}/qty) 읽기 · 기억 (v10 PLANS9 · CALC9.fromPlan 자리).
 // 수량은 백엔드 계산 엔진이 만든다. 여기서는 받아 두고 보여 줄 글만 만든다.
 import type { components } from "@/lib/backend/schema";
 import { SPACES } from "../data";
-import { mvpGet } from "../api";
+import { v2Get } from "../api";
 import { S, touch } from "../store";
 
-export type PlanBrief = components["schemas"]["MvpPlanBriefOut"];
-export type PlanQty = components["schemas"]["MvpPlanQtyOut"];
-export type PlanSpace = components["schemas"]["MvpPlanSpaceOut"];
+export type PlanBrief = components["schemas"]["V2PlanBriefOut"];
+export type PlanQty = components["schemas"]["V2PlanQtyOut"];
+export type PlanSpace = components["schemas"]["V2PlanSpaceOut"];
 
 /* 평형대(공급 평): 고객이 아는 말로 */
 export const PP9_BANDS: [string, string][] = [["all", "전체"], ["20", "20평 안팎"], ["25", "24~26평"], ["30", "30평대 초반"], ["34", "34평 안팎"], ["40", "38평 이상"]];
@@ -45,7 +45,7 @@ let plansP: Promise<PlanBrief[]> | null = null;
 export function loadPlans(): Promise<PlanBrief[]> {
   if (plansState.list) return Promise.resolve(plansState.list);
   if (!plansP)
-    plansP = mvpGet<PlanBrief[]>("plans").then(
+    plansP = v2Get<PlanBrief[]>("floor-plans").then(
       (ls) => {
         plansState.list = ls;
         return ls;
@@ -73,7 +73,7 @@ export async function fetchQty(id: string, expanded: boolean, kinds: string[] | 
   const qs = new URLSearchParams({ expanded: String(expanded) });
   if (!ceiling) qs.set("ceiling", "false");
   for (const k of kinds || []) qs.append("kinds", k);
-  const q = await mvpGet<PlanQty>(`plans/${encodeURIComponent(id)}/qty?${qs}`);
+  const q = await v2Get<PlanQty>(`floor-plans/${encodeURIComponent(id)}/qty?${qs}`);
   qtyCache.set(key, q);
   failed.delete(key);
   return q;

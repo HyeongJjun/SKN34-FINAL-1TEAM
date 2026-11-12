@@ -3,11 +3,11 @@
 from datetime import date
 from decimal import Decimal
 
-from app.calc import mvp_dobae, mvp_mokgong
+from app.calc import precise_dobae, precise_mokgong
 from app.calc.v2_quote import V2QuoteInput, build, inputs, quote_code
 from app.calc.v2_ref_trade import RefMaterial, qty_by_py, ref_trade, unit_norm
-from app.mvp.v2_service import books
 from app.refprice.book import DOBAE_2026H2
+from app.v2.service import books
 
 D = Decimal
 TODAY = date(2026, 11, 11)
@@ -74,7 +74,7 @@ def q_input(**over) -> V2QuoteInput:
         "picks": {},
         "plan": None,
         "balcony": False,
-        "mok": mvp_mokgong.MokSel(),
+        "mok": precise_mokgong.MokSel(),
         "door_count_set": False,
     }
     return V2QuoteInput(**(base | over))
@@ -85,7 +85,7 @@ def test_inputs_defaults_and_doors():
     assert (i.py, i.area_m2, i.grade) == (D(32), D("105.8"), "basic")  # 32 × 3.3058
     assert i.assumed == ["평형을 몰라서 32평으로 잡았어요"]
     assert i.doors_auto == {"n": 5, "how": "32평 기준 방 3 + 욕실 2"}
-    door = mvp_mokgong.MokSel(door=mvp_mokgong.DoorSel("replace", "door-yerim-sound-set"))
+    door = precise_mokgong.MokSel(door=precise_mokgong.DoorSel("replace", "door-yerim-sound-set"))
     i = inputs(q_input(pyeong=D(24), mok=door), books())
     assert i.doors == 3 and i.assumed == ["방문은 24평 기준 방 2 + 욕실 1 3개로 잡았어요"]
 
@@ -97,7 +97,9 @@ def test_quote_code_like_v10():
 
 def test_build_dobae_only():
     q = build(q_input(pyeong=D(32), cats=("wallpaper",)), books(), TODAY)
-    d = mvp_dobae.quote(mvp_dobae.MvpDobaeInput(area_m2=D("105.8"), grade="basic"), DOBAE_2026H2)
+    d = precise_dobae.quote(
+        precise_dobae.V2DobaeInput(area_m2=D("105.8"), grade="basic"), DOBAE_2026H2
+    )
     (t,) = q["precise"]
     assert (t["trade"], t["total"], q["total"]) == ("dobae", d.total, d.total)
     assert next(ln for ln in t["lines"] if ln["key"] == "removal")["calc"] == (

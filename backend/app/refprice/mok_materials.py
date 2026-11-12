@@ -1,4 +1,4 @@
-"""MVP 목공 자재값 · 정해진 단가 한 벌 (2026.11). 수집 · DB 표는 다음 단계라 지금은 코드에 둔다.
+"""목공 자재값 · 정해진 단가 한 벌 (2026.11). 수집 · DB 표는 다음 단계라 지금은 코드에 둔다.
 
 단가는 공급가(부가세 별도) 원이다. basis: public 공공 기준 · market 실견적 · pick 판매처 가격 · assumed 팀 가정값.
 시공 품 · 하루 목수 수는 팀 refprice.book.MOKGONG_2026H2를 같이 쓴다.
@@ -6,7 +6,7 @@
 
 from decimal import Decimal
 
-from app.calc.mvp_mokgong import Extra, GradeInit, MokBook, MokFixed, Price, Product
+from app.calc.precise_mokgong import Extra, GradeInit, MokBook, MokFixed, Price, Product
 
 _PRODUCTS = {
     "door-yerim-abs-foam-set": Product(
@@ -149,7 +149,7 @@ _FIXED = MokFixed(
         3,
         5,
         6,
-    ),  # 방 2 + 욕실 1 · 방 3 + 욕실 2 · 방 4 + 욕실 2  # 도면이 없을 때 천장 넓이 = 공급 ÷ 1.32 (MVP 값)
+    ),  # 방 2 + 욕실 1 · 방 3 + 욕실 2 · 방 4 + 욕실 2  # 도면이 없을 때 천장 넓이 = 공급 ÷ 1.32 (v10 값)
 )
 
 _EXTRAS = (

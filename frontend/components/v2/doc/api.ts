@@ -1,11 +1,11 @@
 // 견적서 · 공정표가 부르는 백엔드 API를 이 파일 한 곳에 모은다. 금액 · 수량 · 날짜는 모두 응답 그대로 쓴다.
 // quote · plan · check · market-extras는 작업자 E의 API.md 모양. estimate · entered는 API.md에 없어 v10 함수 입력 · 출력으로 가정했다.
-import { mvpGet, v2Get, v2Post } from "../api";
+import { v2Get, v2Post } from "../api";
 import { F } from "../engine";
 import { scopeCats } from "../flow";
 import { S, V3 } from "../store";
 
-/* ---------- 표준견적서 (POST /mvp/v2/quote = v10 buildQuote) ---------- */
+/* ---------- 표준견적서 (POST /v2/quote = v10 buildQuote) ---------- */
 export type LineState = "included" | "bundled" | "separate" | "optional" | "after_visit" | "excluded";
 export type QLine = { key: string; name: string; qty: number | null; unit: string; unit_price: number | null; amount: number | null; state: LineState; source: string; basis: string; calc?: string | null };
 export type MkLine = { key: string; name: string; qty: number | null; unit: string; unit_price: number | null; amount: number; note?: string | null };
@@ -74,7 +74,7 @@ export type Quote = {
   price_ver?: string;
 };
 
-/** 공통 입력 MvpV2QuoteIn (API.md) */
+/** 공통 입력 V2QuoteIn (API.md) */
 export function quoteBody() {
   const cats = scopeCats().map((c) => c.id);
   const pl = S.plan;
@@ -93,7 +93,7 @@ export function quoteBody() {
 export type QuoteIn = ReturnType<typeof quoteBody>;
 export const fetchQuote = () => v2Post<Quote>("quote", quoteBody());
 
-/* ---------- 공정표 (POST /mvp/v2/plan = v10 buildPlan: planTrades · defaultStart · fixPlan) ---------- */
+/* ---------- 공정표 (POST /v2/plan = v10 buildPlan: planTrades · defaultStart · fixPlan) ---------- */
 export type PlanTrade = { trade: string; ko: string; steps: Step[]; crew: number; fixed: { start: string } | null; state: "confirmed" | "pending" | "expected"; need: number };
 export type Block = { trade: string; ko: string; kind: "work" | "dry" | "clean"; start: string; end: string; days: number; crew?: number | null; state: string };
 export type PlanDay = { date: string; off: boolean; holiday: string | null; items: { trade: string; ko: string; todo: string[] }[] };
@@ -132,7 +132,7 @@ export type Accepted = { start: string; end: string };
 export const props = () => V3.props as Record<string, Prop>;
 export const accepted = () => V3.accepted as Record<string, Accepted>;
 
-/** MvpV2PlanIn: 견적 입력 + 입주 희망 + 조건(V3.cons 그대로) + 업체가 낸 날짜 · 수락한 날짜 (+ 미리 보기 trial) */
+/** V2PlanIn: 견적 입력 + 입주 희망 + 조건(V3.cons 그대로) + 업체가 낸 날짜 · 수락한 날짜 (+ 미리 보기 trial) */
 export function planBody(trial: { trade: string; start: string; end: string } | null = null) {
   return {
     quote: quoteBody(),
@@ -155,7 +155,7 @@ export type VatMode = "excluded" | "included" | "exempt";
 export type Entered = { supply: number; vat: number; total: number; pct: number | null };
 export const fetchEntered = (amount: number, mode: VatMode, std_total: number | null) => v2Post<Entered>("entered", { amount, mode, std_total });
 
-/* ---------- 받은 견적 맞춰 보기 (POST /mvp/v2/check = v10 quoteCheck go() 숫자 부분 + 범위 막대) ---------- */
+/* ---------- 받은 견적 맞춰 보기 (POST /v2/check = v10 quoteCheck go() 숫자 부분 + 범위 막대) ---------- */
 export type CheckReq = {
   quote: QuoteIn;
   trade: string;
@@ -180,7 +180,7 @@ export type CheckRes = {
 };
 export const fetchCheck = (b: CheckReq) => v2Post<CheckRes>("check", b);
 
-/** 받은 견적 맞춰 보기 목공 추가 항목 칸 (GET /mvp/v2/market-extras = v10 MARKET.P.mokgong.extras) */
+/** 받은 견적 맞춰 보기 목공 추가 항목 칸 (GET /v2/market-extras = v10 MARKET.P.mokgong.extras) */
 export type MarketExtra = { key: string; name: string; per: "곳" | "식"; lo: number; hi: number; n: number };
 let extras: Promise<MarketExtra[]> | null = null;
 export function marketExtras() {
@@ -192,11 +192,11 @@ export function marketExtras() {
   return extras;
 }
 
-/* ---------- 목공 자재 처음 값 (이미 있는 GET /mvp/materials) ---------- */
+/* ---------- 목공 자재 처음 값 (이미 있는 GET /v2/materials) ---------- */
 type Mats = { products: { id: string; kind: string }[]; grades: Record<string, { molding_type: string; molding: string; base: string; leaf: string; door_set: string }> };
 let mats: Promise<Mats> | null = null;
 export function materials() {
-  if (!mats) mats = mvpGet<Mats>("materials").catch((e) => {
+  if (!mats) mats = v2Get<Mats>("materials").catch((e) => {
     mats = null;
     throw e;
   });

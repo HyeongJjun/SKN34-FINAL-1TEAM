@@ -1,5 +1,5 @@
 // AI 한 번 부르기 (v10 localClaude · toImageBlock · runLocal).
-// LLM 호출은 백엔드 POST /mvp/v2/llm 한 곳. 도구 실행은 브라우저에서 하고, 도구 호출이 끝날 때까지 최대 5번 주고받는다.
+// LLM 호출은 백엔드 POST /v2/llm 한 곳. 도구 실행은 브라우저에서 하고, 도구 호출이 끝날 때까지 최대 5번 주고받는다.
 import { v2Get, v2Post } from "../api";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

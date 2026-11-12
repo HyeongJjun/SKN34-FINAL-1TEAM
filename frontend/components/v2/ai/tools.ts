@@ -1,5 +1,5 @@
 // AI가 화면을 움직이는 도구 (v10 claudeTools + v7 searchTool7 + priceReferenceTool).
-// 값은 여기서 검사하고, 단계 카드는 답이 끝난 뒤에 띄운다. 공사비 숫자는 백엔드 견적 계산(POST /mvp/v2/quote) 결과만 넘긴다.
+// 값은 여기서 검사하고, 단계 카드는 답이 끝난 뒤에 띄운다. 공사비 숫자는 백엔드 견적 계산(POST /v2/quote) 결과만 넘긴다.
 import { v2Post } from "../api";
 import { flashBoard } from "../Board";
 import { CATS, manwon, SPACES, STYLES, TIER_ORDER, TIERS } from "../data";

@@ -1,22 +1,22 @@
-"""MVP 목공 계산. DB · HTTP 없이 순수 함수만 본다. 기대값은 손으로 검산한 값이다."""
+"""정밀 목공 계산. DB · HTTP 없이 순수 함수만 본다. 기대값은 손으로 검산한 값이다."""
 
 from dataclasses import replace
 from decimal import Decimal
 
 import pytest
 
-from app.calc.mvp_mokgong import (
+from app.calc.plan_qty import Plan, from_plan
+from app.calc.precise_mokgong import (
     CountSel,
     DoorSel,
     MokSel,
-    MvpMokgongInput,
+    V2MokgongInput,
     default_door_pick,
     default_sel,
     quote,
 )
-from app.calc.plan_qty import Plan, from_plan
 from app.refprice.book import MOKGONG_2026H2 as MG
-from app.refprice.mvp_materials import MOK_2026_11 as BOOK
+from app.refprice.mok_materials import MOK_2026_11 as BOOK
 
 D = Decimal
 AREA = D("109.1")  # 공급 33평
@@ -31,7 +31,7 @@ PLAN = replace(
 
 
 def run(sel, **kw):
-    return quote(MvpMokgongInput(area_m2=AREA, sel=sel, doors=4, **kw), BOOK, MG)
+    return quote(V2MokgongInput(area_m2=AREA, sel=sel, doors=4, **kw), BOOK, MG)
 
 
 def amounts(r):
@@ -130,15 +130,15 @@ def test_rejects_bad_selection(sel):
 
 def test_rejects_zero_area():
     with pytest.raises(ValueError):
-        quote(MvpMokgongInput(area_m2=D(0), sel=default_sel(BOOK, "basic")), BOOK, MG)
+        quote(V2MokgongInput(area_m2=D(0), sel=default_sel(BOOK, "basic")), BOOK, MG)
 
 
 def test_doors_by_pyeong_and_exclusive_area():
-    from app.calc.mvp_mokgong import doors_by_pyeong
+    from app.calc.precise_mokgong import doors_by_pyeong
 
     # 방 + 욕실: 28평 아래 3, 38평 아래 5, 그 위 6
     assert [doors_by_pyeong(BOOK, D(p)) for p in (24, 28, 37, 38)] == [3, 5, 5, 6]
     sel = MokSel(door=DoorSel("leaf", "door-ace-abs-ad001-plain"))
     # 입력 doors가 0이면 평형으로 어림: 전용 84.9 × 1.2 = 101.9㎡ = 30.8평 → 5개
-    r = quote(MvpMokgongInput(area_m2=D("84.9"), area_basis="exclusive", sel=sel), BOOK, MG)
+    r = quote(V2MokgongInput(area_m2=D("84.9"), area_basis="exclusive", sel=sel), BOOK, MG)
     assert r.doors == 5

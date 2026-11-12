@@ -1,4 +1,4 @@
-"""MVP 예시 평면도: 공개 평면도에서 읽은 공간 치수(mm)와 출처 (mvp_plans.json, 20곳).
+"""예시 평면도: 공개 평면도에서 읽은 공간 치수(mm)와 출처 (floor_plans.json, 20곳).
 
 치수는 벽 중심선이고, 공간마다 읽은 방법(how)과 확신(sure)을 남겼다. 평면도 그림은 화면 쪽에 둔다.
 """
@@ -12,7 +12,7 @@ from pathlib import Path
 from app.calc.plan_qty import Plan, PlanSpace, Window
 
 VERSION = "plans-2026.11-v9"
-_FILE = Path(__file__).with_name("mvp_plans.json")
+_FILE = Path(__file__).with_name("floor_plans.json")
 
 
 @dataclass(frozen=True)

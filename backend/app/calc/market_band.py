@@ -10,8 +10,8 @@ from decimal import Decimal
 from typing import Literal
 
 from app.calc.common import PYEONG_M2, AreaBasis, m2, won
-from app.calc.mvp_common import Grade, num
 from app.calc.plan_qty import PlanQty
+from app.calc.precise_common import Grade, num
 
 Paper = Literal["silk", "hapji"]
 MokItem = Literal["molding", "base", "door", "flatten"]

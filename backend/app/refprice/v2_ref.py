@@ -1,4 +1,4 @@
-"""v2 화면(커스텀 MVP v10 이식)이 쓰는 자료.
+"""v2 화면(v10 이식)이 쓰는 자료.
 
 - v2_estimate_ref.json: 도배 · 목공 밖 공정의 참고 산식(평형별 수량 · 단가 범위 · 공공 단가). v10 estimate_ref.json 사본
 - v2_materials.json: 믿집 자재 자료의 가격대(id · 공정 · 등급 · 브랜드 · 이름 · 가격). v10 data.json에서 뺀 것

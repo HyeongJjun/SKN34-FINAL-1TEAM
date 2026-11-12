@@ -1,4 +1,4 @@
-"""MVP 도배 계산. DB · HTTP 없이 순수 함수만 본다. 기대값은 손으로 검산한 값이다."""
+"""정밀 도배 계산. DB · HTTP 없이 순수 함수만 본다. 기대값은 손으로 검산한 값이다."""
 
 from dataclasses import replace
 from decimal import Decimal
@@ -6,8 +6,8 @@ from decimal import Decimal
 import pytest
 
 from app.calc import dobae as team
-from app.calc.mvp_dobae import MvpDobaeInput, quote
 from app.calc.plan_qty import Plan, from_plan
+from app.calc.precise_dobae import V2DobaeInput, quote
 from app.refprice.book import DOBAE_2026H2 as P
 
 D = Decimal
@@ -19,7 +19,7 @@ def amounts(r):
 
 
 def test_without_plan_matches_team_dobae():
-    r = quote(MvpDobaeInput(area_m2=D("109.1"), grade="basic"), P)
+    r = quote(V2DobaeInput(area_m2=D("109.1"), grade="basic"), P)
     t = team.quote(team.DobaeInput(D("109.1"), "supply", "basic", True, False), P)
     assert [(ln.key, ln.qty, ln.amount, ln.state) for ln in r.lines] == [
         (ln.key, ln.qty, ln.amount, ln.state) for ln in t.lines
@@ -33,14 +33,14 @@ def test_without_plan_matches_team_dobae():
 
 
 def test_premium_uses_silk_price():
-    a = quote(MvpDobaeInput(area_m2=D("84.9"), grade="premium"), P)
-    b = quote(MvpDobaeInput(area_m2=D("84.9"), grade="basic"), P)
+    a = quote(V2DobaeInput(area_m2=D("84.9"), grade="premium"), P)
+    b = quote(V2DobaeInput(area_m2=D("84.9"), grade="basic"), P)
     assert a.paper_grade == "basic" and a.total == b.total
     assert a.lines[2].name == "도배지 (실크)"
 
 
 def test_plan_areas_economy_occupied():
-    inp = MvpDobaeInput(
+    inp = V2DobaeInput(
         area_m2=D("84.9"), grade="economy", occupied=True, plan=PLAN, plan_name="시험"
     )
     r = quote(inp, P)
@@ -60,14 +60,14 @@ def test_plan_areas_economy_occupied():
 
 
 def test_plan_ignores_balcony_factor():
-    base = MvpDobaeInput(area_m2=D("84.9"), grade="basic", plan=PLAN, plan_name="시험")
+    base = V2DobaeInput(area_m2=D("84.9"), grade="basic", plan=PLAN, plan_name="시험")
     r1, r2 = quote(base, P), quote(replace(base, balcony_ext=True), P)
     assert r1.total == r2.total
     assert not any("발코니" in n for n in r2.assumptions)
 
 
 def test_ceiling_off_keeps_line_but_excluded():
-    r = quote(MvpDobaeInput(area_m2=D("84.9"), grade="basic", include_ceiling=False), P)
+    r = quote(V2DobaeInput(area_m2=D("84.9"), grade="basic", include_ceiling=False), P)
     ceiling = next(ln for ln in r.lines if ln.key == "ceiling")
     assert (ceiling.state, ceiling.amount) == ("excluded", None)
     assert r.paper_m2 == r.wall_m2
@@ -75,4 +75,4 @@ def test_ceiling_off_keeps_line_but_excluded():
 
 def test_rejects_zero_area():
     with pytest.raises(ValueError):
-        quote(MvpDobaeInput(area_m2=D(0), grade="basic"), P)
+        quote(V2DobaeInput(area_m2=D(0), grade="basic"), P)

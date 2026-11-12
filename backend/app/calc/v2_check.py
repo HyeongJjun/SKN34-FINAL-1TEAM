@@ -8,7 +8,7 @@ from decimal import ROUND_FLOOR, ROUND_HALF_UP, Decimal
 
 from app.calc import market_band
 from app.calc.common import PYEONG_M2, with_vat, won
-from app.calc.mvp_common import num
+from app.calc.precise_common import num
 
 REMOVAL_DOBAE = (600, 2400)  # 기존 벽지 철거: 시장 ㎡당
 REMOVAL_MOKGONG = (60_000, 200_000)  # 철거 · 폐기물 · 양중

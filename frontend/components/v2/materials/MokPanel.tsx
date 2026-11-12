@@ -1,6 +1,6 @@
 "use client";
 // 목공 패널 (v10 mok10Panel · mok10Card): 문 · 천장 몰딩 · 걸레받이 자재 고르기 + 정해진 가격 항목.
-// 고른 값은 S.mok10에만 둔다. 길이 · 자동 수량 · 소계는 견적 API(/mvp/v2/quote)의 정밀 목공 결과를 그대로 보인다.
+// 고른 값은 S.mok10에만 둔다. 길이 · 자동 수량 · 소계는 견적 API(/v2/quote)의 정밀 목공 결과를 그대로 보인다.
 import { useEffect, useRef, type ComponentProps } from "react";
 import { matSrcs, Photo } from "@/components/v2/photo";
 import { DATA, type MokSt, S, useV2 } from "@/components/v2/store";

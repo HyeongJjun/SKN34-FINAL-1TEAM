@@ -1,5 +1,5 @@
-// AI에 넘기는 고객 상태 글 (v10 contextText + pp9Context). 도면 수량은 백엔드 계산(GET /mvp/plans/{id}/qty) 결과를 그대로 쓴다.
-import { mvpGet } from "../api";
+// AI에 넘기는 고객 상태 글 (v10 contextText + pp9Context). 도면 수량은 백엔드 계산(GET /v2/floor-plans/{id}/qty) 결과를 그대로 쓴다.
+import { v2Get } from "../api";
 import { CAT, GUIDE, manwon, priceText, TIERS } from "../data";
 import { F } from "../engine";
 import { scopeCats, styleOf } from "../flow";
@@ -12,7 +12,7 @@ async function planContext() {
   const qs = new URLSearchParams({ expanded: String(S.plan.expanded !== false) });
   for (const k of (F.pp9Kinds?.() as string[] | null | undefined) || []) qs.append("kinds", k);
   try {
-    const t = await mvpGet<PlanQty>(`plans/${encodeURIComponent(S.plan.id)}/qty?${qs}`);
+    const t = await v2Get<PlanQty>(`floor-plans/${encodeURIComponent(S.plan.id)}/qty?${qs}`);
     const roll = (k: string) => t.rolls.find((r) => r.kind === k)?.rolls;
     return `도면 수량(계산 엔진, 실측 전 어림): 벽 도배 ${t.wall_m2}㎡ · 천장 ${t.ceiling_m2}㎡ · 실크 ${roll("silk")}롤 · 합지 ${roll("hapji")}롤 · 몰딩 ${t.molding_m}m · 걸레받이 ${t.base_m}m · 방문 ${t.doors}개`;
   } catch {

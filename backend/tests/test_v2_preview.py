@@ -1,4 +1,4 @@
-"""MVP API: 예시 평면도 · 목공 자재 · 견적 미리 보기. 미리 보기는 저장하지 않는다."""
+"""v2 API: 예시 평면도 · 목공 자재 · 견적 미리 보기. 미리 보기는 저장하지 않는다."""
 
 from tests.conftest import query
 from tests.helpers import signup
@@ -13,31 +13,31 @@ def _project(api, **over) -> str:
 
 
 def test_reads_need_login(api):
-    assert api.get("/mvp/plans").status_code == 401
-    assert api.get("/mvp/materials").status_code == 401
+    assert api.get("/v2/floor-plans").status_code == 401
+    assert api.get("/v2/materials").status_code == 401
 
 
 def test_plans_and_plan_qty(api):
     signup(api)
-    plans = api.get("/mvp/plans").json()
+    plans = api.get("/v2/floor-plans").json()
     assert len(plans) == 20
     areas = [float(p["supply_m2"]) for p in plans]
     assert areas == sorted(areas)
-    q = api.get("/mvp/plans/fp04/qty").json()
+    q = api.get("/v2/floor-plans/fp04/qty").json()
     assert q["expanded"] is True and q["doors"] > 0 and float(q["paper_m2"]) > 0
     # 도면 치수(벽 가운데 기준)는 안쪽 길이보다 길다
     sp = q["spaces"][0]
     assert float(sp["plan_w_m"]) > float(sp["w_m"]) and float(sp["plan_d_m"]) > 0
-    narrow = api.get("/mvp/plans/fp04/qty", params={"kinds": ["kitchen"], "expanded": "false"})
+    narrow = api.get("/v2/floor-plans/fp04/qty", params={"kinds": ["kitchen"], "expanded": "false"})
     assert narrow.status_code == 200 and narrow.json()["doors"] == 0
     assert float(narrow.json()["wall_m2"]) < float(q["wall_m2"])
-    assert api.get("/mvp/plans/nope/qty").status_code == 404
-    assert api.get("/mvp/plans/fp04/qty", params={"kinds": ["garage"]}).status_code == 422
+    assert api.get("/v2/floor-plans/nope/qty").status_code == 404
+    assert api.get("/v2/floor-plans/fp04/qty", params={"kinds": ["garage"]}).status_code == 422
 
 
 def test_materials(api):
     signup(api)
-    m = api.get("/mvp/materials").json()
+    m = api.get("/v2/materials").json()
     assert len(m["products"]) == 17 and len(m["extras"]) == 18
     # 천장 몰딩 · 걸레받이는 자주 쓰는 3가지씩만
     kinds = [p["kind"] for p in m["products"]]
@@ -47,7 +47,7 @@ def test_materials(api):
 
 def test_preview_without_plan_matches_standard_dobae(api):
     pid = _project(api)
-    r = api.post(f"/mvp/projects/{pid}/preview", json={})
+    r = api.post(f"/v2/projects/{pid}/preview", json={})
     assert r.status_code == 200, r.text
     pv = r.json()
     assert [t["trade"] for t in pv["trades"]] == ["mokgong", "dobae"]
@@ -76,7 +76,7 @@ def test_preview_with_plan_and_choices(api):
             "extras": {"flatten_overlay": True, "coffer": 1},
         },
     }
-    r = api.post(f"/mvp/projects/{pid}/preview", json=choice)
+    r = api.post(f"/v2/projects/{pid}/preview", json=choice)
     assert r.status_code == 200, r.text
     pv = r.json()
     assert pv["plan"]["id"] == "fp04" and pv["area_basis"] == "supply"
@@ -95,10 +95,10 @@ def test_preview_with_plan_and_choices(api):
 def test_preview_rejects_bad_choice_and_other_people(api):
     pid = _project(api)
     wrong = {"mok": {"door": {"mode": "replace", "pick": "door-ace-abs-ad001-plain"}}}
-    r = api.post(f"/mvp/projects/{pid}/preview", json=wrong)
+    r = api.post(f"/v2/projects/{pid}/preview", json=wrong)
     assert r.status_code == 422 and r.json()["error"]["code"] == "invalid"
     neg = {"mok": {"extras": {"coffer": -1}}}
-    assert api.post(f"/mvp/projects/{pid}/preview", json=neg).status_code == 422
-    assert api.post(f"/mvp/projects/{pid}/preview", json={"plan_id": "nope"}).status_code == 404
+    assert api.post(f"/v2/projects/{pid}/preview", json=neg).status_code == 422
+    assert api.post(f"/v2/projects/{pid}/preview", json={"plan_id": "nope"}).status_code == 404
     signup(api, "other@mitjip.test")
-    assert api.post(f"/mvp/projects/{pid}/preview", json={}).status_code == 404
+    assert api.post(f"/v2/projects/{pid}/preview", json={}).status_code == 404

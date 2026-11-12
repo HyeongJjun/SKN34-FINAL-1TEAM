@@ -8,26 +8,26 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 from app.agent import llm
-from app.calc import market_band, mvp_mokgong, v2_check, v2_plan, v2_tools
+from app.calc import market_band, precise_mokgong, v2_check, v2_plan, v2_tools
 from app.calc.common import FORMULA_VERSION, from_entered
 from app.calc.plan_qty import PlanOptions, from_plan
 from app.calc.v2_quote import V2Books, V2Plan, V2QuoteInput, build, inputs, market_input
 from app.config import settings
-from app.mvp import v2_schemas as v2
 from app.refprice import v2_ref
 from app.refprice.book import DOBAE_2026H2, MOKGONG_2026H2
+from app.refprice.floor_plans import plans
 from app.refprice.holidays import HOLIDAYS
-from app.refprice.mvp_market import (
+from app.refprice.market import (
     GAP_DOBAE,
     GAP_MOKGONG,
     MARKET_2026_11,
     PUBLIC_EQ_DOBAE,
     PUBLIC_EQ_MOKGONG,
 )
-from app.refprice.mvp_materials import MOK_2026_11
-from app.refprice.mvp_plans import plans
+from app.refprice.mok_materials import MOK_2026_11
 from app.shared import ratelimit
 from app.shared.errors import AppError
+from app.v2 import schemas as v2
 
 LLM_PER_HOUR = 120  # 사용자별 AI 부르기 (도구 한 번마다 다시 부르므로 넉넉히)
 TOO_MANY = "AI에게 너무 많이 물었어요. 잠시 뒤에 다시 해 주세요."
@@ -50,15 +50,15 @@ def books() -> V2Books:
     )
 
 
-def _sel(m: v2.MvpV2MokIn | None, tier: str) -> tuple[mvp_mokgong.MokSel, bool]:
+def _sel(m: v2.V2MokIn | None, tier: str) -> tuple[precise_mokgong.MokSel, bool]:
     """v10 S.mok10 → 계산 입력. v10처럼 자재를 안 고른 칸은 하지 않은 것으로, 모르는 칸은 뺀다."""
     book = MOK_2026_11
     if m is None:  # v10 mok10St() 처음 값
         g = tier if tier in book.init else "basic"
         i = book.init[g]  # type: ignore[index]
-        sel = mvp_mokgong.MokSel(
-            slide=mvp_mokgong.CountSel(0, "door-yerim-hidden-sliding-set"),
-            hidden=mvp_mokgong.CountSel(0, "door-yerim-hidden-set"),
+        sel = precise_mokgong.MokSel(
+            slide=precise_mokgong.CountSel(0, "door-yerim-hidden-sliding-set"),
+            hidden=precise_mokgong.CountSel(0, "door-yerim-hidden-set"),
             molding_type=i.molding_type,
             molding=i.molding,
             base=i.base,
@@ -72,10 +72,10 @@ def _sel(m: v2.MvpV2MokIn | None, tier: str) -> tuple[mvp_mokgong.MokSel, bool]:
             continue
         extras[k] = Decimal(1) if v is True and x.auto is None else v  # v10: +true = 1
     d = m.door
-    sel = mvp_mokgong.MokSel(
-        door=mvp_mokgong.DoorSel(d.mode if d.pick else "none", d.pick, d.count),
-        slide=mvp_mokgong.CountSel(m.slide.n if m.slide.pick else 0, m.slide.pick),
-        hidden=mvp_mokgong.CountSel(m.hidden.n if m.hidden.pick else 0, m.hidden.pick),
+    sel = precise_mokgong.MokSel(
+        door=precise_mokgong.DoorSel(d.mode if d.pick else "none", d.pick, d.count),
+        slide=precise_mokgong.CountSel(m.slide.n if m.slide.pick else 0, m.slide.pick),
+        hidden=precise_mokgong.CountSel(m.hidden.n if m.hidden.pick else 0, m.hidden.pick),
         molding_type=m.molding.type if m.molding.pick else "none",
         molding=m.molding.pick,
         base=m.base.pick,
@@ -84,7 +84,7 @@ def _sel(m: v2.MvpV2MokIn | None, tier: str) -> tuple[mvp_mokgong.MokSel, bool]:
     return sel, d.count is not None
 
 
-def _plan(p: v2.MvpV2PlanSelIn | None) -> V2Plan | None:
+def _plan(p: v2.V2PlanSelIn | None) -> V2Plan | None:
     if p is None:
         return None
     info = plans().get(p.id)
@@ -99,7 +99,7 @@ def _plan(p: v2.MvpV2PlanSelIn | None) -> V2Plan | None:
     return V2Plan(name, info.supply_m2, info.supply_py, p.expanded, qty)
 
 
-def _quote_input(q: v2.MvpV2QuoteIn) -> V2QuoteInput:
+def _quote_input(q: v2.V2QuoteIn) -> V2QuoteInput:
     sel, count_set = _sel(q.mok, q.tier)
     return V2QuoteInput(
         pyeong=q.pyeong,
@@ -114,7 +114,7 @@ def _quote_input(q: v2.MvpV2QuoteIn) -> V2QuoteInput:
     )
 
 
-def _build(q: v2.MvpV2QuoteIn, today: date) -> tuple[V2QuoteInput, dict]:
+def _build(q: v2.V2QuoteIn, today: date) -> tuple[V2QuoteInput, dict]:
     qi = _quote_input(q)
     try:
         return qi, build(qi, books(), today)
@@ -122,20 +122,20 @@ def _build(q: v2.MvpV2QuoteIn, today: date) -> tuple[V2QuoteInput, dict]:
         raise AppError(422, "invalid", str(e)) from e
 
 
-def quote(q: v2.MvpV2QuoteIn, today: date) -> v2.MvpV2QuoteOut:
+def quote(q: v2.V2QuoteIn, today: date) -> v2.V2QuoteOut:
     _, r = _build(q, today)
-    return v2.MvpV2QuoteOut(**r, formula_version=FORMULA_VERSION, price_ver=DOBAE_2026H2.version)
+    return v2.V2QuoteOut(**r, formula_version=FORMULA_VERSION, price_ver=DOBAE_2026H2.version)
 
 
-def market_extras() -> list[v2.MvpV2MarketExtraOut]:
-    return [v2.MvpV2MarketExtraOut(**e.__dict__) for e in MARKET_2026_11.mokgong.extras]
+def market_extras() -> list[v2.V2MarketExtraOut]:
+    return [v2.V2MarketExtraOut(**e.__dict__) for e in MARKET_2026_11.mokgong.extras]
 
 
 def _holidays() -> dict[str, str]:
     return {d.isoformat(): n for d, n in {**HOLIDAYS, **v2_ref.HOLIDAYS_EXTRA}.items()}
 
 
-def plan(b: v2.MvpV2PlanIn, today: date) -> v2.MvpV2PlanOut:
+def plan(b: v2.V2PlanIn, today: date) -> v2.V2PlanOut:
     _, q = _build(b.quote, today)
     c = b.cons
     o = v2_plan.Opts(c.weekendWork, frozenset(c.avoid), _holidays())
@@ -146,7 +146,7 @@ def plan(b: v2.MvpV2PlanIn, today: date) -> v2.MvpV2PlanOut:
     p = v2_plan.build_plan(trades, o, t, c.endBy, c.startAfter, b.move)
     tri = b.trial
     trial = v2_plan.trial(p, tri.trade, tri.start, tri.end, o, t, acc) if tri else None
-    return v2.MvpV2PlanOut(
+    return v2.V2PlanOut(
         **p,
         today=t,
         tomorrow=(today + timedelta(days=1)).isoformat(),
@@ -156,7 +156,7 @@ def plan(b: v2.MvpV2PlanIn, today: date) -> v2.MvpV2PlanOut:
     )
 
 
-def check(b: v2.MvpV2CheckIn, today: date) -> v2.MvpV2CheckOut:
+def check(b: v2.V2CheckIn, today: date) -> v2.V2CheckOut:
     qi, q = _build(b.quote, today)
     t = next((x for x in q["precise"] if x["trade"] == b.trade), None)
     if t is None:
@@ -164,45 +164,45 @@ def check(b: v2.MvpV2CheckIn, today: date) -> v2.MvpV2CheckOut:
     mi = market_input(t, qi, inputs(qi, books()))
     s = b.scope
     scope = v2_check.CheckScope(s.ceiling, s.removal, s.moving, s.casing9, s.etc, dict(s.extras))
-    return v2.MvpV2CheckOut(**v2_check.check(mi, MARKET_2026_11, b.amount, b.mode, scope))
+    return v2.V2CheckOut(**v2_check.check(mi, MARKET_2026_11, b.amount, b.mode, scope))
 
 
-def estimate(b: v2.MvpV2EstimateIn) -> v2.MvpV2EstimateOut:
+def estimate(b: v2.V2EstimateIn) -> v2.V2EstimateOut:
     lines = [ln.model_dump() for ln in b.lines]
-    return v2.MvpV2EstimateOut(**v2_check.estimate_for(lines, b.prices, b.grade, b.std_total))
+    return v2.V2EstimateOut(**v2_check.estimate_for(lines, b.prices, b.grade, b.std_total))
 
 
-def entered(b: v2.MvpV2EnteredIn) -> v2.MvpV2EnteredOut:
+def entered(b: v2.V2EnteredIn) -> v2.V2EnteredOut:
     m = from_entered(b.amount, b.mode)
     pct = v2_check.percent_vs(m.total, b.std_total) if b.std_total else None
-    return v2.MvpV2EnteredOut(supply=m.supply, vat=m.vat, total=m.total, pct=pct)
+    return v2.V2EnteredOut(supply=m.supply, vat=m.vat, total=m.total, pct=pct)
 
 
-def calc7(b: v2.MvpV2Calc7In) -> v2.MvpV2WallOut | v2.MvpV2TrimOut | v2.MvpV2PaintOut:
+def calc7(b: v2.V2Calc7In) -> v2.V2WallOut | v2.V2TrimOut | v2.V2PaintOut:
     if b.kind == "wallpaper":
         r = v2_tools.wallpaper(
             b.w, b.d, b.hgt, b.rollW, b.rollLen, b.doors, b.windows, b.ceiling, b.repeat, b.loss
         )
-        return v2.MvpV2WallOut(**r)
+        return v2.V2WallOut(**r)
     if b.kind == "trim":
-        return v2.MvpV2TrimOut(**v2_tools.trim(b.w, b.d, b.doors, b.doorW, b.pieceLen, b.loss))
+        return v2.V2TrimOut(**v2_tools.trim(b.w, b.d, b.doors, b.doorW, b.pieceLen, b.loss))
     r = v2_tools.paint(b.w, b.d, b.hgt, b.doors, b.windows, b.ceiling, b.coats, b.cover)
-    return v2.MvpV2PaintOut(**r)
+    return v2.V2PaintOut(**r)
 
 
-def extras_range(b: v2.MvpV2ExtrasIn) -> v2.MvpV2ExtrasOut:
+def extras_range(b: v2.V2ExtrasIn) -> v2.V2ExtrasOut:
     c = b.casing
     r = market_band.extras_range(
         MARKET_2026_11.mokgong, dict(b.picks), c.doors if c else 0, c.with_door if c else False
     )
-    return v2.MvpV2ExtrasOut(lo=r.lo, hi=r.hi, notes=r.notes)
+    return v2.V2ExtrasOut(lo=r.lo, hi=r.hi, notes=r.notes)
 
 
-def llm_health() -> v2.MvpV2LlmHealthOut:
-    return v2.MvpV2LlmHealthOut(ok=True, live=settings.llm_live)
+def llm_health() -> v2.V2LlmHealthOut:
+    return v2.V2LlmHealthOut(ok=True, live=settings.llm_live)
 
 
-async def ask_llm(user_id: str, b: v2.MvpV2LlmIn) -> v2.MvpV2LlmOut:
+async def ask_llm(user_id: str, b: v2.V2LlmIn) -> v2.V2LlmOut:
     if (
         sum(
             1
@@ -215,7 +215,7 @@ async def ask_llm(user_id: str, b: v2.MvpV2LlmIn) -> v2.MvpV2LlmOut:
     ):
         raise AppError(422, "too_many_images", "사진은 4장까지 보낼 수 있어요.")
     try:
-        await ratelimit.hit(ratelimit.key("mvp-llm", user_id), LLM_PER_HOUR, 3600, TOO_MANY)
+        await ratelimit.hit(ratelimit.key("v2-llm", user_id), LLM_PER_HOUR, 3600, TOO_MANY)
     except AppError as e:  # 화면이 v10 문구를 보이도록 code를 rate_limited로
         raise AppError(429, "rate_limited", e.message, headers=e.headers) from e
     msgs = [m.model_dump(exclude_none=True) for m in b.messages]
@@ -226,4 +226,4 @@ async def ask_llm(user_id: str, b: v2.MvpV2LlmIn) -> v2.MvpV2LlmOut:
         raise AppError(
             502, "llm_failed", "AI 답변을 만들지 못했어요. 잠시 뒤에 다시 해 주세요."
         ) from e
-    return v2.MvpV2LlmOut(**r)
+    return v2.V2LlmOut(**r)

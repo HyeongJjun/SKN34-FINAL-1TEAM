@@ -7,7 +7,7 @@ export type Living = "vacant" | "living";
 export type Info = { pyeong: number | null; region: string; living: Living | null; move: string };
 export type Scope = { kind: "all" | "part" | null; spaces: string[]; cats: string[] };
 export type PhotoItem = { url: string; name: string; file: File };
-/** 도면: type = 대표 평면(p24 · p32 · p40), apt = 예시 평면도(백엔드 /mvp/plans), file = 올린 파일 */
+/** 도면: type = 대표 평면(p24 · p32 · p40), apt = 예시 평면도(백엔드 /v2/floor-plans), file = 올린 파일 */
 export type PlanSel = { kind: "type" | "apt" | "file"; id?: string; name: string; url?: string; expanded?: boolean };
 export type Tier = "economy" | "basic" | "premium";
 

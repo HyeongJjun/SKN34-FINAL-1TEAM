@@ -4,15 +4,15 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StrictBool
 
-from app.calc.mvp_common import Grade
-from app.calc.mvp_mokgong import DoorMode, MoldingType
 from app.calc.plan_qty import SpaceKind
+from app.calc.precise_common import Grade
+from app.calc.precise_mokgong import DoorMode, MoldingType
 
 QTY_MAX = Decimal(10_000)  # 고객이 넣는 수량 한도 (㎡ · m · 개소)
 Qty = Annotated[Decimal, Field(ge=0, le=QTY_MAX, max_digits=8, decimal_places=1)]
 
 
-class MvpPlanBriefOut(BaseModel):
+class V2PlanBriefOut(BaseModel):
     id: str
     name: str
     region: str
@@ -33,7 +33,7 @@ class MvpPlanBriefOut(BaseModel):
     sup_note: str | None  # 공급면적 출처 글
 
 
-class MvpPlanSpaceOut(BaseModel):
+class V2PlanSpaceOut(BaseModel):
     id: str
     ko: str
     kind: str
@@ -52,7 +52,7 @@ class MvpPlanSpaceOut(BaseModel):
     plan_d_m: Decimal | None = None
 
 
-class MvpRollOut(BaseModel):
+class V2RollOut(BaseModel):
     kind: str
     ko: str
     size: str
@@ -60,7 +60,7 @@ class MvpRollOut(BaseModel):
     rolls: int
 
 
-class MvpPlanEstOut(BaseModel):
+class V2PlanEstOut(BaseModel):
     """평형으로 어림한 값 (v10 CALC9 est): 도면 수량과 비교용."""
 
     py: Decimal
@@ -70,18 +70,18 @@ class MvpPlanEstOut(BaseModel):
     base_m: Decimal
 
 
-class MvpPlanQtyOut(BaseModel):
+class V2PlanQtyOut(BaseModel):
     plan_id: str
     rules_version: str
     expanded: bool
     ceiling: bool
     kinds: list[str] | None
-    spaces: list[MvpPlanSpaceOut]
+    spaces: list[V2PlanSpaceOut]
     wall_m2: Decimal
     ceiling_m2: Decimal
     paper_m2: Decimal
     primer_m2: Decimal
-    rolls: list[MvpRollOut]
+    rolls: list[V2RollOut]
     molding_m: Decimal
     molding_pcs: int
     base_m: Decimal
@@ -91,10 +91,10 @@ class MvpPlanQtyOut(BaseModel):
     windows_m: Decimal
     low: list[str]
     assumptions: list[str]
-    est: MvpPlanEstOut | None = None
+    est: V2PlanEstOut | None = None
 
 
-class MvpProductOut(BaseModel):
+class V2ProductOut(BaseModel):
     id: str
     kind: str
     name: str
@@ -105,7 +105,7 @@ class MvpProductOut(BaseModel):
     per: str | None = None  # 한 개 단위: 짝 · 세트 (v10 MOK10.prod per)
 
 
-class MvpExtraOut(BaseModel):
+class V2ExtraOut(BaseModel):
     key: str
     group: str
     ko: str
@@ -117,7 +117,7 @@ class MvpExtraOut(BaseModel):
     auto: str | None
 
 
-class MvpGradeInitOut(BaseModel):
+class V2GradeInitOut(BaseModel):
     molding_type: str
     molding: str
     base: str
@@ -125,7 +125,7 @@ class MvpGradeInitOut(BaseModel):
     door_set: str
 
 
-class MvpMokFixedOut(BaseModel):
+class V2MokFixedOut(BaseModel):
     """화면 문구에 쓰는 정해진 값 (v10 MOK10.fixed)."""
 
     minus_mult: Decimal  # 무몰딩 시공 배수
@@ -134,29 +134,29 @@ class MvpMokFixedOut(BaseModel):
     base_per_py: Decimal
 
 
-class MvpMaterialsOut(BaseModel):
+class V2MaterialsOut(BaseModel):
     version: str
-    products: list[MvpProductOut]
-    extras: list[MvpExtraOut]
-    grades: dict[str, MvpGradeInitOut]
-    fixed: MvpMokFixedOut | None = None
+    products: list[V2ProductOut]
+    extras: list[V2ExtraOut]
+    grades: dict[str, V2GradeInitOut]
+    fixed: V2MokFixedOut | None = None
 
 
-class MvpDoorIn(BaseModel):
+class V2PreviewDoorIn(BaseModel):
     mode: DoorMode = "none"
     pick: str | None = Field(default=None, max_length=80)
     count: int | None = Field(default=None, ge=0, le=30)
 
 
-class MvpCountIn(BaseModel):
+class V2PreviewCountIn(BaseModel):
     n: int = Field(default=0, ge=0, le=30)
     pick: str | None = Field(default=None, max_length=80)
 
 
-class MvpMokSelIn(BaseModel):
-    door: MvpDoorIn = MvpDoorIn()
-    slide: MvpCountIn = MvpCountIn()
-    hidden: MvpCountIn = MvpCountIn()
+class V2MokSelIn(BaseModel):
+    door: V2PreviewDoorIn = V2PreviewDoorIn()
+    slide: V2PreviewCountIn = V2PreviewCountIn()
+    hidden: V2PreviewCountIn = V2PreviewCountIn()
     molding_type: MoldingType = "none"
     molding: str | None = Field(default=None, max_length=80)
     base: str | None = Field(default=None, max_length=80)
@@ -166,15 +166,15 @@ class MvpMokSelIn(BaseModel):
     )
 
 
-class MvpPreviewIn(BaseModel):
+class V2PreviewIn(BaseModel):
     plan_id: str | None = Field(default=None, max_length=20)
     expanded: bool = True
     kinds: list[SpaceKind] | None = Field(default=None, max_length=9)
     grade: Grade | None = None  # 없으면 프로젝트 도배 등급
-    mok: MvpMokSelIn | None = None  # 없으면 등급별 처음 자재
+    mok: V2MokSelIn | None = None  # 없으면 등급별 처음 자재
 
 
-class MvpLineOut(BaseModel):
+class V2PreviewLineOut(BaseModel):
     key: str
     name: str
     qty: Decimal | None
@@ -187,13 +187,13 @@ class MvpLineOut(BaseModel):
     calc: str
 
 
-class MvpStepOut(BaseModel):
+class V2PreviewStepOut(BaseModel):
     key: str
     name: str
     half_days: int
 
 
-class MvpMarketLineOut(BaseModel):
+class V2PreviewMarketLineOut(BaseModel):
     key: str
     name: str
     qty: Decimal | None
@@ -203,14 +203,14 @@ class MvpMarketLineOut(BaseModel):
     note: str
 
 
-class MvpGapStepOut(BaseModel):
+class V2PreviewGapStepOut(BaseModel):
     key: str
     name: str
     why: str
     d: int
 
 
-class MvpMarketOut(BaseModel):
+class V2PreviewMarketOut(BaseModel):
     version: str
     supply: int  # 부가세 별도
     lo: int
@@ -218,35 +218,35 @@ class MvpMarketOut(BaseModel):
     band_lo: Decimal
     band_hi: Decimal
     n: int
-    lines: list[MvpMarketLineOut]
+    lines: list[V2PreviewMarketLineOut]
     gap_start: int
-    gap: list[MvpGapStepOut]
+    gap: list[V2PreviewGapStepOut]
 
 
-class MvpTradePreviewOut(BaseModel):
+class V2TradePreviewOut(BaseModel):
     trade: Literal["dobae", "mokgong"]
     version: str
     grade: str | None  # 도배: 실제 계산에 쓴 벽지 등급
-    lines: list[MvpLineOut]
+    lines: list[V2PreviewLineOut]
     supply: int
     vat: int
     total: int
     man_day: Decimal
     days: Decimal
-    steps: list[MvpStepOut]
+    steps: list[V2PreviewStepOut]
     notes: list[str]
-    market: MvpMarketOut
+    market: V2PreviewMarketOut
 
 
-class MvpPreviewOut(BaseModel):
+class V2PreviewOut(BaseModel):
     project_id: uuid.UUID
     project_rev: int
     area_m2: Decimal
     area_basis: str
     grade: Grade
-    plan: MvpPlanBriefOut | None
-    plan_qty: MvpPlanQtyOut | None
-    trades: list[MvpTradePreviewOut]
+    plan: V2PlanBriefOut | None
+    plan_qty: V2PlanQtyOut | None
+    trades: list[V2TradePreviewOut]
     supply: int
     vat: int
     total: int

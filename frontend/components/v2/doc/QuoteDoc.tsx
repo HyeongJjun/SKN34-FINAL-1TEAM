@@ -69,7 +69,7 @@ export function QuoteDocBody() {
   );
 }
 
-/** 목공 상태 (v10 mok10St). 없으면 B(F.mok10Sync)가 만들고, 그래도 없으면 등급 처음 값(GET /mvp/materials)으로 만든다 */
+/** 목공 상태 (v10 mok10St). 없으면 B(F.mok10Sync)가 만들고, 그래도 없으면 등급 처음 값(GET /v2/materials)으로 만든다 */
 async function ensureMok() {
   if (!S.mok10) F.mok10Sync?.();
   if (!S.mok10) {

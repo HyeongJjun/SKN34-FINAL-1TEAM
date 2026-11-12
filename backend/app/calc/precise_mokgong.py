@@ -1,7 +1,7 @@
-"""MVP 목공: 고른 자재(문 · 천장 몰딩 · 걸레받이)와 정해진 단가 항목으로 목공 금액을 낸다.
+"""정밀 목공: 고른 자재(문 · 천장 몰딩 · 걸레받이)와 정해진 단가 항목으로 목공 금액을 낸다.
 
 팀 목공 계산(mokgong.quote)과 같은 Quote 모양을 낸다. 시공 품 · 하루 목수 수는 팀 MokgongPrices를 쓰고,
-자재값 · 정해진 단가는 refprice.mvp_materials의 MokBook을 쓴다.
+자재값 · 정해진 단가는 refprice.mok_materials의 MokBook을 쓴다.
 금액은 원 정수(won), 길이 · 면적은 소수 한 자리(m2), 자재 개수는 올림, 품은 0.5 단위로 올린다.
 도면 수량(PlanQty)이 있으면 몰딩 · 걸레받이 길이와 천장 넓이를 도면에서 읽는다.
 """
@@ -12,8 +12,8 @@ from typing import Literal
 
 from app.calc.common import COUNTED, PYEONG_M2, AreaBasis, Line, Step, half_days, half_up, m2, won
 from app.calc.mokgong import MokgongPrices
-from app.calc.mvp_common import Grade, MvpLine, PriceBasis, num, team_basis
 from app.calc.plan_qty import PlanQty
+from app.calc.precise_common import Grade, PriceBasis, V2Line, num, team_basis
 
 ProductKind = Literal["door_set", "door_leaf", "slide", "hidden", "molding", "base"]
 DoorMode = Literal["none", "replace", "overlay", "leaf"]  # 안 함 · 문틀까지 · 문틀 덧방 · 문짝만
@@ -123,7 +123,7 @@ class MokSel:
 
 
 @dataclass(frozen=True)
-class MvpMokgongInput:
+class V2MokgongInput:
     area_m2: Decimal
     sel: MokSel
     area_basis: AreaBasis = "supply"
@@ -134,7 +134,7 @@ class MvpMokgongInput:
 
 
 @dataclass(frozen=True)
-class MvpMokgongQuote:
+class V2MokgongQuote:
     version: str
     lines: list[Line]
     subtotal: int
@@ -169,7 +169,7 @@ def doors_by_pyeong(book: MokBook, py: Decimal) -> int:
     )
 
 
-def supply_area(inp: "MvpMokgongInput", mg: MokgongPrices) -> Decimal:
+def supply_area(inp: "V2MokgongInput", mg: MokgongPrices) -> Decimal:
     if inp.area_basis == "supply":
         return inp.area_m2
     return m2(inp.area_m2 * mg.supply_per_exclusive)
@@ -185,7 +185,7 @@ def default_door_pick(book: MokBook, grade: Grade, mode: DoorMode) -> str | None
     return None if mode == "none" else i.door_set if mode == "replace" else i.leaf
 
 
-def quote(inp: MvpMokgongInput, book: MokBook, mg: MokgongPrices) -> MvpMokgongQuote | None:
+def quote(inp: V2MokgongInput, book: MokBook, mg: MokgongPrices) -> V2MokgongQuote | None:
     """고른 것이 하나도 없으면 None."""
     if inp.area_m2 <= 0:
         raise ValueError("면적은 0보다 커야 해요")
@@ -197,7 +197,7 @@ def quote(inp: MvpMokgongInput, book: MokBook, mg: MokgongPrices) -> MvpMokgongQ
 
     def add(key, name, qty, unit, price, amount, basis: PriceBasis, src, calc="", state="included"):
         lines.append(
-            MvpLine(key, name, qty, unit, price, amount, state, src, team_basis(basis), basis, calc)
+            V2Line(key, name, qty, unit, price, amount, state, src, team_basis(basis), basis, calc)
         )
 
     def add_price(key, name, n: int, p: Price, calc):
@@ -373,7 +373,7 @@ def quote(inp: MvpMokgongInput, book: MokBook, mg: MokgongPrices) -> MvpMokgongQ
             f"몰딩은 공급 1평에 {num(f.molding_per_py)}m, 걸레받이는 {num(f.base_per_py)}m로 "
             "집 전체를 잡았어요. 실측 때 다시 재요."
         )
-    if any(isinstance(ln, MvpLine) and ln.price_basis == "assumed" for ln in lines):
+    if any(isinstance(ln, V2Line) and ln.price_basis == "assumed" for ln in lines):
         notes.append(
             "'팀 가정값' 줄은 공개 단가가 없어 팀이 정한 값이에요. 업체 견적에서 꼭 확인해 주세요."
         )
@@ -381,7 +381,7 @@ def quote(inp: MvpMokgongInput, book: MokBook, mg: MokgongPrices) -> MvpMokgongQ
         notes.append("우물천장 · 가벽 같은 항목은 기간 계산에 넣지 않았어요. 업체가 일정을 정해요.")
     notes.append(f"하루 목수 {mg.crew}명이 들어가는 것으로 기간을 잡았어요.")
 
-    return MvpMokgongQuote(
+    return V2MokgongQuote(
         version=book.version,
         lines=lines,
         subtotal=subtotal,
