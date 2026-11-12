@@ -8,7 +8,7 @@ from app.auth.models import User
 from app.calc.plan_qty import SpaceKind
 from app.db import get_session
 from app.shared.clock import today_seoul
-from app.v2 import preview_service, service
+from app.v2 import ask, preview_service, service
 from app.v2 import schemas as v2
 from app.v2.preview_schemas import (
     V2MaterialsOut,
@@ -107,11 +107,20 @@ async def v2_extras(body: v2.V2ExtrasIn, _: User = Depends(current_user)) -> v2.
     return service.extras_range(body)
 
 
-@router.post("/llm", response_model=v2.V2LlmOut, summary="v2 AI 한 번 부르기")
-async def v2_llm(body: v2.V2LlmIn, user: User = Depends(current_user)) -> v2.V2LlmOut:
-    return await service.ask_llm(str(user.id), body)
+@router.post("/ask", response_model=v2.V2AskOut, summary="v2 AI 상담 한 턴 시작")
+async def v2_ask(body: v2.V2AskIn, user: User = Depends(current_user)) -> v2.V2AskOut:
+    return await ask.start(str(user.id), body, today_seoul())
 
 
-@router.get("/llm/health", response_model=v2.V2LlmHealthOut, summary="v2 AI 상태")
-async def v2_llm_health(_: User = Depends(current_user)) -> v2.V2LlmHealthOut:
-    return service.llm_health()
+@router.post(
+    "/ask/{turn_id}", response_model=v2.V2AskOut, summary="v2 AI 상담: 화면 도구 결과 보내기"
+)
+async def v2_ask_resume(
+    turn_id: str, body: v2.V2AskResumeIn, user: User = Depends(current_user)
+) -> v2.V2AskOut:
+    return await ask.resume(str(user.id), turn_id, body)
+
+
+@router.get("/ask/health", response_model=v2.V2AskHealthOut, summary="v2 AI 상태")
+async def v2_ask_health(_: User = Depends(current_user)) -> v2.V2AskHealthOut:
+    return ask.health()

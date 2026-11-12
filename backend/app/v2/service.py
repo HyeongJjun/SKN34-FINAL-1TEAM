@@ -7,12 +7,10 @@ AI는 agent.llm.chat_tools 한 번 부르기만 한다(도구는 화면이 실�
 from datetime import date, timedelta
 from decimal import Decimal
 
-from app.agent import llm
 from app.calc import market_band, precise_mokgong, v2_check, v2_plan, v2_tools
 from app.calc.common import FORMULA_VERSION, from_entered
 from app.calc.plan_qty import PlanOptions, from_plan
 from app.calc.v2_quote import V2Books, V2Plan, V2QuoteInput, build, inputs, market_input
-from app.config import settings
 from app.refprice import v2_ref
 from app.refprice.book import DOBAE_2026H2, MOKGONG_2026H2
 from app.refprice.floor_plans import plans
@@ -25,12 +23,8 @@ from app.refprice.market import (
     PUBLIC_EQ_MOKGONG,
 )
 from app.refprice.mok_materials import MOK_2026_11
-from app.shared import ratelimit
 from app.shared.errors import AppError
 from app.v2 import schemas as v2
-
-LLM_PER_HOUR = 120  # 사용자별 AI 부르기 (도구 한 번마다 다시 부르므로 넉넉히)
-TOO_MANY = "AI에게 너무 많이 물었어요. 잠시 뒤에 다시 해 주세요."
 
 
 def books() -> V2Books:
@@ -196,34 +190,3 @@ def extras_range(b: v2.V2ExtrasIn) -> v2.V2ExtrasOut:
         MARKET_2026_11.mokgong, dict(b.picks), c.doors if c else 0, c.with_door if c else False
     )
     return v2.V2ExtrasOut(lo=r.lo, hi=r.hi, notes=r.notes)
-
-
-def llm_health() -> v2.V2LlmHealthOut:
-    return v2.V2LlmHealthOut(ok=True, live=settings.llm_live)
-
-
-async def ask_llm(user_id: str, b: v2.V2LlmIn) -> v2.V2LlmOut:
-    if (
-        sum(
-            1
-            for m in b.messages
-            if not isinstance(m.content, str)
-            for p in m.content
-            if p.type == "image"
-        )
-        > 4
-    ):
-        raise AppError(422, "too_many_images", "사진은 4장까지 보낼 수 있어요.")
-    try:
-        await ratelimit.hit(ratelimit.key("v2-llm", user_id), LLM_PER_HOUR, 3600, TOO_MANY)
-    except AppError as e:  # 화면이 v10 문구를 보이도록 code를 rate_limited로
-        raise AppError(429, "rate_limited", e.message, headers=e.headers) from e
-    msgs = [m.model_dump(exclude_none=True) for m in b.messages]
-    tools = [t.model_dump() for t in b.tools]
-    try:
-        r = await llm.chat_tools(b.system, msgs, tools)
-    except llm.LLMError as e:
-        raise AppError(
-            502, "llm_failed", "AI 답변을 만들지 못했어요. 잠시 뒤에 다시 해 주세요."
-        ) from e
-    return v2.V2LlmOut(**r)

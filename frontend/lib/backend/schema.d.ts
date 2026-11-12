@@ -841,7 +841,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v2/llm": {
+    "/v2/ask": {
         parameters: {
             query?: never;
             header?: never;
@@ -850,15 +850,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** v2 AI 한 번 부르기 */
-        post: operations["v2_llm_v2_llm_post"];
+        /** v2 AI 상담 한 턴 시작 */
+        post: operations["v2_ask_v2_ask_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/v2/llm/health": {
+    "/v2/ask/{turn_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v2 AI 상담: 화면 도구 결과 보내기 */
+        post: operations["v2_ask_resume_v2_ask__turn_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/ask/health": {
         parameters: {
             query?: never;
             header?: never;
@@ -866,7 +883,7 @@ export interface paths {
             cookie?: never;
         };
         /** v2 AI 상태 */
-        get: operations["v2_llm_health_v2_llm_health_get"];
+        get: operations["v2_ask_health_v2_ask_health_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4241,6 +4258,241 @@ export interface components {
             /** End */
             end: string;
         };
+        /** V2AskHealthOut */
+        V2AskHealthOut: {
+            /** Ok */
+            ok: boolean;
+            /** Live */
+            live: boolean;
+        };
+        /** V2AskIn */
+        V2AskIn: {
+            /**
+             * Kind
+             * @default chat
+             * @enum {string}
+             */
+            kind: "chat" | "quote_explanation" | "schedule";
+            /** Message */
+            message: string;
+            /**
+             * @default {
+             *       "style": "",
+             *       "region": "",
+             *       "living": "",
+             *       "scope": "",
+             *       "tier": "",
+             *       "step": "",
+             *       "picks": [],
+             *       "photos": 0,
+             *       "ref_photos": 0,
+             *       "plan_name": ""
+             *     }
+             */
+            profile: components["schemas"]["V2AskProfile"];
+            quote?: components["schemas"]["V2QuoteIn"] | null;
+            plan?: components["schemas"]["V2PlanIn"] | null;
+            /**
+             * Materials
+             * @default []
+             */
+            materials: components["schemas"]["V2AskMaterial"][];
+            /**
+             * Refs
+             * @default []
+             */
+            refs: components["schemas"]["V2AskRef"][];
+            /**
+             * Refs Enough
+             * @default true
+             */
+            refs_enough: boolean;
+            /**
+             * Images
+             * @default []
+             */
+            images: string[];
+        };
+        /** V2AskMaterial */
+        V2AskMaterial: {
+            /** Id */
+            id: string;
+            /**
+             * Cat
+             * @default
+             */
+            cat: string;
+            /**
+             * Tier
+             * @default
+             */
+            tier: string;
+            /** Rank */
+            rank?: number | null;
+            /**
+             * Brand
+             * @default
+             */
+            brand: string;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /**
+             * Spec
+             * @default
+             */
+            spec: string;
+            /**
+             * Price
+             * @default
+             */
+            price: string;
+            /**
+             * Tags
+             * @default []
+             */
+            tags: string[];
+        };
+        /** V2AskOut */
+        V2AskOut: {
+            /** Done */
+            done: boolean;
+            /** Turn */
+            turn?: string | null;
+            /**
+             * Tool Calls
+             * @default []
+             */
+            tool_calls: components["schemas"]["V2ToolCallOut"][];
+            /**
+             * Text
+             * @default
+             */
+            text: string;
+            /**
+             * Failed
+             * @default false
+             */
+            failed: boolean;
+            /** Gate */
+            gate?: "out" | null;
+            intent?: components["schemas"]["V2IntentOut"] | null;
+            /**
+             * Dropped
+             * @default []
+             */
+            dropped: string[];
+            cons?: components["schemas"]["V2ConsIn"] | null;
+        };
+        /**
+         * V2AskProfile
+         * @description 화면이 보여 주는 고객 상태(글). 금액 계산에는 쓰지 않는다 (금액은 quote로 서버가 계산).
+         */
+        V2AskProfile: {
+            /**
+             * Style
+             * @default
+             */
+            style: string;
+            /** Pyeong */
+            pyeong?: number | string | null;
+            /**
+             * Region
+             * @default
+             */
+            region: string;
+            /**
+             * Living
+             * @default
+             */
+            living: string;
+            /**
+             * Scope
+             * @default
+             */
+            scope: string;
+            /** Budget Manwon */
+            budget_manwon?: number | null;
+            /**
+             * Tier
+             * @default
+             */
+            tier: string;
+            /**
+             * Step
+             * @default
+             */
+            step: string;
+            /**
+             * Picks
+             * @default []
+             */
+            picks: string[];
+            /**
+             * Photos
+             * @default 0
+             */
+            photos: number;
+            /**
+             * Ref Photos
+             * @default 0
+             */
+            ref_photos: number;
+            /**
+             * Plan Name
+             * @default
+             */
+            plan_name: string;
+        };
+        /** V2AskRef */
+        V2AskRef: {
+            /** Ref */
+            ref: string;
+            /**
+             * Source Type
+             * @default
+             */
+            source_type: string;
+            /**
+             * Title
+             * @default
+             */
+            title: string;
+            /**
+             * Section
+             * @default
+             */
+            section: string;
+            /**
+             * Publisher
+             * @default
+             */
+            publisher: string;
+            /**
+             * Date
+             * @default
+             */
+            date: string;
+            /**
+             * Text
+             * @default
+             */
+            text: string;
+        };
+        /** V2AskResultIn */
+        V2AskResultIn: {
+            /** Id */
+            id: string;
+            /** Content */
+            content: string;
+        };
+        /** V2AskResumeIn */
+        V2AskResumeIn: {
+            /** Results */
+            results: components["schemas"]["V2AskResultIn"][];
+        };
         /** V2BandOut */
         V2BandOut: {
             /** Lo */
@@ -4713,16 +4965,6 @@ export interface components {
             /** Door Set */
             door_set: string;
         };
-        /** V2ImagePart */
-        V2ImagePart: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "image";
-            /** Data */
-            data: string;
-        };
         /** V2InpOut */
         V2InpOut: {
             /** Py */
@@ -4743,6 +4985,15 @@ export interface components {
             doors_auto: components["schemas"]["V2DoorsAutoOut"];
             /** Assumed */
             assumed: string[];
+        };
+        /** V2IntentOut */
+        V2IntentOut: {
+            /** Label */
+            label: string;
+            /** Confidence */
+            confidence: number;
+            /** Source */
+            source: string;
         };
         /** V2LineOut */
         V2LineOut: {
@@ -4766,40 +5017,6 @@ export interface components {
             basis: string;
             /** Calc */
             calc: string;
-        };
-        /** V2LlmHealthOut */
-        V2LlmHealthOut: {
-            /** Ok */
-            ok: boolean;
-            /** Live */
-            live: boolean;
-        };
-        /** V2LlmIn */
-        V2LlmIn: {
-            /**
-             * System
-             * @default
-             */
-            system: string;
-            /** Messages */
-            messages: components["schemas"]["V2MessageIn"][];
-            /**
-             * Tools
-             * @default []
-             */
-            tools: components["schemas"]["V2ToolIn"][];
-        };
-        /** V2LlmOut */
-        V2LlmOut: {
-            /** Text */
-            text: string;
-            /** Tool Calls */
-            tool_calls: components["schemas"]["V2ToolCallOut"][];
-            /**
-             * Stop
-             * @enum {string}
-             */
-            stop: "tool_calls" | "stop" | "refusal";
         };
         /** V2MarketExtraOut */
         V2MarketExtraOut: {
@@ -4882,20 +5099,6 @@ export interface components {
             base_m: number;
             /** Doors */
             doors: number;
-        };
-        /** V2MessageIn */
-        V2MessageIn: {
-            /**
-             * Role
-             * @enum {string}
-             */
-            role: "user" | "assistant" | "tool";
-            /** Content */
-            content: string | (components["schemas"]["V2TextPart"] | components["schemas"]["V2ImagePart"])[];
-            /** Tool Calls */
-            tool_calls?: components["schemas"]["V2ToolCallIn"][] | null;
-            /** Tool Call Id */
-            tool_call_id?: string | null;
         };
         /**
          * V2MokFixedOut
@@ -5617,30 +5820,6 @@ export interface components {
             /** Hi */
             hi: number;
         };
-        /** V2TextPart */
-        V2TextPart: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "text";
-            /** Text */
-            text: string;
-        };
-        /** V2ToolCallIn */
-        V2ToolCallIn: {
-            /** Id */
-            id: string;
-            /** Name */
-            name: string;
-            /**
-             * Arguments
-             * @default {}
-             */
-            arguments: {
-                [key: string]: unknown;
-            };
-        };
         /** V2ToolCallOut */
         V2ToolCallOut: {
             /** Id */
@@ -5649,23 +5828,6 @@ export interface components {
             name: string;
             /** Arguments */
             arguments: {
-                [key: string]: unknown;
-            };
-        };
-        /** V2ToolIn */
-        V2ToolIn: {
-            /** Name */
-            name: string;
-            /**
-             * Description
-             * @default
-             */
-            description: string;
-            /**
-             * Parameters
-             * @default {}
-             */
-            parameters: {
                 [key: string]: unknown;
             };
         };
@@ -8014,7 +8176,7 @@ export interface operations {
             };
         };
     };
-    v2_llm_v2_llm_post: {
+    v2_ask_v2_ask_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -8023,7 +8185,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["V2LlmIn"];
+                "application/json": components["schemas"]["V2AskIn"];
             };
         };
         responses: {
@@ -8033,7 +8195,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["V2LlmOut"];
+                    "application/json": components["schemas"]["V2AskOut"];
                 };
             };
             /** @description Validation Error */
@@ -8047,7 +8209,42 @@ export interface operations {
             };
         };
     };
-    v2_llm_health_v2_llm_health_get: {
+    v2_ask_resume_v2_ask__turn_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                turn_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2AskResumeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2AskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_ask_health_v2_ask_health_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -8062,7 +8259,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["V2LlmHealthOut"];
+                    "application/json": components["schemas"]["V2AskHealthOut"];
                 };
             };
         };

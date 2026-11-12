@@ -535,49 +535,72 @@ class V2ExtrasOut(BaseModel):
     notes: list[str]
 
 
-# ---- AI ----
-IMAGE_MAX = 1_500_000  # base64 글자 수
+# ---- AI 상담 (/v2/ask) ----
+# 지시문 · 도구 정의는 서버가 정한다. 화면은 질문 · 고객 상태 · 자료(데이터)만 보낸다.
+IMAGE_MAX = 600_000  # base64 글자 수: 긴 변 1280px jpeg 한 장이 넉넉히 들어간다
+AskKind = Literal["chat", "quote_explanation", "schedule"]
+Short = Annotated[str, Field(max_length=200)]
+B64 = Annotated[str, Field(max_length=IMAGE_MAX, pattern=r"^[A-Za-z0-9+/=]*$")]
 
 
-class V2TextPart(BaseModel):
-    type: Literal["text"]
-    text: str = Field(max_length=60_000)
+class V2AskProfile(BaseModel):
+    """화면이 보여 주는 고객 상태(글). 금액 계산에는 쓰지 않는다 (금액은 quote로 서버가 계산)."""
+
+    style: Short = ""
+    pyeong: Decimal | None = Field(default=None, ge=0, le=300, max_digits=6, decimal_places=2)
+    region: Short = ""
+    living: Short = ""
+    scope: Short = ""
+    budget_manwon: int | None = Field(default=None, ge=0, le=1_000_000)
+    tier: Short = ""
+    step: Short = ""
+    picks: list[Short] = Field(default=[], max_length=20)
+    photos: int = Field(default=0, ge=0, le=50)
+    ref_photos: int = Field(default=0, ge=0, le=50)
+    plan_name: Short = ""
 
 
-class V2ImagePart(BaseModel):
-    type: Literal["image"]
-    data: str = Field(max_length=IMAGE_MAX, pattern=r"^[A-Za-z0-9+/=]*$")
+class V2AskMaterial(BaseModel):
+    id: Id
+    cat: Short = ""
+    tier: Short = ""
+    rank: int | None = Field(default=None, ge=0, le=1000)
+    brand: Short = ""
+    name: Short = ""
+    spec: Annotated[str, Field(max_length=120)] = ""
+    price: Short = ""
+    tags: list[Annotated[str, Field(max_length=20)]] = Field(default=[], max_length=8)
 
 
-class V2ToolCallIn(BaseModel):
+class V2AskRef(BaseModel):
+    ref: str = Field(pattern=r"^K\d{1,5}$")
+    source_type: Short = ""
+    title: Short = ""
+    section: Short = ""
+    publisher: Short = ""
+    date: Annotated[str, Field(max_length=20)] = ""
+    text: str = Field(default="", max_length=2_000)
+
+
+class V2AskIn(BaseModel):
+    kind: AskKind = "chat"
+    message: str = Field(min_length=1, max_length=1_000)
+    profile: V2AskProfile = V2AskProfile()
+    quote: V2QuoteIn | None = None  # 금액 도구 · 견적 설명이 서버에서 다시 계산한다
+    plan: V2PlanIn | None = None  # 공정표 상담
+    materials: list[V2AskMaterial] = Field(default=[], max_length=24)
+    refs: list[V2AskRef] = Field(default=[], max_length=6)
+    refs_enough: bool = True
+    images: list[B64] = Field(default=[], max_length=2)
+
+
+class V2AskResultIn(BaseModel):
     id: str = Field(max_length=100)
-    name: str = Field(max_length=64)
-    arguments: dict = {}
+    content: str = Field(max_length=20_000)
 
 
-class V2MessageIn(BaseModel):
-    role: Literal["user", "assistant", "tool"]
-    content: (
-        Annotated[str, Field(max_length=60_000)]
-        | Annotated[
-            list[Annotated[V2TextPart | V2ImagePart, Field(discriminator="type")]],
-            Field(max_length=12),
-        ]
-    )
-    tool_calls: list[V2ToolCallIn] | None = Field(default=None, max_length=12)
-    tool_call_id: str | None = Field(default=None, max_length=100)
-
-
-class V2ToolIn(BaseModel):
-    name: str = Field(max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
-    description: str = Field(default="", max_length=2_000)
-    parameters: dict = {}
-
-
-class V2LlmIn(BaseModel):
-    system: str = Field(default="", max_length=60_000)
-    messages: list[V2MessageIn] = Field(min_length=1, max_length=30)
-    tools: list[V2ToolIn] = Field(default=[], max_length=12)
+class V2AskResumeIn(BaseModel):
+    results: list[V2AskResultIn] = Field(min_length=1, max_length=12)
 
 
 class V2ToolCallOut(BaseModel):
@@ -586,12 +609,24 @@ class V2ToolCallOut(BaseModel):
     arguments: dict
 
 
-class V2LlmOut(BaseModel):
-    text: str
-    tool_calls: list[V2ToolCallOut]
-    stop: Literal["tool_calls", "stop", "refusal"]
+class V2IntentOut(BaseModel):
+    label: str
+    confidence: float
+    source: str
 
 
-class V2LlmHealthOut(BaseModel):
+class V2AskOut(BaseModel):
+    done: bool
+    turn: str | None = None  # 화면 도구를 실행하고 /v2/ask/{turn}로 결과를 보낸다
+    tool_calls: list[V2ToolCallOut] = []
+    text: str = ""  # 숫자 검사를 마친 답. done일 때만 채운다
+    failed: bool = False
+    gate: Literal["out"] | None = None  # 범위 밖이라 AI를 부르지 않았다
+    intent: V2IntentOut | None = None
+    dropped: list[str] = []  # 숫자 검사로 뺀 문장의 이유
+    cons: V2ConsIn | None = None  # 공정표 상담이 바꾼 조건
+
+
+class V2AskHealthOut(BaseModel):
     ok: bool
     live: bool

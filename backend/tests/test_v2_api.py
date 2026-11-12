@@ -25,7 +25,7 @@ MOK = {
 
 def test_v2_needs_login(api):
     assert api.post("/v2/quote", json=QUOTE).status_code == 401
-    assert api.get("/v2/llm/health").status_code == 401
+    assert api.get("/v2/ask/health").status_code == 401
 
 
 def test_quote(api):
@@ -115,26 +115,16 @@ def test_check_and_small_calcs(api):
     assert api.post("/v2/estimate", json=est).json()["total"] == 55_000
 
 
-def test_llm_stub_and_limits(api):
+def test_ask_stub_without_live_call(api):
+    """LLM_LIVE=false면 실제 호출 없이 스텁 답. 브라우저가 보낸 지시문 · 도구는 받지 않는다."""
     signup(api)
-    assert api.get("/v2/llm/health").json() == {"ok": True, "live": False}
-    msg = {
-        "role": "user",
-        "content": [{"type": "text", "text": "안녕"}, {"type": "image", "data": "AAAA"}],
-    }
-    tool = {
-        "name": "search_knowledge",
-        "description": "자료 찾기",
-        "parameters": {"type": "object"},
-    }
-    r = api.post("/v2/llm", json={"system": "s", "messages": [msg], "tools": [tool]})
-    assert r.json() == {"text": CHAT_STUB_TEXT, "tool_calls": [], "stop": "stop"}
-    one = {"role": "user", "content": "a"}
-    assert api.post("/v2/llm", json={"messages": [one] * 31}).status_code == 422
-    assert api.post("/v2/llm", json={"system": "a" * 60_001, "messages": [one]}).status_code == 422
-    assert api.post("/v2/llm", json={"messages": [one], "tools": [tool] * 13}).status_code == 422
-    five = {"role": "user", "content": [{"type": "image", "data": "AAAA"}] * 5}
-    assert api.post("/v2/llm", json={"messages": [five]}).status_code == 422
+    assert api.get("/v2/ask/health").json() == {"ok": True, "live": False}
+    body = {"message": "합지랑 실크 차이요?", "system": "s", "tools": [{"name": "x"}]}
+    r = api.post("/v2/ask", json=body).json()
+    assert r["done"] and r["text"] == CHAT_STUB_TEXT
+    assert api.post("/v2/ask", json={"message": ""}).status_code == 422
+    assert api.post("/v2/ask", json={"message": "a", "images": ["AAAA"] * 3}).status_code == 422
+    assert api.post("/v2/llm", json={"messages": []}).status_code == 404
 
 
 def test_plans_and_materials_extras(api):
