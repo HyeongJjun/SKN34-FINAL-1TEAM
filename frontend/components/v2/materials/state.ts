@@ -6,17 +6,11 @@ import { F, live } from "@/components/v2/engine";
 import { flashBoard } from "@/components/v2/Board";
 import type { Material } from "@/components/v2/data";
 
-export const LIST_STEP = 6;
-
-/** 자재 화면 상태 (v10 matCard · matCat · matFilter · matSort · matShow · matQuery · matTag · matAdd) */
+/** 자재 화면 상태 (v10 matCard · matCat · matFilter · matAdd). filter가 비면 고객이 고른 등급을 먼저 보인다 */
 export const M = {
   cardId: 0, // 0이면 아직 카드가 없다 (v10 matCard = null)
   cat: null as string | null,
-  filter: "all",
-  sort: "rec",
-  show: LIST_STEP,
-  query: "",
-  tag: null as string | null,
+  filter: "",
   add: false,
   full: false, // 자재 크게 보기 (v10 mat-full)
 };
@@ -25,10 +19,7 @@ export const CMP: Record<string, string[]> = {};
 const REC_SLOTS: Record<string, string[]> = {};
 
 export function listReset() {
-  M.filter = "all";
-  M.show = LIST_STEP;
-  M.query = "";
-  M.tag = null;
+  M.filter = "";
   M.add = false;
 }
 

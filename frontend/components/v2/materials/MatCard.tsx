@@ -2,7 +2,7 @@
 // 자재 카드 (v10 refreshMat · matCardEl · matListEl · matRowEl · addCatBox). 대화에 한 번 붙이고 touch()마다 다시 그린다.
 // 크게 보기(mat-full)는 가장 최근 카드에만 걸린다. 가격은 자재 판매가 글(priceText)만 보인다.
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { CAT, CATS, type Material, priceText, SORTS, TIER_ORDER, TIERS, unitShort } from "@/components/v2/data";
+import { CAT, CATS, type Material, priceText, TIER_ORDER, TIERS, unitShort } from "@/components/v2/data";
 import { clearQuick, F, me } from "@/components/v2/engine";
 import { priceFlags, recommend, scopeCats, sortMats } from "@/components/v2/flow";
 import { matSrcs, Photo } from "@/components/v2/photo";
@@ -10,7 +10,7 @@ import { DATA, S, useV2 } from "@/components/v2/store";
 import { addCat, dropCat, goCat, recWhy, selectMat, setAllTier } from "./actions";
 import { MokPanel } from "./MokPanel";
 import { openCompare, openSheet } from "./Sheets";
-import { CMP, keepSlots, LIST_STEP, M, redraw } from "./state";
+import { CMP, keepSlots, M, redraw } from "./state";
 
 function MatTile({ m }: { m: Material }) {
   const on = S.picks[m.cat] === m.id;
@@ -99,70 +99,29 @@ function MatRow({ m }: { m: Material }) {
   );
 }
 
-/** 추천 밖 자재 목록: 등급 거르기 · 꼬리표 · 찾기 · 정렬 · 더 보기 */
+/** 추천 밖 자재 목록: 고른 등급의 자재를 모두 보인다(등급마다 7개 안팎) */
 function MatList({ rest }: { rest: Material[] }) {
   const cnt: Record<string, number> = { all: rest.length };
   for (const t of TIER_ORDER) cnt[t] = rest.filter((m) => m.tier === t).length;
-  if (M.filter !== "all" && !cnt[M.filter]) M.filter = "all";
+  const tier = M.filter || (cnt[S.tier] ? S.tier : "all"); // 처음엔 고객이 고른 등급
+  const cur = tier === "all" || cnt[tier] ? tier : "all";
   const picked = rest.find((m) => S.picks[m.cat] === m.id);
-  const q = M.query.trim().toLowerCase();
-  const tagCnt: Record<string, number> = {};
-  for (const m of rest) for (const t of m.tags || []) tagCnt[t] = (tagCnt[t] || 0) + 1;
-  if (M.tag && !tagCnt[M.tag]) M.tag = null;
-  const list = sortMats(
-    rest.filter(
-      (m) => m !== picked && (M.filter === "all" || m.tier === M.filter) && (!M.tag || (m.tags || []).includes(M.tag)) && (!q || `${m.brand} ${m.name}`.toLowerCase().includes(q)),
-    ),
-    M.sort,
-  );
-  const shown = list.slice(0, M.show);
-  const run = (v: string) => {
-    M.query = v;
-    M.show = LIST_STEP;
-    redraw();
-  };
+  const list = sortMats(rest.filter((m) => m !== picked && (cur === "all" || m.tier === cur)), "rec");
   return (
     <section className="mlist-wrap" aria-label="다른 자재">
       <div className="sec-head">
         <h4>다른 자재<small className="num">{`${rest.length}개`}</small></h4>
-        <select
-          className="sort"
-          aria-label="정렬"
-          value={M.sort}
-          onChange={(e) => {
-            M.sort = e.target.value;
-            redraw();
-          }}
-        >
-          {Object.entries(SORTS).map(([k, ko]) => <option key={k} value={k}>{ko}</option>)}
-        </select>
       </div>
-      {rest.length > 8 ? (
-        <input
-          key={M.cat ?? ""}
-          className="inp msearch"
-          type="search"
-          placeholder="이름 · 브랜드로 찾기"
-          aria-label="자재 찾기"
-          defaultValue={M.query}
-          enterKeyHint="search"
-          onInput={(e) => {
-            if (!(e.nativeEvent as InputEvent).isComposing) run(e.currentTarget.value);
-          }}
-          onCompositionEnd={(e) => run(e.currentTarget.value)}
-        />
-      ) : null}
       <div className="seg" role="group" aria-label="등급으로 보기">
-        {([["all", "전체"], ...TIER_ORDER.map((t) => [t, TIERS[t]])] as [string, string][])
+        {([...TIER_ORDER.map((t) => [t, TIERS[t]]), ["all", "전체"]] as [string, string][])
           .filter(([k]) => cnt[k])
           .map(([k, ko]) => (
             <button
               key={k}
               type="button"
-              aria-pressed={M.filter === k}
+              aria-pressed={cur === k}
               onClick={() => {
                 M.filter = k;
-                M.show = LIST_STEP;
                 redraw();
               }}
             >
@@ -171,52 +130,17 @@ function MatList({ rest }: { rest: Material[] }) {
             </button>
           ))}
       </div>
-      {Object.keys(tagCnt).length > 1 ? (
-        <div className="tagrow" role="group" aria-label="꼬리표로 거르기">
-          {Object.entries(tagCnt)
-            .sort((a, b) => b[1] - a[1])
-            .map(([t, n]) => (
-              <button
-                key={t}
-                type="button"
-                className="chip sm"
-                aria-pressed={M.tag === t}
-                onClick={() => {
-                  M.tag = M.tag === t ? null : t;
-                  M.show = LIST_STEP;
-                  redraw();
-                }}
-              >
-                {t}
-                <span className="n">{n}</span>
-              </button>
-            ))}
-        </div>
-      ) : null}
       {picked ? (
         <div className="pinned">
           <span className="lbl">고른 자재</span>
           <div className="mlist"><MatRow m={picked} /></div>
         </div>
       ) : null}
-      {shown.length ? (
-        <div className="mlist">{shown.map((m) => <MatRow key={m.id} m={m} />)}</div>
+      {list.length ? (
+        <div className="mlist">{list.map((m) => <MatRow key={m.id} m={m} />)}</div>
       ) : (
-        <p className="muted empty">맞는 자재가 없어요. 거르기를 풀어 보세요.</p>
+        <p className="muted empty">이 등급에는 다른 자재가 없어요.</p>
       )}
-      {list.length > shown.length ? (
-        <button
-          type="button"
-          className="btn more"
-          onClick={() => {
-            M.show += LIST_STEP;
-            redraw();
-          }}
-        >
-          {`${Math.min(LIST_STEP, list.length - shown.length)}개 더 보기`}
-          <small>{`${shown.length}/${list.length}`}</small>
-        </button>
-      ) : null}
     </section>
   );
 }

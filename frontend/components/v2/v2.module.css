@@ -251,14 +251,17 @@
 .root :global(.sheet.cmp) { display: block; width: min(960px, 100%); }
 .root :global(.cmp-head) { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px 8px; }
 .root :global(.cmp-head .x) { margin: 0; }
-.root :global(.cmp-scroll) { overflow-x: auto; padding: 0 20px 20px; }
-.root :global(.cmp table) { border-collapse: collapse; width: 100%; min-width: 560px; font-size: var(--fs-sm); }
+.root :global(.cmp-scroll) { overflow-x: auto; padding: 0 20px 20px 0; }
+.root :global(.cmp table) { border-collapse: collapse; table-layout: fixed; width: 100%; min-width: 560px; font-size: var(--fs-sm); }
 .root :global(.cmp th), .root :global(.cmp td) { text-align: left; vertical-align: top; padding: 10px 8px; border-top: 1px solid var(--line); }
-.root :global(.cmp thead th) { border-top: 0; font-weight: 400; width: 30%; }
+.root :global(.cmp thead th) { border-top: 0; font-weight: 400; }
+.root :global(.cmp thead th:first-child) { width: 112px; }
+.root :global(.cmp th:first-child) { position: sticky; left: 0; z-index: 1; padding-left: 20px; background: var(--bg); }
 .root :global(.cmp thead th .ph) { aspect-ratio: 4 / 3; border-radius: var(--r-sm); margin-bottom: 8px; }
 .root :global(.cmp thead th .brand) { display: block; font-size: 12px; color: var(--ink-mute); }
 .root :global(.cmp thead th b) { font-size: var(--fs-sm); font-weight: 500; }
-.root :global(.cmp tbody th) { color: var(--ink-mute); font-weight: 500; white-space: nowrap; width: 88px; }
+.root :global(.cmp tbody th) { color: var(--ink-mute); font-weight: 500; word-break: keep-all; }
+.root :global(.cmp td), .root :global(.cmp thead th b) { overflow-wrap: anywhere; }
 .root :global(.copy-fallback) { width: 100%; font: inherit; font-size: var(--fs-xs); border: 1px solid var(--line-strong); border-radius: var(--r-md); padding: 10px; }
 .root :global(.sheet .proof) { list-style: none; padding: 10px 12px; margin: 0; display: grid; gap: 6px; font-size: var(--fs-xs); color: var(--ink-sub); background: var(--accent-weak); border-radius: var(--r-sm); }
 .root :global(.sheet .proof b) { color: var(--accent); font-weight: 700; margin-right: 2px; }
