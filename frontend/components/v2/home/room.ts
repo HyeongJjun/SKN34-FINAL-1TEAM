@@ -1,4 +1,4 @@
-// 사진이 없는 느낌의 방 그림 (v10 roomDraw · RR · standIn · roomSvg · lookCredit7).
+// 사진이 없는 느낌의 방 그림 (v10 roomDraw · RR · standIn · roomSvg).
 // 거실 · 방은 빈 방 실사 사진에 느낌 색(바닥 · 벽 · 나무)을 입히고, 욕실 · 주방 · 현관은 같은 공간의 비슷한 사진을 빌린다.
 // 사진을 칠할 준비가 되기 전에는 SVG 그림(roomDraw)을 쓰고, 준비되면 touch()로 다시 그린다.
 import { LOOKS, type Look, mixHex, rgbOf } from "../looks";
@@ -295,11 +295,4 @@ export function roomSvg(lk: LookLike): string {
   if (painted) return painted;
   rrReady();
   return roomDraw(lk);
-}
-export function lookCredit(lk: LookLike) {
-  if (lk.space && RR_STANDIN[lk.space]) {
-    const s = standIn(lk);
-    if (s) return `비슷한 공간 사진이에요(사진 ${s.credit || "Unsplash"} · Unsplash). 색은 위 견본을 봐 주세요.`;
-  }
-  return "빈 방 사진(Unsplash)에 이 느낌의 바닥 · 벽 · 문 색을 입혔어요";
 }

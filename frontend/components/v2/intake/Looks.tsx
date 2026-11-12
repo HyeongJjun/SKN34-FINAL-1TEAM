@@ -2,7 +2,7 @@
 // 느낌 사진 모음 겹창 (v10 openLooks · SPACE_FILTERS · inFilter). onPick(lk)를 넘기면 [이 사진으로 할게요] 버튼이 생긴다.
 import { useEffect, useRef, useState } from "react";
 import type { Style } from "../data";
-import { F, openOverlay } from "../engine";
+import { openOverlay } from "../engine";
 import { lookSrcs } from "../flow";
 import { type Look, lookOf, lookPhotos, TONE_KO } from "../looks";
 import { Photo } from "../photo";
@@ -92,7 +92,6 @@ function LooksSheet({ st, start, onPick, close }: Opts & { st: Style; close: () 
                     </li>
                   ))}
                 </ul>
-                <p className="src">{F.lookCredit?.(cur) ?? ""}</p>
                 <div className="row">
                   {onPick ? (
                     <button
