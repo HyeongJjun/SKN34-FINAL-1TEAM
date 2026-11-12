@@ -1,15 +1,11 @@
 "use client";
-// 받은 견적 맞춰 보기 (v5 quoteCheck + 2816 덧씌움: 범위 위치 막대 · 견적서에 적혀 있나요 점검표).
+// 받은 견적 맞춰 보기 (v5 quoteCheck + 2816 덧씌움: 범위 위치 막대). 도구에서 연다. 점검표는 체크리스트 '계약 전'으로 옮겼다.
 // 받은 금액의 부가세 빼기 · 시장 기준 범위 · 추가 항목 범위 · 판정 · 안내 · 막대 위치는 API check가 만든다. 화면은 칸 값을 보내고 보이기만 한다.
 import { useEffect, useState } from "react";
 import { errorText } from "@/lib/backend/client";
 import { type CheckReq, type CheckRes, fetchCheck, type MarketExtra, marketExtras, type Quote, quoteBody } from "./api";
 import { Fld, fmt } from "./shared";
 
-const QC_ITEMS: Record<string, string[]> = {
-  dobae: ["벽지 브랜드 · 모델 · 종류(합지 · 실크)", "초배 · 부직포 · 퍼티 같은 바탕 작업", "기존 벽지 철거 · 폐기물 처리", "몰딩 · 걸레받이 주변 마감", "가구 이동 · 바닥 보양", "부가세 포함 여부", "하자 보수 기간", "견적 유효기간"],
-  mokgong: ["문 종류 · 문틀 포함 여부", "몰딩 · 걸레받이 길이(m)나 개수", "철거 · 폐기물 · 양중", "천장 평탄화 범위", "부가세 포함 여부", "하자 보수 기간", "대금 나눠 내는 시점"],
-};
 /** 맞춰 본 기록 (v10 V5.checks) */
 export const V5 = { checks: [] as { trade: string; supply: number; lo: number; hi: number; where: string }[] };
 
@@ -110,7 +106,6 @@ export function QuoteCheck({ q }: { q: Quote }) {
       <div className="qc-out" aria-live="polite">
         {out && "warn" in out ? <p className="warn-line">{out.warn}</p> : out ? <Result res={out.res} /> : null}
       </div>
-      <Items key={sel} list={QC_ITEMS[sel] || QC_ITEMS.dobae} />
     </section>
   );
 }
@@ -141,27 +136,6 @@ function Result({ res }: { res: CheckRes }) {
         </ul>
       ) : null}
       {res.vat_unknown ? <p className="muted">부가세 말이 없으면 부가세 별도 금액으로 보고 비교했어요.</p> : null}
-    </div>
-  );
-}
-
-function Items({ list }: { list: string[] }) {
-  const [checked, setChecked] = useState<boolean[]>(() => list.map(() => false));
-  const n = checked.filter((c) => !c).length;
-  return (
-    <div className="qc-items">
-      <b>견적서에 적혀 있나요?</b>
-      <ul className="c7-list">
-        {list.map((t, i) => (
-          <li key={t}>
-            <label className="chk">
-              <input type="checkbox" checked={checked[i]} onChange={(e) => setChecked(checked.map((c, k) => (k === i ? e.target.checked : c)))} />
-              {t}
-            </label>
-          </li>
-        ))}
-      </ul>
-      <p className="muted">{n ? `적혀 있지 않은 항목 ${n}개 · 업체에 물어보세요` : "다 적혀 있어요"}</p>
     </div>
   );
 }

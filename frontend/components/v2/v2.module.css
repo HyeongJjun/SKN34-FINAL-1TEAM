@@ -341,6 +341,34 @@
 .root :global(.doc-sec) { font-size: var(--fs-md); display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; margin: 4px 0 0; }
 .root :global(.doc-sec small) { font-size: var(--fs-xs); color: var(--ink-mute); font-weight: 400; }
 .root :global(.doc-trade) { display: grid; gap: 8px; }
+.root :global(.qsum) { display: grid; gap: 8px; margin: 14px 0; }
+.root :global(.qsum table) { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+.root :global(.qsum th), .root :global(.qsum td) { padding: 9px 12px; border-top: 1px solid var(--line); text-align: left; vertical-align: middle; }
+.root :global(.qsum thead th) { border-top: 0; background: var(--surface); color: var(--ink-sub); font-weight: 500; white-space: nowrap; }
+.root :global(.qsum tbody th) { font-weight: 500; }
+.root :global(.qsum th small) { display: block; font-size: 12px; font-weight: 400; color: var(--ink-mute); }
+.root :global(.qsum .num) { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.root :global(.qsum tr.dim) { color: var(--ink-mute); }
+.root :global(.qsum tfoot th), .root :global(.qsum tfoot td) { background: var(--surface); font-weight: 700; }
+.root :global(.qsum-go) { display: inline-flex; align-items: center; border: 0; padding: 0; min-height: 40px; background: none; font: inherit; font-weight: 600; color: var(--ink); cursor: pointer; text-align: left; }
+.root :global(.qsum-go:hover) { color: var(--accent); }
+.root :global(.doc-trade) { scroll-margin-top: 64px; }
+.root :global(.qsum-head) { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.root :global(.qsum-head .btn-text) { min-height: 40px; }
+.root :global(.qsum-go svg) { flex: none; margin-right: 4px; color: var(--ink-mute); transition: transform .2s ease; }
+.root :global(.qsum-go[aria-expanded="true"] svg) { transform: rotate(90deg); }
+.root :global(.qsum tr.on > th), .root :global(.qsum tr.on > td) { background: var(--accent-weak); }
+.root :global(.qsum tr.qsum-detail > td) { padding: 10px 12px 14px; background: var(--surface); border-top: 0; }
+.root :global(.qsum-detail .tbl) { background: var(--bg); }
+.root :global(.qsum-sub) { font-size: 12px; }
+.root :global(.doc-tool) { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; margin-top: 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r-md); font-size: var(--fs-sm); }
+@media (prefers-reduced-motion: reduce) {
+.root :global(.qsum-go svg) { transition: none; }
+}
+@media (max-width: 420px) {
+.root :global(.qsum th), .root :global(.qsum td) { padding: 8px; }
+.root :global(.qsum td.num:last-child) { white-space: normal; }
+}
 .root :global(.tbl) { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r-md); }
 .root :global(.tbl table) { border-collapse: collapse; width: 100%; min-width: 640px; font-size: var(--fs-sm); }
 .root :global(.tbl th), .root :global(.tbl td) { text-align: left; padding: 8px 10px; border-top: 1px solid var(--line); vertical-align: top; }

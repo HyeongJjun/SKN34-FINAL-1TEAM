@@ -422,8 +422,8 @@ def build(q: V2QuoteInput, books: V2Books, today: date) -> dict:
         )
     supply = sum(t["supply"] for t in precise)
     vat = sum(t["vat"] for t in precise)
-    rlo = sum(t["lo"] + t["vlo"] for t in ref)
-    rhi = sum(t["hi"] + t["vhi"] for t in ref)
+    rlo = sum(t["tlo"] for t in ref)
+    rhi = sum(t["thi"] for t in ref)
     bands = [t["band"] for t in precise]
     return {
         "inp": {

@@ -151,6 +151,7 @@ def ref_trade(
     lo = sum(ln["lo"] for ln in counted)
     hi = sum(ln["hi"] for ln in counted)
     days = max(Decimal(1), Decimal(_round(qty_by_py(trade["days_by_py"], py) * 2)) / 2)
+    vlo, vhi = won(Decimal(lo) * Decimal("0.1")), won(Decimal(hi) * Decimal("0.1"))
     notes = list(dict.fromkeys(ln["note"] for ln in lines if ln["note"]))
     return {
         "cat": cat,
@@ -159,8 +160,10 @@ def ref_trade(
         "lines": lines,
         "lo": lo,
         "hi": hi,
-        "vlo": won(Decimal(lo) * Decimal("0.1")),
-        "vhi": won(Decimal(hi) * Decimal("0.1")),
+        "vlo": vlo,
+        "vhi": vhi,
+        "tlo": lo + vlo,  # 부가세 포함 범위 (견적서 공정별 금액 표)
+        "thi": hi + vhi,
         "days": days,
         "crew": trade.get("crew") or 2,
         "steps": [{"key": "work", "name": f"{cat_ko} 시공", "half_days": max(1, int(days * 2))}],

@@ -5,4 +5,4 @@ import { goChat } from "../V2App";
 
 export const startWithLook = (st: Style, lk: Look) => goChat("look", { style: st.id, look: lk.id });
 export const startWithAsk = (q: string) => goChat("ask", { ask: q });
-export const startWithTool = (t: "calc" | "check") => goChat("tool", { tool: t });
+export const startWithTool = (t: "calc" | "check" | "compare") => goChat("tool", { tool: t });

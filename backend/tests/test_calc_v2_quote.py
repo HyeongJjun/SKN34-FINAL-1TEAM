@@ -59,6 +59,7 @@ def test_ref_trade_fallback_and_pick():
     assert (a["calc"], a["source"]) == ("32평 기준", "시장 · 표준시장단가 시공")
     assert (b["qty"], b["calc"], b["state"]) == (1, "1식", "after_visit")
     assert (r["lo"], r["hi"], r["vlo"], r["vhi"]) == (22_500, 40_500, 2_250, 4_050)  # 철거는 빼고
+    assert (r["tlo"], r["thi"]) == (24_750, 44_550)  # 부가세 포함
     assert r["days"] == D("1.5") and r["steps"][0]["half_days"] == 3 and r["notes"] == ["가정"]
     p = ref_trade("floor", D(32), mat("㎡"), True, TRADE, {}, "바닥재")["lines"][0]
     assert (p["lo"], p["hi"], p["basis"]) == (52_500, 70_500, "pick")  # 15 × 3,000~4,000 + 시공

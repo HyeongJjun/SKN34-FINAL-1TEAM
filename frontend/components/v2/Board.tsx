@@ -141,6 +141,7 @@ export function Board() {
           <div className="row">
             <button type="button" className="btn btn-sm" onClick={go(() => F.calcStep())}>셀프 계산기</button>
             <button type="button" className="btn btn-sm" onClick={go(() => F.checkStep())}>체크리스트</button>
+            <button type="button" className="btn btn-sm" onClick={go(() => F.compareStep())}>받은 견적 맞춰 보기</button>
             <button type="button" className="btn btn-sm pp9-tool" onClick={go(() => F.planQtyTool?.())}>도면으로 수량</button>
           </div>
         </div>

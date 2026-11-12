@@ -5943,6 +5943,10 @@ export interface components {
             vlo: number;
             /** Vhi */
             vhi: number;
+            /** Tlo */
+            tlo: number;
+            /** Thi */
+            thi: number;
             /** Days */
             days: number;
             /** Crew */

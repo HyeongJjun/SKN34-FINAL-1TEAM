@@ -1,15 +1,14 @@
 "use client";
 // 표준견적서 문서 (v10 quoteDocEl + 2494 덧씌움 · customerGuide · vendorGuide · preciseTable · refTable · bandLine(v5) · gapList · marketTable
 // · vendorQuoteForm · customerCompare). 금액은 모두 API 응답(quote · estimate · entered)을 보이기만 한다.
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { errorText } from "@/lib/backend/client";
 import { CAT, manwon } from "../data";
 import { todaySeoul } from "../dates";
-import { F, toast } from "../engine";
+import { closeAllOverlays, F, toast } from "../engine";
 import { scopeCats } from "../flow";
 import { S, touch, V3 } from "../store";
 import { type Band, cachedQuote, type Entered, type Estimate, fetchEntered, fetchEstimate, fetchQuote, materials, type Precise, type Quote, type RefTrade, type VatMode } from "./api";
-import { QuoteCheck } from "./QuoteCheck";
 import { BASIS_KO, DateField, Fld, fmt, log, signWon, STATE_KO } from "./shared";
 
 /* 업체 단가 · 확인 상태 · 받은 실측 견적서 (V3에 둔다) */
@@ -254,25 +253,143 @@ function QuoteDocEl({ q, reload, bump }: { q: Quote; reload: () => void; bump: (
   return (
     <div>
       {head}
+      <SumTable q={q} vendor={vendor} bump={bump} />
       {vendor ? <VendorGuide /> : <CustomerGuide q={q} />}
-      {q.precise.map((t) => <PreciseTable key={t.trade} t={t} vendor={vendor} bump={bump} />)}
-      {q.ref.length ? (
-        <h4 className="doc-sec">
-          참고 공정<small>시장 근거 범위 · 업체 실측 견적서에서 정해져요</small>
-        </h4>
+      {vendor ? (
+        <>
+          {q.precise.map((t) => <PreciseTable key={t.trade} t={t} vendor bump={bump} />)}
+          {q.ref.length ? (
+            <h4 className="doc-sec">
+              참고 공정<small>시장 근거 범위 · 업체 실측 견적서에서 정해져요</small>
+            </h4>
+          ) : null}
+          {q.ref.map((t) => <RefTable key={t.cat} t={t} vendor />)}
+          {q.missing.length ? <p className="muted">{`${q.missing.map((c) => CAT[c]?.ko ?? c).join(" · ")}는 아직 참고 산식이 없어 업체 견적에서 정해요.`}</p> : null}
+        </>
       ) : null}
-      {q.ref.map((t) => <RefTable key={t.cat} t={t} vendor={vendor} />)}
-      {q.missing.length ? <p className="muted">{`${q.missing.map((c) => CAT[c]?.ko ?? c).join(" · ")}는 아직 참고 산식이 없어 업체 견적에서 정해요.`}</p> : null}
       {sumBox}
       {vendor ? (
         <VendorQuoteForm q={q} />
       ) : (
         <>
-          <QuoteCheck q={q} />
           <CustomerCompare q={q} />
+          {q.precise.length ? (
+            <div className="doc-tool">
+              <span>다른 곳에서 받은 도배 · 목공 견적이 있나요?</span>
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={() => {
+                  closeAllOverlays();
+                  void F.compareStep?.();
+                }}
+              >
+                받은 견적 맞춰 보기
+              </button>
+            </div>
+          ) : null}
         </>
       )}
     </div>
+  );
+}
+
+/** 공정별 금액 표 (총괄표): 공정마다 한 줄, 부가세 포함.
+    고객은 줄을 누르면 그 자리에 항목별 줄 표가 펼쳐지고, 업체는 아래 그 공정 칸(단가 넣기)으로 간다 */
+function SumTable({ q, vendor, bump }: { q: Quote; vendor: boolean; bump: () => void }) {
+  const [open, setOpen] = useState<Set<string>>(() => new Set());
+  const all = [...q.precise.map((t) => t.trade), ...q.ref.map((t) => t.cat)];
+  const allOpen = all.length > 0 && all.every((k) => open.has(k));
+  const toggle = (k: string) =>
+    setOpen((o) => {
+      const n = new Set(o);
+      if (n.has(k)) n.delete(k);
+      else n.add(k);
+      return n;
+    });
+  const go = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const name = (k: string, ko: string, basis: string) => (
+    <th scope="row">
+      {vendor ? (
+        <button type="button" className="qsum-go" onClick={() => go(`qd-${k}`)}>{ko}</button>
+      ) : (
+        <button type="button" className="qsum-go" aria-expanded={open.has(k)} aria-controls={`qx-${k}`} onClick={() => toggle(k)}>
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          {ko}
+        </button>
+      )}
+      <small>{basis}</small>
+    </th>
+  );
+  const detail = (k: string, body: React.ReactNode) =>
+    !vendor && open.has(k) ? (
+      <tr className="qsum-detail" id={`qx-${k}`}>
+        <td colSpan={3}>{body}</td>
+      </tr>
+    ) : null;
+  return (
+    <section className="qsum" aria-labelledby="qsum-t">
+      <div className="qsum-head">
+        <h4 id="qsum-t" className="doc-sec">
+          공정별 금액<small>{vendor ? "부가세 포함 · 이름을 누르면 아래 단가 칸으로 가요" : "부가세 포함 · 공정을 누르면 항목별 금액이 펼쳐져요"}</small>
+        </h4>
+        {!vendor && all.length ? (
+          <button type="button" className="btn-text" onClick={() => setOpen(allOpen ? new Set() : new Set(all))}>
+            {allOpen ? "모두 접기" : "모두 펼치기"}
+          </button>
+        ) : null}
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">공정</th>
+            <th scope="col" className="num">기간</th>
+            <th scope="col" className="num">금액</th>
+          </tr>
+        </thead>
+        <tbody>
+          {q.precise.map((t) => (
+            <Fragment key={t.trade}>
+              <tr className={open.has(t.trade) ? "on" : ""}>
+                {name(t.trade, t.ko, "공공 기준 단가")}
+                <td className="num">{`${t.days}일`}</td>
+                <td className="num">{`${fmt(t.total)}원`}</td>
+              </tr>
+              {detail(t.trade, <PreciseTable t={t} vendor={false} bump={bump} inline />)}
+            </Fragment>
+          ))}
+          {q.ref.map((t) => (
+            <Fragment key={t.cat}>
+              <tr className={open.has(t.cat) ? "on" : ""}>
+                {name(t.cat, t.ko, "시장 가격 범위")}
+                <td className="num">{`${t.days}일`}</td>
+                <td className="num">{t.tlo === t.thi ? `${fmt(t.tlo)}원` : `${fmt(t.tlo)} ~ ${fmt(t.thi)}원`}</td>
+              </tr>
+              {detail(t.cat, <RefTable t={t} vendor={false} inline />)}
+            </Fragment>
+          ))}
+          {q.missing.map((c) => (
+            <tr key={c} className="dim">
+              <th scope="row">
+                {CAT[c]?.ko ?? c}
+                <small>업체 견적에서</small>
+              </th>
+              <td className="num">—</td>
+              <td className="num">실측 뒤 정해요</td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr>
+            <th scope="row">{`합계 (${q.precise.length + q.ref.length}개 공정)`}</th>
+            <td />
+            <td className="num">{q.ref.length ? `${fmt(q.all_lo)} ~ ${fmt(q.all_hi)}원` : `${fmt(q.total)}원`}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </section>
   );
 }
 
@@ -283,7 +400,7 @@ function CustomerGuide({ q }: { q: Quote }) {
       <ul>
         <li>{"'포함' 줄만 합계에 들어가요. '실측 후' 줄은 집을 본 뒤 업체가 정해요."}</li>
         <li>도배 · 목공은 공공 단가로 계산했고, 나머지는 시장 가격 범위예요.</li>
-        {q.band ? <li>{"업체 견적은 공공 단가와 달라서 도배 · 목공 아래에 '업체 견적은 보통' 범위를 같이 적었어요. 받은 견적은 맨 아래 [받은 견적 맞춰 보기]에 넣어 보세요."}</li> : null}
+        {q.band ? <li>{"업체 견적은 공공 단가와 달라서 도배 · 목공을 펼치면 '업체 견적은 보통' 범위를 같이 적었어요. 받은 견적은 맨 아래 [받은 견적 맞춰 보기]에 넣어 보세요."}</li> : null}
         <li>업체 견적이 이 금액과 많이 다르면 어느 줄이 다른지 물어보세요.</li>
       </ul>
       <dl className="gloss">
@@ -324,7 +441,7 @@ function Tbl({ collapse, n, sub, children }: { collapse: boolean; n: number; sub
   );
 }
 
-function PreciseTable({ t, vendor, bump }: { t: Precise; vendor: boolean; bump: () => void }) {
+function PreciseTable({ t, vendor, bump, inline = false }: { t: Precise; vendor: boolean; bump: () => void; inline?: boolean }) {
   const vp = vpOf(t.trade);
   const est = EST[t.trade];
   const rows = t.lines.map((l) => {
@@ -372,12 +489,16 @@ function PreciseTable({ t, vendor, bump }: { t: Precise; vendor: boolean; bump: 
     );
   });
   return (
-    <section className="doc-trade">
-      <h4 className="doc-sec">
-        {t.ko}
-        <small>{`품 ${t.man_days} · ${t.ko === "도배" ? "도배공" : "목수"} ${t.crew}명 · ${t.days}일`}</small>
-      </h4>
-      <Tbl collapse={!vendor} n={t.lines.length} sub={`${fmt(t.supply)}원`}>
+    <section className="doc-trade" id={inline ? undefined : `qd-${t.trade}`}>
+      {inline ? (
+        <p className="muted qsum-sub">{`품 ${t.man_days} · ${t.ko === "도배" ? "도배공" : "목수"} ${t.crew}명 · ${t.days}일 · 줄 금액은 부가세 빼기 전`}</p>
+      ) : (
+        <h4 className="doc-sec">
+          {t.ko}
+          <small>{`품 ${t.man_days} · ${t.ko === "도배" ? "도배공" : "목수"} ${t.crew}명 · ${t.days}일`}</small>
+        </h4>
+      )}
+      <Tbl collapse={!vendor && !inline} n={t.lines.length} sub={`${fmt(t.supply)}원`}>
         <table>
           <thead>
             <tr>
@@ -543,14 +664,18 @@ export function BandLine({ t, vendor }: { t: Precise; vendor: boolean }) {
   );
 }
 
-function RefTable({ t, vendor }: { t: RefTrade; vendor: boolean }) {
+function RefTable({ t, vendor, inline = false }: { t: RefTrade; vendor: boolean; inline?: boolean }) {
   return (
-    <section className="doc-trade ref">
-      <h4 className="doc-sec">
-        {t.ko}
-        <small>{`참고 · ${t.days}일 어림`}</small>
-      </h4>
-      <Tbl collapse={!vendor} n={t.lines.length} sub={`${fmt(t.lo)} ~ ${fmt(t.hi)}원`}>
+    <section className="doc-trade ref" id={inline ? undefined : `qd-${t.cat}`}>
+      {inline ? (
+        <p className="muted qsum-sub">{`참고 · ${t.days}일 어림 · 시장 근거 범위 · 줄 금액은 부가세 빼기 전`}</p>
+      ) : (
+        <h4 className="doc-sec">
+          {t.ko}
+          <small>{`참고 · ${t.days}일 어림`}</small>
+        </h4>
+      )}
+      <Tbl collapse={!vendor && !inline} n={t.lines.length} sub={`${fmt(t.lo)} ~ ${fmt(t.hi)}원`}>
         <table>
           <thead>
             <tr>

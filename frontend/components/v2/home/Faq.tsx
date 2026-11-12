@@ -90,6 +90,7 @@ export function FaqSection() {
       <div className="row">
         <button type="button" className="btn btn-sm" onClick={() => startWithTool("calc")}>셀프 계산기</button>
         <button type="button" className="btn btn-sm" onClick={() => startWithTool("check")}>체크리스트</button>
+        <button type="button" className="btn btn-sm" onClick={() => startWithTool("compare")}>받은 견적 맞춰 보기</button>
       </div>
     </section>
   );

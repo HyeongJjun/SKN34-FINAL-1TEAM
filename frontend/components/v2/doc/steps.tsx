@@ -140,7 +140,7 @@ export async function bandWhy() {
     <div className="card">
       <ul className="notes band-why">{cards}</ul>
       <p className="muted">시장 기준은 2025~2026년에 공개된 실견적(숨고 · 커뮤니티 · 블로그 · 업체 사이트)과 시장 조사로 맞췄어요. 지역 · 업체 · 자재마다 달라요.</p>
-      <p className="muted">업체 견적을 받으면 견적서의 [받은 견적 맞춰 보기]에 넣어 보세요.</p>
+      <p className="muted">업체 견적을 받으면 도구의 [받은 견적 맞춰 보기]에 넣어 보세요.</p>
     </div>,
   );
   quick([["견적서 열기", () => openQuoteDoc()], ["공정표 보기", () => schedStep()]]);

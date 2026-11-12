@@ -209,6 +209,8 @@ class V2RefOut(BaseModel):
     hi: int
     vlo: int
     vhi: int
+    tlo: int  # 부가세 포함
+    thi: int
     days: float
     crew: int
     steps: list[V2StepOut]

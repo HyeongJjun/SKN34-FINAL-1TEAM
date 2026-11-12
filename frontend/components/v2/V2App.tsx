@@ -95,7 +95,7 @@ async function startFlow() {
   if (mode === "tool" && start.tool) {
     const t = start.tool;
     start.tool = "";
-    await (t === "calc" ? F.calcStep() : F.checkStep());
+    await (t === "calc" ? F.calcStep() : t === "compare" ? F.compareStep() : F.checkStep());
     quick([["처음부터 시작하기", () => F.welcome()]]);
     return;
   }

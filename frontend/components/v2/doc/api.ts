@@ -52,7 +52,7 @@ export type RefLine = {
   pub: { unit_price: number; amount: number; source: string } | null;
   note: string | null;
 };
-export type RefTrade = { cat: string; ko: string; level: string; lines: RefLine[]; lo: number; hi: number; vlo: number; vhi: number; days: number; crew: number; steps: Step[]; notes: string[] };
+export type RefTrade = { cat: string; ko: string; level: string; lines: RefLine[]; lo: number; hi: number; vlo: number; vhi: number; tlo: number; thi: number; days: number; crew: number; steps: Step[]; notes: string[] };
 export type Measured = { name: string; wall_m2: number; ceiling_m2: number; molding_m: number; base_m: number; doors: number; [k: string]: unknown };
 export type Quote = {
   inp: { py: number; area_m2: number; measured: Measured | null; occupied: boolean; balcony: boolean; grade: string; mok: string[]; doors: number; doors_auto?: { n: number; how: string }; assumed: string[] };
