@@ -40,3 +40,6 @@ Thumbs.db
 
 # 올린 파일 (API를 PC에서 바로 띄울 때 생김)
 backend/data/
+
+# 기준 자료 원본은 프로젝트 폴더 밖에서 보관
+/data/raw/
