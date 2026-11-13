@@ -44,7 +44,6 @@ def convert(raw: dict[str, str]) -> dict:
         "content_hash": content_hash(content),
         "section": raw["section"],
         "page_numbers": pages,
-        "review_reason": raw["review_reason"] or None,
         "provenance": raw,
     }
 

@@ -9,15 +9,14 @@ import pytest
 from conftest import query
 
 
-def _version(kind="wage", *, key=None, version=1, status="draft", digest="a" * 64):
+def _version(kind="wage", *, key=None, version=1, status=False, digest="a" * 64):
     ident = uuid.uuid4()
     query(
         """insert into ref_dataset_versions
         (id,dataset_key,kind,version,source,processed_path,processed_sha256,build_profile,
-         historical,current_rule_usable,calculation_usable,reference_usable,
          embedding_model,embedding_dimensions,provenance,status)
         values ($1,$2,$3,$4,'synthetic.pdf','synthetic.csv',$5,'test-v1',
-                false,false,false,false,$6,$7,'{}'::jsonb,$8)""",
+                $6,$7,'{}'::jsonb,$8)""",
         ident,
         key or str(ident),
         kind,
@@ -46,13 +45,12 @@ def _wage(ident, key, code="1001", hours=8, amount=None):
 
 def test_schema_shape_and_vector_extension():
     tables = {
-        "ref_dataset_versions": 18,
+        "ref_dataset_versions": 14,
         "ref_floorplan_rows": 15,
         "ref_unit_price_rows": 15,
-        "ref_productivity_rows": 22,
+        "ref_productivity_rows": 21,
         "ref_wage_rows": 17,
-        "rag_chunks": 10,
-        "ref_dataset_events": 7,
+        "rag_chunks": 9,
     }
     rows = query(
         """select table_name,count(*) as n from information_schema.columns
@@ -70,9 +68,9 @@ def test_schema_shape_and_vector_extension():
 
 
 def test_duplicate_import_and_active_version_are_rejected():
-    _version(key="same", status="active")
+    _version(key="same", status=True)
     with pytest.raises(asyncpg.UniqueViolationError):
-        _version(key="same", version=2, digest="b" * 64, status="active")
+        _version(key="same", version=2, digest="b" * 64, status=True)
     # 모델 설정이 NULL인 정형 자료도 같은 내용의 중복 등록을 막는다.
     with pytest.raises(asyncpg.UniqueViolationError):
         _version(key="same", version=2)
@@ -85,7 +83,6 @@ def test_duplicate_import_and_active_version_are_rejected():
         "embedding_model='test-model'",
         "embedding_dimensions=0",
         "provenance='[]'::jsonb",
-        "status='unknown'",
         "processed_sha256='invalid'",
         "version=0",
     ],
@@ -198,45 +195,13 @@ def test_rag_literal_vector_roundtrip_and_citation():
         query("delete from ref_dataset_versions where id=$1", ident)
 
 
-@pytest.mark.parametrize(
-    "seq,previous,current,actor",
-    [
-        (1, None, "active", "system"),
-        (2, None, "active", "system"),
-        (2, "active", "active", "system"),
-        (1, None, "draft", " "),
-    ],
-)
-def test_event_checks(seq, previous, current, actor):
+def test_boolean_status_default_and_not_null():
     ident = _version()
-    with pytest.raises(asyncpg.CheckViolationError):
-        query(
-            """insert into ref_dataset_events(dataset_id,event_no,from_status,to_status,actor,details)
-        values ($1,$2,$3,$4,$5,'{}'::jsonb)""",
-            ident,
-            seq,
-            previous,
-            current,
-            actor,
-        )
-
-
-def test_event_initial_and_following_rows():
-    ident = _version()
-    query(
-        """insert into ref_dataset_events(dataset_id,event_no,from_status,to_status,actor,details)
-    values ($1,1,null,'draft','system','{}'::jsonb),($1,2,'draft','approved','user:test','{}'::jsonb)""",
-        ident,
-    )
-    assert (
-        len(
-            query(
-                "select event_no from ref_dataset_events where dataset_id=$1 order by event_no",
-                ident,
-            )
-        )
-        == 2
-    )
+    query("update ref_dataset_versions set status=DEFAULT where id=$1", ident)
+    assert query("select status from ref_dataset_versions where id=$1", ident)[0]["status"] is False
+    with pytest.raises(asyncpg.NotNullViolationError):
+        query("update ref_dataset_versions set status=NULL where id=$1", ident)
+    assert query("select to_regclass('public.ref_dataset_events') as name")[0]["name"] is None
 
 
 def test_rag_sqlalchemy_roundtrip():
