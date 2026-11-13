@@ -907,3 +907,79 @@ def test_removed_csv_metadata_is_optional_and_preserved(tmp_path, kind):
     write(path, [{k: v for k, v in row.items() if k not in removed} for row in rows])
     simplified = ingest.inspect_csv(path)
     assert simplified.kind == original.kind and len(simplified.hashes) == len(original.hashes)
+
+
+@pytest.mark.parametrize(
+    "dataset_key",
+    [
+        "01_floorplan_quantities",
+        "02_unit_price",
+        "03_standard_productivity",
+        "06_construction_wages",
+    ],
+)
+def test_unused_structured_datasets_stay_inactive(tmp_path, dataset_key):
+    with (DATA / f"{dataset_key}.csv").open(encoding="utf-8-sig", newline="") as stream:
+        row = next(csv.DictReader(stream))
+    path = tmp_path / f"{dataset_key}.csv"
+    write(path, [row])
+    rag_path, _ = sample(tmp_path, "knowledge")
+
+    async def mark_active(ident):
+        async with SessionLocal.begin() as session:
+            await session.execute(
+                text("UPDATE ref_dataset_versions SET status=true WHERE id=:id"), {"id": ident}
+            )
+
+    async def run():
+        old = await load(path)
+        assert old.status is False
+        original = await contents(old, old.kind)
+        await mark_active(old.id)
+        repeated = await load(path)
+        assert repeated.id == old.id and repeated.status is False
+        assert await contents(old, old.kind)
+        await mark_active(old.id)
+        row["source"] = "수정한 출처.pdf"
+        write(path, [row])
+        new = await load(path)
+        assert new.id != old.id and new.status is False
+        assert not any(
+            v["status"] for v in await db_query("SELECT status FROM ref_dataset_versions")
+        )
+        await mark_active(new.id)
+        knowledge = await load(rag_path)
+        await embed(knowledge, MockEmbedding())
+        result = await activate([path, rag_path])
+        assert [item["status"] for item in result] == [False, True]
+        result = await activate([path, rag_path])
+        assert [item["status"] for item in result] == [False, True]
+        assert (await contents(old, old.kind)).keys() == original.keys()
+        states = await db_query("SELECT kind,status FROM ref_dataset_versions")
+        assert all(v["status"] is False for v in states if v["kind"] != "knowledge")
+        assert all(v["status"] is True for v in states if v["kind"] == "knowledge")
+        assert len(await contents(new, new.kind)) == 1
+        assert len(await contents(knowledge, "knowledge")) == 2
+
+    asyncio.run(run())
+
+
+def test_unused_dataset_cli_dry_run_and_activation(tmp_path, monkeypatch, capsys):
+    path, _ = sample(tmp_path, "unit_price")
+    path = path.rename(tmp_path / "02_unit_price.csv")
+    asyncio.run(load(path))
+    query("UPDATE ref_dataset_versions SET status=true")
+    monkeypatch.setattr(rag, "token_counter", lambda: lambda _: 10)
+    common = ["--directory", str(tmp_path), "--dimensions", "3", "--json"]
+    asyncio.run(ingest.run(ingest.parser().parse_args(["load", *common])))
+    assert json.loads(capsys.readouterr().out)["executed"] is False
+    assert query("SELECT status FROM ref_dataset_versions")[0]["status"] is True
+    asyncio.run(
+        ingest.run(
+            ingest.parser().parse_args(["verify", *common, "--require-embeddings", "--activate"])
+        )
+    )
+    result = json.loads(capsys.readouterr().out)
+    assert result["verified"][0]["status"] is False
+    assert query("SELECT status FROM ref_dataset_versions")[0]["status"] is False
+    assert query("SELECT count(*) n FROM ref_unit_price_rows")[0]["n"] == 2

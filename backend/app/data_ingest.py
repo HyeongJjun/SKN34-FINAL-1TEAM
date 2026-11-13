@@ -28,6 +28,13 @@ MODELS = {**ref.MODELS, "knowledge": RagChunk}
 BUILD_PROFILE = "processed-csv-v1"
 LOCK_KEY = 718234019  # 수동 load·embed 실행끼리만 직렬화한다.
 COMMON = {"id", "source", "source_sha256", "effective_date"}
+# 현재 쓰지 않는 정형 자료는 적재해도 활성화하지 않는다.
+INACTIVE_DATASETS = {
+    "01_floorplan_quantities",
+    "02_unit_price",
+    "03_standard_productivity",
+    "06_construction_wages",
+}
 
 
 def digest_file(path: Path) -> str:
@@ -302,6 +309,14 @@ async def load_dataset(factory, dataset, model, dimensions, profile):
         await session.execute(
             text("SELECT pg_advisory_xact_lock(hashtextextended(:key,0))"), {"key": dataset.key}
         )
+        if dataset.key in INACTIVE_DATASETS:
+            await session.execute(
+                update(RefDatasetVersion)
+                .where(
+                    RefDatasetVersion.dataset_key == dataset.key, RefDatasetVersion.status.is_(True)
+                )
+                .values(status=False)
+            )
         existing = await matching_version(session, dataset, model, dimensions, profile)
         if existing:
             await assert_snapshot(session, dataset, existing)
@@ -401,7 +416,7 @@ async def verify(
 
 
 async def activate_versions(factory, datasets, model, dimensions, profile):
-    """검증한 스냅샷 전체의 활성 여부를 한 트랜잭션으로 전환한다."""
+    """검증한 자료를 활성화하되 미사용 정형 자료는 비활성으로 유지한다."""
     if not datasets:
         raise ValueError("활성화할 CSV가 없어요")
     async with factory.begin() as session:
@@ -427,7 +442,11 @@ async def activate_versions(factory, datasets, model, dimensions, profile):
                     )
                 ).all()
             )
-            if not target.status and target.version != max(v.version for v in versions):
+            if (
+                dataset.key not in INACTIVE_DATASETS
+                and not target.status
+                and target.version != max(v.version for v in versions)
+            ):
                 raise ValueError(f"{dataset.path.name}: 최신 비활성 버전만 활성화할 수 있어요")
             targets.append((target, versions))
 
@@ -442,14 +461,19 @@ async def activate_versions(factory, datasets, model, dimensions, profile):
                 raise ValueError("상태 변경 충돌(409): 다시 검증해 주세요")
 
         for target, versions in targets:
+            if target.dataset_key in INACTIVE_DATASETS:
+                for version in versions:
+                    if version.status:
+                        await transition(version, True, False)
+                continue
             if target.status:
                 continue
             for previous in versions:
                 if previous.status:
                     await transition(previous, True, False)
             await transition(target, False, True)
-        for item in verified:
-            item["status"] = True
+        for item, (target, _) in zip(verified, targets, strict=True):
+            item["status"] = target.dataset_key not in INACTIVE_DATASETS
         return verified
 
 
@@ -497,7 +521,7 @@ def show_report(report, command, as_json=False):
             print("실제로 실행하려면 --execute를 붙여 주세요.")
     else:
         if report.get("activated"):
-            print("활성화 완료 · 새 버전은 활성, 이전 활성 버전은 비활성으로 보존해요.")
+            print("활성화 완료 · 미사용 정형 자료 4종은 비활성으로 유지해요.")
         print("요청한 작업과 최종 검증이 끝났어요.")
 
 
@@ -646,7 +670,7 @@ def parser():
     result.add_argument(
         "--activate",
         action="store_true",
-        help="verify --require-embeddings 통과 후 버전을 활성화 (DB 상태 변경)",
+        help="verify --require-embeddings 통과 후 활성화 (미사용 정형 자료 4종은 비활성 유지)",
     )
     result.add_argument("--json", action="store_true", help="기계 처리용 JSON으로 출력")
     result.add_argument("command", choices=("plan", "load", "embed", "verify"))

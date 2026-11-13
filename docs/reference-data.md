@@ -15,7 +15,7 @@
 | `ref_dataset_versions` | 자료별 버전, 출처, 적용일, 전처리 파일 경로·해시, 가공 프로필, 임베딩 모델·차원, 출처 기록(`provenance`), 활성 여부(`status BOOLEAN`, 기본값 `False`) | 계산·검색 전에 사용할 자료 버전을 선택한다. 데이터 행들이 참조하는 기준이며, 단순 파일 목록이 아니다. |
 | `ref_floorplan_rows` | 예시 평면도의 공간별 물량, 요약·상세·합계, 단위와 적용 조건 | 표준 수량 산정의 참고 입력. 예시 평면도를 고객 집의 실제 측정값으로 취급하지 않고, 상세와 합계를 중복 합산하지 않는다. |
 | `ref_unit_price_rows` | 일위대가의 작업 코드·규격, 구성 항목의 수치·단위, 기준 단위와 조건 | 공공 기준의 작업별 구성·수량을 해석할 때 쓴다. 모든 수치가 원화 단가인 것은 아니며 업체 확인 단가(`vendor_price`)와도 구분한다. |
-| `ref_productivity_rows` | 표준품셈의 작업, 표 셀 수치, 행·열 문맥, 수치 역할, 적용 조건 | 품·소요량 등의 계산 입력 후보를 찾는다. 수치만 뽑지 않고 기준·단위·문맥를 함께 확인한다. |
+| `ref_productivity_rows` | 표준품셈의 작업, 표 셀 수치, 행·열 문맥, 수치 역할, 적용 조건 | 품·소요량 등의 계산 입력 후보를 찾는다. 수치만 뽑지 않고 기준·단위·문맥을 함께 확인한다. |
 | `ref_wage_rows` | 직종별 공표 임금, 공표일, 기준 근로시간, 조사 표시와 직종 정의 | 노무비 산정에 필요한 기준 임금을 찾는다. `occupation_wage` 행을 대상으로 직종·공표일·근로시간·조사 표시를 확인한다. |
 | `rag_chunks` | 시방서·안내 문서의 본문 조각, 절, 페이지, 본문 해시와 임베딩 | 상담 주의점·설명 근거 검색. 계산용 단가·수량의 확정값을 만드는 테이블이 아니다. 출처는 연결된 버전과 페이지로 확인한다. |
 
@@ -25,14 +25,15 @@
 
 `data/processed/`의 CSV 12개와 DB 테이블 6개는 일대일 관계가 아니다.
 
-| CSV | 데이터 행 테이블 |
-| --- | --- |
-| `01_floorplan_quantities.csv` | `ref_floorplan_rows` |
-| `02_unit_price.csv` | `ref_unit_price_rows` |
-| `03_standard_productivity.csv` | `ref_productivity_rows` |
-| `06_construction_wages.csv` | `ref_wage_rows` |
-| `04`, `05`, `07`~`12`의 `*_rag.csv` 8개 | `rag_chunks` |
+| CSV | 데이터 행 테이블 | 상태 처리 |
+| --- | --- | --- |
+| `01_floorplan_quantities.csv` | `ref_floorplan_rows` | 적재·활성화 시 `False` 유지 |
+| `02_unit_price.csv` | `ref_unit_price_rows` | 적재·활성화 시 `False` 유지 |
+| `03_standard_productivity.csv` | `ref_productivity_rows` | 적재·활성화 시 `False` 유지 |
+| `06_construction_wages.csv` | `ref_wage_rows` | 적재·활성화 시 `False` 유지 |
+| `04`, `05`, `07`~`12`의 `*_rag.csv` 8개 | `rag_chunks` | 적재 시 `False`, 검증·활성화 후 `True` |
 
+- 현재 미사용 정형 자료 4종은 파일별 `dataset_key`로 구분한다(`app/data_ingest.py`의 `INACTIVE_DATASETS`). `load --execute`와 `verify --require-embeddings --activate`를 실행하면 선택한 해당 자료의 모든 버전을 `False`로 유지하며, 기존 활성 버전도 비활성으로 바꾼다. 테이블과 데이터 행은 삭제하지 않는다. 읽기 전용 명령은 상태를 바꾸지 않는다.
 - 데이터 행 5개 테이블은 `(dataset_id, record_key)`가 기본 키다. `record_key`만으로는 버전 간 행을 식별할 수 없다.
 - `dataset_id`와 `dataset_kind`는 `ref_dataset_versions`의 `id`와 `kind`를 함께 참조한다. 종류는 각각 `floorplan`, `unit_price`, `productivity`, `wage`, `knowledge`다.
 - 계산용 행 4개 테이블의 `parent_key`는 같은 버전·같은 테이블의 상위 행을 참조한다. 표 제목·주석·합계·문맥도 저장하므로 모든 행이 계산 대상은 아니다.
@@ -65,5 +66,5 @@
 - 버전의 `historical`, `current_rule_usable`, `calculation_usable`, `reference_usable`, 품셈의 `semantic_status`, RAG의 `review_reason`과 `ref_dataset_events`를 제거한다. 그 외 데이터 행과 임베딩은 유지한다.
 - 삭제 전 이력 건수는 마이그레이션의 NOTICE로 출력한다. PostgreSQL 트랜잭션에서 수행하며 예상하지 못한 의존성이 있으면 실패·롤백한다. 실제 적용 전 이력과 제거 메타데이터를 별도로 백업해야 한다.
 - downgrade는 스키마만 복원한다. 비활성은 `draft`, 제거한 불리언은 `False`, 검토 열은 NULL, 이력은 빈 테이블이 되므로 원래 상태·메타데이터·이력은 복구되지 않는다.
-- CSV의 기존 메타데이터 열은 필수가 아니며 남아 있어도 행의 `provenance`에 보존한다. `--allow-calculation`은 제거한다. 새 적재는 비활성이고 검증 후 `--activate`로 전환한다.
+- CSV의 기존 메타데이터 열은 필수가 아니며 남아 있어도 행의 `provenance`에 보존한다. `--allow-calculation`은 제거한다. 새 적재는 비활성이고 검증 후 `--activate`로 전환한다. 단, 미사용 정형 자료 4종은 활성화 대상에서 제외한다.
 - 위 조회 규칙은 후속 기능 연결 기준이다. 이번 변경에서는 조회에 활성 필터를 추가하지 않는다.
