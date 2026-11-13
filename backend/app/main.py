@@ -24,6 +24,7 @@ from app.shared.errors import (
     validation_error_handler,
 )
 from app.shared.request_guards import BodyLimit, CatchAll
+from app.v2.router import router as v2_router
 from app.vendor.router import router as vendor_router
 from app.visit.router import router as visit_router
 
@@ -60,6 +61,7 @@ ROUTERS = [
     project_router,
     quote_router,
     schedule_router,
+    v2_router,
     vendor_router,
     visit_router,
 ]

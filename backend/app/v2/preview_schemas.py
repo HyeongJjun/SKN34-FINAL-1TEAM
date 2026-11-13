@@ -1,0 +1,252 @@
+import uuid
+from decimal import Decimal
+from typing import Annotated, Literal
+
+from pydantic import BaseModel, Field, StrictBool
+
+from app.calc.plan_qty import SpaceKind
+from app.calc.precise_common import Grade
+from app.calc.precise_mokgong import DoorMode, MoldingType
+
+QTY_MAX = Decimal(10_000)  # 고객이 넣는 수량 한도 (㎡ · m · 개소)
+Qty = Annotated[Decimal, Field(ge=0, le=QTY_MAX, max_digits=8, decimal_places=1)]
+
+
+class V2PlanBriefOut(BaseModel):
+    id: str
+    name: str
+    region: str
+    type: str
+    supply_m2: Decimal
+    excl_m2: Decimal | None
+    supply_py: int
+    rooms: int
+    baths: int
+    layout: str
+    year: int | None
+    stage: str | None
+    src: str
+    src_url: str
+    img: str
+    drawn: str
+    has_ext: bool
+    sup_note: str | None  # 공급면적 출처 글
+
+
+class V2PlanSpaceOut(BaseModel):
+    id: str
+    ko: str
+    kind: str
+    w_m: Decimal
+    d_m: Decimal
+    floor_m2: Decimal
+    wall_m2: Decimal
+    ceiling_m2: Decimal
+    molding_m: Decimal
+    base_m: Decimal
+    own_door: bool
+    papered: bool
+    sure: str
+    ext: bool
+    plan_w_m: Decimal | None = None  # 도면 치수 (벽 가운데 기준, 확장 전)
+    plan_d_m: Decimal | None = None
+
+
+class V2RollOut(BaseModel):
+    kind: str
+    ko: str
+    size: str
+    per_roll: int
+    rolls: int
+
+
+class V2PlanEstOut(BaseModel):
+    """평형으로 어림한 값 (v10 CALC9 est): 도면 수량과 비교용."""
+
+    py: Decimal
+    wall_m2: Decimal
+    ceiling_m2: Decimal
+    molding_m: Decimal
+    base_m: Decimal
+
+
+class V2PlanQtyOut(BaseModel):
+    plan_id: str
+    rules_version: str
+    expanded: bool
+    ceiling: bool
+    kinds: list[str] | None
+    spaces: list[V2PlanSpaceOut]
+    wall_m2: Decimal
+    ceiling_m2: Decimal
+    paper_m2: Decimal
+    primer_m2: Decimal
+    rolls: list[V2RollOut]
+    molding_m: Decimal
+    molding_pcs: int
+    base_m: Decimal
+    base_pcs: int
+    doors: int
+    casing_m: Decimal
+    windows_m: Decimal
+    low: list[str]
+    assumptions: list[str]
+    est: V2PlanEstOut | None = None
+
+
+class V2ProductOut(BaseModel):
+    id: str
+    kind: str
+    name: str
+    price: int
+    why: str
+    len_m: Decimal | None
+    type: str | None
+    per: str | None = None  # 한 개 단위: 짝 · 세트 (v10 MOK10.prod per)
+
+
+class V2ExtraOut(BaseModel):
+    key: str
+    group: str
+    ko: str
+    what: str
+    unit: str
+    price: int
+    basis: str
+    src: str
+    auto: str | None
+
+
+class V2GradeInitOut(BaseModel):
+    molding_type: str
+    molding: str
+    base: str
+    leaf: str
+    door_set: str
+
+
+class V2MokFixedOut(BaseModel):
+    """화면 문구에 쓰는 정해진 값 (v10 MOK10.fixed)."""
+
+    minus_mult: Decimal  # 무몰딩 시공 배수
+    hidden_mult: Decimal  # 히든 걸레받이 시공 배수
+    molding_per_py: Decimal
+    base_per_py: Decimal
+
+
+class V2MaterialsOut(BaseModel):
+    version: str
+    products: list[V2ProductOut]
+    extras: list[V2ExtraOut]
+    grades: dict[str, V2GradeInitOut]
+    fixed: V2MokFixedOut | None = None
+
+
+class V2PreviewDoorIn(BaseModel):
+    mode: DoorMode = "none"
+    pick: str | None = Field(default=None, max_length=80)
+    count: int | None = Field(default=None, ge=0, le=30)
+
+
+class V2PreviewCountIn(BaseModel):
+    n: int = Field(default=0, ge=0, le=30)
+    pick: str | None = Field(default=None, max_length=80)
+
+
+class V2MokSelIn(BaseModel):
+    door: V2PreviewDoorIn = V2PreviewDoorIn()
+    slide: V2PreviewCountIn = V2PreviewCountIn()
+    hidden: V2PreviewCountIn = V2PreviewCountIn()
+    molding_type: MoldingType = "none"
+    molding: str | None = Field(default=None, max_length=80)
+    base: str | None = Field(default=None, max_length=80)
+    # 정해진 단가 항목: true면 자동 수량(도면 · 면적), 숫자면 넣은 수량
+    extras: dict[Annotated[str, Field(max_length=40)], StrictBool | Qty] = Field(
+        default={}, max_length=30
+    )
+
+
+class V2PreviewIn(BaseModel):
+    plan_id: str | None = Field(default=None, max_length=20)
+    expanded: bool = True
+    kinds: list[SpaceKind] | None = Field(default=None, max_length=9)
+    grade: Grade | None = None  # 없으면 프로젝트 도배 등급
+    mok: V2MokSelIn | None = None  # 없으면 등급별 처음 자재
+
+
+class V2PreviewLineOut(BaseModel):
+    key: str
+    name: str
+    qty: Decimal | None
+    unit: str
+    unit_price: int | None
+    amount: int | None
+    state: str
+    source: str
+    price_basis: str
+    calc: str
+
+
+class V2PreviewStepOut(BaseModel):
+    key: str
+    name: str
+    half_days: int
+
+
+class V2PreviewMarketLineOut(BaseModel):
+    key: str
+    name: str
+    qty: Decimal | None
+    unit: str
+    unit_price: int | None
+    amount: int
+    note: str
+
+
+class V2PreviewGapStepOut(BaseModel):
+    key: str
+    name: str
+    why: str
+    d: int
+
+
+class V2PreviewMarketOut(BaseModel):
+    version: str
+    supply: int  # 부가세 별도
+    lo: int
+    hi: int
+    band_lo: Decimal
+    band_hi: Decimal
+    n: int
+    lines: list[V2PreviewMarketLineOut]
+    gap_start: int
+    gap: list[V2PreviewGapStepOut]
+
+
+class V2TradePreviewOut(BaseModel):
+    trade: Literal["dobae", "mokgong"]
+    version: str
+    grade: str | None  # 도배: 실제 계산에 쓴 벽지 등급
+    lines: list[V2PreviewLineOut]
+    supply: int
+    vat: int
+    total: int
+    man_day: Decimal
+    days: Decimal
+    steps: list[V2PreviewStepOut]
+    notes: list[str]
+    market: V2PreviewMarketOut
+
+
+class V2PreviewOut(BaseModel):
+    project_id: uuid.UUID
+    project_rev: int
+    area_m2: Decimal
+    area_basis: str
+    grade: Grade
+    plan: V2PlanBriefOut | None
+    plan_qty: V2PlanQtyOut | None
+    trades: list[V2TradePreviewOut]
+    supply: int
+    vat: int
+    total: int

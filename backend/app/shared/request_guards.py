@@ -24,6 +24,7 @@ MB = 1024 * 1024
 LIMITS: dict[str, int] = {
     "/auth/vendor-signup": 11 * MB,
     "/files": 21 * MB,
+    "/v2/ask": 2 * MB,  # AI 상담: 사진 2장(base64)까지
 }
 DEFAULT_LIMIT = 1 * MB
 
