@@ -292,12 +292,19 @@ async def _drop(turn_id: str) -> None:
 
 
 # ---- 한 턴 ----
-async def start(user_id: str, b: v2.V2AskIn, today: date) -> v2.V2AskOut:
+async def start(
+    user_id: str,
+    b: v2.V2AskIn,
+    today: date,
+    history: list[dict] | None = None,  # 지난 대화 [{role, content}] (ask_chat이 대화 표에서 읽음)
+    waiting: str | None = None,  # 고객 답을 기다리던 역할의 의도 라벨
+    chat: dict | None = None,  # 저장할 대화 정보. 턴과 같이 Redis에 두고 ask_chat이 읽는다
+) -> v2.V2AskOut:
     if settings.app_env != "local":  # 로컬 개발 · 시연에서는 손으로 여러 번 물어봐도 막지 않는다
         await ratelimit.hit(ratelimit.key("v2-ask", user_id), ASK_PER_HOUR, 3600, TOO_MANY)
     intent: Intent | None = None
     if b.kind == "chat" and not b.images:
-        intent = await agent_gate.classify(b.message)
+        intent = await agent_gate.classify(b.message, waiting)
         if intent is not None and intent.label == "out_of_scope":
             return v2.V2AskOut(done=True, text=OUT_TEXT, gate="out", intent=_intent_out(intent))
     sure = intent is not None and intent.confidence >= settings.intent_confidence_threshold
@@ -310,9 +317,15 @@ async def start(user_id: str, b: v2.V2AskIn, today: date) -> v2.V2AskOut:
         "user": user_id,
         "kind": b.kind,
         "today": today.isoformat(),
+        "chat": chat,
         "system": system,
-        "messages": [{"role": "user", "content": content}],
-        "allowed": [*allowed, b.message],
+        "messages": [*(history or []), {"role": "user", "content": content}],
+        # 지난 AI 답은 이미 숫자 검사를 통과한 글이라 그 숫자는 다시 말해도 된다 (기간은 calc만)
+        "allowed": [
+            *allowed,
+            b.message,
+            *(h["content"] for h in history or [] if h["role"] == "assistant"),
+        ],
         "calc": calc,
         "text": "",
         "calls": 0,

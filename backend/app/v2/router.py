@@ -8,7 +8,7 @@ from app.auth.models import User
 from app.calc.plan_qty import SpaceKind
 from app.db import get_session
 from app.shared.clock import today_seoul
-from app.v2 import ask, case_service, preview_service, service
+from app.v2 import ask, ask_chat, case_service, preview_service, service
 from app.v2 import case_schemas as cs
 from app.v2 import schemas as v2
 from app.v2.preview_schemas import (
@@ -110,7 +110,7 @@ async def v2_extras(body: v2.V2ExtrasIn, _: User = Depends(current_user)) -> v2.
 
 @router.post("/ask", response_model=v2.V2AskOut, summary="v2 AI 상담 한 턴 시작")
 async def v2_ask(body: v2.V2AskIn, user: User = Depends(current_user)) -> v2.V2AskOut:
-    return await ask.start(str(user.id), body, today_seoul())
+    return await ask_chat.start(user.id, body, today_seoul())
 
 
 @router.post(
@@ -119,7 +119,7 @@ async def v2_ask(body: v2.V2AskIn, user: User = Depends(current_user)) -> v2.V2A
 async def v2_ask_resume(
     turn_id: str, body: v2.V2AskResumeIn, user: User = Depends(current_user)
 ) -> v2.V2AskOut:
-    return await ask.resume(str(user.id), turn_id, body)
+    return await ask_chat.resume(user.id, turn_id, body)
 
 
 @router.get("/ask/health", response_model=v2.V2AskHealthOut, summary="v2 AI 상태")
