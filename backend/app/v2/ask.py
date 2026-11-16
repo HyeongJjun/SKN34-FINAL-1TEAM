@@ -274,25 +274,24 @@ async def _save(turn_id: str, turn: dict) -> None:
         raise AppError(503, "unavailable", "잠시 뒤에 다시 물어봐 주세요.") from e
 
 
-async def _load(turn_id: str, user_id: str) -> dict:
-    try:
-        raw = await redis.get(_key(turn_id))
-    except RedisError as e:
-        raise AppError(503, "unavailable", "잠시 뒤에 다시 물어봐 주세요.") from e
-    turn = json.loads(raw) if raw else None
-    if not turn or turn.get("user") != user_id:
-        raise AppError(404, "not_found", GONE)
-    return turn
+# 읽은 값이 그대로일 때만 지운다(비교와 삭제를 한 번에). 그사이 다음 도구 턴이 같은 키에 저장됐으면 지우지 않는다
+_TAKE = (
+    "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) end return 0"
+)
 
 
 async def take(turn_id: str, user_id: str) -> dict:
-    """재개할 턴을 가져간다. 같은 턴 재개가 동시에 와도 먼저 지운 요청만 이어 간다(늦은 쪽은 404).
+    """재개할 턴을 가져간다. 같은 턴 재개가 겹치면 읽은 값을 먼저 지운 요청만 이어 간다(늦은 쪽은 404).
 
-    화면 도구를 다시 기다리면 _run이 다시 저장한다.
+    화면 도구를 다시 기다리면 _run이 같은 키에 다시 저장한다. 늦은 요청은 그 새 턴을 지우지 못한다.
     """
-    turn = await _load(turn_id, user_id)
+    key = _key(turn_id)
     try:
-        taken = await redis.delete(_key(turn_id))
+        raw = await redis.get(key)
+        turn = json.loads(raw) if raw else None
+        if not turn or turn.get("user") != user_id:
+            raise AppError(404, "not_found", GONE)
+        taken = await redis.eval(_TAKE, 1, key, raw)
     except RedisError as e:
         raise AppError(503, "unavailable", "잠시 뒤에 다시 물어봐 주세요.") from e
     if taken != 1:
@@ -361,8 +360,9 @@ async def resume(
 ) -> v2.V2AskOut:
     """turn: take()로 이미 가져간 턴(ask_chat이 대화 정보를 먼저 읽을 때). 없으면 여기서 가져간다."""
     turn = turn or await take(turn_id, user_id)
+    ids = [r.id for r in b.results]
     got = {r.id: r.content for r in b.results}
-    if set(got) != set(turn["pending"]):
+    if len(ids) != len(got) or set(got) != set(turn["pending"]):  # 같은 id가 두 번 와도 422
         await _save(turn_id, turn)  # 되돌려 놓아 화면이 맞는 결과로 다시 보낼 수 있게
         raise AppError(422, "invalid", "도구 결과가 맞지 않아요.")
     for call_id in turn["pending"]:
