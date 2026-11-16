@@ -46,6 +46,15 @@ def test_first_answer_makes_chat_and_next_question_gets_history(api, fake):
     assert len(_messages(first["chat_id"])) == 4
 
 
+def test_number_from_last_answer_can_be_said_again(api, fake):
+    fake({"text": "32평 기준으로 볼게요."}, {"text": "32평이라고 하셨어요."})
+    signup(api)
+    chat_id = api.post("/v2/ask", json={"message": "우리 집은 32평이에요"}).json()["chat_id"]
+    again = api.post("/v2/ask", json={"message": "아까 몇 평이라고 했죠?", "chat_id": chat_id})
+    out = again.json()
+    assert out["text"] == "32평이라고 하셨어요." and out["dropped"] == []
+
+
 def test_other_users_chat_is_404_before_llm(api, fake):
     f = fake({"text": "합지는 종이 벽지예요."})
     signup(api)

@@ -320,7 +320,12 @@ async def start(
         "chat": chat,
         "system": system,
         "messages": [*(history or []), {"role": "user", "content": content}],
-        "allowed": [*allowed, b.message],
+        # 지난 AI 답은 이미 숫자 검사를 통과한 글이라 그 숫자는 다시 말해도 된다 (기간은 calc만)
+        "allowed": [
+            *allowed,
+            b.message,
+            *(h["content"] for h in history or [] if h["role"] == "assistant"),
+        ],
         "calc": calc,
         "text": "",
         "calls": 0,
