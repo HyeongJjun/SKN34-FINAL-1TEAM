@@ -4,7 +4,8 @@
 - 열 때 본 rev · 질문은 ask 턴 정보("chat")에 같이 둔다. 화면 도구를 기다리는 동안에도 남는다
 - 새 대화는 첫 턴을 저장할 때 만든다. 범위 밖 · 실패로 끝난 질문 때문에 빈 대화가 남지 않게
 - 실패한 답은 저장하지 않는다. rev가 그대로라 다음 질문은 그대로 이어진다
-- waiting은 아직 늘 비운다. 되물었는지 판단하는 방법은 협약 9절에서 정한다
+- 되물었는지는 답 끝의 [되물음] 표시로 안다(chat 지시문). 표시는 떼고, 그 역할 라벨을 waiting에 남긴다
+  다음 턴 관문이 waiting을 받아 짧은 답("32평")도 같은 역할로 보낸다 (#120)
 - 대화 표에는 일반 상담(kind=chat)만 쌓는다. 견적서 · 공정표 화면 버튼의 설명은 한 번으로 끝난다
 """
 
@@ -16,6 +17,8 @@ from app.chat import service as chat_service
 from app.db import SessionLocal
 from app.v2 import ask
 from app.v2 import schemas as v2
+
+ASKED = "[되물음]"  # chat 지시문이 되물을 때만 답 끝에 붙인다. 화면에는 보내지 않는다
 
 
 async def start(user_id: uuid.UUID, b: v2.V2AskIn, today: date) -> v2.V2AskOut:
@@ -51,6 +54,10 @@ async def _finish(user_id: uuid.UUID, out: v2.V2AskOut, meta: dict) -> v2.V2AskO
     if not out.done or out.failed or not meta["keep"]:
         return out.model_copy(update={"chat_id": chat_id})
     intent = Intent.model_validate(out.intent.model_dump()) if out.intent else None
+    asked = ASKED in out.text
+    text = out.text.replace(ASKED, "").strip()
+    # 되물은 역할: 관문 라벨, 없으면 가이드(orchestrator). 되묻지 않았으면 비운다
+    waiting = (intent.label if intent else "orchestrator") if asked else None
     async with SessionLocal() as s:
         if chat_id is None:
             chat_id = await chat_service.create(s, user_id)
@@ -60,8 +67,8 @@ async def _finish(user_id: uuid.UUID, out: v2.V2AskOut, meta: dict) -> v2.V2AskO
             chat_id=chat_id,
             rev=meta["rev"],
             question=meta["question"],
-            answer=out.text,
+            answer=text,
             intent=intent,
-            waiting=None,
+            waiting=waiting,
         )
-    return out.model_copy(update={"chat_id": chat_id})
+    return out.model_copy(update={"chat_id": chat_id, "text": text})
