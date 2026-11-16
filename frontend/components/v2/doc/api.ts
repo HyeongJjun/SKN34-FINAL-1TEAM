@@ -88,6 +88,7 @@ export function quoteBody() {
     balcony: V3.balcony,
     mok: S.mok10 ?? null,
     tier: S.tier,
+    grade: S.grade,
   };
 }
 export type QuoteIn = ReturnType<typeof quoteBody>;

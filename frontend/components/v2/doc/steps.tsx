@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { errorText } from "@/lib/backend/client";
 import { bot, F, feedEpoch, me, openOverlay, quick, stillHere } from "../engine";
 import { setStep } from "../flow";
-import { V3 } from "../store";
+import { moveLabel } from "../dates";
+import { S, V3 } from "../store";
 import { cachedQuote, type Plan, planBody, type Quote, quoteBody } from "./api";
 import { ensureQuote, GanttEl, loadPlan, PlanDocBody } from "./PlanDoc";
 import { QuoteCheck } from "./QuoteCheck";
@@ -83,7 +84,7 @@ export async function quoteStep() {
     ["공정표 보기", () => schedStep()],
     ["계약 전 점검", () => F.checkStep?.("contract")],
     ["왜 이 금액이에요?", () => explainQuote(undefined, "왜 이 금액이에요?"), true],
-    ...(q.band ? ([["왜 달라요?", () => bandWhy(), true]] as [string, () => void, boolean][]) : []),
+    ...(q.band ? ([["시장 금액과 왜 달라요?", () => bandWhy(), true]] as [string, () => void, boolean][]) : []),
   ]);
 }
 
@@ -111,7 +112,7 @@ export async function explainQuote(question?: string, label = "금액 풀이") {
   await F.agentAnswer({ label: question ? null : label, ask, kind: "quote_explanation", quote: quoteBody() });
 }
 
-/** '왜 달라요?' 대화 카드: 공정마다 가장 큰 이유 3개 (v5) */
+/** '시장 금액과 왜 달라요?' 대화 카드: 공정마다 가장 큰 이유 3개 (v5) */
 export async function bandWhy() {
   const ep = feedEpoch.n;
   let q: Quote;
@@ -122,7 +123,7 @@ export async function bandWhy() {
   }
   if (!stillHere(ep)) return;
   if (!q.band) return;
-  me("왜 달라요?");
+  me("시장 금액과 왜 달라요?");
   const cards = q.precise.map((t) => {
     const g = t.gap;
     if (!g) return null;
@@ -208,10 +209,12 @@ export async function schedStep() {
   }
   if (!stillHere(ep)) return;
   await bot("공사 순서대로 예상 날짜를 잡았어요.", <PlanCard p={p} title />);
+  // 끝낼 날: 입주일을 넣었으면 그 날짜로, 없으면 날짜를 물어보게 한다 (달을 고정해 두지 않는다)
+  const endBy = S.info.move ? `${moveLabel(S.info.move)} 전에 끝내 주세요` : "끝내야 하는 날이 있어요";
   quick([
     ["공사 전 체크리스트", () => F.checkStep?.("before")],
-    ["12월 안에 끝내고 싶어요", () => schedAgent("12월 안에 끝내고 싶어요"), true],
-    ["주말에도 공사해도 돼요", () => schedAgent("주말에도 공사해도 돼요"), true],
+    [endBy, () => schedAgent(endBy), true],
+    ["주말 공사도 괜찮아요", () => schedAgent("주말 공사도 괜찮아요"), true],
     ["견적서 다시 보기", () => openQuoteDoc()],
   ]);
 }

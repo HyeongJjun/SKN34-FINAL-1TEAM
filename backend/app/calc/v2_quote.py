@@ -64,6 +64,7 @@ class V2QuoteInput:
     door_removal: bool = (
         False  # v10: 문틀까지 교체 · 덧방을 고르면 문 수 · 자재와 상관없이 철거 줄을 둔다
     )
+    grade: str | None = None  # 고객이 고른 도배 유형. 없으면 고른 벽지 등급으로 정한다
 
 
 @dataclass(frozen=True)
@@ -127,7 +128,7 @@ def inputs(q: V2QuoteInput, books: V2Books) -> V2Inputs:
         auto = {"n": r + b, "how": f"{num(py)}평 기준 방 {r} + 욕실 {b}"}
     doors = q.mok.door.count if q.mok.door.count is not None else auto["n"]
     pick = books.materials.get(q.picks.get("wallpaper", ""))
-    grade = "economy" if pick and pick.tier == "economy" else "basic"
+    grade = q.grade or ("economy" if pick and pick.tier == "economy" else "basic")
     items = mok_items(q.mok)
     if not q.door_count_set and "door" in items:
         assumed.append(f"방문은 {auto['how']} {doors}개로 잡았어요")

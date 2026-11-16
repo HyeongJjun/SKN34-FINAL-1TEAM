@@ -63,7 +63,7 @@ export function dropCat(id: string) {
 export function addCat(id: string) {
   const cur = new Set(scopeCats().map((c) => c.id));
   cur.add(id);
-  if (cur.size === CATS.length) Object.assign(S.scope, { kind: "all", spaces: [], cats: [] });
+  if (cur.size === CATS.length) Object.assign(S.scope, { kind: "all", spaces: [], cats: [], kinds: null });
   else {
     S.scope.kind = "part";
     S.scope.cats = CATS.filter((c) => cur.has(c.id)).map((c) => c.id);

@@ -5,11 +5,29 @@ import type { Material, StyleData } from "./data";
 
 export type Living = "vacant" | "living";
 export type Info = { pyeong: number | null; region: string; living: Living | null; move: string };
-export type Scope = { kind: "all" | "part" | null; spaces: string[]; cats: string[] };
+/** kinds: 빠른 예산에서 고른 공간 종류(도면 공간 kind). 있으면 spaces보다 먼저 쓴다 */
+export type Scope = { kind: "all" | "part" | null; spaces: string[]; cats: string[]; kinds?: string[] | null };
 export type PhotoItem = { url: string; name: string; file: File };
 /** 도면: type = 대표 평면(p24 · p32 · p40), apt = 예시 평면도(백엔드 /v2/floor-plans), file = 올린 파일 */
 export type PlanSel = { kind: "type" | "apt" | "file"; id?: string; name: string; url?: string; expanded?: boolean };
 export type Tier = "economy" | "basic" | "premium";
+/** 첫 화면에서 고른 목적. 수준 신호로도 쓴다(처음 · 알아보는 중 · 견적 받아 봄) */
+export type Goal = "budget" | "learn" | "check" | "vendor";
+export type Level = "new" | "looking" | "experienced";
+/** 빠른 예산 답. null = 모름 (계산 엔진이 흔한 값으로 채운다) */
+export type QuickAns = {
+  plan: string | null;
+  pyeong: number | null;
+  basis: "supply" | "exclusive";
+  kinds: string[] | null;
+  dobae: boolean;
+  molding: boolean;
+  base: boolean;
+  door: "none" | "leaf" | "frame" | null;
+  grade: "economy" | "basic" | null;
+  ceiling: boolean | null;
+  occupied: boolean | null;
+};
 
 export type MokSt = {
   door: { mode: "none" | "replace" | "overlay" | "leaf"; pick: string | null; count: number | null };
@@ -39,6 +57,11 @@ export type State = {
   far: number;
   imgMode: "free" | "mfg" | "ai";
   mok10?: MokSt;
+  goal: Goal | null;
+  level: Level | null;
+  /** 고객이 고른 도배 유형. 표준견적서 도배 금액에 그대로 쓴다 */
+  grade: "economy" | "basic" | null;
+  quick: QuickAns | null;
 };
 
 export const freshState = (): State => ({
@@ -48,6 +71,7 @@ export const freshState = (): State => ({
   budget: null, budgetUnknown: false, tier: "basic", tierBy: null,
   photos: [], refs: [], plan: null,
   picks: {}, step: "welcome", far: 0, imgMode: "ai",
+  goal: null, level: null, grade: null, quick: null,
 });
 
 /** 상담 상태. 흐름 코드가 직접 고친 뒤 touch()로 알린다 */

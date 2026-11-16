@@ -108,6 +108,11 @@ async def v2_extras(body: v2.V2ExtrasIn, _: User = Depends(current_user)) -> v2.
     return service.extras_range(body)
 
 
+@router.post("/quick-budget", response_model=v2.V2QuickOut, summary="v2 빠른 예산")
+async def v2_quick(body: v2.V2QuickIn, _: User = Depends(current_user)) -> v2.V2QuickOut:
+    return service.quick(body)
+
+
 @router.post("/ask", response_model=v2.V2AskOut, summary="v2 AI 상담 한 턴 시작")
 async def v2_ask(body: v2.V2AskIn, user: User = Depends(current_user)) -> v2.V2AskOut:
     return await ask_chat.start(user.id, body, today_seoul())

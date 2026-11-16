@@ -96,6 +96,7 @@
 .root :global(.steps button.done) { color: var(--ink-sub); cursor: pointer; }
 .root :global(.steps button.done::before) { background: var(--ink); }
 .root :global(.steps button.now) { color: var(--accent); font-weight: 700; }
+.root :global(.steps button:disabled) { opacity: .5; }
 .root :global(.steps button.now::before) { background: var(--accent); }
 .root :global(.reset-ask) { display: flex; gap: 6px; align-items: center; font-size: var(--fs-xs); color: var(--ink-sub); white-space: nowrap; }
 .root :global(.msgs) { display: flex; flex-direction: column; gap: 20px; padding: 24px 0; flex: 1; }

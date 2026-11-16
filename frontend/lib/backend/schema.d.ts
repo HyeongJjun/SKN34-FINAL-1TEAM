@@ -841,6 +841,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v2/quick-budget": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v2 빠른 예산 */
+        post: operations["v2_quick_v2_quick_budget_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v2/ask": {
         parameters: {
             query?: never;
@@ -5842,6 +5859,104 @@ export interface components {
             /** Source */
             source: string;
         };
+        /** V2QuickAskOut */
+        V2QuickAskOut: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "door" | "ceiling" | "occupied" | "grade";
+            /** Q */
+            q: string;
+            /** Choices */
+            choices: components["schemas"]["V2QuickChoiceOut"][];
+            /** Spread */
+            spread: number;
+            /** Note */
+            note: string;
+        };
+        /** V2QuickChoiceOut */
+        V2QuickChoiceOut: {
+            /** Value */
+            value: string;
+            /** Label */
+            label: string;
+            /** Lo */
+            lo: number;
+            /** Hi */
+            hi: number;
+        };
+        /**
+         * V2QuickIn
+         * @description 질문 3개 + '더 정확히' 답. 모르는 칸은 비워 두면(null) 계산 엔진이 흔한 값으로 채운다.
+         */
+        V2QuickIn: {
+            /** Pyeong */
+            pyeong?: number | string | null;
+            /**
+             * Area Basis
+             * @default supply
+             * @enum {string}
+             */
+            area_basis: "supply" | "exclusive";
+            plan?: components["schemas"]["V2PlanSelIn"] | null;
+            /**
+             * Dobae
+             * @default true
+             */
+            dobae: boolean;
+            /**
+             * Molding
+             * @default false
+             */
+            molding: boolean;
+            /**
+             * Base
+             * @default false
+             */
+            base: boolean;
+            /** Door */
+            door?: ("none" | "leaf" | "frame") | null;
+            /** Grade */
+            grade?: ("economy" | "basic") | null;
+            /** Ceiling */
+            ceiling?: boolean | null;
+            /** Occupied */
+            occupied?: boolean | null;
+        };
+        /**
+         * V2QuickOut
+         * @description 금액은 모두 부가세 포함, 만 원 단위 시장 범위(실견적 중간 50%)
+         */
+        V2QuickOut: {
+            /** Lo */
+            lo: number;
+            /** Hi */
+            hi: number;
+            /** Trades */
+            trades: components["schemas"]["V2QuickTradeOut"][];
+            /** Assumed */
+            assumed: string[];
+            alt: components["schemas"]["V2QuickChoiceOut"] | null;
+            /** Asks */
+            asks: components["schemas"]["V2QuickAskOut"][];
+            /** Version */
+            version: string;
+        };
+        /** V2QuickTradeOut */
+        V2QuickTradeOut: {
+            /**
+             * Trade
+             * @enum {string}
+             */
+            trade: "dobae" | "mokgong";
+            /** Lo */
+            lo: number;
+            /** Hi */
+            hi: number;
+            /** N */
+            n: number;
+        };
         /** V2QuoteIn */
         V2QuoteIn: {
             /** Pyeong */
@@ -5873,6 +5988,8 @@ export interface components {
              * @enum {string}
              */
             tier: "economy" | "basic" | "premium";
+            /** Grade */
+            grade?: ("economy" | "basic") | null;
         };
         /** V2QuoteOut */
         V2QuoteOut: {
@@ -8336,6 +8453,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["V2ExtrasOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_quick_v2_quick_budget_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2QuickIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2QuickOut"];
                 };
             };
             /** @description Validation Error */

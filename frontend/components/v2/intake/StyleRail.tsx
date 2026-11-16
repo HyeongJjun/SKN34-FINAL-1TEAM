@@ -96,7 +96,7 @@ export async function welcome() {
   const r = railBox();
   await bot("어떤 분위기가 좋아요?", r.node);
   railMsg = r.state;
-  quick([["잘 모르겠어요", () => afterStyle()], ["공사 순서가 궁금해요", () => guideStep(true)]]);
+  quick([["스타일은 나중에 고를게요", () => afterStyle()], ["공사 순서가 궁금해요", () => guideStep(true)]]);
 }
 export function collapseRail() {
   if (!railMsg) return;
@@ -163,7 +163,7 @@ function GuideCard({ mine }: { mine: Set<string> }) {
     <div className="card">
       <div>
         <h3>공사 순서</h3>
-        <p className="muted">30평대 전체 공사 4~6주</p>
+        <p className="muted">기간은 우리 집 조건으로 공정표에서 계산해요</p>
       </div>
       <ol className="guide">
         {GUIDE.map((g, i) => (all || i < 3) && (
@@ -173,14 +173,12 @@ function GuideCard({ mine }: { mine: Set<string> }) {
               <b>{g.n}</b>
               <p>{g.t}</p>
             </div>
-            <span className="d">{g.d}</span>
           </li>
         ))}
       </ol>
       {all ? null : (
         <button type="button" className="btn-text" onClick={() => setAll(true)}>{`전체 ${GUIDE.length}단계 보기`}</button>
       )}
-      <p className="muted">벽 안의 일 → 보이는 마감, 먼지 나는 일 → 깨끗한 일 순서예요.</p>
     </div>
   );
 }
@@ -188,7 +186,7 @@ export async function guideStep(fromStart?: boolean) {
   S.guideSeen = true;
   collapseRail();
   await bot(null, <GuideCard mine={new Set(S.scope.cats)} />);
-  if (fromStart && !S.style) quick([["스타일 고르기", () => reopenStyles()], ["집 정보부터", () => F.infoStep()]]);
+  if (fromStart && !S.style) quick([["스타일 고르기", () => reopenStyles()], ["집 정보부터 넣을게요", () => F.infoStep()]]);
   else quick([["다음", () => F.infoStep()]]);
 }
 

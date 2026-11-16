@@ -8,7 +8,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, BaseModel, Field, StrictBool
+from pydantic import AfterValidator, BaseModel, Field, StrictBool, model_validator
 
 from app.calc.plan_qty import SpaceKind
 from app.calc.precise_mokgong import DoorMode, MoldingType
@@ -101,6 +101,8 @@ class V2QuoteIn(BaseModel):
     balcony: bool = False
     mok: V2MokIn | None = None
     tier: Literal["economy", "basic", "premium"] = "basic"
+    # 도배 유형을 고객이 직접 골랐으면 그 값(자재를 고르지 않아도 금액에 이어진다)
+    grade: Literal["economy", "basic"] | None = None
 
 
 # ---- 출력: 견적 ----
@@ -551,6 +553,62 @@ class V2ExtrasOut(BaseModel):
     lo: int
     hi: int
     notes: list[str]
+
+
+# ---- 빠른 예산 (/v2/quick-budget) ----
+class V2QuickIn(BaseModel):
+    """질문 3개 + '더 정확히' 답. 모르는 칸은 비워 두면(null) 계산 엔진이 흔한 값으로 채운다."""
+
+    pyeong: Decimal | None = Field(default=None, ge=5, le=150, max_digits=5, decimal_places=1)
+    area_basis: Literal["supply", "exclusive"] = "supply"
+    plan: V2PlanSelIn | None = None  # 대표 집 카드
+    dobae: StrictBool = True
+    molding: StrictBool = False
+    base: StrictBool = False
+    door: Literal["none", "leaf", "frame"] | None = None
+    grade: Literal["economy", "basic"] | None = None
+    ceiling: StrictBool | None = None
+    occupied: StrictBool | None = None
+
+    @model_validator(mode="after")
+    def _house(self):
+        if self.pyeong is None and self.plan is None:
+            raise ValueError("평형이나 집 카드를 골라 주세요")
+        return self
+
+
+class V2QuickChoiceOut(BaseModel):
+    value: str
+    label: str
+    lo: int
+    hi: int
+
+
+class V2QuickAskOut(BaseModel):
+    key: Literal["door", "ceiling", "occupied", "grade"]
+    q: str
+    choices: list[V2QuickChoiceOut]
+    spread: int
+    note: str
+
+
+class V2QuickTradeOut(BaseModel):
+    trade: Literal["dobae", "mokgong"]
+    lo: int
+    hi: int
+    n: int
+
+
+class V2QuickOut(BaseModel):
+    """금액은 모두 부가세 포함, 만 원 단위 시장 범위(실견적 중간 50%)"""
+
+    lo: int
+    hi: int
+    trades: list[V2QuickTradeOut]
+    assumed: list[str]
+    alt: V2QuickChoiceOut | None
+    asks: list[V2QuickAskOut]
+    version: str
 
 
 # ---- AI 상담 (/v2/ask) ----
