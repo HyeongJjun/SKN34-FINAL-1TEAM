@@ -3,15 +3,15 @@
 import asyncio
 import json
 import uuid
+from typing import get_args
 
 import httpx
 import pytest
 
 from app.agent import gate as gate_module
 from app.agent import intent, llm, route
-from app.agent.gate import OUT_OF_SCOPE_TEXT, classify, gate
-from app.agent.graph import build_graph, default_nodes
-from app.agent.schemas import AgentAnswer, Intent, Section, TurnContext
+from app.agent.gate import OUT_OF_SCOPE_TEXT, classify, fixed_reply, gate
+from app.agent.schemas import Intent, IntentLabel, TurnContext
 
 NO_PROJECT = TurnContext(user_id=uuid.uuid4(), chat_id=uuid.uuid4())
 WITH_PROJECT = TurnContext(user_id=uuid.uuid4(), chat_id=uuid.uuid4(), project_id=uuid.uuid4())
@@ -36,6 +36,13 @@ def gate_of(message, ctx=WITH_PROJECT, waiting=None):
     return asyncio.run(gate({"ctx": ctx, "message": message, "waiting": waiting}))["intent"]
 
 
+def reply_of(message, ctx=NO_PROJECT):
+    """관문 → LLM 없는 고정 응답(범위 밖 · 되묻기)."""
+    state = {"ctx": ctx, "message": message}
+    found = asyncio.run(gate(state))
+    return found["intent"], asyncio.run(fixed_reply({**state, **found}))["answer"]
+
+
 def test_model_matches_training_probs():
     model = intent._model()
     for check in model["checks"]:
@@ -49,12 +56,8 @@ def test_confident_model_skips_jev(jev_calls):
 
 
 def test_out_of_scope_replies_without_llm(jev_calls):
-    out = asyncio.run(
-        build_graph(default_nodes()).ainvoke(
-            {"ctx": NO_PROJECT, "message": "욕실 타일 교체하고 싶어요"}
-        )
-    )
-    assert out["answer"].sections[0].sentences == [OUT_OF_SCOPE_TEXT] and jev_calls == []
+    _, answer = reply_of("욕실 타일 교체하고 싶어요")
+    assert answer.sections[0].sentences == [OUT_OF_SCOPE_TEXT] and jev_calls == []
 
 
 def test_low_confidence_asks_jev_once(jev_calls):
@@ -74,8 +77,8 @@ def test_jev_disabled_uses_model_label(monkeypatch, jev_calls):
 
 
 def test_jev_failure_asks_back():
-    out = asyncio.run(build_graph(default_nodes()).ainvoke({"ctx": NO_PROJECT, "message": "음"}))
-    assert out["intent"] is None and out["answer"].cards[0].kind == "choices"
+    found, answer = reply_of("음")
+    assert found is None and answer.cards[0].kind == "choices"
 
 
 def test_short_answer_stays_with_waiting_agent(jev_calls):
@@ -90,22 +93,10 @@ def test_kept_waiting_does_not_borrow_other_label_confidence():
     assert route.keep_waiting("schedule", same, 0.7).confidence == 0.4
 
 
-def test_waiting_is_cleared_unless_agent_asks_again():
-    def turn(nodes, message):
-        state = {"ctx": WITH_PROJECT, "message": message, "waiting": "trade"}
-        return asyncio.run(build_graph(nodes).ainvoke(state))
-
-    # 다른 담당으로 넘어가면 지난 waiting이 남지 않는다
-    assert turn(default_nodes(), "공사 날짜 언제로 잡혔어요?")["waiting"] is None
-
-    async def ask_again(state):
-        return {
-            "answer": AgentAnswer(sections=[Section(sentences=["몇 개예요?"])]),
-            "waiting": "trade",
-        }
-
-    # 되묻는 에이전트가 돌려준 waiting만 다음 턴으로 간다
-    assert turn({**default_nodes(), "trade": ask_again}, "네 두 개요")["waiting"] == "trade"
+def test_gate_clears_waiting():
+    # 관문은 지난 waiting을 읽고 비운다. 이번 턴에 되묻는 역할만 다시 넣는다
+    state = {"ctx": WITH_PROJECT, "message": "공사 날짜 언제로 잡혔어요?", "waiting": "trade"}
+    assert asyncio.run(gate(state))["waiting"] is None
 
 
 def test_clear_other_intent_leaves_waiting_agent():
@@ -149,9 +140,7 @@ def test_missing_model_falls_back_to_jev(monkeypatch, jev_calls):
 
 
 def test_jev_question_covers_every_label():
-    from app.agent.graph import ROUTE
-
-    assert set(gate_module.JEV_CRITERIA) == set(ROUTE)
+    assert set(gate_module.JEV_CRITERIA) == set(get_args(IntentLabel))
 
 
 @pytest.mark.parametrize(
