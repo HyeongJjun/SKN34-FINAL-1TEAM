@@ -59,6 +59,29 @@ def test_trade_weight_lifts_same_trade_chunk():
     assert refs(bm25.search(ix, "작업 순서 기준", trade="도배"))[0] == "K2"
 
 
+def test_scope_of_groups_trade_tags():
+    assert bm25.scope_of(("도배", "도장")) == ("도배",)
+    assert bm25.scope_of(("도배", "목공", "전체")) == ("도배", "목공")
+    assert bm25.scope_of(()) == ("공통",)
+    assert bm25.scope_of(("전체", "공통")) == ("공통",)
+    assert bm25.scope_of(("욕실", "전체")) == ("범위밖",)
+
+
+def test_trade_words_skip_door_to_door_sales_and_visits():
+    assert bm25.trade_of("방문판매로 계약했는데 취소돼요?") is None
+    assert bm25.trade_of("실측 방문은 돈을 내야 해요?") is None
+    assert bm25.trade_of("도어락도 바꿔 줘요?") is None
+    assert bm25.trade_of("방문은 문짝만 바꿔도 돼요?") == "목공"
+
+
+def test_trade_view_puts_common_before_out_of_scope():
+    ix = _ix(
+        ("K1", "kcs", "작업 순서와 확인 기준", ("욕실",)),
+        ("K2", "kcs", "작업 순서와 확인 기준", ("전체",)),
+    )
+    assert refs(bm25.search(ix, "작업 순서 기준", trade="도배"))[:2] == ["K2", "K1"]
+
+
 def test_dense_order_brings_in_chunk_without_shared_words():
     ix = _ix(("K1", "official", "벽지 들뜸 원인", ()), ("K2", "official", "곰팡이 결로 환기", ()))
     assert refs(bm25.search(ix, "벽지 들뜸")) == ["K1"]

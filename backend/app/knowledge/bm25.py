@@ -2,6 +2,7 @@
 
 키워드 부분은 예전 화면 검색(ragSearch7)을 옮겼다. 의미 검색 순위는 부르는 쪽이 DB(pgvector)에서 뽑아 넘긴다.
 무게는 evaluation/rag/hybrid.py로 dev 질문(90 + 300 세트의 dev)에서 골랐다 (2026-11-13).
+공정 · 공통 · 범위 밖 무게는 evaluation/rag/agent_view.py로 골랐다 (2026-11-16).
 """
 
 import math
@@ -9,7 +10,7 @@ import re
 from dataclasses import dataclass, field
 
 CONF = {
-    "version": "rag7-2026.11.11",
+    "version": "rag7-2026.11.16",
     "rrf_k": 60,
     "tier_w": 0.0008,
     "high_w": 0.0004,
@@ -19,13 +20,24 @@ CONF = {
     "dense_w": 0.75,
     "dense_n": 30,
     # 질문 공정과 같은 공정 조각에 더하는 점수 (RRF 1위가 1/61 ≈ 0.016)
-    "trade_w": 0.002,
+    "trade_w": 0.004,
+    # 공정을 알 때 공통 조각에 더하는 점수와 범위 밖 공정 조각에서 빼는 점수
+    "common_w": 0.002,
+    "out_w": 0.002,
 }
 # 공정을 넘겨받지 못하면 질문 낱말로 코드가 고른다 (LLM 없이)
+# '방문'은 방문판매 · 실측 방문 · 사전 방문을 빼고 문으로만 본다
 TRADE_WORDS = {
-    "도배": "도배|벽지|초배|정배|합지|실크|도배풀|풀자국|벽면 시공",
-    "목공": "목공|몰딩|문틀|문선|방문|도어|석고|다루끼|각재|가벽|칸막이|천장틀|걸레받이|단열|웨인스코팅|분리대",
+    "도배": "도배|벽지|초배|정배|합지|실크|도배풀|풀자국|벽면 시공|퍼티",
+    "목공": (
+        "목공|목수|목재|몰딩|문틀|문선|(?<!사전)(?<!실측 )방문(?!판매)|문짝|경첩|도어(?!락|록)|석고|"
+        "다루끼|각재|가벽|칸막이|천장틀|평탄화|단내림|커튼박스|걸레받이|단열|웨인스코팅|분리대"
+    ),
 }
+# 조각의 공정 표시(16가지 낱말)를 네 갈래로 모은다: 도배 · 목공 · 공통 · 범위 밖
+SCOPES = ("도배", "목공")
+COMMON_TAGS = frozenset({"전체", "공통"})
+COMMON, OUT = "공통", "범위밖"
 TIER = {
     "law": 1.0, "gov_notice": 1.0, "gov_guide": 1.0, "gov_qa": 1.0, "kcs": 1.0, "pumsem": 1.0,
     "standard_contract": 1.0, "consumer_agency": 1.0, "official": 1.0, "public_data": 1.0,
@@ -94,6 +106,7 @@ class Item:
     doc: Doc
     tf: dict[str, int]
     length: int
+    scope: tuple[str, ...] = ()
 
 
 @dataclass
@@ -131,6 +144,14 @@ class Result:
     policy: list[str]
 
 
+def scope_of(trades: tuple[str, ...]) -> tuple[str, ...]:
+    """도배 · 목공 표시가 있으면 그 공정들, 없고 전체 · 공통뿐이거나 비었으면 공통, 다른 공정뿐이면 범위 밖"""
+    own = tuple(t for t in SCOPES if t in trades)
+    if own:
+        return own
+    return (COMMON,) if set(trades) <= COMMON_TAGS else (OUT,)
+
+
 def grams(text: str) -> list[str]:
     out: list[str] = []
     for w in _NOT_WORD.sub(" ", (text or "").lower()).split(" "):
@@ -150,13 +171,13 @@ def build(chunks: list[Chunk], docs: dict[str, Doc], version: str = "") -> Index
     for c in chunks:
         d = docs.get(c.doc) or Doc()
         hints = " ".join(c.hints)
-        toks = grams(f"{c.text} {c.sec} {hints} {hints} {d.title}")
+        toks = grams(f"{c.text} {c.sec} {hints} {d.title}")
         tf: dict[str, int] = {}
         for t in toks:
             tf[t] = tf.get(t, 0) + 1
         for t in tf:
             df[t] = df.get(t, 0) + 1
-        items.append(Item(c, d, tf, len(toks)))
+        items.append(Item(c, d, tf, len(toks), scope_of(c.trades)))
         total += len(toks)
     avg = total / max(len(items), 1)
     return Index(
@@ -182,7 +203,7 @@ def _bm25(ix: Index, q: str, trade: str | None = None, n: int = 30, only=None) -
             m = ix.df.get(t, 0)
             idf = math.log(1 + (ix.n - m + 0.5) / (m + 0.5))
             s += (idf * (f * (K1 + 1))) / (f + K1 * (1 - B + (B * x.length) / ix.avg))
-        if trade and trade in x.chunk.trades:
+        if trade and trade in x.scope:
             s *= 1.15
         if s > 0:
             out.append((s, x))
@@ -258,8 +279,13 @@ def search(
         b = CONF["tier_w"] * TIER.get(x.doc.kind, 0.5) + (
             CONF["high_w"] if x.doc.rel == "high" else 0
         )
-        if my_trades and any(t in my_trades for t in x.chunk.trades):
-            b += CONF["trade_w"]
+        if my_trades:
+            if any(t in my_trades for t in x.scope):
+                b += CONF["trade_w"]
+            elif x.scope == (COMMON,):
+                b += CONF["common_w"]
+            elif x.scope == (OUT,):
+                b -= CONF["out_w"]
         return b
 
     ranked = [(s + bonus(x), x) for x, s in fused.items()]
