@@ -1,10 +1,11 @@
 """v2 상담 한 턴을 대화 표에 잇기 (C안, #111): 지난 대화 · 남의 대화 404 · 번호표(rev) 409 · 재개 한 번만(#119)."""
 
 import pytest
+import redis
 
 from app.agent import llm
 from app.v2 import ask
-from tests.conftest import query
+from tests.conftest import REDIS_URL, query
 from tests.helpers import signup
 from tests.test_v2_ask import FakeLLM, call
 
@@ -101,18 +102,43 @@ TOOL_TURN = {"tool_calls": [call("suggest_questions", {"questions": ["벽지 고
 RESULT = {"results": [{"id": "c1", "content": "{}"}]}
 
 
-def test_resume_taken_by_other_request_is_404_before_llm(api, fake, monkeypatch):
+def test_late_resume_cannot_delete_next_tool_turn(api, fake, monkeypatch):
+    """A가 재개해 다음 도구 턴을 같은 키에 저장한 뒤, 그 전에 옛 턴을 읽어 둔 B가 늦게 와도
+    B는 새 턴을 지우지 못하고 LLM 전에 404. A는 새 턴으로 그대로 이어 간다."""
+    second = {"tool_calls": [call("suggest_questions", {"questions": ["벽지 고르기"]}, "c2")]}
+    f = fake(TOOL_TURN, second, {"text": "실크는 닦기 쉬워요."})
+    signup(api)
+    turn = api.post("/v2/ask", json={"message": ASK}).json()["turn"]
+    stale = redis.Redis.from_url(REDIS_URL).get(ask._key(turn))  # B가 읽은 옛 턴
+
+    a = api.post(f"/v2/ask/{turn}", json=RESULT).json()  # A: 다음 도구 턴(c2)을 같은 키에 저장
+    assert not a["done"] and a["turn"] == turn and len(f.seen) == 2
+
+    real_get = ask.redis.get
+
+    async def stale_once(key):
+        monkeypatch.setattr(ask.redis, "get", real_get)
+        return stale
+
+    monkeypatch.setattr(ask.redis, "get", stale_once)
+    late = api.post(f"/v2/ask/{turn}", json=RESULT)  # B: 옛 턴(c1) 결과로 늦게 재개
+    assert late.status_code == 404, late.text
+    assert len(f.seen) == 2  # LLM을 다시 부르지 않았다
+
+    done = api.post(f"/v2/ask/{turn}", json={"results": [{"id": "c2", "content": "{}"}]}).json()
+    assert done["done"] and done["text"] == "실크는 닦기 쉬워요."
+
+
+def test_duplicate_result_ids_are_422(api, fake):
     f = fake(TOOL_TURN, {"text": "실크는 닦기 쉬워요."})
     signup(api)
     turn = api.post("/v2/ask", json={"message": ASK}).json()["turn"]
-
-    async def lost(*keys):  # 같은 턴 재개가 겹쳐 다른 요청이 먼저 턴을 가져갔다
-        return 0
-
-    monkeypatch.setattr(ask.redis, "delete", lost)
-    r = api.post(f"/v2/ask/{turn}", json=RESULT)
-    assert r.status_code == 404, r.text
-    assert len(f.seen) == 1  # 재개 쪽 LLM은 부르지 않았다
+    twice = {"results": [{"id": "c1", "content": "{}"}, {"id": "c1", "content": "{}"}]}
+    assert api.post(f"/v2/ask/{turn}", json=twice).status_code == 422
+    assert len(f.seen) == 1
+    assert api.post(f"/v2/ask/{turn}", json=RESULT).json()[
+        "done"
+    ]  # 턴은 남아 있어 다시 보낼 수 있다
 
 
 def test_wrong_results_keep_turn_for_retry(api, fake):
