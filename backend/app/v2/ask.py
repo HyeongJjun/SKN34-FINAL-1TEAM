@@ -298,6 +298,7 @@ async def start(
     today: date,
     history: list[dict] | None = None,  # 지난 대화 [{role, content}] (ask_chat이 대화 표에서 읽음)
     waiting: str | None = None,  # 고객 답을 기다리던 역할의 의도 라벨
+    chat: dict | None = None,  # 저장할 대화 정보. 턴과 같이 Redis에 두고 ask_chat이 읽는다
 ) -> v2.V2AskOut:
     if settings.app_env != "local":  # 로컬 개발 · 시연에서는 손으로 여러 번 물어봐도 막지 않는다
         await ratelimit.hit(ratelimit.key("v2-ask", user_id), ASK_PER_HOUR, 3600, TOO_MANY)
@@ -316,6 +317,7 @@ async def start(
         "user": user_id,
         "kind": b.kind,
         "today": today.isoformat(),
+        "chat": chat,
         "system": system,
         "messages": [*(history or []), {"role": "user", "content": content}],
         "allowed": [*allowed, b.message],
