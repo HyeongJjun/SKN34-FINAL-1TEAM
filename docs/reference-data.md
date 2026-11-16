@@ -4,7 +4,7 @@
 
 ## 스키마와 적재
 
-- 스키마: [기준 자료 모델](../backend/app/refprice/models.py), [RAG 모델](../backend/app/knowledge/models.py), [0019 마이그레이션](../backend/migrations/versions/0019_reference_data.py), [0022 마이그레이션](../backend/migrations/versions/0022_reference_simplify.py)을 기준으로 6개 테이블이 유지된다.
+- 스키마: [기준 자료 모델](../backend/app/refprice/models.py), [RAG 모델](../backend/app/knowledge/models.py), [0019 마이그레이션](../backend/migrations/versions/0019_reference_data.py), [0023 마이그레이션](../backend/migrations/versions/0023_reference_simplify.py)을 기준으로 6개 테이블이 유지된다.
 - `0019`는 확장과 빈 테이블만 만든다. CSV 적재와 임베딩 생성은 수행하지 않는다.
 - 전처리 CSV 데이터는 담당자가 DB에 수동으로 적재한다. 마이그레이션만 실행하면 데이터는 적재되지 않는다.
 
@@ -62,7 +62,7 @@
 
 ## 구조 단순화와 호환성
 
-- `0022`는 `active`만 `True`, `draft`·`approved`·`retired`·`rejected`는 `False`로 바꾼다. 미정의 상태가 있으면 변경 전에 중단한다. `dataset_key`별 활성 버전은 최대 하나다.
+- `0023`는 `active`만 `True`, `draft`·`approved`·`retired`·`rejected`는 `False`로 바꾼다. 미정의 상태가 있으면 변경 전에 중단한다. `dataset_key`별 활성 버전은 최대 하나다.
 - 버전의 `historical`, `current_rule_usable`, `calculation_usable`, `reference_usable`, 품셈의 `semantic_status`, RAG의 `review_reason`과 `ref_dataset_events`를 제거한다. 그 외 데이터 행과 임베딩은 유지한다.
 - 삭제 전 이력 건수는 마이그레이션의 NOTICE로 출력한다. PostgreSQL 트랜잭션에서 수행하며 예상하지 못한 의존성이 있으면 실패·롤백한다. 실제 적용 전 이력과 제거 메타데이터를 별도로 백업해야 한다.
 - downgrade는 스키마만 복원한다. 비활성은 `draft`, 제거한 불리언은 `False`, 검토 열은 NULL, 이력은 빈 테이블이 되므로 원래 상태·메타데이터·이력은 복구되지 않는다.

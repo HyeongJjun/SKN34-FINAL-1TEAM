@@ -1,15 +1,15 @@
 """기준 자료 활성 여부 단순화와 검토·이력 제거.
 
-Revision ID: 0022_reference_simplify
-Revises: 0021_v2_cases
+Revision ID: 0023_reference_simplify
+Revises: 0022_chat
 """
 
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision = "0022_reference_simplify"
-down_revision = "0021_v2_cases"
+revision = "0023_reference_simplify"
+down_revision = "0022_chat"
 branch_labels = None
 depends_on = None
 
