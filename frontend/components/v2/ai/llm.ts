@@ -2,12 +2,14 @@
 // 서버가 화면 도구(고객 상태 저장 · 단계 카드 · 자료 검색 · 이어 물을 질문)를 부르면 여기서 실행하고
 // 결과를 POST /v2/ask/{turn}로 보낸다. 답은 숫자 검사를 마친 뒤 한 번에 온다.
 import { v2Get, v2Post } from "../api";
+import { ApiError } from "@/lib/backend/client";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AiTool = { name: string; execute: (a: any) => unknown };
 type ToolCall = { id: string; name: string; arguments: Record<string, unknown> };
 export type Cons = { weekendWork: boolean; endBy: string; startAfter: string; avoid: string[] };
 export type AskOut = {
+  chat_id: string | null;
   done: boolean;
   turn: string | null;
   tool_calls: ToolCall[];
@@ -20,6 +22,7 @@ export type AskOut = {
 };
 export type AskRef = { ref: string; source_type: string; title: string; section: string; publisher: string; date: string; text: string };
 export type AskBody = {
+  chat_id?: string;
   kind: "chat" | "quote_explanation" | "schedule";
   message: string;
   profile?: Record<string, unknown>;
@@ -74,10 +77,26 @@ function race<T>(p: Promise<T>, signal?: AbortSignal): Promise<T> {
   });
 }
 
+/** 이어 가는 대화 id (일반 상담만). 서버가 첫 답을 저장할 때 준다. 새로고침하면 새 대화 */
+let chatId: string | null = null;
+
+/** 첫 요청. 대화가 없어졌으면(404) 새 대화로 한 번 다시 묻는다 */
+async function first(body: AskBody, signal?: AbortSignal): Promise<AskOut> {
+  const send = (b: AskBody) => race(v2Post<AskOut>("ask", b), signal);
+  if (body.kind !== "chat" || !chatId) return send(body);
+  try {
+    return await send({ ...body, chat_id: chatId });
+  } catch (e) {
+    if (!(e instanceof ApiError && e.status === 404)) throw e;
+    chatId = null;
+    return send(body);
+  }
+}
+
 /** 한 턴: 서버가 화면 도구를 부르면 실행하고 결과를 보낸다 (서버가 도구 4번까지로 막는다) */
 export async function runAsk(body: AskBody, tools: AiTool[], signal?: AbortSignal): Promise<AskOut> {
   aborted(signal);
-  let out = await race(v2Post<AskOut>("ask", body), signal);
+  let out = await first(body, signal);
   for (let i = 0; i < 6 && !out.done && out.turn; i++) {
     aborted(signal);
     const results = [];
@@ -95,5 +114,6 @@ export async function runAsk(body: AskBody, tools: AiTool[], signal?: AbortSigna
     out = await race(v2Post<AskOut>(`ask/${encodeURIComponent(out.turn)}`, { results }), signal);
   }
   aborted(signal);
+  if (body.kind === "chat" && out.chat_id) chatId = out.chat_id;
   return out;
 }
