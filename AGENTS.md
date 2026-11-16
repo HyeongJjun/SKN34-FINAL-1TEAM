@@ -82,25 +82,25 @@ migrations/              Alembic. 0001(처음 표 12개)부터 하나씩 더한�
 아직 없음: quote · visit · schedule · refprice · jobs · calc
 ```
 
-**에이전트 뼈대** (지금은 빈 파일. 채우는 순서는 이슈로 정한다)
+**AI 상담** (C안: v2 한 턴 루프 + 입구 관문 + 대화 저장, #110)
 
 ```
-chat/                    대화 API(SSE) · 동시 저장 확인(rev) · 상태 복원 · 저장 · 도구 묶음(tools.py)
+v2/ask.py                한 턴: 대화 열기 → 입구 관문 → 오케스트레이터 역할 루프(LLM ↔ 도구) → 출력 검사 → 저장
+v2/ask_tools.py          도구 정의와 역할별 도구. 서버 도구(계산 · 검색 · 공종 에이전트)는 서버가, 화면 도구는 브라우저가 실행
+v2/guard.py              출력 검사: 문장 단위 숫자 · 근거 · 금지 표현, 전화번호 · 동호수 가림
+v2/prompts/              역할별 지시문 <역할>_v<번호>.md
+chat/                    대화 저장: 열기(get_for) · 지난 대화(recent) · 저장(save_turn, 번호표 rev)
 agent/                   에이전트. 기능 service를 import하지 않는다
-  graph.py               한 턴의 실행 순서: 입구 관문 → 담당 에이전트 → 출력 검사
-  schemas.py             대화 상태, 에이전트 입출력 Pydantic 모델
   llm.py                 LLM SDK 호출 한 곳: 팀 LLM · Jev · 임베딩 · 스텁(LLM_LIVE=false)
   gate.py                입구 관문: route → intent → 신뢰도 낮으면 Jev → Jev 실패면 되묻기
-  route.py               코드 라우터: 하던 대화 · 프로젝트 유무
+  route.py               코드 라우터: 기다리던 담당(waiting) · 프로젝트 유무
   intent.py              직접 학습한 의도 분류 모델 추론: 문장 → (라벨, 신뢰도)
-  orchestrator.py        오케스트레이터: 가이드 답변 · 담당 에이전트 호출 · 취합 · 되묻기
-  trade_agent.py         공종 에이전트: 공정별 설정을 불러 조건 묻기 · 주의점 · 브리프
-  trades/                공정별 설정 dobae.py · mokgong.py. 견적 설명 · 공정표도 읽는다
-  extract.py             대화에서 조건 후보 뽑기 (공종 에이전트가 씀)
-  quote_explanation_agent.py   견적 설명 에이전트
-  schedule_agent.py      공정표 에이전트. 일정 MCP는 여기서만 부른다
-  prompts/               <역할>_v<번호>.md
-knowledge/               시방서 · 안내 글 검색과 적재
+  schemas.py             의도 · 에이전트 입출력 Pydantic 모델
+  trade_agent.py         공종 에이전트: 공정별 설정 + 검색으로 조건 · 주의점 · 근거 번호. 고객에게 말하지 않는다
+  trades/                공정별 설정 dobae.py · mokgong.py. 견적 설명 · 공정표 역할도 읽는다
+  graph.py · orchestrator.py · quote_explanation_agent.py · schedule_agent.py · extract.py
+                         C안에서 쓰지 않는 옛 뼈대. 정리는 따로 한다
+knowledge/               지식 검색(BM25 + 임베딩)과 적재
 mcp_server.py            믿집 일정 MCP 서버
 ```
 
@@ -114,8 +114,8 @@ mcp_server.py            믿집 일정 MCP 서버
 - API 안: `CatchAll`(처리 못 한 오류 → 같은 오류 모양) → `BodyLimit`(경로별 본문 한도) → Origin 확인 → `router` → `deps`(세션 · 권한) → `service` → `repository` → PostgreSQL. 오류는 모두 `{"error": {code, message, fields?}}`.
 - 느린 일: service가 같은 트랜잭션에 `jobs` 행을 남기고 commit 뒤 큐에 넣는다 → worker → `agent` · 외부 API → 결과 저장은 해당 기능 service.
 - 화면 알림: 상태를 바꾸는 service가 같은 트랜잭션에 `notify.service.add`로 쓴다(`dedup_key`로 한 번만). 문자 · 메일 같은 바깥 발송만 `jobs` → worker로 보낸다.
-- 대화: 브라우저 → `/api/*`(SSE) → `chat.router` → `chat.service`(번호표 rev 확인, 같은 대화 동시 저장은 409) → 입구 관문 → 담당 에이전트 또는 오케스트레이터 → 도구 · 믿집 MCP → 출력 검사 → 저장은 `chat.service`와 해당 기능 service → 문장 · 카드 전송.
-- 일정 연기: 업체 [연기] → `schedule.service`(상태 변경) → 공정표 에이전트 → 일정 MCP(영향 계산 · 승인 대기 건 저장) → 고객 [승인] → `schedule.service`(공정표 반영) → `jobs` → worker 알림.
+- 대화: 브라우저 → `/api/v2/ask` → `v2.router` → `v2.ask` → `chat.service.get_for`(남의 대화 404, rev · waiting · 지난 대화) → 입구 관문(`gate.classify`) → 오케스트레이터 역할 루프(LLM ↔ 도구: 계산 엔진 · `knowledge.service` · 공종 에이전트 · 일정 MCP, 화면 도구는 브라우저가 실행) → 출력 검사(`v2.guard`) → `chat.service.save_turn`(rev가 다르면 409) → 답 · 근거 · 추천 질문.
+- 일정 연기: 업체 [연기] → `schedule.service`(상태 변경) → 공정표 역할 → 일정 MCP(영향 계산 · 승인 대기 건 저장) → 고객 [승인] → `schedule.service`(공정표 반영) → `jobs` → worker 알림.
 - 예 (견적 받기, 기능이 생긴 뒤):
 
   ```
@@ -131,7 +131,7 @@ mcp_server.py            믿집 일정 MCP 서버
 
 ```
 조립   main.py | worker.py | mcp_server.py
-흐름   chat → schedule → visit → quote
+흐름   v2 → chat → schedule → visit → quote
 대상   account | project | vendor
 기반   files | refprice | jobs | knowledge | notify  → auth
 도구   agent → calc
@@ -141,7 +141,7 @@ mcp_server.py            믿집 일정 MCP 서버
 - 다른 기능은 그 기능 service의 공개 함수로만 부른다. 다른 기능 models는 읽기 조인에만 쓰고, router끼리 import하지 않는다.
 - 예외는 하나: `/me`가 업체 승인 상태를 읽으려고 `auth.service → vendor.repository`를 함수 안에서 늦게 import한다.
 - `calc`는 DB · HTTP · 시계를 모르는 순수 함수다. 오늘 날짜는 인자로 받는다.
-- `agent`는 기능 service를 import하지 않는다. 기능 데이터는 `chat/tools.py`의 도구로 넘겨받고, 믿집 MCP는 MCP 클라이언트로만 부른다.
+- `agent`는 기능 service를 import하지 않는다. 기능 데이터는 `v2/ask_tools.py`의 도구로 넘겨받고, 믿집 MCP는 MCP 클라이언트로만 부른다.
 
 ## 3. 돈 · 날짜 · 상태
 
