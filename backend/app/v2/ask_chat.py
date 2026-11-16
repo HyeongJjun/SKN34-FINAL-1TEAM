@@ -49,13 +49,26 @@ async def resume(user_id: uuid.UUID, turn_id: str, b: v2.V2AskResumeIn) -> v2.V2
     return await _finish(user_id, out, meta)
 
 
+def asked_back(text: str, dropped: list[str]) -> tuple[str, bool]:
+    """(표시를 뗀 답, 되물었는지). eval도 같은 판정을 쓴다.
+
+    답이 표시로 끝날 때만 되물음이다(따로 된 줄이든 질문 끝에 붙었든). 중간 · 앞 도구 라운드의 표시는 아니다.
+    출력 검사가 문장을 뺐으면 질문이 남았는지 알 수 없어 되물음으로 보지 않는다. 표시는 어디 있든 뗀다.
+    """
+    body = text.rstrip()
+    return body.replace(ASKED, "").strip(), body.endswith(ASKED) and not dropped
+
+
 async def _finish(user_id: uuid.UUID, out: v2.V2AskOut, meta: dict) -> v2.V2AskOut:
     chat_id = uuid.UUID(meta["id"]) if meta["id"] else None
     if not out.done or out.failed or not meta["keep"]:
         return out.model_copy(update={"chat_id": chat_id})
     intent = Intent.model_validate(out.intent.model_dump()) if out.intent else None
-    asked = ASKED in out.text
-    text = out.text.replace(ASKED, "").strip()
+    text, asked = asked_back(out.text, out.dropped)
+    if not text:  # 표시만 남은 답(출력 검사가 질문을 뺀 경우 포함)은 실패로 보고 저장하지 않는다
+        return out.model_copy(
+            update={"chat_id": chat_id, "text": ask.FAILED["chat"], "failed": True}
+        )
     # 되물은 역할: 관문 라벨, 없으면 가이드(orchestrator). 되묻지 않았으면 비운다
     waiting = (intent.label if intent else "orchestrator") if asked else None
     async with SessionLocal() as s:
