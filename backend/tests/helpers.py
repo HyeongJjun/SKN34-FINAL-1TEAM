@@ -87,3 +87,41 @@ def no_surprises(results: list) -> list:
         if isinstance(r, BaseException) and not isinstance(r, AppError):
             raise r
     return results
+
+
+def knowledge_version(key: str, status: bool = True):
+    """지식 자료 버전 하나 (합성). 임베딩 없이도 검색 시험이 되게 상태를 바로 넣는다"""
+    import uuid
+
+    from conftest import query
+
+    ident = uuid.uuid4()
+    query(
+        """insert into ref_dataset_versions
+        (id,dataset_key,kind,version,source,processed_path,processed_sha256,build_profile,
+         embedding_model,embedding_dimensions,provenance,status)
+        values ($1,$2,'knowledge',1,'synthetic.pdf','synthetic.csv',$3,'test-v1',
+                'test-model',3,'{}'::jsonb,$4)""",
+        ident, key, uuid.uuid4().hex * 2, status,
+    )  # fmt: skip
+    return ident
+
+
+def knowledge_chunk(
+    dataset, ref: str, content: str, kind: str = "official", embedding: list[float] | None = None
+) -> None:
+    """ref 열이 있는 지식 조각 (합성). embedding은 3차원 (버전의 test-model · 3과 맞춘다)"""
+    import json
+
+    from conftest import query
+
+    prov = {"id": ref, "ref": ref, "doc": f"d{ref}", "source": "안내", "source_org": "믿집",
+            "source_url": "", "source_type": kind, "trades": "도배", "hints": "[]"}  # fmt: skip
+    query(
+        """insert into rag_chunks
+        (dataset_id,dataset_kind,record_key,section,content,page_numbers,content_hash,provenance,
+         embedding)
+        values ($1,'knowledge',$2,'',$3,'{1}',$4,$5::jsonb,$6::vector)""",
+        dataset, ref, content, "a" * 64, json.dumps(prov, ensure_ascii=False),
+        str(embedding) if embedding else None,
+    )  # fmt: skip
