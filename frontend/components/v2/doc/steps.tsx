@@ -6,7 +6,7 @@ import { errorText } from "@/lib/backend/client";
 import { bot, F, feedEpoch, me, openOverlay, quick, stillHere } from "../engine";
 import { setStep } from "../flow";
 import { moveLabel } from "../dates";
-import { S, V3 } from "../store";
+import { S, touch, V3 } from "../store";
 import { cachedQuote, type Plan, planBody, type Quote, quoteBody } from "./api";
 import { ensureQuote, GanttEl, loadPlan, PlanDocBody } from "./PlanDoc";
 import { QuoteCheck } from "./QuoteCheck";
@@ -148,17 +148,35 @@ export async function bandWhy() {
 }
 
 /** 받은 견적 맞춰 보기를 다른 곳(체크리스트 · 계산기)에서 열 때. 견적이 없으면 받아 온다 */
+// 평수를 모르면 같은 평수 시장 기준과 견줄 수 없어서 먼저 받는다. 바꾸면 견적을 다시 받는다
+const CHECK_PY = [24, 32, 34, 40];
 function QuoteCheckCard({ q: given }: { q?: Quote }) {
-  const [q, setQ] = useState<Quote | null>(given ?? cachedQuote());
+  const [py, setPy] = useState<number | null>(S.info.pyeong);
+  const [q, setQ] = useState<Quote | null>(py ? (given ?? cachedQuote()) : null);
   const [err, setErr] = useState("");
   useEffect(() => {
-    if (!q) loadQuote().then(setQ, (e) => setErr(errorText(e)));
-  }, []);
-  if (!q) return <p className="muted">{err || "견적서를 계산하는 중이에요…"}</p>;
-  if (!q.precise.length) return <p className="muted">도배 · 목공을 고르면 받은 견적을 맞춰 볼 수 있어요.</p>;
+    if (py && !q) loadQuote().then(setQ, (e) => setErr(errorText(e)));
+  }, [py, q]);
+  const pick = (p: number | null) => {
+    if (p == null || p < 5 || p > 150) return;
+    S.info.pyeong = p;
+    touch();
+    setErr("");
+    setQ(null);
+    setPy(p);
+  };
   return (
     <div className="card">
-      <QuoteCheck q={q} />
+      <div className="row qc-py" role="group" aria-label="평수">
+        <b>몇 평이에요?</b>
+        <div className="chips">
+          {CHECK_PY.map((p) => (
+            <button key={p} type="button" className="chip" aria-pressed={py === p} onClick={() => pick(p)}>{`${p}평`}</button>
+          ))}
+        </div>
+        <input className="inp cnt" type="number" min="5" max="150" inputMode="decimal" placeholder="직접" aria-label="평형 직접 넣기" defaultValue={py && !CHECK_PY.includes(py) ? py : ""} onBlur={(e) => pick(e.target.value ? Number(e.target.value) : null)} />
+      </div>
+      {!py ? <p className="muted">평수를 고르면 받은 금액을 넣을 수 있어요.</p> : !q ? <p className="muted">{err || "시장 기준을 계산하는 중이에요…"}</p> : !q.precise.length ? <p className="muted">도배를 고르면 받은 견적을 맞춰 볼 수 있어요.</p> : <QuoteCheck key={py} q={q} />}
     </div>
   );
 }

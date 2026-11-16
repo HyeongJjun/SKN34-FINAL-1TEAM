@@ -11,11 +11,11 @@ import { type Goal, type Level, type QuickAns, S, touch, useV2 } from "../store"
 import s from "./budget.module.css";
 import { freshAns, QuickCard } from "./QuickCard";
 
+// '업체를 찾고 있어요'는 지금 예산 보기와 같은 흐름이라 뺐다 (업체 연결이 생기면 다시 넣는다)
 const GOALS: [Goal, string, string, Level][] = [
-  ["budget", "예산만 빨리 알고 싶어요", "집 · 범위 · 바꿀 것 · 도배 유형만 물어요", "looking"],
-  ["learn", "인테리어가 처음이라 순서부터요", "공사 순서와 낱말을 짧게 보고 금액으로 가요", "new"],
-  ["check", "받은 견적이 맞는지 보고 싶어요", "받은 금액과 포함 범위를 넣어 맞춰 봐요", "experienced"],
-  ["vendor", "업체를 찾고 있어요", "기준 금액을 보고 업체 견적으로 이어 가요", "looking"],
+  ["budget", "도배 비용부터 알고 싶어요", "평수 · 범위 · 도배 유형만 물어요", "looking"],
+  ["learn", "처음이라 순서부터 알고 싶어요", "공사 순서와 낱말을 짧게 보고 금액으로 가요", "new"],
+  ["check", "받은 견적이 맞는지 보고 싶어요", "받은 금액만 넣으면 시장 기준과 맞춰 봐요", "experienced"],
 ];
 
 function GoalCard() {
@@ -59,7 +59,7 @@ export async function budgetStep() {
   setStep("info");
   const lead = S.goal === "vendor" ? "업체 견적을 받기 전에 우리 집 기준 금액부터 볼게요. " : "";
   await bot(
-    `${lead}네 가지만 물어볼게요. 모르는 건 비워 두면 흔한 값으로 계산하고 무엇으로 봤는지 적어 드려요.`,
+    `${lead}세 가지만 물어볼게요. 모르는 건 비워 두면 흔한 값으로 계산해요.`,
     <QuickCard init={S.quick ?? freshAns()} onQuote={toQuote} onAsk={(q) => F.askClaude(q, { label: q })} />,
   );
 }

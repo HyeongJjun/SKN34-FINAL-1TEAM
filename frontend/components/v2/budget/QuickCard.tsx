@@ -1,11 +1,12 @@
 "use client";
-// 빠른 예산 카드: 집(카드 또는 평형) · 어디 · 바꿀 것 · 도배 유형만 묻고 시장 범위를 보여 준다.
+// 빠른 예산 카드: 평수 · 어디 · 도배 유형만 묻고 시장 범위를 보여 준다. 지금은 도배만 연다(data.ts SHOWN_CATS).
 // 금액 · 기본값 · '더 정확히' 순서는 모두 /v2/quick-budget(계산 엔진) 응답 그대로다. 화면은 계산하지 않는다.
 import { useEffect, useRef, useState } from "react";
 import type { components } from "@/lib/backend/schema";
 import { errorText } from "@/lib/backend/client";
 import { v2Post } from "../api";
-import { loadPlans, type PlanBrief, plansState, pp9PyBand } from "../intake/plans";
+import { DOBAE_ONLY } from "../data";
+import { loadPlans, type PlanBrief, plansState } from "../intake/plans";
 import type { QuickAns } from "../store";
 import s from "./budget.module.css";
 
@@ -23,15 +24,14 @@ const PARTS: [string, string, string[]][] = [
   ["kitchen", "주방", ["kitchen"]],
   ["entry", "현관 · 복도", ["entry", "hall"]],
 ];
-const BANDS = ["20", "25", "30", "34", "40"];
+/** 많이 묻는 평형. 누르면 칸에 넣는다 */
+const PY = [24, 32, 34, 40];
+/** 목공 쪽 '더 정확히' 질문 (도배만 열 때는 숨긴다) */
+const MOK_KEYS = new Set(["molding", "base", "door"]);
 
 const man = (n: number) => `${(n / 10000).toLocaleString("ko-KR")}만`;
 export const rangeText = (lo: number, hi: number) => `약 ${man(lo)}~${man(hi)} 원`;
 
-/** 평형대마다 실제 평면 하나 (목록 순서의 첫 집) */
-function samples(list: PlanBrief[]) {
-  return BANDS.map((b) => list.find((p) => pp9PyBand(p.supply_py) === b)).filter((p): p is PlanBrief => !!p);
-}
 /** 평형만 넣고 '일부만'을 고르면 가장 가까운 평면으로 잰다 */
 function nearest(list: PlanBrief[], py: number) {
   return [...list].sort((a, b) => Math.abs(a.supply_py - py) - Math.abs(b.supply_py - py))[0] ?? null;
@@ -48,14 +48,15 @@ function body(a: QuickAns, list: PlanBrief[]) {
   };
 }
 const ready = (a: QuickAns) => (a.plan != null || (a.pyeong != null && a.pyeong >= 5)) && (a.dobae || a.molding || a.base || (a.door != null && a.door !== "none"));
+/** 도배만 열 때는 예전에 고른 목공 답을 지우고, 집 카드 대신 평형으로 받는다 */
+const onlyDobae = (a: QuickAns): QuickAns => (DOBAE_ONLY ? { ...a, plan: null, dobae: true, molding: false, base: false, door: null } : a);
 
 export function QuickCard({ init, onQuote, onAsk }: { init: QuickAns; onQuote: (a: QuickAns, planId: string | null) => void; onAsk: (q: string) => void }) {
-  const [a, setA] = useState<QuickAns>(init);
+  const [a, setA] = useState<QuickAns>(() => onlyDobae(init));
   const [list, setList] = useState<PlanBrief[]>(plansState.list ?? []);
   const [out, setOut] = useState<QuickOut | null>(null);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
-  const [typing, setTyping] = useState(init.plan == null && init.pyeong != null);
   const asked = useRef(false);
   const seq = useRef(0);
   useEffect(() => {
@@ -84,7 +85,6 @@ export function QuickCard({ init, onQuote, onAsk }: { init: QuickAns; onQuote: (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [a]);
 
-  const cards = samples(list);
   const auto = a.plan == null && a.kinds && a.pyeong ? nearest(list, a.basis === "exclusive" ? a.pyeong * 1.2 : a.pyeong) : null;
   const toggleKind = (ks: string[]) => {
     const cur = new Set(a.kinds ?? []);
@@ -97,34 +97,19 @@ export function QuickCard({ init, onQuote, onAsk }: { init: QuickAns; onQuote: (
   return (
     <div className={`card ${s.quick}`}>
       <fieldset className={s.q}>
-        <legend>1. 어떤 집이에요?</legend>
-        <p className="muted">비슷한 집을 고르면 실제 평면으로 재요. 평형만 넣어도 돼요.</p>
-        <div className={s.homes}>
-          {cards.map((p) => (
-            <button key={p.id} type="button" className={s.home} aria-pressed={a.plan === p.id} onClick={() => { setTyping(false); set({ plan: a.plan === p.id ? null : p.id, pyeong: null }); }}>
-              <b>{p.supply_py}평</b>
-              <span>{`방 ${p.rooms} · 욕실 ${p.baths}`}</span>
-              <small>{`예: ${p.name} ${p.type}`}</small>
-            </button>
-          ))}
-          <button type="button" className={s.home} aria-pressed={typing} onClick={() => { setTyping(true); set({ plan: null }); }}>
-            <b>직접 넣기</b>
-            <span>평형을 알아요</span>
-          </button>
-        </div>
-        {typing ? (
-          <div className="row">
-            <label className={s.py}>
-              <input type="number" inputMode="decimal" min={5} max={150} value={a.pyeong ?? ""} placeholder="32" aria-label="평형" onChange={(e) => set({ pyeong: e.target.value ? Number(e.target.value) : null })} />
-              평
-            </label>
-            <div className="seg" role="group" aria-label="면적 기준">
-              {(["supply", "exclusive"] as const).map((b) => (
-                <button key={b} type="button" aria-pressed={a.basis === b} onClick={() => set({ basis: b })}>{b === "supply" ? "공급(분양 평형)" : "전용"}</button>
-              ))}
-            </div>
+        <legend>1. 몇 평이에요?</legend>
+        <div className="row">
+          <label className={s.py}>
+            <input type="number" inputMode="decimal" min={5} max={150} value={a.pyeong ?? ""} placeholder="32" aria-label="평형" onChange={(e) => set({ plan: null, pyeong: e.target.value ? Number(e.target.value) : null })} />
+            평
+          </label>
+          <div className="chips">
+            {PY.map((p) => (
+              <button key={p} type="button" className="chip" aria-pressed={a.pyeong === p} onClick={() => set({ plan: null, pyeong: p, basis: "supply" })}>{`${p}평`}</button>
+            ))}
           </div>
-        ) : null}
+        </div>
+        <p className="muted">분양 평형(공급면적) 기준이에요.</p>
       </fieldset>
 
       <fieldset className={s.q}>
@@ -145,37 +130,39 @@ export function QuickCard({ init, onQuote, onAsk }: { init: QuickAns; onQuote: (
         ) : null}
       </fieldset>
 
-      <fieldset className={s.q}>
-        <legend>3. 무엇을 바꿔요?</legend>
-        <div className="chips">
-          <button type="button" className="chip" aria-pressed={a.dobae} onClick={() => set({ dobae: !a.dobae })}>도배</button>
-          <button type="button" className="chip" aria-pressed={a.molding} onClick={() => set({ molding: !a.molding })}>천장 몰딩</button>
-          <button type="button" className="chip" aria-pressed={a.base} onClick={() => set({ base: !a.base })}>걸레받이</button>
-          <button type="button" className="chip" aria-pressed={door} onClick={() => set({ door: door ? null : "frame" })}>방문</button>
-        </div>
-        {door ? (
-          <div className="seg" role="group" aria-label="방문 바꾸는 범위">
-            <button type="button" aria-pressed={a.door === "leaf"} onClick={() => set({ door: "leaf" })}>문짝만</button>
-            <button type="button" aria-pressed={a.door === "frame"} onClick={() => set({ door: "frame" })}>문틀까지</button>
+      {DOBAE_ONLY ? null : (
+        <fieldset className={s.q}>
+          <legend>무엇을 바꿔요?</legend>
+          <div className="chips">
+            <button type="button" className="chip" aria-pressed={a.dobae} onClick={() => set({ dobae: !a.dobae })}>도배</button>
+            <button type="button" className="chip" aria-pressed={a.molding} onClick={() => set({ molding: !a.molding })}>천장 몰딩</button>
+            <button type="button" className="chip" aria-pressed={a.base} onClick={() => set({ base: !a.base })}>걸레받이</button>
+            <button type="button" className="chip" aria-pressed={door} onClick={() => set({ door: door ? null : "frame" })}>방문</button>
           </div>
-        ) : null}
-      </fieldset>
+          {door ? (
+            <div className="seg" role="group" aria-label="방문 바꾸는 범위">
+              <button type="button" aria-pressed={a.door === "leaf"} onClick={() => set({ door: "leaf" })}>문짝만</button>
+              <button type="button" aria-pressed={a.door === "frame"} onClick={() => set({ door: "frame" })}>문틀까지</button>
+            </div>
+          ) : null}
+        </fieldset>
+      )}
 
       {a.dobae ? (
         <fieldset className={s.q}>
-          <legend>4. 도배는 어떤 유형이에요?</legend>
+          <legend>3. 도배는 어떤 유형이에요?</legend>
           <div className={s.grades}>
             <button type="button" className={s.grade} aria-pressed={a.grade === "basic"} onClick={() => set({ grade: "basic" })}>
               <b>기본형 · 실크</b>
-              <span>비닐 코팅이라 물걸레로 닦여요. 아이 있는 집 · 오래 살 집이 많이 골라요.</span>
+              <span>물걸레로 닦여요</span>
             </button>
             <button type="button" className={s.grade} aria-pressed={a.grade === "economy"} onClick={() => set({ grade: "economy" })}>
               <b>저가형 · 합지</b>
-              <span>종이 벽지라 값이 낮아요. 세 놓을 집 · 짧게 살 집이 많이 골라요.</span>
+              <span>값이 낮아요</span>
             </button>
             <button type="button" className={s.grade} aria-pressed={a.grade == null} onClick={() => set({ grade: null })}>
               <b>잘 모르겠어요</b>
-              <span>둘 다 보여 드릴게요. 제품 · 색은 실측 때 샘플북으로 골라요.</span>
+              <span>둘 다 보여 드려요</span>
             </button>
           </div>
         </fieldset>
@@ -200,6 +187,7 @@ function Result({ out, a, busy, set, onQuote, onAsk }: { out: QuickOut; a: Quick
     else if (key === "grade") set({ grade: v as QuickAns["grade"] });
     else set({ [key]: v === "true" } as Partial<QuickAns>);
   };
+  const asks = DOBAE_ONLY ? out.asks.filter((q) => !MOK_KEYS.has(q.key)) : out.asks;
   return (
     <section className={s.result} aria-live="polite" aria-busy={busy}>
       <p className={s.big}>{rangeText(out.lo, out.hi)}</p>
@@ -210,25 +198,29 @@ function Result({ out, a, busy, set, onQuote, onAsk }: { out: QuickOut; a: Quick
           <b>{rangeText(out.alt.lo, out.alt.hi)}</b>
         </p>
       ) : null}
-      <ul className={s.trades}>
-        {out.trades.map((t) => (
-          <li key={t.trade}>
-            <span>{TRADE_KO[t.trade]}</span>
-            <span className="num">{rangeText(t.lo, t.hi)}</span>
-            <small>{`실견적 ${t.n}건 근거`}</small>
-          </li>
-        ))}
-      </ul>
+      {out.trades.length > 1 ? (
+        <ul className={s.trades}>
+          {out.trades.map((t) => (
+            <li key={t.trade}>
+              <span>{TRADE_KO[t.trade]}</span>
+              <span className="num">{rangeText(t.lo, t.hi)}</span>
+              <small>{`실견적 ${t.n}건 근거`}</small>
+            </li>
+          ))}
+        </ul>
+      ) : out.trades[0] ? (
+        <p className="muted">{`도배 실견적 ${out.trades[0].n}건으로 잡은 범위예요.`}</p>
+      ) : null}
       <details className={s.how}>
         <summary>이렇게 봤어요</summary>
         <ul>
           {out.assumed.map((x) => <li key={x}>{x}</li>)}
         </ul>
       </details>
-      {out.asks.length ? (
+      {asks.length ? (
         <div className={s.asks}>
           <b>더 정확히 하려면</b>
-          {out.asks.map((q) => (
+          {asks.map((q) => (
             <div key={q.key} className={s.ask}>
               <span>{q.q}</span>
               <div className="chips">

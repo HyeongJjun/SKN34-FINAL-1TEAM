@@ -64,7 +64,7 @@ export const STYLES: Style[] = [
 
 /* 공정: 2026-11-09 실제 견적서 공종 구분으로 검증(문 → 목공 · 중문 · 창호 · 필름 · 마감, 설비 → 욕실) */
 export type Cat = { id: string; ko: string; what: string };
-export const CATS: Cat[] = [
+export const ALL_CATS: Cat[] = [
   { id: "wallpaper", ko: "도배", what: "벽 · 천장 벽지" },
   { id: "floor", ko: "바닥재", what: "마루 · 장판 · 데코타일" },
   { id: "tile", ko: "타일", what: "욕실 · 주방 · 현관 타일" },
@@ -78,7 +78,11 @@ export const CATS: Cat[] = [
   { id: "window", ko: "창호", what: "샷시 · 유리 · 현관문" },
   { id: "finish", ko: "마감", what: "도어록" },
 ];
-export const CAT: Record<string, Cat> = Object.fromEntries(CATS.map((c) => [c.id, c]));
+/** 지금 화면에 보이는 공정. 도배부터 열고, 다른 공정은 여기에 id를 더하면 다시 보인다 */
+export const SHOWN_CATS = ["wallpaper"];
+export const CATS: Cat[] = ALL_CATS.filter((c) => SHOWN_CATS.includes(c.id));
+export const DOBAE_ONLY = SHOWN_CATS.length === 1 && SHOWN_CATS[0] === "wallpaper";
+export const CAT: Record<string, Cat> = Object.fromEntries(ALL_CATS.map((c) => [c.id, c]));
 export const TIERS: Record<string, string> = { economy: "베이직", basic: "스탠다드", premium: "프리미엄" };
 export const TIER_ORDER = ["economy", "basic", "premium"] as const;
 export const TIER_NOTE: Record<string, string> = { economy: "합지 벽지 · 장판", basic: "실크 벽지 · 강마루", premium: "고급 실크 · 원목마루" };

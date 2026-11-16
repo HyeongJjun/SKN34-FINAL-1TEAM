@@ -13,7 +13,7 @@ export async function checkStep(which?: "before" | "contract" | "after") {
 }
 /** 받은 견적 맞춰 보기 (견적서에서 옮김): 다른 곳에서 받은 도배 · 목공 견적을 시장 기준과 견준다 */
 export async function compareStep() {
-  await bot("다른 곳에서 받은 도배 · 목공 견적 금액과 포함 범위를 넣어 보세요. 같은 범위의 시장 기준과 견줘 볼게요.", F.quoteCheckCard?.());
+  await bot("받은 도배 견적 금액을 넣어 보세요. 같은 평수 · 범위의 시장 기준과 견줘 볼게요.", F.quoteCheckCard?.());
 }
 
 register({ calcStep, checkStep, compareStep });
