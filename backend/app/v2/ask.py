@@ -25,7 +25,7 @@ from app.v2.ask_tools import BY_KIND, SERVER_TOOLS, tools_for
 
 _DIR = Path(__file__).with_name("prompts")
 PROMPT_VERSION = {
-    "chat": "chat_v1",
+    "chat": "chat_v2",
     "quote_explanation": "quote_explanation_v1",
     "schedule": "schedule_v1",
 }
