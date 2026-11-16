@@ -4305,6 +4305,8 @@ export interface components {
         };
         /** V2AskIn */
         V2AskIn: {
+            /** Chat Id */
+            chat_id?: string | null;
             /**
              * Kind
              * @default chat
@@ -4395,6 +4397,8 @@ export interface components {
         };
         /** V2AskOut */
         V2AskOut: {
+            /** Chat Id */
+            chat_id?: string | null;
             /** Done */
             done: boolean;
             /** Turn */

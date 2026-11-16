@@ -3,6 +3,7 @@
 스키마 이름은 모두 V2 접두어(팀 스키마 이름과 겹치면 OpenAPI가 덮어쓴다).
 """
 
+import uuid
 from datetime import date
 from decimal import Decimal
 from typing import Annotated, Literal
@@ -600,6 +601,7 @@ class V2AskRef(BaseModel):
 
 
 class V2AskIn(BaseModel):
+    chat_id: uuid.UUID | None = None  # 이어 갈 대화. 없으면 서버가 새로 만든다
     kind: AskKind = "chat"
     message: str = Field(min_length=1, max_length=1_000)
     profile: V2AskProfile = V2AskProfile()
@@ -633,6 +635,7 @@ class V2IntentOut(BaseModel):
 
 
 class V2AskOut(BaseModel):
+    chat_id: uuid.UUID | None = None  # 다음 질문에 같이 보낼 대화 id
     done: bool
     turn: str | None = None  # 화면 도구를 실행하고 /v2/ask/{turn}로 결과를 보낸다
     tool_calls: list[V2ToolCallOut] = []
