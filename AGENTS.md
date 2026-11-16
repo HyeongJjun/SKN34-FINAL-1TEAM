@@ -84,7 +84,7 @@ migrations/              Alembic. 0001(처음 표 12개)부터 하나씩 더한�
 **에이전트 뼈대** (지금은 빈 파일. 채우는 순서는 이슈로 정한다)
 
 ```
-chat/                    대화 API(SSE) · 대화 잠금 · 상태 복원 · 저장 · 도구 묶음(tools.py)
+chat/                    대화 API(SSE) · 동시 저장 확인(rev) · 상태 복원 · 저장 · 도구 묶음(tools.py)
 agent/                   에이전트. 기능 service를 import하지 않는다
   graph.py               한 턴의 실행 순서: 입구 관문 → 담당 에이전트 → 출력 검사
   schemas.py             대화 상태, 에이전트 입출력 Pydantic 모델
@@ -113,7 +113,7 @@ mcp_server.py            믿집 일정 MCP 서버
 - API 안: `CatchAll`(처리 못 한 오류 → 같은 오류 모양) → `BodyLimit`(경로별 본문 한도) → Origin 확인 → `router` → `deps`(세션 · 권한) → `service` → `repository` → PostgreSQL. 오류는 모두 `{"error": {code, message, fields?}}`.
 - 느린 일: service가 같은 트랜잭션에 `jobs` 행을 남기고 commit 뒤 큐에 넣는다 → worker → `agent` · 외부 API → 결과 저장은 해당 기능 service.
 - 화면 알림: 상태를 바꾸는 service가 같은 트랜잭션에 `notify.service.add`로 쓴다(`dedup_key`로 한 번만). 문자 · 메일 같은 바깥 발송만 `jobs` → worker로 보낸다.
-- 대화: 브라우저 → `/api/*`(SSE) → `chat.router` → `chat.service`(대화 잠금, 같은 대화 동시 요청은 409) → 입구 관문 → 담당 에이전트 또는 오케스트레이터 → 도구 · 믿집 MCP → 출력 검사 → 저장은 `chat.service`와 해당 기능 service → 문장 · 카드 전송.
+- 대화: 브라우저 → `/api/*`(SSE) → `chat.router` → `chat.service`(번호표 rev 확인, 같은 대화 동시 저장은 409) → 입구 관문 → 담당 에이전트 또는 오케스트레이터 → 도구 · 믿집 MCP → 출력 검사 → 저장은 `chat.service`와 해당 기능 service → 문장 · 카드 전송.
 - 일정 연기: 업체 [연기] → `schedule.service`(상태 변경) → 공정표 에이전트 → 일정 MCP(영향 계산 · 승인 대기 건 저장) → 고객 [승인] → `schedule.service`(공정표 반영) → `jobs` → worker 알림.
 - 예 (견적 받기, 기능이 생긴 뒤):
 
@@ -169,7 +169,7 @@ mcp_server.py            믿집 일정 MCP 서버
 - '오케스트레이터' 의도는 오케스트레이터가, 나머지는 담당 에이전트가 바로 받는다. 화면 버튼과 worker의 일은 입구 관문 없이 해당 에이전트를 부른다.
 - LLM SDK 호출은 `app/agent/llm.py` 한 곳에서만 한다. 공급자는 팀이 정한 하나만 쓴다. 예외는 하나: Jev는 입구 분류에만 쓰고 답변 글을 쓰지 않는다. Jev로 보내는 문장의 전화번호 · 동호수는 가린다.
 - 대화 LLM은 API에서 SSE로 돌리고, 견적 도착 뒤 설명은 worker가 맡는다. 대화 상태는 턴 시작에 짧은 DB 세션으로 복원하고, LLM을 기다리는 동안 세션을 쥐지 않는다. 저장은 새 세션으로 하고 commit 뒤에 완료 신호를 보낸다.
-- 대화 잠금은 조건부 UPDATE와 만료 시각으로 하고, DB 락을 쥔 채 LLM을 기다리지 않는다.
+- 같은 대화의 동시 요청은 번호표(`rev`)로 막는다. 열 때 본 `rev`가 저장할 때 그대로일 때만 조건부 UPDATE로 1 올리고, 아니면 아무것도 쓰지 않고 409다. 만료 시각으로 잠그지 않는다(한 질문이 요청 여러 번에 걸치고 화면이 중간에 버릴 수 있어서). DB 락을 쥔 채 LLM을 기다리지 않는다.
 - 프로젝트 정보처럼 항상 필요한 입력은 코드가 먼저 읽어 에이전트에 넘긴다.
 - 호출 상한: 에이전트별 도구 4회, 턴당 하위 호출 3회, 사용자별 일일 토큰 제한.
 - 에이전트는 DB에 쓰지 않고 확정 · 저장 권한이 없다. 예외는 하나: 일정 MCP의 `request_schedule_change`는 공정표를 바꾸지 않는 승인 대기 건만 저장한다. 슬롯과 일정 변경은 고객이 누른 요청으로 반영한다. 출력은 Pydantic 스키마로 검사하고, 숫자는 계산 엔진 결과와 맞지 않으면 버린다. 대화는 문장 단위로 숫자를 검사한 뒤 보낸다.
