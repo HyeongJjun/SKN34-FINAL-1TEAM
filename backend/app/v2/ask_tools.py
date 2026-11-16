@@ -1,7 +1,8 @@
 """v2 AI 도구 정의. 서버가 정하고 브라우저는 고르지 못한다.
 
-- 서버 도구: 서버가 바로 실행한다 (계산 엔진: price_reference · set_schedule_constraints, 지식 검색: search_knowledge,
-  이어 물을 질문 후보: suggest_questions — 서버가 답할 수 있는지 걸러 응답의 suggest로 보낸다).
+- 서버 도구: 서버가 바로 실행한다 (계산 엔진: price_reference · set_schedule_constraints, 지식 검색: search_knowledge).
+- 이어 물을 질문은 LLM 도구로 받지 않고 서버가 질문 은행에서 고른다. 도구로 받으면 답 글 없이 도구만 부르는
+  호출이 한 번 더 생겨 답이 3초쯤 늦었다 (2026-11-16 측정 8.7초 → 6.9초).
 - 화면 도구: 브라우저가 실행하고 결과만 돌려준다 (고객 상태 저장 · 단계 카드).
 """
 
@@ -121,22 +122,11 @@ DEFS: dict[str, dict] = {
             "required": ["query"],
         },
     },
-    "suggest_questions": {
-        "description": "답 끝에 고객이 이어서 물어보면 좋을 짧은 질문 2~3개(동사+대상, 20자 안쪽)를 버튼으로 "
-        "보여 준다. 매 답마다 한 번 쓴다.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "questions": {"type": "array", "items": {"type": "string"}, "maxItems": 3}
-            },
-            "required": ["questions"],
-        },
-    },
 }
 
 # 계산 엔진 결과: 공사 기간 숫자의 근거가 된다 (지식 자료는 근거가 아니다)
 CALC_TOOLS = frozenset({"price_reference", "set_schedule_constraints"})
-SERVER_TOOLS = CALC_TOOLS | {"search_knowledge", "suggest_questions"}
+SERVER_TOOLS = CALC_TOOLS | {"search_knowledge"}
 CLIENT_TOOLS = frozenset(DEFS) - SERVER_TOOLS
 
 # 대화 종류마다 쓸 수 있는 도구
@@ -150,7 +140,6 @@ BY_KIND: dict[str, tuple[str, ...]] = {
         "pick_material",
         "show_step",
         "search_knowledge",
-        "suggest_questions",
     ),
     "quote_explanation": ("search_knowledge",),
     "schedule": ("set_schedule_constraints", "search_knowledge"),

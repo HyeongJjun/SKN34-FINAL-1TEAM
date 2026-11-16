@@ -1,7 +1,7 @@
 // AI가 화면을 움직이는 도구의 실행 부분 (v10 claudeTools).
 // 도구 이름 · 설명 · 입력 모양은 서버(backend/app/v2/ask_tools.py)가 정한다. 여기서는 받은 값을 검사하고 실행만 한다.
 // 공사비(price_reference) · 공정표 조건(set_schedule_constraints) · 지식 검색(search_knowledge) ·
-// 이어 물을 질문(suggest_questions)은 서버가 실행한다.
+// 이어 물을 질문은 서버가 질문 은행에서 고른다 (LLM 도구 아님).
 import { flashBoard } from "../Board";
 import { CATS, manwon, SPACES, STYLES, TIER_ORDER, TIERS } from "../data";
 import { moveLabel } from "../dates";

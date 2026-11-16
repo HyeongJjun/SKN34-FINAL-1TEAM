@@ -356,13 +356,6 @@ async def _cites(turn: dict, text: str) -> tuple[str, int, list[v2.V2AskSource]]
 
 
 # ---- 이어 물을 질문 ----
-def _llm_suggest(turn: dict, args: dict) -> dict:
-    """LLM이 낸 후보는 모아만 두고, 끝날 때 답할 수 있는 것만 고른다"""
-    qs = args.get("questions") if isinstance(args.get("questions"), list) else []
-    turn["llm_suggest"] = [str(q)[:60] for q in qs if isinstance(q, str)][:3]
-    return {"ok": True}
-
-
 async def _suggest(turn: dict, sources: list[v2.V2AskSource]) -> list[v2.V2AskSuggest]:
     """후보 모으기(DB) → 뜻 가까움 임베딩(세션 밖) → 고르기(DB). 임베딩이 없으면 글자 규칙으로"""
     question = turn.get("question") or ""
@@ -370,7 +363,6 @@ async def _suggest(turn: dict, sources: list[v2.V2AskSource]) -> list[v2.V2AskSu
     async with SessionLocal() as s:
         cands = await knowledge.suggest_candidates(
             s, question, shown=list(turn.get("seen") or {}), cited=cited,
-            llm=turn.get("llm_suggest") or [],
         )  # fmt: skip
     if not cands:
         return []
@@ -588,8 +580,6 @@ async def _run(turn_id: str, turn: dict) -> v2.V2AskOut:
                     out = _price_reference(_quote_in(turn), today)
                 elif c["name"] == "search_knowledge":
                     out = await _search_tool(turn, args)
-                elif c["name"] == "suggest_questions":
-                    out = _llm_suggest(turn, args)
                 else:
                     out = _set_cons(turn, args, today)
             else:

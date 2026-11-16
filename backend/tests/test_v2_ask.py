@@ -327,15 +327,11 @@ def test_suggest_keeps_only_answerable_questions(api, fake):
         where record_key = 'K2'""",
         json.dumps(["실크 벽지는 물걸레로 닦아도 돼요?"], ensure_ascii=False),
     )
-    asks = {"questions": ["그럼 합지는요?", "도배 비용은 얼마예요?", "우주선 수리도 해요?"]}
-    fake(
-        {"tool_calls": [call("suggest_questions", asks)]},
-        {"text": "합지는 종이 벽지예요 [K1]"},
-    )
+    f = fake({"text": "합지는 종이 벽지예요 [K1]"})
     signup(api)
     out = api.post("/v2/ask", json={"message": "합지 벽지 특징이 뭐예요?"}).json()
-    assert out["done"] and out["turn"] is None  # 추천 질문 도구도 서버에서 끝난다
-    # 은행 질문(K2)만 남고, '그럼'으로 시작 · 금액 질문 · 자료로 답할 수 없는 질문은 빠진다
+    # 추천 질문은 LLM 도구 없이 서버가 질문 은행에서 고른다 (LLM은 한 번만 부른다)
+    assert len(f.seen) == 1 and "suggest_questions" not in {t["name"] for t in f.seen[0]["tools"]}
     assert out["suggest"] == [{"text": "실크 벽지는 물걸레로 닦아도 돼요?", "ref": "K2"}]
 
 
