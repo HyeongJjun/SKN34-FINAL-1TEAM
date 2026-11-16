@@ -3,6 +3,7 @@
 // 결과를 POST /v2/ask/{turn}로 보낸다. 답은 숫자 검사를 마친 뒤 한 번에 온다.
 import { v2Get, v2Post } from "../api";
 import { ApiError } from "@/lib/backend/client";
+import { feedEpoch } from "../engine";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AiTool = { name: string; execute: (a: any) => unknown };
@@ -77,18 +78,21 @@ function race<T>(p: Promise<T>, signal?: AbortSignal): Promise<T> {
   });
 }
 
-/** 이어 가는 대화 id (일반 상담만). 서버가 첫 답을 저장할 때 준다. 새로고침하면 새 대화 */
-let chatId: string | null = null;
+/** 이어 가는 대화 (일반 상담만). 서버가 첫 답을 저장할 때 준다.
+ *  '처음부터'로 대화 번호(feedEpoch)가 바뀌면 버린다. 새로고침해도 새 대화 */
+let chat: { id: string; epoch: number } | null = null;
+const currentChat = () => (chat && chat.epoch === feedEpoch.n ? chat.id : null);
 
 /** 첫 요청. 대화가 없어졌으면(404) 새 대화로 한 번 다시 묻는다 */
 async function first(body: AskBody, signal?: AbortSignal): Promise<AskOut> {
   const send = (b: AskBody) => race(v2Post<AskOut>("ask", b), signal);
+  const chatId = currentChat();
   if (body.kind !== "chat" || !chatId) return send(body);
   try {
     return await send({ ...body, chat_id: chatId });
   } catch (e) {
     if (!(e instanceof ApiError && e.status === 404)) throw e;
-    chatId = null;
+    chat = null;
     return send(body);
   }
 }
@@ -114,6 +118,6 @@ export async function runAsk(body: AskBody, tools: AiTool[], signal?: AbortSigna
     out = await race(v2Post<AskOut>(`ask/${encodeURIComponent(out.turn)}`, { results }), signal);
   }
   aborted(signal);
-  if (body.kind === "chat" && out.chat_id) chatId = out.chat_id;
+  if (body.kind === "chat" && out.chat_id) chat = { id: out.chat_id, epoch: feedEpoch.n };
   return out;
 }
