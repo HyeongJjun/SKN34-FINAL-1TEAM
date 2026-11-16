@@ -57,6 +57,38 @@ def test_number_from_last_answer_can_be_said_again(api, fake):
     assert out["text"] == "32평이라고 하셨어요." and out["dropped"] == []
 
 
+def _waiting(chat_id):
+    return query("select waiting from chats where id = $1", chat_id)[0]["waiting"]
+
+
+def test_asked_back_answer_keeps_role_for_next_turn(api, fake):
+    f = fake(
+        {"text": "도배할 방이 몇 개예요?\n[되물음]"},
+        {"text": "알겠어요. 그 기준으로 볼게요."},
+    )
+    signup(api)
+    first = api.post("/v2/ask", json={"message": ASK}).json()
+    chat_id = first["chat_id"]
+    # 표시는 화면 · 저장 글에서 뗀다
+    assert first["text"] == "도배할 방이 몇 개예요?"
+    assert _messages(chat_id)[1]["text"] == "도배할 방이 몇 개예요?"
+    assert _waiting(chat_id) == ((first["intent"] or {}).get("label") or "orchestrator")
+
+    # 공정 상담이 되물은 상태에서 짧은 답이 오면 같은 역할(출처 rule)로 가고 역할 힌트가 붙는다
+    query("update chats set waiting = 'trade' where id = $1", chat_id)
+    second = api.post("/v2/ask", json={"message": "두 개요", "chat_id": chat_id}).json()
+    assert second["intent"]["label"] == "trade" and second["intent"]["source"] == "rule"
+    assert ask.HINTS["trade"] in f.seen[1]["system"]
+    assert _waiting(chat_id) is None  # 이번에는 되묻지 않았다
+
+
+def test_answer_without_mark_leaves_no_waiting(api, fake):
+    fake({"text": "합지는 종이 벽지예요."})
+    signup(api)
+    chat_id = api.post("/v2/ask", json={"message": ASK}).json()["chat_id"]
+    assert _waiting(chat_id) is None
+
+
 def test_other_users_chat_is_404_before_llm(api, fake):
     f = fake({"text": "합지는 종이 벽지예요."})
     signup(api)
