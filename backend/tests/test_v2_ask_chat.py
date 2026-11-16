@@ -89,6 +89,55 @@ def test_answer_without_mark_leaves_no_waiting(api, fake):
     assert _waiting(chat_id) is None
 
 
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "[되물음]",  # 표시만 온 답
+        "방이 7개 맞나요?\n[되물음]",  # 출력 검사가 질문(없는 숫자)을 빼면 표시만 남는다
+    ],
+)
+def test_mark_only_answer_is_failed_and_not_saved(api, fake, answer):
+    fake({"text": answer})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": ASK}).json()
+    assert out["failed"] and out["text"] == ask.FAILED["chat"] and out["chat_id"] is None
+    assert query("select count(*) as n from chats")[0]["n"] == 0
+
+
+def test_mark_in_middle_is_not_asked_and_hidden(api, fake):
+    fake({"text": "방이 몇 개예요?\n[되물음]\n합지는 종이 벽지예요."})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": ASK}).json()
+    assert out["text"] == "방이 몇 개예요?\n\n합지는 종이 벽지예요."
+    assert _waiting(out["chat_id"]) is None
+
+
+def test_mark_on_question_line_is_asked(api, fake):
+    fake({"text": "도배할 방이 몇 개예요? [되물음]"})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": ASK}).json()
+    assert out["text"] == "도배할 방이 몇 개예요?"
+    assert _waiting(out["chat_id"]) == ((out["intent"] or {}).get("label") or "orchestrator")
+
+
+def test_guard_dropped_question_leaves_no_waiting(api, fake):
+    fake({"text": "합지는 종이 벽지예요. 방이 7개 맞나요?\n[되물음]"})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": ASK}).json()
+    assert out["text"] == "합지는 종이 벽지예요." and out["dropped"]
+    assert _waiting(out["chat_id"]) is None
+
+
+def test_mark_from_earlier_tool_round_is_not_asked(api, fake):
+    """도구 라운드마다 글이 이어 붙는다. 앞 라운드 글의 표시는 되물음이 아니다."""
+    fake({"text": "자료를 볼게요.\n[되물음]", **TOOL_TURN}, {"text": "합지는 종이 벽지예요."})
+    signup(api)
+    turn = api.post("/v2/ask", json={"message": ASK}).json()["turn"]
+    out = api.post(f"/v2/ask/{turn}", json=RESULT).json()
+    assert out["done"] and out["text"] == "자료를 볼게요.\n\n합지는 종이 벽지예요."
+    assert _waiting(out["chat_id"]) is None
+
+
 def test_other_users_chat_is_404_before_llm(api, fake):
     f = fake({"text": "합지는 종이 벽지예요."})
     signup(api)
