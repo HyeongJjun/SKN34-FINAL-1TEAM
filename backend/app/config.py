@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     # Jev는 입구 분류에만 쓴다. 키는 repr·오류에 표시하지 않는다
     openrouter_api_key: SecretStr = SecretStr("")
     jev_model: str = "typesafe/jev-1.14"
+    # false면 Jev를 부르지 않고 학습 모델 라벨을 그대로 쓴다 (Jev 효과 비교 테스트용)
+    jev_enabled: bool = True
 
     @property
     def is_https(self) -> bool:

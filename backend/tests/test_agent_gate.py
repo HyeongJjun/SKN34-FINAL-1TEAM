@@ -63,6 +63,16 @@ def test_low_confidence_asks_jev_once(jev_calls):
     assert (found.label, found.source) == ("orchestrator", "jev") and len(jev_calls) == 1
 
 
+def test_jev_disabled_uses_model_label(monkeypatch, jev_calls):
+    monkeypatch.setattr(gate_module.settings, "jev_enabled", False)
+    llm.set_jev_stub("orchestrator", 0.8)
+    found = asyncio.run(classify("음"))
+    assert found.source == "model" and found.confidence < 0.7 and jev_calls == []
+    # 기다리던 담당 유지는 그대로
+    kept = asyncio.run(classify("네 두 개요", "schedule"))
+    assert (kept.label, kept.source) == ("schedule", "rule") and jev_calls == []
+
+
 def test_jev_failure_asks_back():
     out = asyncio.run(build_graph(default_nodes()).ainvoke({"ctx": NO_PROJECT, "message": "음"}))
     assert out["intent"] is None and out["answer"].cards[0].kind == "choices"
