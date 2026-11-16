@@ -1,6 +1,6 @@
 """지식 조각 검색 점수 매기기: 글자 두 개 묶음 BM25 + 의미 검색 순위를 RRF로 합친다. DB · HTTP를 모르는 순수 함수.
 
-키워드 부분은 화면 검색(rag.ts ragSearch7)에서 옮겼다. 의미 검색 순위는 부르는 쪽이 DB(pgvector)에서 뽑아 넘긴다.
+키워드 부분은 예전 화면 검색(ragSearch7)을 옮겼다. 의미 검색 순위는 부르는 쪽이 DB(pgvector)에서 뽑아 넘긴다.
 무게는 evaluation/rag/hybrid.py로 dev 질문(90 + 300 세트의 dev)에서 골랐다 (2026-11-13).
 """
 

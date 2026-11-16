@@ -9,7 +9,7 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.knowledge import bm25, repository
+from app.knowledge import bm25, repository, suggest
 from app.knowledge.sources import assemble
 
 _cache: tuple[tuple[str, ...], bm25.Index] | None = None
@@ -63,3 +63,31 @@ async def search(
 async def verify_cites(s: AsyncSession, text: str) -> tuple[str, int]:
     """[K번호] 인용 중 문장과 맞지 않는 것을 뗀다. (고친 글, 뗀 수)"""
     return bm25.verify_cites(await index(s), text)
+
+
+async def suggest_candidates(
+    s: AsyncSession,
+    question: str,
+    *,
+    shown: list[str],
+    cited: set[str],
+    llm: list[str] | tuple[str, ...] = (),
+) -> list[suggest.Pick]:
+    """이어 물을 질문 후보 (질문 은행 + LLM). 고르기는 suggest_questions"""
+    ix = await index(s)
+    return await asyncio.to_thread(
+        suggest.candidates, ix, question, shown=shown, cited=cited, llm=llm
+    )
+
+
+async def suggest_questions(
+    s: AsyncSession,
+    question: str,
+    *,
+    cands: list[suggest.Pick],
+    cited: set[str],
+    sims: dict[str, float] | None = None,
+) -> list[suggest.Pick]:
+    """후보에서 답할 수 있고 이어지는 것만 0~3개. sims = 후보 글 → 방금 질문과 뜻 가까움(없으면 글자 규칙)"""
+    ix = await index(s)
+    return await asyncio.to_thread(suggest.pick, ix, question, cands=cands, cited=cited, sims=sims)

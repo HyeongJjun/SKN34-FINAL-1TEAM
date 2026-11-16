@@ -20,7 +20,7 @@ python evaluation/rag/corpus.py
 python evaluation/rag/rank_server.py --name server
 python evaluation/rag/metrics.py evaluation/rag/.cache/rank_server.json
 ```
-- 화면 자료 CSV 다시 만들기: `cd backend && uv run python -m app.knowledge.json_csv ../frontend/public/v2/rag5.json ../data/consult/consult_knowledge_rag.csv`
+- 화면 자료 CSV 다시 만들기: `cd backend && uv run python -m app.knowledge.json_csv ../data/consult/rag5.json ../data/consult/consult_knowledge_rag.csv`
 - held-out은 마지막에 한 번만: `--final`
 - 로컬 추가 자료(책)가 없으면 K5001~ 정답은 찾을 수 없어 점수가 낮게 나온다. 책 조각이 있는 로컬에서 잰다
 

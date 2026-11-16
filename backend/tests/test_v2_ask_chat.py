@@ -175,7 +175,7 @@ def test_other_users_chat_is_404_before_llm(api, fake):
 def test_stale_rev_is_409_and_saves_nothing(api, fake):
     fake(
         {"text": "합지는 종이 벽지예요."},
-        {"tool_calls": [call("suggest_questions", {"questions": ["벽지 고르기"]})]},
+        {"tool_calls": [call("show_step", {"step": "quote"})]},
         {"text": "실크는 닦기 쉬워요."},
         {"text": "늦게 끝난 답이에요."},
     )
@@ -204,14 +204,15 @@ def test_failed_answer_and_doc_buttons_leave_no_chat(api, fake):
     assert query("select count(*) as n from chats")[0]["n"] == 0
 
 
-TOOL_TURN = {"tool_calls": [call("suggest_questions", {"questions": ["벽지 고르기"]})]}
+# 화면 도구 턴 (추천 질문은 서버가 고르므로 화면 도구인 show_step으로)
+TOOL_TURN = {"tool_calls": [call("show_step", {"step": "quote"})]}
 RESULT = {"results": [{"id": "c1", "content": "{}"}]}
 
 
 def test_late_resume_cannot_delete_next_tool_turn(api, fake, monkeypatch):
     """A가 재개해 다음 도구 턴을 같은 키에 저장한 뒤, 그 전에 옛 턴을 읽어 둔 B가 늦게 와도
     B는 새 턴을 지우지 못하고 LLM 전에 404. A는 새 턴으로 그대로 이어 간다."""
-    second = {"tool_calls": [call("suggest_questions", {"questions": ["벽지 고르기"]}, "c2")]}
+    second = {"tool_calls": [call("show_step", {"step": "quote"}, "c2")]}
     f = fake(TOOL_TURN, second, {"text": "실크는 닦기 쉬워요."})
     signup(api)
     turn = api.post("/v2/ask", json={"message": ASK}).json()["turn"]

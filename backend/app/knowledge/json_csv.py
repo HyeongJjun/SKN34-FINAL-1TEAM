@@ -1,6 +1,6 @@
-"""화면 지식 자료(JSON: docs · chunks) → 팀 전처리 CSV 형식. 만든 CSV는 `python -m app.data_ingest`로 적재한다.
+"""상담 지식 자료(JSON: docs · chunks) → 팀 전처리 CSV 형식. 만든 CSV는 `python -m app.data_ingest`로 적재한다.
 
-    python -m app.knowledge.json_csv ../frontend/public/v2/rag5.json ../data/consult/consult_knowledge_rag.csv
+    python -m app.knowledge.json_csv ../data/consult/rag5.json ../data/consult/consult_knowledge_rag.csv
     python -m app.knowledge.json_csv ../data/local/rag-local.json ../data/local/interior_guide_book_rag.csv
 
 - 팀 적재가 요구하는 열 + 검색에 쓰는 열(ref · doc · trades · hints · rel · doc_date · page_known)만 쓴다.
@@ -56,7 +56,7 @@ def rows(data: dict, sha: str) -> list[dict[str, str]]:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="화면 지식 JSON → 팀 전처리 CSV")
+    ap = argparse.ArgumentParser(description="상담 지식 JSON → 팀 전처리 CSV")
     ap.add_argument("src", type=Path)
     ap.add_argument("out", type=Path)
     a = ap.parse_args()

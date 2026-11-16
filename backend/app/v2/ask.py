@@ -328,6 +328,41 @@ async def _cites(turn: dict, text: str) -> tuple[str, int, list[v2.V2AskSource]]
     return text, unseen + unfit, [v2.V2AskSource(**seen[r]) for r in refs]
 
 
+# ---- 이어 물을 질문 ----
+def _llm_suggest(turn: dict, args: dict) -> dict:
+    """LLM이 낸 후보는 모아만 두고, 끝날 때 답할 수 있는 것만 고른다"""
+    qs = args.get("questions") if isinstance(args.get("questions"), list) else []
+    turn["llm_suggest"] = [str(q)[:60] for q in qs if isinstance(q, str)][:3]
+    return {"ok": True}
+
+
+async def _suggest(turn: dict, sources: list[v2.V2AskSource]) -> list[v2.V2AskSuggest]:
+    """후보 모으기(DB) → 뜻 가까움 임베딩(세션 밖) → 고르기(DB). 임베딩이 없으면 글자 규칙으로"""
+    question = turn.get("question") or ""
+    cited = {x.ref for x in sources}
+    async with SessionLocal() as s:
+        cands = await knowledge.suggest_candidates(
+            s, question, shown=list(turn.get("seen") or {}), cited=cited,
+            llm=turn.get("llm_suggest") or [],
+        )  # fmt: skip
+    if not cands:
+        return []
+    sims = None
+    emb = await llm.embed_texts([question, *(c.text for c in cands)])
+    if emb:
+        q, *vs = emb[1]
+        sims = {c.text: _cosine(q, v) for c, v in zip(cands, vs, strict=True)}
+    async with SessionLocal() as s:
+        picks = await knowledge.suggest_questions(s, question, cands=cands, cited=cited, sims=sims)
+    return [v2.V2AskSuggest(text=p.text, ref=p.ref) for p in picks]
+
+
+def _cosine(a: list[float], b: list[float]) -> float:
+    dot = sum(x * y for x, y in zip(a, b, strict=True))
+    na, nb = sum(x * x for x in a) ** 0.5, sum(y * y for y in b) ** 0.5
+    return dot / (na * nb) if na and nb else 0.0
+
+
 # ---- 턴 보관 (Redis, 10분) ----
 def _key(turn_id: str) -> str:
     return f"v2ask:{turn_id}"
@@ -403,6 +438,7 @@ async def start(
     content.append({"type": "text", "text": b.message})
     turn = {
         "user": user_id,
+        "question": b.message,
         "kind": b.kind,
         "today": today.isoformat(),
         "chat": chat,
@@ -520,6 +556,8 @@ async def _run(turn_id: str, turn: dict) -> v2.V2AskOut:
                     out = _price_reference(_quote_in(turn), today)
                 elif c["name"] == "search_knowledge":
                     out = await _search_tool(turn, args)
+                elif c["name"] == "suggest_questions":
+                    out = _llm_suggest(turn, args)
                 else:
                     out = _set_cons(turn, args, today)
             else:
@@ -556,7 +594,8 @@ async def _done(turn: dict, failed: bool = False) -> v2.V2AskOut:
             done=True, text=FAILED[kind], failed=True, intent=intent, dropped=g.dropped, cons=cons
         )
     text, cites_dropped, sources = await _cites(turn, g.text)
+    suggest = await _suggest(turn, sources) if kind == "chat" else []
     return v2.V2AskOut(
         done=True, text=text, intent=intent, dropped=g.dropped, cons=cons,
-        sources=sources, cites_dropped=cites_dropped,
+        sources=sources, cites_dropped=cites_dropped, suggest=suggest,
     )  # fmt: skip
