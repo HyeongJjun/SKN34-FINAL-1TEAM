@@ -54,7 +54,10 @@
 아래는 `AGENTS.md`의 층 규칙에 따른 연결 방향이다.
 
 - 계산: 기능 service가 기준 자료를 조회해 입력을 준비하고 `calc`에 전달한다. `calc`는 DB·HTTP·시계를 모르는 순수 함수로 금액·수량·기간·날짜를 계산한다.
-- 지식 검색: `v2/ask_tools.py`의 서버 도구 → `knowledge.service` → `knowledge.repository` → PostgreSQL 순서로 연결한다. 시방서 검색용 외부 MCP 서버를 추가하지 않는다.
+- 지식 검색
+  - 현재: v2 상담의 자료 검색(`search_knowledge`)은 브라우저가 실행하는 화면 도구다. 화면에 든 자료로 찾고 결과만 서버에 돌려준다. `knowledge.service`를 거치지 않는다.
+  - 후속: `v2/ask_tools.py`의 서버 도구 → `knowledge.service` → `knowledge.repository` → PostgreSQL 순서로 연결한다. 서버가 찾은 원문만 숫자 근거로 쓴다(#124).
+  - 시방서 검색용 외부 MCP 서버를 추가하지 않는다.
 - 에이전트는 DB나 기능 service를 직접 호출하지 않는다. 프로젝트의 필수 입력은 코드가 먼저 읽어 전달하고, 추가 자료는 도구로 제공한다. 도구가 출처와 버전을 포함한 결과를 반환하도록 구현한다.
 - 견적 설명 역할은 저장된 계산 결과를 설명한다. RAG 본문이나 LLM이 만든 숫자로 견적 금액을 대체하지 않는다.
 
