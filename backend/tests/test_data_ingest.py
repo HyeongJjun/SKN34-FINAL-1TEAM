@@ -31,14 +31,21 @@ def write(path, rows, header=None):
 
 
 def sample(tmp_path, kind):
-    source = DATA / ("02_unit_price.csv" if kind == "unit_price" else "04_lhcs_gypsum_rag.csv")
+    source = (
+        DATA
+        / {
+            "unit_price": "02_unit_price.csv",
+            "knowledge": "04_lhcs_gypsum_rag.csv",
+            "productivity": "03_standard_productivity.csv",
+        }[kind]
+    )
     with source.open(encoding="utf-8-sig", newline="") as stream:
         row = next(csv.DictReader(stream))
     first, second = dict(row, id="one"), dict(row, id="two")
     if kind == "unit_price":
         first.update(parent_id="", normalized_value="-0.12345678901234567890")
         second.update(parent_id="", normalized_value="")
-    else:
+    elif kind == "knowledge":
         first.update(content="첫 번째 본문", page="1;2")
         second.update(content="두 번째 본문", page="3")
     path = tmp_path / f"{kind}.csv"
@@ -117,7 +124,7 @@ def test_independent_snapshot_changes(tmp_path, kind, change):
         write(path, rows)
         new = await load(path)
         assert new.id != old.id and (old.version, new.version) == (1, 2)
-        assert new.status == "draft"
+        assert new.status is False
         if kind == "knowledge":
             await embed(new, mock)
             assert len(mock.calls) == (3 if change in {"add", "update"} else 2)
@@ -157,10 +164,10 @@ def test_independent_snapshot_changes(tmp_path, kind, change):
             )
             if kind == "knowledge":
                 old_results = await rag.search_version(
-                    session, old.id, "draft", [1, 1, 1], MODEL, DIMS
+                    session, old.id, False, [1, 1, 1], MODEL, DIMS
                 )
                 new_results = await rag.search_version(
-                    session, new.id, "draft", [1, 1, 1], MODEL, DIMS
+                    session, new.id, False, [1, 1, 1], MODEL, DIMS
                 )
                 assert {r.record_key for r in old_results} == {"one", "two"}
                 assert {r.record_key for r in new_results} == set(after)
@@ -197,7 +204,7 @@ def test_unchanged_and_missing_file_preserve_db(tmp_path, kind, profile):
             assert report["missing_files"] == [path.stem]
             assert report["warnings"] and report["embedding_unique_inputs"] == 0
             preserved = await session.get(RefDatasetVersion, first.id)
-            assert preserved.status == "draft"
+            assert preserved.status is False
             assert await session.scalar(select(func.count()).select_from(RefDatasetVersion)) == 1
         assert len(await contents(first, kind)) == 2
 
@@ -236,7 +243,7 @@ def test_model_change_is_separate_snapshot(tmp_path):
         assert first.id != second.id and second.version == 2 and len(mock.calls) == 4
         async with SessionLocal() as session:
             with pytest.raises(ValueError, match="검색 버전"):
-                await rag.search_version(session, first.id, "draft", [1, 1, 1], other_model, DIMS)
+                await rag.search_version(session, first.id, False, [1, 1, 1], other_model, DIMS)
 
     asyncio.run(run())
 
@@ -599,7 +606,7 @@ def test_human_report_shows_verified_status_and_percentage(capsys):
                 "file": "rag.csv",
                 "rows": 1000,
                 "version": 2,
-                "status": "draft",
+                "status": False,
                 "embedding_missing": 0,
             }
         ],
@@ -608,7 +615,7 @@ def test_human_report_shows_verified_status_and_percentage(capsys):
     ingest.show_report(report, "verify")
     output = capsys.readouterr().out
     assert "50.0%" in output and "500/1,000행" in output
-    assert "1,000행 | 2차 | 검토 전 | 0행" in output
+    assert "1,000행 | 2차 | 비활성 | 0행" in output
     assert "임베딩 누락 없음" in output and "CSV 누락: missing" in output
     assert '"verified"' not in output
 
@@ -623,7 +630,7 @@ def test_human_load_and_verify_show_real_completion(tmp_path, monkeypatch, capsy
         asyncio.run(ingest.run(ingest.parser().parse_args(arguments)))
         output = capsys.readouterr().out
         assert "100.0%" in output and "2/2행" in output
-        assert "검증 통과" in output and "검토 전" in output
+        assert "검증 통과" in output and "비활성" in output
         assert "CSV 1개 | 전체 2행" in output
 
 
@@ -634,48 +641,13 @@ async def activate(paths):
         )
 
 
-def test_calculation_permission_is_explicit_and_preserves_source(tmp_path):
-    path, _ = sample(tmp_path, "unit_price")
-    original = path.read_bytes()
-
-    async def run():
-        version = await load(path)
-        await activate([path])
-        before = await db_query("select calculation_usable,provenance from ref_dataset_versions")
-        assert before[0]["calculation_usable"] is False
-        dataset = ingest.inspect_csv(path)
-        for _ in range(2):
-            result = await ingest.activate_versions(
-                SessionLocal, [dataset], MODEL, DIMS, PROFILE, allow_calculation=True
-            )
-            assert result[0]["calculation_usable"] is True
-        after = await db_query("select calculation_usable,provenance from ref_dataset_versions")
-        assert after[0]["calculation_usable"] is True
-        assert (
-            after[0]["provenance"]["calculation_permission"]["processed_sha256"] == dataset.sha256
-        )
-        assert (await contents(version, "unit_price"))["one"].provenance[
-            "automatic_calculation_usable"
-        ] == "false"
-        assert (await db_query("select count(*) n from ref_dataset_events"))[0]["n"] == 3
-        await activate([path])
-        assert (await db_query("select calculation_usable from ref_dataset_versions"))[0][
-            "calculation_usable"
-        ] is True
-
-    asyncio.run(run())
-    assert path.read_bytes() == original
-
-
-def test_calculation_option_requires_explicit_activation():
-    for command in ("plan", "load", "embed", "verify"):
-        args = ingest.parser().parse_args([command, "--allow-calculation"])
-        with pytest.raises(ValueError, match="--allow-calculation"):
-            asyncio.run(ingest.run(args))
+def test_removed_calculation_option_is_rejected():
+    with pytest.raises(SystemExit):
+        ingest.parser().parse_args(["verify", "--allow-calculation"])
 
 
 @pytest.mark.parametrize("kind", ["unit_price", "knowledge"])
-def test_activate_and_repeat_preserve_events(tmp_path, kind):
+def test_activate_and_repeat_preserve_rows(tmp_path, kind):
     path, _ = sample(tmp_path, kind)
 
     async def run():
@@ -684,18 +656,10 @@ def test_activate_and_repeat_preserve_events(tmp_path, kind):
         if kind == "knowledge":
             await embed(version, mock)
         result = await activate([path])
-        assert result[0]["status"] == "active"
-        assert (await db_query("select status from ref_dataset_versions"))[0]["status"] == "active"
-        events = await db_query(
-            "select from_status,to_status from ref_dataset_events order by event_no"
-        )
-        assert [(e["from_status"], e["to_status"]) for e in events] == [
-            (None, "draft"),
-            ("draft", "approved"),
-            ("approved", "active"),
-        ]
+        assert result[0]["status"] is True
+        assert (await db_query("select status from ref_dataset_versions"))[0]["status"] is True
         await activate([path])
-        assert (await db_query("select count(*) n from ref_dataset_events"))[0]["n"] == 3
+        assert len(await contents(version, kind)) == 2
         assert len(mock.calls) == (2 if kind == "knowledge" else 0)
 
     asyncio.run(run())
@@ -720,7 +684,7 @@ def test_activation_replaces_previous_and_preserves_rows(tmp_path, kind):
             await embed(new, mock)
         await activate([path])
         states = await db_query("select version,status from ref_dataset_versions order by version")
-        assert [(v["version"], v["status"]) for v in states] == [(1, "retired"), (2, "active")]
+        assert [(v["version"], v["status"]) for v in states] == [(1, False), (2, True)]
         preserved = await contents(old, kind)
         assert len(preserved) == 2
         assert preserved["one"].provenance["id"] == "one"
@@ -728,7 +692,6 @@ def test_activation_replaces_previous_and_preserves_rows(tmp_path, kind):
             assert preserved["one"].content == "첫 번째 본문"
         else:
             assert preserved["one"].normalized_value == Decimal("-0.12345678901234567890")
-        assert (await db_query("select count(*) n from ref_dataset_events"))[0]["n"] == 7
 
     asyncio.run(run())
 
@@ -751,9 +714,8 @@ def test_failed_embedding_verification_keeps_all_active_versions(tmp_path):
         with pytest.raises(ValueError, match="임베딩 미완료"):
             await activate([unit, knowledge])
         states = await db_query("select version,status from ref_dataset_versions order by version")
-        assert [v["status"] for v in states if v["version"] == 1] == ["active", "active"]
-        assert [v["status"] for v in states if v["version"] == 2] == ["draft", "draft"]
-        assert (await db_query("select count(*) n from ref_dataset_events"))[0]["n"] == 8
+        assert [v["status"] for v in states if v["version"] == 1] == [True, True]
+        assert [v["status"] for v in states if v["version"] == 2] == [False, False]
 
     asyncio.run(run())
 
@@ -772,11 +734,11 @@ def test_activation_transaction_failure_rolls_back_retirement(tmp_path):
         async with SessionLocal.begin() as session:
             await session.execute(
                 text("""CREATE FUNCTION fail_test_activation() RETURNS trigger LANGUAGE plpgsql AS $$
-                BEGIN IF NEW.to_status='active' THEN RAISE EXCEPTION 'synthetic failure'; END IF;
+                BEGIN IF NEW.status THEN RAISE EXCEPTION 'synthetic failure'; END IF;
                 RETURN NEW; END $$""")
             )
             await session.execute(
-                text("""CREATE TRIGGER fail_test_activation BEFORE INSERT ON ref_dataset_events
+                text("""CREATE TRIGGER fail_test_activation BEFORE UPDATE ON ref_dataset_versions
                 FOR EACH ROW EXECUTE FUNCTION fail_test_activation()""")
             )
         try:
@@ -787,12 +749,11 @@ def test_activation_transaction_failure_rolls_back_retirement(tmp_path):
         finally:
             async with SessionLocal.begin() as session:
                 await session.execute(
-                    text("DROP TRIGGER fail_test_activation ON ref_dataset_events")
+                    text("DROP TRIGGER fail_test_activation ON ref_dataset_versions")
                 )
                 await session.execute(text("DROP FUNCTION fail_test_activation()"))
         states = await db_query("select version,status from ref_dataset_versions order by version")
-        assert [(v["version"], v["status"]) for v in states] == [(1, "active"), (2, "draft")]
-        assert (await db_query("select count(*) n from ref_dataset_events"))[0]["n"] == 4
+        assert [(v["version"], v["status"]) for v in states] == [(1, True), (2, False)]
         await activate([path])
 
     asyncio.run(run())
@@ -809,9 +770,9 @@ def test_activation_cli_requires_explicit_flags_and_preserves_readonly_verify(
             asyncio.run(ingest.run(ingest.parser().parse_args(args)))
     common = ["verify", "--directory", str(tmp_path), "--dimensions", "3", "--require-embeddings"]
     asyncio.run(ingest.run(ingest.parser().parse_args(common)))
-    assert query("select status from ref_dataset_versions")[0]["status"] == "draft"
+    assert query("select status from ref_dataset_versions")[0]["status"] is False
     asyncio.run(ingest.run(ingest.parser().parse_args([*common, "--activate"])))
-    assert query("select status from ref_dataset_versions")[0]["status"] == "active"
+    assert query("select status from ref_dataset_versions")[0]["status"] is True
     assert "활성화 완료" in capsys.readouterr().out
 
 
@@ -831,8 +792,7 @@ def test_activation_rejects_stale_snapshot_and_serializes_repeat(tmp_path):
         with pytest.raises(ValueError, match="최신"):
             await activate([path])
         assert all(
-            v["status"] == "draft"
-            for v in await db_query("select status from ref_dataset_versions")
+            v["status"] is False for v in await db_query("select status from ref_dataset_versions")
         )
         rows[0]["normalized_value"] = "99"
         write(path, rows)
@@ -841,10 +801,9 @@ def test_activation_rejects_stale_snapshot_and_serializes_repeat(tmp_path):
             ingest.activate_versions(SessionLocal, [data], MODEL, DIMS, PROFILE),
             ingest.activate_versions(SessionLocal, [data], MODEL, DIMS, PROFILE),
         )
-        assert (
-            await db_query("select count(*) n from ref_dataset_versions where status='active'")
-        )[0]["n"] == 1
-        assert (await db_query("select count(*) n from ref_dataset_events"))[0]["n"] == 4
+        assert (await db_query("select count(*) n from ref_dataset_versions where status = true"))[
+            0
+        ]["n"] == 1
 
     asyncio.run(run())
 
@@ -926,3 +885,101 @@ def test_cli_embedding_json_has_single_result(tmp_path, monkeypatch, capsys, fai
         assert report["embedding_usage"]["input_tokens"] == 20
         assert report["verified"][0]["embedding_missing"] == 0
         assert not captured.err
+
+
+@pytest.mark.parametrize("kind", ["unit_price", "knowledge", "productivity"])
+def test_removed_csv_metadata_is_optional_and_preserved(tmp_path, kind):
+    path, rows = sample(tmp_path, kind)
+    original = ingest.inspect_csv(path)
+    values = next(ingest.records(path, kind))
+    assert "review_reason" not in values
+    assert "semantic_status" not in values
+    assert values["provenance"] == rows[0]
+    removed = {
+        "historical",
+        "current_rule_usable",
+        "automatic_calculation_usable",
+        "rag_reference_usable",
+        "needs_review",
+        "review_reason",
+        "semantic_status",
+    }
+    write(path, [{k: v for k, v in row.items() if k not in removed} for row in rows])
+    simplified = ingest.inspect_csv(path)
+    assert simplified.kind == original.kind and len(simplified.hashes) == len(original.hashes)
+
+
+@pytest.mark.parametrize(
+    "dataset_key",
+    [
+        "01_floorplan_quantities",
+        "02_unit_price",
+        "03_standard_productivity",
+        "06_construction_wages",
+    ],
+)
+def test_unused_structured_datasets_stay_inactive(tmp_path, dataset_key):
+    with (DATA / f"{dataset_key}.csv").open(encoding="utf-8-sig", newline="") as stream:
+        row = next(csv.DictReader(stream))
+    path = tmp_path / f"{dataset_key}.csv"
+    write(path, [row])
+    rag_path, _ = sample(tmp_path, "knowledge")
+
+    async def mark_active(ident):
+        async with SessionLocal.begin() as session:
+            await session.execute(
+                text("UPDATE ref_dataset_versions SET status=true WHERE id=:id"), {"id": ident}
+            )
+
+    async def run():
+        old = await load(path)
+        assert old.status is False
+        original = await contents(old, old.kind)
+        await mark_active(old.id)
+        repeated = await load(path)
+        assert repeated.id == old.id and repeated.status is False
+        assert await contents(old, old.kind)
+        await mark_active(old.id)
+        row["source"] = "수정한 출처.pdf"
+        write(path, [row])
+        new = await load(path)
+        assert new.id != old.id and new.status is False
+        assert not any(
+            v["status"] for v in await db_query("SELECT status FROM ref_dataset_versions")
+        )
+        await mark_active(new.id)
+        knowledge = await load(rag_path)
+        await embed(knowledge, MockEmbedding())
+        result = await activate([path, rag_path])
+        assert [item["status"] for item in result] == [False, True]
+        result = await activate([path, rag_path])
+        assert [item["status"] for item in result] == [False, True]
+        assert (await contents(old, old.kind)).keys() == original.keys()
+        states = await db_query("SELECT kind,status FROM ref_dataset_versions")
+        assert all(v["status"] is False for v in states if v["kind"] != "knowledge")
+        assert all(v["status"] is True for v in states if v["kind"] == "knowledge")
+        assert len(await contents(new, new.kind)) == 1
+        assert len(await contents(knowledge, "knowledge")) == 2
+
+    asyncio.run(run())
+
+
+def test_unused_dataset_cli_dry_run_and_activation(tmp_path, monkeypatch, capsys):
+    path, _ = sample(tmp_path, "unit_price")
+    path = path.rename(tmp_path / "02_unit_price.csv")
+    asyncio.run(load(path))
+    query("UPDATE ref_dataset_versions SET status=true")
+    monkeypatch.setattr(rag, "token_counter", lambda: lambda _: 10)
+    common = ["--directory", str(tmp_path), "--dimensions", "3", "--json"]
+    asyncio.run(ingest.run(ingest.parser().parse_args(["load", *common])))
+    assert json.loads(capsys.readouterr().out)["executed"] is False
+    assert query("SELECT status FROM ref_dataset_versions")[0]["status"] is True
+    asyncio.run(
+        ingest.run(
+            ingest.parser().parse_args(["verify", *common, "--require-embeddings", "--activate"])
+        )
+    )
+    result = json.loads(capsys.readouterr().out)
+    assert result["verified"][0]["status"] is False
+    assert query("SELECT status FROM ref_dataset_versions")[0]["status"] is False
+    assert query("SELECT count(*) n FROM ref_unit_price_rows")[0]["n"] == 2

@@ -18,7 +18,7 @@ MODELS = {
 SIGNATURES = {
     "floorplan": {"apartment_type", "quantity_item", "aggregation_role"},
     "unit_price": {"component_name", "basis_normalized_unit", "specification"},
-    "productivity": {"division", "numeric_role", "semantic_status"},
+    "productivity": {"division", "numeric_role", "table_column"},
     "wage": {"occupation_code", "publication_date", "basis_hours"},
 }
 

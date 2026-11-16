@@ -45,9 +45,6 @@ class RefDatasetVersion(Base):
         CheckConstraint("processed_sha256 ~ '^[0-9a-f]{64}$'", name="processed_sha256"),
         CheckConstraint("jsonb_typeof(provenance) = 'object'", name="provenance"),
         CheckConstraint(
-            "status in ('draft', 'approved', 'active', 'retired', 'rejected')", name="status"
-        ),
-        CheckConstraint(
             "(embedding_model is null) = (embedding_dimensions is null)", name="embedding_profile"
         ),
         CheckConstraint(
@@ -75,7 +72,7 @@ class RefDatasetVersion(Base):
             "uq_ref_dataset_versions_active",
             "dataset_key",
             unique=True,
-            postgresql_where=text("status = 'active'"),
+            postgresql_where=text("status = true"),
         ),
     )
 
@@ -88,18 +85,14 @@ class RefDatasetVersion(Base):
     processed_sha256: Mapped[str] = mapped_column(Text(), nullable=False)
     build_profile: Mapped[str] = mapped_column(Text(), nullable=False)
     effective_date: Mapped[date | None] = mapped_column(Date(), nullable=True)
-    historical: Mapped[bool] = mapped_column(Boolean(), nullable=False)
-    current_rule_usable: Mapped[bool] = mapped_column(Boolean(), nullable=False)
-    calculation_usable: Mapped[bool] = mapped_column(Boolean(), nullable=False)
-    reference_usable: Mapped[bool] = mapped_column(Boolean(), nullable=False)
     embedding_model: Mapped[str | None] = mapped_column(Text(), nullable=True)
     embedding_dimensions: Mapped[int | None] = mapped_column(Integer(), nullable=True)
     provenance: Mapped[dict[str, Any]] = mapped_column(JSONB(), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    status: Mapped[str] = mapped_column(
-        Text(), nullable=False, default="draft", server_default="draft"
+    status: Mapped[bool] = mapped_column(
+        Boolean(), nullable=False, default=False, server_default=text("false")
     )
 
 
@@ -295,7 +288,6 @@ class ProductivityRow(Base):
     normalized_value: Mapped[Decimal | None] = mapped_column(Numeric(), nullable=True)
     normalized_unit: Mapped[str | None] = mapped_column(Text(), nullable=True)
     numeric_role: Mapped[str | None] = mapped_column(Text(), nullable=True)
-    semantic_status: Mapped[str | None] = mapped_column(Text(), nullable=True)
     condition: Mapped[str | None] = mapped_column(Text(), nullable=True)
     source_text: Mapped[str | None] = mapped_column(Text(), nullable=True)
 
@@ -375,35 +367,3 @@ class WageRow(Base):
     condition: Mapped[str | None] = mapped_column(Text(), nullable=True)
     page: Mapped[int] = mapped_column(Integer(), nullable=False)
     source_text: Mapped[str] = mapped_column(Text(), nullable=False)
-
-
-class RefDatasetEvent(Base):
-    """버전 등록과 상태 변경 이력."""
-
-    __tablename__ = "ref_dataset_events"
-    __table_args__ = (
-        ForeignKeyConstraint(["dataset_id"], ["ref_dataset_versions.id"], ondelete="RESTRICT"),
-        CheckConstraint("event_no > 0", name="event_no"),
-        CheckConstraint(
-            "from_status is null or from_status in ('draft', 'approved', 'active', 'retired', 'rejected')",
-            name="from_status",
-        ),
-        CheckConstraint(
-            "to_status in ('draft', 'approved', 'active', 'retired', 'rejected')", name="to_status"
-        ),
-        CheckConstraint("from_status is distinct from to_status", name="status_change"),
-        CheckConstraint("(event_no = 1) = (from_status is null)", name="initial_from"),
-        CheckConstraint("event_no <> 1 or to_status = 'draft'", name="initial_to"),
-        CheckConstraint("length(btrim(actor)) > 0", name="actor"),
-        CheckConstraint("jsonb_typeof(details) = 'object'", name="details"),
-    )
-
-    dataset_id: Mapped[uuid.UUID] = mapped_column(Uuid(), nullable=False, primary_key=True)
-    event_no: Mapped[int] = mapped_column(Integer(), nullable=False, primary_key=True)
-    from_status: Mapped[str | None] = mapped_column(Text(), nullable=True)
-    to_status: Mapped[str] = mapped_column(Text(), nullable=False)
-    actor: Mapped[str] = mapped_column(Text(), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
-    )
-    details: Mapped[dict[str, Any]] = mapped_column(JSONB(), nullable=False)

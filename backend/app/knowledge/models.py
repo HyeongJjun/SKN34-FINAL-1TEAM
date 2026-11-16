@@ -53,6 +53,5 @@ class RagChunk(Base):
     section: Mapped[str] = mapped_column(Text(), nullable=False)
     content: Mapped[str] = mapped_column(Text(), nullable=False)
     page_numbers: Mapped[list[int]] = mapped_column(ARRAY(Integer()), nullable=False)
-    review_reason: Mapped[str | None] = mapped_column(Text(), nullable=True)
     content_hash: Mapped[str] = mapped_column(Text(), nullable=False)
     embedding: Mapped[list[float] | None] = mapped_column(VECTOR(), nullable=True)

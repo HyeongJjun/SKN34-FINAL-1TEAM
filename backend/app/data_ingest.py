@@ -21,20 +21,20 @@ from app.db import SessionLocal, engine
 from app.knowledge import ingest as rag
 from app.knowledge.models import RagChunk
 from app.refprice import ingest as ref
-from app.refprice.models import RefDatasetEvent, RefDatasetVersion
+from app.refprice.models import RefDatasetVersion
 from app.shared.ids import uuid7
 
 MODELS = {**ref.MODELS, "knowledge": RagChunk}
 BUILD_PROFILE = "processed-csv-v1"
 LOCK_KEY = 718234019  # 수동 load·embed 실행끼리만 직렬화한다.
-FLAGS = (
-    "historical",
-    "current_rule_usable",
-    "automatic_calculation_usable",
-    "rag_reference_usable",
-    "needs_review",
-)
-COMMON = {"id", "source", "source_sha256", "effective_date", "review_reason", *FLAGS}
+COMMON = {"id", "source", "source_sha256", "effective_date"}
+# 현재 쓰지 않는 정형 자료는 적재해도 활성화하지 않는다.
+INACTIVE_DATASETS = {
+    "01_floorplan_quantities",
+    "02_unit_price",
+    "03_standard_productivity",
+    "06_construction_wages",
+}
 
 
 def digest_file(path: Path) -> str:
@@ -59,9 +59,6 @@ def fingerprint(values: dict) -> str:
 def row_values(kind: str, raw: dict) -> dict:
     if not raw["id"].strip() or not raw["source"].strip():
         raise ValueError("ID와 출처는 비어 있을 수 없어요")
-    for key in FLAGS:
-        if raw[key] not in {"true", "false"}:
-            raise ValueError("메타데이터 불리언은 true/false여야 해요")
     if not re.fullmatch(r"[0-9a-f]{64}", raw["source_sha256"]):
         raise ValueError("원본 SHA-256 형식이 올바르지 않아요")
     if raw["effective_date"]:
@@ -96,7 +93,6 @@ class CsvDataset:
     hashes: dict[str, str]
     sources: list[str]
     source_hashes: list[str]
-    flags: dict[str, bool]
     effective_date: date | None
 
     @property
@@ -127,8 +123,6 @@ def inspect_csv(path: Path) -> CsvDataset:
         if not required | {"parent_id"} <= set(header):
             raise ValueError(f"{path.name}: 정형 데이터 필수 열이 없어요")
     hashes, parents, sources, source_hashes, dates = {}, {}, set(), set(), set()
-    flags = {key: True for key in FLAGS}
-    historical = False
     published = set()
     for values in records(path, kind):
         key, raw = values["record_key"], values["provenance"]
@@ -148,11 +142,6 @@ def inspect_csv(path: Path) -> CsvDataset:
         sources.add(raw["source"])
         source_hashes.add(raw["source_sha256"])
         dates.add(raw["effective_date"])
-        for flag in FLAGS:
-            flags[flag] &= raw[flag] == "true"
-        historical |= raw["historical"] == "true"
-    # 빈 스냅샷도 삭제를 표현할 수 있다. 공통 메타데이터는 보수적으로 둔다.
-    flags["historical"] = historical
     for key, parent in parents.items():
         if parent and (parent not in hashes or parent == key):
             raise ValueError(f"{path.name}: 부모 참조 무결성 오류")
@@ -172,9 +161,7 @@ def inspect_csv(path: Path) -> CsvDataset:
     effective = (
         date.fromisoformat(next(iter(dates))) if len(dates) == 1 and "" not in dates else None
     )
-    return CsvDataset(
-        path, kind, digest, hashes, sorted(sources), sorted(source_hashes), flags, effective
-    )
+    return CsvDataset(path, kind, digest, hashes, sorted(sources), sorted(source_hashes), effective)
 
 
 def discover(directory: Path, selected=None):
@@ -218,9 +205,6 @@ async def assert_snapshot(session, dataset, version):
         or await stored_hashes(session, version) != dataset.hashes
     ):
         raise ValueError(f"{dataset.path.name}: DB 스냅샷이 불완전하거나 CSV와 달라요")
-    initial = await session.get(RefDatasetEvent, (version.id, 1))
-    if initial is None or initial.to_status != "draft":
-        raise ValueError(f"{dataset.path.name}: 최초 등록 이력이 없어요")
 
 
 async def plan(session, datasets, model, dimensions, profile, count_tokens, price, selected=None):
@@ -325,6 +309,14 @@ async def load_dataset(factory, dataset, model, dimensions, profile):
         await session.execute(
             text("SELECT pg_advisory_xact_lock(hashtextextended(:key,0))"), {"key": dataset.key}
         )
+        if dataset.key in INACTIVE_DATASETS:
+            await session.execute(
+                update(RefDatasetVersion)
+                .where(
+                    RefDatasetVersion.dataset_key == dataset.key, RefDatasetVersion.status.is_(True)
+                )
+                .values(status=False)
+            )
         existing = await matching_version(session, dataset, model, dimensions, profile)
         if existing:
             await assert_snapshot(session, dataset, existing)
@@ -351,11 +343,6 @@ async def load_dataset(factory, dataset, model, dimensions, profile):
             processed_sha256=dataset.sha256,
             build_profile=profile,
             effective_date=dataset.effective_date,
-            historical=dataset.flags["historical"],
-            current_rule_usable=dataset.flags["current_rule_usable"] and bool(dataset.hashes),
-            calculation_usable=dataset.flags["automatic_calculation_usable"]
-            and bool(dataset.hashes),
-            reference_usable=dataset.flags["rag_reference_usable"] and bool(dataset.hashes),
             embedding_model=model if dataset.kind == "knowledge" else None,
             embedding_dimensions=dimensions if dataset.kind == "knowledge" else None,
             provenance={
@@ -364,20 +351,10 @@ async def load_dataset(factory, dataset, model, dimensions, profile):
                 "row_count": len(dataset.hashes),
                 "load_complete": True,
             },
-            status="draft",
+            status=False,
         )
         session.add(version)
         await session.flush()
-        session.add(
-            RefDatasetEvent(
-                dataset_id=version.id,
-                event_no=1,
-                from_status=None,
-                to_status="draft",
-                actor="manual-csv-cli",
-                details={"processed_sha256": dataset.sha256, "row_count": len(dataset.hashes)},
-            )
-        )
         batch = []
         seen = {}
         for values in records(dataset.path, dataset.kind):
@@ -438,12 +415,10 @@ async def verify(
     return results
 
 
-async def activate_versions(factory, datasets, model, dimensions, profile, allow_calculation=False):
-    """검증한 스냅샷 전체의 상태·이력을 한 트랜잭션으로 전환한다."""
+async def activate_versions(factory, datasets, model, dimensions, profile):
+    """검증한 자료를 활성화하되 미사용 정형 자료는 비활성으로 유지한다."""
     if not datasets:
         raise ValueError("활성화할 CSV가 없어요")
-    if allow_calculation and not any(dataset.kind != "knowledge" for dataset in datasets):
-        raise ValueError("자동계산을 허용할 정형 자료를 선택해 주세요")
     async with factory.begin() as session:
         for dataset in sorted(datasets, key=lambda item: item.key):
             await session.execute(
@@ -467,13 +442,12 @@ async def activate_versions(factory, datasets, model, dimensions, profile, allow
                     )
                 ).all()
             )
-            if target.status != "active" and (
-                target.status not in {"draft", "approved"}
-                or target.version != max(v.version for v in versions)
+            if (
+                dataset.key not in INACTIVE_DATASETS
+                and not target.status
+                and target.version != max(v.version for v in versions)
             ):
-                raise ValueError(
-                    f"{dataset.path.name}: 최신 검토 전·승인 버전만 활성화할 수 있어요"
-                )
+                raise ValueError(f"{dataset.path.name}: 최신 비활성 버전만 활성화할 수 있어요")
             targets.append((target, versions))
 
         async def transition(version, previous, status):
@@ -485,50 +459,21 @@ async def activate_versions(factory, datasets, model, dimensions, profile, allow
             )
             if changed.rowcount != 1:
                 raise ValueError("상태 변경 충돌(409): 다시 검증해 주세요")
-            number = await session.scalar(
-                select(func.max(RefDatasetEvent.event_no)).where(
-                    RefDatasetEvent.dataset_id == version.id
-                )
-            )
-            await session.execute(
-                insert(RefDatasetEvent.__table__),
-                {
-                    "dataset_id": version.id,
-                    "event_no": (number or 0) + 1,
-                    "from_status": previous,
-                    "to_status": status,
-                    "actor": "manual-csv-cli",
-                    "details": {"reason": "manual_verify_activate"},
-                },
-            )
 
         for target, versions in targets:
-            if allow_calculation and target.kind != "knowledge":
-                if not target.provenance.get("row_count"):
-                    raise ValueError("빈 정형 자료는 자동계산을 허용할 수 없어요")
-                target.calculation_usable = True
-                target.provenance = {
-                    **target.provenance,
-                    "calculation_permission": {
-                        "actor": "manual-csv-cli",
-                        "processed_sha256": target.processed_sha256,
-                        "reason": "explicit_allow_calculation",
-                    },
-                }
-            if target.status == "active":
+            if target.dataset_key in INACTIVE_DATASETS:
+                for version in versions:
+                    if version.status:
+                        await transition(version, True, False)
+                continue
+            if target.status:
                 continue
             for previous in versions:
-                if previous.status == "active":
-                    await transition(previous, "active", "retired")
-            if target.status == "draft":
-                await transition(target, "draft", "approved")
-            await transition(target, "approved", "active")
-        for item in verified:
-            item["status"] = "active"
-        if allow_calculation:
-            await session.flush()
-            for item, (target, _) in zip(verified, targets, strict=True):
-                item["calculation_usable"] = target.calculation_usable
+                if previous.status:
+                    await transition(previous, True, False)
+            await transition(target, False, True)
+        for item, (target, _) in zip(verified, targets, strict=True):
+            item["status"] = target.dataset_key not in INACTIVE_DATASETS
         return verified
 
 
@@ -547,13 +492,7 @@ def show_report(report, command, as_json=False):
     print(f"CSV {len(files):,}개 | 전체 {sum(f['rows'] for f in files):,}행")
     if "verified" in report:
         print("파일 | 검증한 행 | 버전 | 상태 | 임베딩 미완료")
-        states = {
-            "draft": "검토 전",
-            "approved": "승인됨",
-            "active": "사용 중",
-            "retired": "사용 종료",
-            "rejected": "반려됨",
-        }
+        states = {False: "비활성", True: "활성"}
         for item in report["verified"]:
             print(
                 f"  {item['file']} | {item['rows']:,}행 | {item['version']}차 | "
@@ -582,17 +521,11 @@ def show_report(report, command, as_json=False):
             print("실제로 실행하려면 --execute를 붙여 주세요.")
     else:
         if report.get("activated"):
-            print("활성화 완료 · 새 버전은 사용 중, 이전 사용 버전은 사용 종료로 보존해요.")
-        if report.get("calculation_allowed"):
-            print("자동계산 허용 완료 · 정형 자료에만 적용하고 원본 검토 표시는 보존해요.")
+            print("활성화 완료 · 미사용 정형 자료 4종은 비활성으로 유지해요.")
         print("요청한 작업과 최종 검증이 끝났어요.")
 
 
 async def run(args):
-    if args.allow_calculation and not args.activate:
-        raise ValueError(
-            "--allow-calculation은 verify --require-embeddings --activate와 함께 사용해 주세요"
-        )
     if args.activate and (args.command != "verify" or not args.require_embeddings):
         raise ValueError("--activate는 verify --require-embeddings와 함께 사용해 주세요")
     rag.check_profile(args.model, args.dimensions)
@@ -639,11 +572,9 @@ async def run(args):
                 args.model,
                 args.dimensions,
                 args.build_profile,
-                allow_calculation=args.allow_calculation,
             )
         report["executed"] = True
         report["activated"] = True
-        report["calculation_allowed"] = args.allow_calculation
         show_report(report, args.command, args.json)
         return
     if args.command in {"plan", "verify"} or not args.execute:
@@ -737,14 +668,9 @@ async def run(args):
 def parser():
     result = argparse.ArgumentParser(description="전처리 CSV 수동 적재·임베딩 (기본: 읽기 전용)")
     result.add_argument(
-        "--allow-calculation",
-        action="store_true",
-        help="--activate와 함께 정형 자료의 자동계산 사용을 명시적으로 허용",
-    )
-    result.add_argument(
         "--activate",
         action="store_true",
-        help="verify --require-embeddings 통과 후 버전을 활성화 (DB 상태 변경)",
+        help="verify --require-embeddings 통과 후 활성화 (미사용 정형 자료 4종은 비활성 유지)",
     )
     result.add_argument("--json", action="store_true", help="기계 처리용 JSON으로 출력")
     result.add_argument("command", choices=("plan", "load", "embed", "verify"))
