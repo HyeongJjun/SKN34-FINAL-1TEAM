@@ -203,3 +203,13 @@ def test_suggest_pick_uses_meaning_closeness_when_given():
         "초배지는 왜 발라요?": 0.7
     }  # 너무 멀거나 되풀이에 가까우면 뺀다
     assert suggest.pick(ix, q, cands=cands, cited={"K1"}, sims=far) == []
+
+
+def test_suggest_bank_skips_out_of_scope_chunks():
+    chunks = [
+        bm25.Chunk(ref="K1", doc="d", text="벽지 들뜸은 바탕 습기 때문이에요", hints=("벽지 들뜸은 왜 생겨요?",), trades=("도배",), rid="K1"),
+        bm25.Chunk(ref="K2", doc="d", text="벽 뒤 배관 누수로 벽지가 들떠요", hints=("수도사업소가 누수 진단해 줘요?",), trades=("설비", "욕실"), rid="K2"),
+    ]  # fmt: skip
+    ix = bm25.build(chunks, {"d": bm25.Doc(title="안내", kind="official")})
+    cands = suggest.candidates(ix, "벽지가 들떴어요", shown=["K1", "K2"], cited=set())
+    assert [p.text for p in cands] == ["벽지 들뜸은 왜 생겨요?"]
