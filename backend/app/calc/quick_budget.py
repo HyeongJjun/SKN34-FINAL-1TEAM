@@ -2,6 +2,8 @@
 
 - 모르는 칸(None)은 실견적에서 흔한 값으로 채우고, 채운 값은 assumed에 적는다
 - 도배 유형을 모르면 기본형으로 계산하고 저가형 범위를 alt로 따로 낸다(범위 하나에 섞지 않는다)
+- 실크벽지 종류(papers)를 넘기면 도배 유형 대신 벽지 종류를 묻는다. 모르면 첫 종류로 계산하고
+  나머지 종류 범위를 alt로 낸다
 - '더 정확히' 질문(asks)은 답에 따라 범위가 가장 크게 달라지는 칸부터 늘어놓는다
 금액은 market_band가 만들고, 여기서는 부가세를 붙여 만 원 단위로 맞춘다. DB · HTTP · 시계 없음.
 """
@@ -13,7 +15,7 @@ from typing import Literal
 from app.calc import market_band
 from app.calc.common import PYEONG_M2, VAT_RATE, AreaBasis, won
 from app.calc.plan_qty import PlanQty
-from app.calc.precise_common import Grade, num
+from app.calc.precise_common import Grade, SilkPaper, num
 
 DoorMode = Literal["none", "leaf", "frame"]
 DOOR_KO = {"none": "안 바꿔요", "leaf": "문짝만", "frame": "문틀까지"}
@@ -30,6 +32,10 @@ class QuickIn:
     grade: Grade | None = None  # 모름 → 기본형
     ceiling: bool | None = None  # 모름 → 포함
     occupied: bool | None = None  # 모름 → 빈 집
+    paper: SilkPaper | None = None  # 고른 실크벽지 (papers가 있을 때만)
+    papers: tuple[
+        SilkPaper, ...
+    ] = ()  # 고를 수 있는 실크벽지. 비면 도배 유형(합지 · 실크)으로 묻는다
     plan: PlanQty | None = None  # 대표 집 카드(실제 평면)를 골랐으면 그 수량
     plan_name: str = ""
     part: bool = False  # 일부 방만 (plan이 고른 공간만 센 수량)
@@ -53,7 +59,7 @@ class Choice:
 
 @dataclass(frozen=True)
 class Ask:
-    key: Literal["door", "ceiling", "occupied", "grade"]
+    key: Literal["door", "ceiling", "occupied", "grade", "paper"]
     q: str
     choices: tuple[Choice, ...]
     spread: int  # 답에 따라 범위 끝이 가장 크게 달라지는 만큼
@@ -98,6 +104,7 @@ def _run(inp: QuickIn, book: market_band.MarketBook) -> tuple[TradeRange, ...]:
                 occupied=bool(inp.occupied),
                 plan=inp.plan,
                 plan_name=inp.plan_name,
+                silk=_silk(inp),
             ),
             book,
         )
@@ -127,6 +134,12 @@ def _run(inp: QuickIn, book: market_band.MarketBook) -> tuple[TradeRange, ...]:
     return tuple(out)
 
 
+def _silk(inp: QuickIn) -> SilkPaper | None:
+    if not inp.papers:
+        return None
+    return inp.paper or inp.papers[0]
+
+
 def _total(ts: tuple[TradeRange, ...]) -> tuple[int, int]:
     return sum(t.lo for t in ts), sum(t.hi for t in ts)
 
@@ -148,7 +161,10 @@ def quick(inp: QuickIn, book: market_band.MarketBook) -> QuickOut:
         assumed.append(f"도면 {inp.plan_name}에서 잰 면적 · 길이 ({what})")
     else:
         assumed.append(f"공급 {num(py.quantize(Decimal('0.1')))}평으로 어림한 면적 · 길이")
-    if inp.dobae and inp.grade is None:
+    silk = bool(inp.papers)
+    if inp.dobae and silk and inp.paper is None:
+        assumed.append(f"벽지는 {inp.papers[0].name}로 계산")
+    elif inp.dobae and not silk and inp.grade is None:
         assumed.append("도배는 기본형(실크)으로 계산")
     if inp.dobae and inp.ceiling is None:
         assumed.append("천장 도배 포함")
@@ -165,7 +181,10 @@ def quick(inp: QuickIn, book: market_band.MarketBook) -> QuickOut:
     ts = _run(inp, book)
     lo, hi = _total(ts)
     alt = None
-    if inp.dobae and inp.grade is None:
+    if inp.dobae and silk and inp.paper is None and len(inp.papers) > 1:
+        other = inp.papers[1]
+        alt = Choice(other.key, f"{other.name}면", *_total(_run(replace(inp, paper=other), book)))
+    elif inp.dobae and not silk and inp.grade is None:
         alt = Choice(
             "economy", "저가형(합지)이면", *_total(_run(replace(inp, grade="economy"), book))
         )
@@ -178,7 +197,12 @@ def quick(inp: QuickIn, book: market_band.MarketBook) -> QuickOut:
     if inp.dobae and inp.ceiling is None:
         opts = [(True, "천장도 해요"), (False, "벽만 해요")]
         asks.append(Ask("ceiling", "천장도 도배해요?", _choices(inp, book, "ceiling", opts), 0))
-    if inp.dobae and inp.grade is None:
+    if inp.dobae and silk and inp.paper is None:
+        choices = tuple(
+            Choice(s.key, s.name, *_total(_run(replace(inp, paper=s), book))) for s in inp.papers
+        )
+        asks.append(Ask("paper", "실크벽지 종류를 정했어요?", choices, 0))
+    elif inp.dobae and not silk and inp.grade is None:
         opts = [("basic", "기본형(실크)"), ("economy", "저가형(합지)")]
         asks.append(Ask("grade", "도배 유형을 정했어요?", _choices(inp, book, "grade", opts), 0))
     if inp.occupied is None:

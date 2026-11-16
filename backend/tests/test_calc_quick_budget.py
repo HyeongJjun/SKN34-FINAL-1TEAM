@@ -49,7 +49,8 @@ def test_quick_budget_api(api):
     signup(api)
     r = api.post("/v2/quick-budget", json={"pyeong": 32, "molding": True, "base": True})
     assert r.status_code == 200, r.text
-    assert (r.json()["lo"], r.json()["hi"]) == (3_710_000, 5_450_000)
+    # API는 실크벽지 종류로 계산한다 (베스띠 · 로하스 평당 값 → 시장 실크 평균보다 1만 원 낮음)
+    assert (r.json()["lo"], r.json()["hi"]) == (3_700_000, 5_440_000)
     assert api.post("/v2/quick-budget", json={}).status_code == 422
     assert api.post("/v2/quick-budget", json={"pyeong": 32, "dobae": False}).status_code == 422
     whole = api.post("/v2/quick-budget", json={"plan": {"id": "fp04"}}).json()

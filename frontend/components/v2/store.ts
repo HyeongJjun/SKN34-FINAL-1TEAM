@@ -25,6 +25,7 @@ export type QuickAns = {
   base: boolean;
   door: "none" | "leaf" | "frame" | null;
   grade: "economy" | "basic" | null;
+  paper?: "best" | "diamant" | null; // 실크벽지 종류 (data.ts SILKS)
   ceiling: boolean | null;
   occupied: boolean | null;
 };

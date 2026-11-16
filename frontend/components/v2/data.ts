@@ -82,6 +82,18 @@ export const ALL_CATS: Cat[] = [
 export const SHOWN_CATS = ["wallpaper"];
 export const CATS: Cat[] = ALL_CATS.filter((c) => SHOWN_CATS.includes(c.id));
 export const DOBAE_ONLY = SHOWN_CATS.length === 1 && SHOWN_CATS[0] === "wallpaper";
+/** 지금 고를 수 있는 벽지: 실크벽지 두 종류. 값은 업체 견적서 1건의 평당 값이고, 자재 자료가 더 모이면 이 목록을 늘린다.
+    계산 엔진도 같은 id로 평당 값을 찾는다 (backend/app/refprice/book.py SILK_2026) */
+export const SILKS = [
+  { id: "wall-silk-best", key: "best", ko: "베스띠 · 로하스", sub: "가장 많이 쓰는 실크" },
+  { id: "wall-silk-diamant", key: "diamant", ko: "디아망 · 프리모", sub: "두껍고 엠보가 깊은 고급 실크" },
+] as const;
+export type SilkKey = (typeof SILKS)[number]["key"];
+/** 화면에 보일 자재만 남긴다: 벽지는 SILKS만 */
+export function shownMaterials<T extends { id: string; cat: string }>(list: T[]): T[] {
+  const silk = new Set<string>(SILKS.map((s) => s.id));
+  return list.filter((m) => m.cat !== "wallpaper" || silk.has(m.id));
+}
 export const CAT: Record<string, Cat> = Object.fromEntries(ALL_CATS.map((c) => [c.id, c]));
 export const TIERS: Record<string, string> = { economy: "베이직", basic: "스탠다드", premium: "프리미엄" };
 export const TIER_ORDER = ["economy", "basic", "premium"] as const;

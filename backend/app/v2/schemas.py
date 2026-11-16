@@ -567,6 +567,9 @@ class V2QuickIn(BaseModel):
     base: StrictBool = False
     door: Literal["none", "leaf", "frame"] | None = None
     grade: Literal["economy", "basic"] | None = None
+    paper: Literal["best", "diamant"] | None = (
+        None  # 실크벽지 종류 (베스띠 · 로하스 / 디아망 · 프리모)
+    )
     ceiling: StrictBool | None = None
     occupied: StrictBool | None = None
 
@@ -585,7 +588,7 @@ class V2QuickChoiceOut(BaseModel):
 
 
 class V2QuickAskOut(BaseModel):
-    key: Literal["door", "ceiling", "occupied", "grade"]
+    key: Literal["door", "ceiling", "occupied", "grade", "paper"]
     q: str
     choices: list[V2QuickChoiceOut]
     spread: int

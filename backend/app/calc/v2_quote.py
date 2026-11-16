@@ -5,7 +5,7 @@
 """
 
 import json
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import date
 from decimal import Decimal
 
@@ -14,7 +14,7 @@ from app.calc.common import Line, m2, pyeong_to_m2
 from app.calc.dobae import DobaePrices
 from app.calc.mokgong import MokgongPrices
 from app.calc.plan_qty import PlanQty
-from app.calc.precise_common import V2Line, num
+from app.calc.precise_common import SilkPaper, V2Line, num
 from app.calc.v2_ref_trade import RefMaterial, ref_trade
 
 TRADE_OF = {"wallpaper": "dobae", "carpentry": "mokgong"}
@@ -49,6 +49,8 @@ class V2Books:
     materials: dict[str, RefMaterial]
     cat_ko: dict[str, str]
     dobae_removal_calc: str
+    silk: dict[str, SilkPaper] = field(default_factory=dict)  # 자재 id → 실크벽지 평당 값
+    silk_default: str = ""  # 벽지를 안 골랐을 때 쓸 자재 id
 
 
 @dataclass(frozen=True)
@@ -81,6 +83,7 @@ class V2Inputs:
     doors: int
     doors_auto: dict
     assumed: list[str]
+    silk: SilkPaper | None = None  # 벽지 줄에 쓸 실크벽지 (합지면 없음)
 
 
 def rooms_for(py: Decimal) -> int:
@@ -127,8 +130,15 @@ def inputs(q: V2QuoteInput, books: V2Books) -> V2Inputs:
         r, b = rooms_for(py), baths_for(py)
         auto = {"n": r + b, "how": f"{num(py)}평 기준 방 {r} + 욕실 {b}"}
     doors = q.mok.door.count if q.mok.door.count is not None else auto["n"]
-    pick = books.materials.get(q.picks.get("wallpaper", ""))
+    pick_id = q.picks.get("wallpaper", "")
+    pick = books.materials.get(pick_id)
     grade = q.grade or ("economy" if pick and pick.tier == "economy" else "basic")
+    silk = None
+    if grade != "economy" and books.silk:
+        silk = books.silk.get(pick_id)
+        if silk is None and "wallpaper" in q.cats:
+            silk = books.silk[books.silk_default]
+            assumed.append(f"벽지를 아직 안 골라서 {silk.name}로 잡았어요")
     items = mok_items(q.mok)
     if not q.door_count_set and "door" in items:
         assumed.append(f"방문은 {auto['how']} {doors}개로 잡았어요")
@@ -143,6 +153,7 @@ def inputs(q: V2QuoteInput, books: V2Books) -> V2Inputs:
         doors=doors,
         doors_auto=auto,
         assumed=assumed,
+        silk=silk,
     )
 
 
@@ -267,6 +278,7 @@ def _dobae(q: V2QuoteInput, inp: V2Inputs, books: V2Books) -> dict:
             balcony_ext=inp.balcony,
             plan=plan.qty if plan else None,
             plan_name=plan.name if plan else "",
+            silk=inp.silk,
         ),
         p,
     )
@@ -310,6 +322,7 @@ def market_input(
             balcony_ext=inp.balcony,
             plan=plan,
             plan_name=name,
+            silk=inp.silk,
         )
     return market_band.MarketMokgongInput(
         area_m2=inp.area_m2,

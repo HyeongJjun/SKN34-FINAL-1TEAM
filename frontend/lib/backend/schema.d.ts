@@ -5865,7 +5865,7 @@ export interface components {
              * Key
              * @enum {string}
              */
-            key: "door" | "ceiling" | "occupied" | "grade";
+            key: "door" | "ceiling" | "occupied" | "grade" | "paper";
             /** Q */
             q: string;
             /** Choices */
@@ -5919,6 +5919,8 @@ export interface components {
             door?: ("none" | "leaf" | "frame") | null;
             /** Grade */
             grade?: ("economy" | "basic") | null;
+            /** Paper */
+            paper?: ("best" | "diamant") | null;
             /** Ceiling */
             ceiling?: boolean | null;
             /** Occupied */

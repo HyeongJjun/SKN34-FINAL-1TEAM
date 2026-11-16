@@ -3,7 +3,7 @@
 // 첫 화면(#)과 상담 화면(#chat)을 주소 뒤 #으로 나눈다. 단계 화면은 F 표의 함수가 대화에 카드로 붙인다.
 import { useEffect, useRef, useState } from "react";
 import { Board, BoardBand } from "./Board";
-import { type Material, MODE_LABEL, STEP_INDEX, STEPS, type StyleData } from "./data";
+import { type Material, MODE_LABEL, shownMaterials, STEP_INDEX, STEPS, type StyleData } from "./data";
 import { bot, busy, closeAllOverlays, F, Feed, me, Overlays, Quick, quick, resetFeed, Toast, useFeed } from "./engine";
 import { stepFn } from "./flow";
 import { Home } from "./home/Home";
@@ -344,7 +344,7 @@ export function V2App({ userId }: { userId: string }) {
         return r.json() as Promise<{ materials: Material[]; styles: Record<string, StyleData> }>;
       })
       .then((d) => {
-        DATA.materials = d.materials;
+        DATA.materials = shownMaterials(d.materials);
         DATA.styles = d.styles;
         DATA.ready = true;
         touch();

@@ -1,13 +1,15 @@
 "use client";
-// 빠른 예산 카드: 평수 · 어디 · 도배 유형만 묻고 시장 범위를 보여 준다. 지금은 도배만 연다(data.ts SHOWN_CATS).
+// 빠른 예산 카드: 평수 · 어디 · 실크벽지 종류만 묻고 시장 범위를 보여 준다. 지금은 도배만 연다(data.ts SHOWN_CATS · SILKS).
 // 금액 · 기본값 · '더 정확히' 순서는 모두 /v2/quick-budget(계산 엔진) 응답 그대로다. 화면은 계산하지 않는다.
 import { useEffect, useRef, useState } from "react";
 import type { components } from "@/lib/backend/schema";
 import { errorText } from "@/lib/backend/client";
 import { v2Post } from "../api";
-import { DOBAE_ONLY } from "../data";
+import { DOBAE_ONLY, priceText, SILKS, type SilkKey } from "../data";
 import { loadPlans, type PlanBrief, plansState } from "../intake/plans";
-import type { QuickAns } from "../store";
+import { openSheet } from "../materials/Sheets";
+import { matSrcs, Photo } from "../photo";
+import { DATA, type QuickAns, useV2 } from "../store";
 import s from "./budget.module.css";
 
 export type QuickOut = components["schemas"]["V2QuickOut"];
@@ -44,7 +46,7 @@ function body(a: QuickAns, list: PlanBrief[]) {
     area_basis: a.basis,
     plan: planId ? { id: planId, expanded: true, kinds: a.kinds } : null,
     dobae: a.dobae, molding: a.molding, base: a.base, door: a.door,
-    grade: a.grade, ceiling: a.ceiling, occupied: a.occupied,
+    grade: a.grade, paper: a.paper ?? null, ceiling: a.ceiling, occupied: a.occupied,
   };
 }
 const ready = (a: QuickAns) => (a.plan != null || (a.pyeong != null && a.pyeong >= 5)) && (a.dobae || a.molding || a.base || (a.door != null && a.door !== "none"));
@@ -148,7 +150,12 @@ export function QuickCard({ init, onQuote, onAsk }: { init: QuickAns; onQuote: (
         </fieldset>
       )}
 
-      {a.dobae ? (
+      {a.dobae && DOBAE_ONLY ? (
+        <fieldset className={s.q}>
+          <legend>3. 어떤 실크벽지예요?</legend>
+          <SilkTiles value={a.paper} onPick={(paper) => set({ paper })} />
+        </fieldset>
+      ) : a.dobae ? (
         <fieldset className={s.q}>
           <legend>3. 도배는 어떤 유형이에요?</legend>
           <div className={s.grades}>
@@ -179,12 +186,77 @@ export function QuickCard({ init, onQuote, onAsk }: { init: QuickAns; onQuote: (
   );
 }
 
+/** 자재 고르기 화면의 벽지 카드(사진 · 이름 · 평당 값 · 자세히)로 실크벽지 두 종류를 고른다. 고른 것은 표준견적서 벽지 자재가 된다 */
+function SilkTiles({ value, onPick }: { value: SilkKey | null | undefined; onPick: (k: SilkKey | null) => void }) {
+  useV2(); // 자재 자료(data.json)를 다 읽으면 사진 · 값을 채운다
+  return (
+    <div className={s.silks}>
+      <div className={`mgrid ${s.silkGrid}`}>
+        {SILKS.map((x) => {
+          const m = DATA.materials.find((y) => y.id === x.id);
+          const pick = () => onPick(x.key);
+          return (
+            <div
+              key={x.key}
+              className="mcard"
+              role="button"
+              tabIndex={0}
+              aria-pressed={value === x.key}
+              aria-label={`${x.ko} ${m ? priceText(m.price) : ""} ${value === x.key ? "고름" : "고르기"}`}
+              onClick={pick}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  pick();
+                }
+              }}
+            >
+              {m ? (
+                <Photo srcs={matSrcs(m)} alt={m.name}>
+                  <span className="sel" aria-hidden="true">✓</span>
+                </Photo>
+              ) : null}
+              <div className="in">
+                <span className="brand">{m?.brand ?? "LX Z:IN · 개나리벽지"}</span>
+                <span className="nm">{x.ko}</span>
+                <span className="why">{x.sub}</span>
+                <div className="meta">
+                  <span className="price">{m ? priceText(m.price, false) : ""}</span>
+                  {m?.price?.unit ? <span className="flag">{`/ ${m.price.unit}`}</span> : null}
+                </div>
+                {m ? (
+                  <button
+                    type="button"
+                    className="btn-text"
+                    style={{ minHeight: 40 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openSheet(m);
+                    }}
+                  >
+                    자세히
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <button type="button" className="chip" aria-pressed={value == null} onClick={() => onPick(null)}>
+        잘 모르겠어요 · 둘 다 보여 드려요
+      </button>
+      <small className="muted">값은 벽지 자재값만이에요(평당, 업체 견적서 기준). 색 · 무늬는 실측 때 샘플북으로 골라요.</small>
+    </div>
+  );
+}
+
 const TRADE_KO = { dobae: "도배", mokgong: "목공(몰딩 · 걸레받이 · 문)" } as const;
 
 function Result({ out, a, busy, set, onQuote, onAsk }: { out: QuickOut; a: QuickAns; busy: boolean; set: (p: Partial<QuickAns>) => void; onQuote: () => void; onAsk: (q: string) => void }) {
   const pick = (key: string, v: string) => {
     if (key === "door") set({ door: v as QuickAns["door"] });
     else if (key === "grade") set({ grade: v as QuickAns["grade"] });
+    else if (key === "paper") set({ paper: v as QuickAns["paper"] });
     else set({ [key]: v === "true" } as Partial<QuickAns>);
   };
   const asks = DOBAE_ONLY ? out.asks.filter((q) => !MOK_KEYS.has(q.key)) : out.asks;

@@ -1,7 +1,7 @@
 "use client";
 // 첫 질문(무엇이 궁금해서 왔는지) · 빠른 예산 · 빠른 예산 → 표준견적서.
 // 목적이 곧 수준 신호다: 순서부터 = 처음, 예산 · 업체 = 알아보는 중, 받은 견적 = 견적 받아 봄.
-import { CATS } from "../data";
+import { CATS, SILKS } from "../data";
 import { bot, clearQuick, F, me, quick, register } from "../engine";
 import { autoPick, setStep } from "../flow";
 import { welcome as styleWelcome } from "../intake/StyleRail";
@@ -13,7 +13,7 @@ import { freshAns, QuickCard } from "./QuickCard";
 
 // '업체를 찾고 있어요'는 지금 예산 보기와 같은 흐름이라 뺐다 (업체 연결이 생기면 다시 넣는다)
 const GOALS: [Goal, string, string, Level][] = [
-  ["budget", "도배 비용부터 알고 싶어요", "평수 · 범위 · 도배 유형만 물어요", "looking"],
+  ["budget", "도배 비용부터 알고 싶어요", "평수 · 범위 · 실크벽지 종류만 물어요", "looking"],
   ["learn", "처음이라 순서부터 알고 싶어요", "공사 순서와 낱말을 짧게 보고 금액으로 가요", "new"],
   ["check", "받은 견적이 맞는지 보고 싶어요", "받은 금액만 넣으면 시장 기준과 맞춰 봐요", "experienced"],
 ];
@@ -87,6 +87,8 @@ export async function toQuote(a: QuickAns, planId: string | null) {
     m.door = { mode, pick: mok10DefaultPick(mode), count: null };
   }
   autoPick();
+  // 빠른 예산에서 고른 실크벽지를 자재로 넣는다 (추천 1순위가 덮지 않게 autoPick 뒤에). 모르면 베스띠 · 로하스
+  if (a.dobae) S.picks.wallpaper = (SILKS.find((x) => x.key === a.paper) ?? SILKS[0]).id;
   S.guideSeen = true;
   S.far = Math.max(S.far, 6);
   touch();

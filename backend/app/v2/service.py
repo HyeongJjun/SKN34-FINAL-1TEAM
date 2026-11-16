@@ -12,7 +12,7 @@ from app.calc.common import FORMULA_VERSION, from_entered, pyeong_to_m2
 from app.calc.plan_qty import PlanOptions, from_plan
 from app.calc.v2_quote import V2Books, V2Plan, V2QuoteInput, build, inputs, market_input
 from app.refprice import v2_ref
-from app.refprice.book import DOBAE_2026H2, MOKGONG_2026H2
+from app.refprice.book import DOBAE_2026H2, MOKGONG_2026H2, SILK_2026, SILK_DEFAULT
 from app.refprice.floor_plans import plans
 from app.refprice.holidays import HOLIDAYS
 from app.refprice.market import (
@@ -41,6 +41,8 @@ def books() -> V2Books:
         materials=v2_ref.materials(),
         cat_ko=v2_ref.CAT_KO,
         dobae_removal_calc=v2_ref.DOBAE_REMOVAL_CALC,
+        silk=SILK_2026,
+        silk_default=SILK_DEFAULT,
     )
 
 
@@ -193,6 +195,9 @@ def extras_range(b: v2.V2ExtrasIn) -> v2.V2ExtrasOut:
     return v2.V2ExtrasOut(lo=r.lo, hi=r.hi, notes=r.notes)
 
 
+SILK_BY_KEY = {s.key: s for s in SILK_2026.values()}
+
+
 def quick(b: v2.V2QuickIn) -> v2.V2QuickOut:
     """빠른 예산: 집 카드를 골랐으면 그 평면에서 잰 수량, 아니면 평형으로 어림한다."""
     plan, name, area = None, "", None
@@ -213,6 +218,8 @@ def quick(b: v2.V2QuickIn) -> v2.V2QuickOut:
         grade=b.grade,
         ceiling=b.ceiling,
         occupied=b.occupied,
+        paper=SILK_BY_KEY.get(b.paper) if b.paper else None,
+        papers=tuple(SILK_2026.values()),
         plan=plan,
         plan_name=name,
         part=b.plan is not None and b.plan.kinds is not None,
