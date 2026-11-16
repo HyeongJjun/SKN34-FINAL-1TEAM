@@ -23,6 +23,13 @@ def test_status_conversion_and_data_preservation(unknown):
     statuses = ["active", "draft", "approved", "retired", "rejected"]
     kinds = ["knowledge", "floorplan", "unit_price", "productivity", "wage"]
     ids = [uuid.uuid4() for _ in kinds]
+    inactive_keys = [
+        "01_floorplan_quantities",
+        "02_unit_price",
+        "03_standard_productivity",
+        "06_construction_wages",
+    ]
+    inactive_ids = [uuid.uuid4() for _ in inactive_keys]
     tables = ["rag_chunks"] + [f"ref_{kind}_rows" for kind in kinds[1:]]
     removed = {"rag_chunks": "review_reason", "ref_productivity_rows": "semantic_status"}
 
@@ -53,6 +60,18 @@ def test_status_conversion_and_data_preservation(unknown):
                 (dataset_id,event_no,from_status,to_status,actor,details)
                 VALUES ($1,1,NULL,'draft','test','{}')""",
                 ident,
+            )
+        for ident, key, kind in zip(inactive_ids, inactive_keys, kinds[1:], strict=True):
+            query(
+                """INSERT INTO ref_dataset_versions
+                (id,dataset_key,kind,version,source,processed_path,processed_sha256,build_profile,
+                 historical,current_rule_usable,calculation_usable,reference_usable,provenance,status)
+                VALUES ($1,$2,$3,1,'합성 출처','sample.csv',$4,'test',true,true,true,true,
+                        '{}'::jsonb,'active')""",
+                ident,
+                key,
+                kind,
+                "b" * 64,
             )
         query(
             """INSERT INTO rag_chunks
@@ -102,9 +121,9 @@ def test_status_conversion_and_data_preservation(unknown):
         migrate("head")
         assert {table: snapshot(table) for table in tables} == before
         result = query("SELECT id,status FROM ref_dataset_versions")
-        assert {row["id"]: row["status"] for row in result} == dict(
-            zip(ids, [True, False, False, False, False], strict=True)
-        )
+        expected = dict(zip(ids, [True, False, False, False, False], strict=True))
+        expected.update(dict.fromkeys(inactive_ids, False))
+        assert {row["id"]: row["status"] for row in result} == expected
         assert query("SELECT to_regclass('public.ref_dataset_events') AS name")[0]["name"] is None
     finally:
         # 실패해도 뒤 테스트가 이전 스키마를 쓰지 않게 복원한다.

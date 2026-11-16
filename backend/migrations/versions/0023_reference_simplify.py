@@ -45,7 +45,10 @@ def upgrade() -> None:
         type_=sa.Boolean(),
         existing_type=sa.Text(),
         existing_nullable=False,
-        postgresql_using="status = 'active'",
+        postgresql_using="""status = 'active' AND dataset_key NOT IN (
+            '01_floorplan_quantities', '02_unit_price',
+            '03_standard_productivity', '06_construction_wages'
+        )""",
     )
     op.alter_column("ref_dataset_versions", "status", server_default=sa.text("false"))
     op.create_index(
