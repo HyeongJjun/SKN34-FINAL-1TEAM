@@ -4511,6 +4511,8 @@ export interface components {
              * @default
              */
             plan_name: string;
+            /** Level */
+            level?: ("new" | "looking" | "experienced") | null;
         };
         /** V2AskResultIn */
         V2AskResultIn: {

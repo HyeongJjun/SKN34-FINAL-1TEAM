@@ -637,6 +637,8 @@ class V2AskProfile(BaseModel):
     photos: int = Field(default=0, ge=0, le=50)
     ref_photos: int = Field(default=0, ge=0, le=50)
     plan_name: Short = ""
+    # 첫 화면에서 고른 목적으로 정한 수준. 이번 질문 낱말과 함께 서버가 말하기 깊이를 정한다
+    level: Literal["new", "looking", "experienced"] | None = None
 
 
 class V2AskMaterial(BaseModel):

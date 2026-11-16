@@ -4,7 +4,7 @@ import pytest
 import redis
 
 from app.agent import llm
-from app.v2 import ask
+from app.v2 import ask, ask_chat
 from tests.conftest import REDIS_URL, query
 from tests.helpers import signup
 from tests.test_v2_ask import FakeLLM, call
@@ -258,3 +258,8 @@ def test_wrong_results_keep_turn_for_retry(api, fake):
     assert out["done"] and out["text"] == "실크는 닦기 쉬워요."
     # 끝난 턴을 다시 보내면 404 (LLM 다시 안 부름)
     assert api.post(f"/v2/ask/{turn}", json=RESULT).status_code == 404
+
+
+def test_chat_prompt_keeps_ask_back_mark_rule():
+    """기다리는 역할은 답 끝 [되물음] 표시로만 남는다. 상담 지시문 판을 올려도 그 규칙이 있어야 한다"""
+    assert ask_chat.ASKED in ask.PROMPTS["chat"]

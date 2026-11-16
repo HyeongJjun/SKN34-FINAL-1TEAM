@@ -1,8 +1,8 @@
 "use client";
-// AI 상담 (v10 askClaude · askAboutStyle · askAboutMat · askCompare · askPhotos · askReview · agentAnswer · nextButton).
+// AI 상담 (v10 askClaude · askAboutStyle · askAboutMat · askCompare · askPhotos · askReview · agentAnswer).
 // 질문 · 고객 상태 · 자료만 서버(/v2/ask)에 보낸다. 지시문 · 입구 관문 · 숫자 검사는 서버가 한다.
-// AI 답 메시지는 글이 바뀌는 말풍선(live) 하나로 두고, 끝나면 근거 · 다음 버튼 · '보드에 담았어요'를 붙인다.
-import { useState } from "react";
+// AI 답 메시지는 글이 바뀌는 말풍선(live) 하나로 두고, 끝나면 근거 · '보드에 담을까요?' · 이어 물을 질문을 붙인다.
+import { type ReactNode, useState } from "react";
 import { CAT, type Material, type Style } from "../data";
 import { addMsg, bot, busy, F, live, me, type MsgHandle, quick, refreshFeed } from "../engine";
 import { recommend, STEP_NAMES, stepFn } from "../flow";
@@ -10,12 +10,35 @@ import { DATA, S } from "../store";
 import { quoteBody } from "../doc/api";
 import { materialsFor, profileOf } from "./context";
 import { type AskOut, localClaude, runAsk, toImageBlock } from "./llm";
-import { cleanMarks, nextStepOf } from "./route";
+import { cleanMarks } from "./route";
 import { ragSources } from "./Sources";
 import { type After, claudeTools, type Pending } from "./tools";
 
 type Bub = { text: string; typing: boolean };
 type Live = { use: () => Bub; set: (b: Bub) => void };
+
+/** 답 글을 줄 단위로: '· '로 시작하는 줄은 목록, 짧고 문장 끝이 없는 줄은 소제목. 별표(**)는 지운다 */
+const HEAD = /^[^·•\-\d].{0,18}$/;
+function AnswerText({ text }: { text: string }) {
+  const plain = text.replace(/\*\*/g, "");
+  const lines = plain.split("\n").map((l) => l.trim()).filter(Boolean);
+  if (!lines.some((l) => /^[·•-]\s/.test(l))) return <>{plain}</>;
+  const out: ReactNode[] = [];
+  let items: string[] = [];
+  const flush = () => {
+    if (items.length) out.push(<ul key={out.length} className="ans-list">{items.map((t, i) => <li key={i}>{t}</li>)}</ul>);
+    items = [];
+  };
+  for (const l of lines) {
+    if (/^[·•-]\s/.test(l)) items.push(l.replace(/^[·•-]\s+/, ""));
+    else {
+      flush();
+      out.push(HEAD.test(l) && !/[.?!요다]$/.test(l) ? <b key={out.length} className="ans-head">{l}</b> : <p key={out.length} className="ans-p">{l}</p>);
+    }
+  }
+  flush();
+  return <>{out}</>;
+}
 
 /** AI가 담자고 한 값: 고객이 [담기]를 눌러야 보드에 저장한다 */
 function SaveAsk({ items }: { items: Pending[] }) {
@@ -43,7 +66,7 @@ function AiBubble({ lv }: { lv: Live }) {
           <i />
         </span>
       ) : (
-        b.text
+        <AnswerText text={b.text} />
       )}
     </div>
   );
@@ -59,30 +82,6 @@ function scrollLast() {
 
 /** 단계 이름으로 그 단계를 열 수 있는지 (v10 STEP_FN[id]) */
 const hasStep = (id: string) => (id === "guide" ? !!F.guideStep : !!(STEP_NAMES[id] && F[STEP_NAMES[id]]));
-
-function NextBtn({ step, ko }: { step: string; ko: string }) {
-  const [done, setDone] = useState(false);
-  return (
-    <p className="next-btn">
-      <button
-        type="button"
-        className="btn"
-        disabled={done}
-        onClick={() => {
-          setDone(true);
-          stepFn(step)();
-        }}
-      >
-        {`${ko} 열기 →`}
-      </button>
-    </p>
-  );
-}
-function nextButton(t: string, opened?: string) {
-  const n = nextStepOf(t);
-  if (!n || n.step === opened || !hasStep(n.step)) return null;
-  return <NextBtn step={n.step} ko={n.ko} />;
-}
 
 /* 질문 종류: 서버 입구 관문(팀 의도 분류)이 정한 것 */
 const INTENT_KO: Record<string, string> = { orchestrator: "일반 안내", trade: "도배 · 목공 상담", quote_explanation: "견적 · 공사비", schedule: "공정 순서 · 기간" };
@@ -134,11 +133,8 @@ export async function askClaude(q: string, { label, images, withPhotos }: { labe
   const el = addMsg("bot", <AiBubble lv={lv} />);
   scrollLast();
   const pending: Pending[] = [], after: After = {};
-  let out: AskOut | null = null, shown = "";
-  const show = (t: string) => {
-    shown = t;
-    lv.set({ text: t, typing: false });
-  };
+  let out: AskOut | null = null;
+  const show = (t: string) => lv.set({ text: t, typing: false });
   try {
     const sendPhotos = images || (withPhotos && (S.photos.length || S.refs.length));
     const files = sendPhotos ? [...S.photos, ...S.refs].map((p) => p.file).slice(0, 2) : [];
@@ -168,8 +164,6 @@ export async function askClaude(q: string, { label, images, withPhotos }: { labe
   if (out) droppedNote(el, out.dropped);
   const src = ragSources(out);
   if (src) el.append(src);
-  const nb = nextButton(shown, after.step);
-  if (nb) el.append(nb);
   if (pending.length) el.append(<SaveAsk items={pending} />);
   if (out?.trade) el.append(<p className="route-chip muted">{`질문 답변: ${out.trade}`}</p>);
   const it = out?.intent;
@@ -228,7 +222,7 @@ export async function agentAnswer({ label, ask, kind, quote, plan }: {
   const after: After = {};
   let out: AskOut | null = null;
   try {
-    out = await runAsk({ kind, message: ask, quote, plan }, [], ctl.signal);
+    out = await runAsk({ kind, message: ask, quote, plan, profile: profileOf() } as Parameters<typeof runAsk>[0], [], ctl.signal);
   } catch {
     out = null;
   } finally {

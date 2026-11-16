@@ -27,11 +27,12 @@ from app.shared.errors import AppError
 from app.v2 import guard, preview_service, service
 from app.v2 import schemas as v2
 from app.v2.ask_tools import BY_KIND, CALC_TOOLS, RAG_TRADES, SERVER_TOOLS, tools_for
+from app.v2.level import level_text
 
 _DIR = Path(__file__).with_name("prompts")
 PROMPT_VERSION = {
-    "chat": "chat_v2",
-    "quote_explanation": "quote_explanation_v1",
+    "chat": "chat_v3",
+    "quote_explanation": "quote_explanation_v2",
     "schedule": "schedule_v1",
 }
 PROMPTS = {k: (_DIR / f"{v}.md").read_text(encoding="utf-8") for k, v in PROMPT_VERSION.items()}
@@ -516,7 +517,10 @@ def _system(
             raise AppError(422, "invalid", "견적 정보가 필요해요.")
         q = service.quote(b.quote, today)
         facts = _quote_facts(q, b.profile.budget_manwon)
-        system = "\n".join([PROMPTS["quote_explanation"], "## 표준견적서 데이터", facts, "", refs])
+        level = level_text(b.profile.level, b.message)
+        system = "\n".join(
+            [PROMPTS["quote_explanation"], level, "## 표준견적서 데이터", facts, "", refs]
+        )
         calc = [facts, json.dumps(q.model_dump(mode="json"))]
         return system, [*calc, QUOTE_CONSTS, refs], calc
     if b.kind == "schedule":
@@ -537,9 +541,10 @@ def _system(
         x for x in (PROMPTS["chat"].strip(), own, hint, IMAGE_RULE if b.images else "") if x
     )
     profile, materials = _profile_text(b.profile, b.quote), _materials_text(b.materials)
-    data = [profile, "## 공정 순서\n" + guide, materials, refs]
+    level = level_text(b.profile.level, b.message)
+    data = [level, profile, "## 공정 순서\n" + guide, materials, refs]
     if trade:
-        data.insert(1, _trade_text(trade))
+        data.insert(2, _trade_text(trade))
     system = rules + "\n\n" + "\n\n".join(data)
     return system, [profile, materials, refs], []
 
