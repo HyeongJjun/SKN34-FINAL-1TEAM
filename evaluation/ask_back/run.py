@@ -49,11 +49,12 @@ async def _one(text: str) -> tuple[str, bool]:
             for c in out.tool_calls
         ]
         out = await ask.resume("eval", out.turn or "", v2.V2AskResumeIn(results=results))
-    return out.text, bool(out.failed)
+    return out.text, bool(out.failed), out.dropped
 
 
 async def main(split: str) -> None:
     from app.agent import llm
+    from app.v2.ask_chat import asked_back
 
     calls = [0]
     real = llm.chat_tools
@@ -69,8 +70,8 @@ async def main(split: str) -> None:
     hit = {True: [0, 0], False: [0, 0]}  # ask: [표시 붙임, 전체]
     failed = 0
     for r in rows:
-        text, fail = await _one(r["text"])
-        marked = "[되물음]" in text
+        text, fail, dropped = await _one(r["text"])
+        _, marked = asked_back(text, dropped)  # 실제 저장과 같은 판정
         failed += fail
         hit[r["ask"]][0] += marked
         hit[r["ask"]][1] += 1
