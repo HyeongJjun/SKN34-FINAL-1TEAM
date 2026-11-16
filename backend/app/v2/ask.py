@@ -36,6 +36,7 @@ MAX_CALLS = 6  # 턴당 LLM 호출 (도구 4번 + 답 쓰기 + 다시 쓰라는 
 TURN_TTL = 600
 ASK_PER_HOUR = 60  # 사용자별 시간당 질문 수 (APP_ENV=local이면 세지 않는다)
 TOO_MANY = "AI에게 너무 많이 물었어요. 잠시 뒤에 다시 해 주세요."
+GONE = "질문이 끝났거나 없어요. 다시 물어봐 주세요."
 OUT_TEXT = "지금은 아파트 도배와 목공만 도와드려요. 견적 · 공정표 · 업체 고르기는 물어봐 주세요."
 FAILED = {
     "chat": "답을 만들지 못했어요. 다시 물어봐 주세요.",
@@ -273,14 +274,31 @@ async def _save(turn_id: str, turn: dict) -> None:
         raise AppError(503, "unavailable", "잠시 뒤에 다시 물어봐 주세요.") from e
 
 
-async def _load(turn_id: str, user_id: str) -> dict:
+# 읽은 값이 그대로일 때만 지운다(비교와 삭제를 한 번에). 그사이 다음 도구 턴이 같은 키에 저장됐으면 지우지 않는다
+_TAKE = (
+    "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) end return 0"
+)
+
+
+async def take(turn_id: str, user_id: str, ids: list[str]) -> dict:
+    """재개할 턴을 가져간다. 같은 턴 재개가 겹치면 읽은 값을 먼저 지운 요청만 이어 간다(늦은 쪽은 404).
+
+    화면 도구를 다시 기다리면 _run이 같은 키에 다시 저장한다. 늦은 요청은 그 새 턴을 지우지 못한다.
+    ids: 화면이 보낸 도구 결과 id. 기다리는 id와 다르면 지우지 않고 422라 다시 보낼 수 있다.
+    """
+    key = _key(turn_id)
     try:
-        raw = await redis.get(_key(turn_id))
+        raw = await redis.get(key)
+        turn = json.loads(raw) if raw else None
+        if not turn or turn.get("user") != user_id:
+            raise AppError(404, "not_found", GONE)
+        if len(ids) != len(set(ids)) or set(ids) != set(turn["pending"]):  # 같은 id 두 번도 422
+            raise AppError(422, "invalid", "도구 결과가 맞지 않아요.")
+        taken = await redis.eval(_TAKE, 1, key, raw)
     except RedisError as e:
         raise AppError(503, "unavailable", "잠시 뒤에 다시 물어봐 주세요.") from e
-    turn = json.loads(raw) if raw else None
-    if not turn or turn.get("user") != user_id:
-        raise AppError(404, "not_found", "질문이 끝났거나 없어요. 다시 물어봐 주세요.")
+    if taken != 1:
+        raise AppError(404, "not_found", GONE)
     return turn
 
 
@@ -340,11 +358,12 @@ async def start(
     return await _run(secrets.token_urlsafe(16), turn)
 
 
-async def resume(user_id: str, turn_id: str, b: v2.V2AskResumeIn) -> v2.V2AskOut:
-    turn = await _load(turn_id, user_id)
+async def resume(
+    user_id: str, turn_id: str, b: v2.V2AskResumeIn, turn: dict | None = None
+) -> v2.V2AskOut:
+    """turn: take()로 이미 가져간 턴(ask_chat이 대화 정보를 먼저 읽을 때). 없으면 여기서 가져간다."""
+    turn = turn or await take(turn_id, user_id, [r.id for r in b.results])
     got = {r.id: r.content for r in b.results}
-    if set(got) != set(turn["pending"]):
-        raise AppError(422, "invalid", "도구 결과가 맞지 않아요.")
     for call_id in turn["pending"]:
         turn["messages"].append({"role": "tool", "tool_call_id": call_id, "content": got[call_id]})
         turn["allowed"].append(got[call_id])
