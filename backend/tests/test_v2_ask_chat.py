@@ -57,6 +57,87 @@ def test_number_from_last_answer_can_be_said_again(api, fake):
     assert out["text"] == "32평이라고 하셨어요." and out["dropped"] == []
 
 
+def _waiting(chat_id):
+    return query("select waiting from chats where id = $1", chat_id)[0]["waiting"]
+
+
+def test_asked_back_answer_keeps_role_for_next_turn(api, fake):
+    f = fake(
+        {"text": "도배할 방이 몇 개예요?\n[되물음]"},
+        {"text": "알겠어요. 그 기준으로 볼게요."},
+    )
+    signup(api)
+    first = api.post("/v2/ask", json={"message": ASK}).json()
+    chat_id = first["chat_id"]
+    # 표시는 화면 · 저장 글에서 뗀다
+    assert first["text"] == "도배할 방이 몇 개예요?"
+    assert _messages(chat_id)[1]["text"] == "도배할 방이 몇 개예요?"
+    assert _waiting(chat_id) == ((first["intent"] or {}).get("label") or "orchestrator")
+
+    # 공정 상담이 되물은 상태에서 짧은 답이 오면 같은 역할(출처 rule)로 가고 역할 힌트가 붙는다
+    query("update chats set waiting = 'trade' where id = $1", chat_id)
+    second = api.post("/v2/ask", json={"message": "두 개요", "chat_id": chat_id}).json()
+    assert second["intent"]["label"] == "trade" and second["intent"]["source"] == "rule"
+    assert ask.HINTS["trade"] in f.seen[1]["system"]
+    assert _waiting(chat_id) is None  # 이번에는 되묻지 않았다
+
+
+def test_answer_without_mark_leaves_no_waiting(api, fake):
+    fake({"text": "합지는 종이 벽지예요."})
+    signup(api)
+    chat_id = api.post("/v2/ask", json={"message": ASK}).json()["chat_id"]
+    assert _waiting(chat_id) is None
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "[되물음]",  # 표시만 온 답
+        "방이 7개 맞나요?\n[되물음]",  # 출력 검사가 질문(없는 숫자)을 빼면 표시만 남는다
+    ],
+)
+def test_mark_only_answer_is_failed_and_not_saved(api, fake, answer):
+    fake({"text": answer})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": ASK}).json()
+    assert out["failed"] and out["text"] == ask.FAILED["chat"] and out["chat_id"] is None
+    assert query("select count(*) as n from chats")[0]["n"] == 0
+
+
+def test_mark_in_middle_is_not_asked_and_hidden(api, fake):
+    fake({"text": "방이 몇 개예요?\n[되물음]\n합지는 종이 벽지예요."})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": ASK}).json()
+    assert out["text"] == "방이 몇 개예요?\n\n합지는 종이 벽지예요."
+    assert _waiting(out["chat_id"]) is None
+
+
+def test_mark_on_question_line_is_asked(api, fake):
+    fake({"text": "도배할 방이 몇 개예요? [되물음]"})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": ASK}).json()
+    assert out["text"] == "도배할 방이 몇 개예요?"
+    assert _waiting(out["chat_id"]) == ((out["intent"] or {}).get("label") or "orchestrator")
+
+
+def test_guard_dropped_question_leaves_no_waiting(api, fake):
+    fake({"text": "합지는 종이 벽지예요. 방이 7개 맞나요?\n[되물음]"})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": ASK}).json()
+    assert out["text"] == "합지는 종이 벽지예요." and out["dropped"]
+    assert _waiting(out["chat_id"]) is None
+
+
+def test_mark_from_earlier_tool_round_is_not_asked(api, fake):
+    """도구 라운드마다 글이 이어 붙는다. 앞 라운드 글의 표시는 되물음이 아니다."""
+    fake({"text": "자료를 볼게요.\n[되물음]", **TOOL_TURN}, {"text": "합지는 종이 벽지예요."})
+    signup(api)
+    turn = api.post("/v2/ask", json={"message": ASK}).json()["turn"]
+    out = api.post(f"/v2/ask/{turn}", json=RESULT).json()
+    assert out["done"] and out["text"] == "자료를 볼게요.\n\n합지는 종이 벽지예요."
+    assert _waiting(out["chat_id"]) is None
+
+
 def test_other_users_chat_is_404_before_llm(api, fake):
     f = fake({"text": "합지는 종이 벽지예요."})
     signup(api)

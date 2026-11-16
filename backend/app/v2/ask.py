@@ -25,7 +25,7 @@ from app.v2.ask_tools import BY_KIND, SERVER_TOOLS, tools_for
 
 _DIR = Path(__file__).with_name("prompts")
 PROMPT_VERSION = {
-    "chat": "chat_v1",
+    "chat": "chat_v2",
     "quote_explanation": "quote_explanation_v1",
     "schedule": "schedule_v1",
 }
@@ -325,7 +325,10 @@ async def start(
         intent = await agent_gate.classify(b.message, waiting)
         if intent is not None and intent.label == "out_of_scope":
             return v2.V2AskOut(done=True, text=OUT_TEXT, gate="out", intent=_intent_out(intent))
-    sure = intent is not None and intent.confidence >= settings.intent_confidence_threshold
+    # 기다리던 역할을 이어 받은 의도(출처 rule)는 신뢰도와 상관없이 그 역할 힌트를 붙인다 (#120)
+    sure = intent is not None and (
+        intent.source == "rule" or intent.confidence >= settings.intent_confidence_threshold
+    )
     system, allowed, calc = _system(
         b, today, HINTS.get(intent.label, "") if sure and intent else ""
     )
