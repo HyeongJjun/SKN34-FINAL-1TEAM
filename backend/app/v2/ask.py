@@ -36,6 +36,7 @@ MAX_CALLS = 6  # 턴당 LLM 호출 (도구 4번 + 답 쓰기 + 다시 쓰라는 
 TURN_TTL = 600
 ASK_PER_HOUR = 60  # 사용자별 시간당 질문 수 (APP_ENV=local이면 세지 않는다)
 TOO_MANY = "AI에게 너무 많이 물었어요. 잠시 뒤에 다시 해 주세요."
+GONE = "질문이 끝났거나 없어요. 다시 물어봐 주세요."
 OUT_TEXT = "지금은 아파트 도배와 목공만 도와드려요. 견적 · 공정표 · 업체 고르기는 물어봐 주세요."
 FAILED = {
     "chat": "답을 만들지 못했어요. 다시 물어봐 주세요.",
@@ -280,7 +281,22 @@ async def _load(turn_id: str, user_id: str) -> dict:
         raise AppError(503, "unavailable", "잠시 뒤에 다시 물어봐 주세요.") from e
     turn = json.loads(raw) if raw else None
     if not turn or turn.get("user") != user_id:
-        raise AppError(404, "not_found", "질문이 끝났거나 없어요. 다시 물어봐 주세요.")
+        raise AppError(404, "not_found", GONE)
+    return turn
+
+
+async def take(turn_id: str, user_id: str) -> dict:
+    """재개할 턴을 가져간다. 같은 턴 재개가 동시에 와도 먼저 지운 요청만 이어 간다(늦은 쪽은 404).
+
+    화면 도구를 다시 기다리면 _run이 다시 저장한다.
+    """
+    turn = await _load(turn_id, user_id)
+    try:
+        taken = await redis.delete(_key(turn_id))
+    except RedisError as e:
+        raise AppError(503, "unavailable", "잠시 뒤에 다시 물어봐 주세요.") from e
+    if taken != 1:
+        raise AppError(404, "not_found", GONE)
     return turn
 
 
@@ -340,10 +356,14 @@ async def start(
     return await _run(secrets.token_urlsafe(16), turn)
 
 
-async def resume(user_id: str, turn_id: str, b: v2.V2AskResumeIn) -> v2.V2AskOut:
-    turn = await _load(turn_id, user_id)
+async def resume(
+    user_id: str, turn_id: str, b: v2.V2AskResumeIn, turn: dict | None = None
+) -> v2.V2AskOut:
+    """turn: take()로 이미 가져간 턴(ask_chat이 대화 정보를 먼저 읽을 때). 없으면 여기서 가져간다."""
+    turn = turn or await take(turn_id, user_id)
     got = {r.id: r.content for r in b.results}
     if set(got) != set(turn["pending"]):
+        await _save(turn_id, turn)  # 되돌려 놓아 화면이 맞는 결과로 다시 보낼 수 있게
         raise AppError(422, "invalid", "도구 결과가 맞지 않아요.")
     for call_id in turn["pending"]:
         turn["messages"].append({"role": "tool", "tool_call_id": call_id, "content": got[call_id]})

@@ -39,8 +39,9 @@ async def start(user_id: uuid.UUID, b: v2.V2AskIn, today: date) -> v2.V2AskOut:
 
 
 async def resume(user_id: uuid.UUID, turn_id: str, b: v2.V2AskResumeIn) -> v2.V2AskOut:
-    meta = (await ask._load(turn_id, str(user_id)))["chat"]  # ask가 턴을 지우기 전에 읽는다
-    out = await ask.resume(str(user_id), turn_id, b)
+    turn = await ask.take(turn_id, str(user_id))  # 같은 턴 재개가 겹치면 늦은 쪽은 여기서 404
+    out = await ask.resume(str(user_id), turn_id, b, turn)
+    meta = turn["chat"]
     return await _finish(user_id, out, meta)
 
 
