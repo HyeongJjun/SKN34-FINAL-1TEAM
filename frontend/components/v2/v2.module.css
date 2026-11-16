@@ -111,6 +111,7 @@
 .root :global(.msg.me .bubble) { background: var(--surface-2); padding: 10px 16px; border-radius: 18px 18px 4px 18px; }
 .root :global(.bubble.ai) { background: none; }
 .root :global(.applied) { font-size: var(--fs-xs); color: var(--ok); }
+.root :global(.save-ask) { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: var(--fs-sm); margin-top: 8px; }
 .root :global(.card) { background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 20px; min-width: 0; display: grid; gap: 16px; }
 .root :global(.card h3) { font-size: var(--fs-lg); }
 .root :global(.card.done) { opacity: .55; pointer-events: none; }

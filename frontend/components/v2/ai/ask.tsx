@@ -12,10 +12,25 @@ import { materialsFor, profileOf } from "./context";
 import { type AskOut, localClaude, runAsk, toImageBlock } from "./llm";
 import { cleanMarks, nextStepOf } from "./route";
 import { ragSources } from "./Sources";
-import { type After, claudeTools } from "./tools";
+import { type After, claudeTools, type Pending } from "./tools";
 
 type Bub = { text: string; typing: boolean };
 type Live = { use: () => Bub; set: (b: Bub) => void };
+
+/** AI가 담자고 한 값: 고객이 [담기]를 눌러야 보드에 저장한다 */
+function SaveAsk({ items }: { items: Pending[] }) {
+  const [st, setSt] = useState<"ask" | "saved" | "no">("ask");
+  const label = [...new Set(items.map((x) => x.label))].join(" · ");
+  if (st === "saved") return <p className="applied">{`✓ 보드에 담았어요 · ${label}`}</p>;
+  if (st === "no") return <p className="applied muted">담지 않았어요</p>;
+  return (
+    <div className="save-ask">
+      <span>{`우리 집 보드에 담을까요? ${label}`}</span>
+      <button type="button" className="chip sm" onClick={() => { items.forEach((x) => x.apply()); setSt("saved"); }}>담기</button>
+      <button type="button" className="chip sm ghost" onClick={() => setSt("no")}>아니에요</button>
+    </div>
+  );
+}
 
 function AiBubble({ lv }: { lv: Live }) {
   const b = lv.use();
@@ -118,7 +133,7 @@ export async function askClaude(q: string, { label, images, withPhotos }: { labe
   const lv = live<Bub>({ text: "", typing: true });
   const el = addMsg("bot", <AiBubble lv={lv} />);
   scrollLast();
-  const applied: string[] = [], after: After = {};
+  const pending: Pending[] = [], after: After = {};
   let out: AskOut | null = null, shown = "";
   const show = (t: string) => {
     shown = t;
@@ -134,7 +149,7 @@ export async function askClaude(q: string, { label, images, withPhotos }: { labe
       } catch {}
     }
     const body = { kind: "chat" as const, message: q, profile: profileOf(), quote: quoteBody(), materials: materialsFor(q), images: imgs };
-    out = await runAsk(body, claudeTools(applied, after), ctl.signal);
+    out = await runAsk(body, claudeTools(pending, after), ctl.signal);
     show(cleanMarks(out.text));
   } catch (err) {
     show(errMsg(err as AskErr));
@@ -155,7 +170,7 @@ export async function askClaude(q: string, { label, images, withPhotos }: { labe
   if (src) el.append(src);
   const nb = nextButton(shown, after.step);
   if (nb) el.append(nb);
-  if (applied.length) el.append(<p className="applied">{"✓ 보드에 담았어요 · " + [...new Set(applied)].join(" · ")}</p>);
+  if (pending.length) el.append(<SaveAsk items={pending} />);
   if (out?.trade) el.append(<p className="route-chip muted">{`질문 답변: ${out.trade}`}</p>);
   const it = out?.intent;
   if (!images && it && it.confidence >= 0.7 && INTENT_KO[it.label]) el.append(<p className="route-chip muted">{`질문 종류: ${INTENT_KO[it.label]}`}</p>);

@@ -46,7 +46,9 @@ DEFS: dict[str, dict] = {
         },
     },
     "set_home_info": {
-        "description": "고객이 말한 집 정보를 저장한다. 말한 칸만 넣는다. pyeong은 공급 평형(10~90).",
+        "description": "고객이 자기 집이라고 말한 정보만 담자고 제안한다(고객이 화면에서 담기를 눌러야 저장). "
+        "'32평 도배하면 얼마예요?'처럼 가정 · 예시로 든 숫자는 넣지 않는다. 말한 칸만 넣는다. "
+        "pyeong은 공급 평형(10~90).",
         "parameters": {
             "type": "object",
             "properties": {
