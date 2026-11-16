@@ -360,3 +360,37 @@ def test_suggest_uses_embedding_closeness(api, fake, monkeypatch):
     out = api.post("/v2/ask", json={"message": "합지 벽지 특징이 뭐예요?"}).json()
     assert seen[-1][0] == "합지 벽지 특징이 뭐예요?"  # 질문과 후보를 한 번에
     assert out["suggest"] == [{"text": "초배지는 왜 발라요?", "ref": "K2"}]
+
+
+@pytest.mark.parametrize(
+    ("message", "trade"),
+    [
+        ("합지랑 실크 벽지는 뭐가 달라요?", "도배"),
+        ("방문은 문짝만 바꿔도 돼요?", "목공"),
+        ("몰딩은 도배 전에 하나요?", None),  # 두 공정이면 일반 상담
+        ("방문판매로 계약했는데 취소돼요?", None),
+    ],
+)
+def test_trade_agent_is_picked_by_code(api, fake, message, trade):
+    f = fake({"text": "답이에요."})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": message}).json()
+    system = f.seen[0]["system"]
+    assert out["trade"] == trade
+    for name, prompt in ask.TRADE_PROMPTS.items():
+        assert (prompt.strip()[:20] in system) == (name == trade)
+    assert ("## 공정 설정" in system) == (trade is not None)
+
+
+def test_trade_agent_searches_own_trade_by_default(api, fake, monkeypatch):
+    seen = []
+
+    async def search(q, *, queries=None, trade=None):
+        seen.append(trade)
+        return ask.bm25.Result([], False, [])
+
+    monkeypatch.setattr(ask, "_search", search)
+    fake({"tool_calls": [call("search_knowledge", {"query": "벽지 들뜸"})]}, {"text": "답이에요."})
+    signup(api)
+    api.post("/v2/ask", json={"message": "벽지가 들떴어요"})
+    assert seen == ["도배", "도배"]  # 첫 검색과 도구 검색 모두 도배 범위

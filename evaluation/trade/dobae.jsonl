@@ -1,0 +1,9 @@
+{"id": "td01", "split": "dev", "trade": "도배", "text": "합지랑 실크 중에 뭐로 해야 해요?", "profile": {}, "expect": ["벽지 종류를 비교하고 고르는 건 고객에게 맡김", "조건(세 놓을 집인지 · 오래 살 집인지 등) 하나만 되물음"], "must_not": ["제품 · 브랜드 추천"]}
+{"id": "td02", "split": "dev", "trade": "도배", "text": "벽지가 군데군데 들떴는데 다시 해야 해요?", "profile": {}, "expect": ["들뜸 원인(바탕 · 습기)을 말함", "지금 벽 상태를 실측 때 확인한다고 안내", "도배 시방서 · LH · 안내서 조각을 근거로 인용"], "must_not": ["하자라고 단정"]}
+{"id": "td03", "split": "dev", "trade": "도배", "text": "곰팡이 핀 벽에 그냥 도배해도 돼요?", "profile": {"pyeong": 32, "scope": "도배 · 목공", "living": "비우고 공사"}, "expect": ["곰팡이 원인(결로 · 누수)부터 보라고 함", "바탕 처리 뒤 도배", "근거 인용"], "must_not": ["곰팡이 제거제 제품 추천"]}
+{"id": "td04", "split": "dev", "trade": "도배", "text": "천장 도배도 꼭 같이 해야 해요?", "profile": {"pyeong": 32, "scope": "도배 · 목공", "living": "비우고 공사"}, "expect": ["하는 경우 · 안 해도 되는 경우를 나눔", "금액은 price_reference 숫자만"], "must_not": ["새 금액 계산"]}
+{"id": "td05", "split": "dev", "trade": "도배", "text": "초배는 왜 하는 거예요?", "profile": {"level": "new"}, "expect": ["초배를 쉬운 말로 풀이", "근거 인용"], "must_not": ["목공 이야기 덧붙임"]}
+{"id": "td06", "split": "dev", "trade": "도배", "text": "도배하고 나서 창문은 언제 열어도 돼요?", "profile": {}, "expect": ["건조 · 환기 주의(맞바람)를 자료대로", "날짜 숫자는 지어내지 않음"], "must_not": ["자료에 없는 일수 단정"]}
+{"id": "td07", "split": "heldout", "trade": "도배", "text": "벽에 요철이 많으면 도배가 어떻게 달라져요?", "profile": {}, "expect": ["밀착 · 공간초배 차이", "바탕 상태를 실측 때 확인"], "must_not": ["금액 지어냄"]}
+{"id": "td08", "split": "heldout", "trade": "도배", "text": "32평 도배 견적 380만 원이면 비싼 거예요?", "profile": {"pyeong": 32, "scope": "도배 · 목공", "living": "비우고 공사"}, "expect": ["price_reference 숫자로 비교", "표준견적서(부가세 포함)와 시장 기준(부가세 별도)을 나눔"], "must_not": ["비싸다 · 싸다 단정"]}
+{"id": "td09", "split": "heldout", "trade": "도배", "text": "살면서 도배하면 뭘 준비해야 해요?", "profile": {"pyeong": 32, "living": "살면서 공사"}, "expect": ["가구 옮기기 같은 고객 준비", "이미 아는 거주 여부를 다시 묻지 않음"], "must_not": ["거주 여부 되묻기"]}

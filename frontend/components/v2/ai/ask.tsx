@@ -156,6 +156,7 @@ export async function askClaude(q: string, { label, images, withPhotos }: { labe
   const nb = nextButton(shown, after.step);
   if (nb) el.append(nb);
   if (applied.length) el.append(<p className="applied">{"✓ 보드에 담았어요 · " + [...new Set(applied)].join(" · ")}</p>);
+  if (out?.trade) el.append(<p className="route-chip muted">{`질문 답변: ${out.trade}`}</p>);
   const it = out?.intent;
   if (!images && it && it.confidence >= 0.7 && INTENT_KO[it.label]) el.append(<p className="route-chip muted">{`질문 종류: ${INTENT_KO[it.label]}`}</p>);
   // 이어 물을 질문: 서버가 답할 수 있는지 검색해 본 것만 보낸다 (없으면 버튼을 띄우지 않는다)

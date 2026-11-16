@@ -656,6 +656,7 @@ class V2AskOut(BaseModel):
     sources: list[V2AskSource] = []  # 답에 남은 [K번호] 근거
     cites_dropped: int = 0  # 보여 주지 않았거나 문장과 맞지 않아 뗀 [K번호] 수
     suggest: list[V2AskSuggest] = []  # 이어 물을 질문 0~3개 (일반 상담만)
+    trade: str | None = None  # 답한 공정 담당 (도배 · 목공). 없으면 일반 상담
 
 
 class V2AskHealthOut(BaseModel):

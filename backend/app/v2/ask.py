@@ -16,6 +16,7 @@ from redis.exceptions import RedisError
 from app.agent import gate as agent_gate
 from app.agent import llm
 from app.agent.schemas import Intent
+from app.agent.trades import TRADES
 from app.config import settings
 from app.db import SessionLocal
 from app.knowledge import bm25
@@ -34,6 +35,12 @@ PROMPT_VERSION = {
     "schedule": "schedule_v1",
 }
 PROMPTS = {k: (_DIR / f"{v}.md").read_text(encoding="utf-8") for k, v in PROMPT_VERSION.items()}
+# 공정 상담 역할의 공정별 지시문(도배 · 목공): 질문 낱말로 공정 하나가 분명하면 코드가 고른다 (LLM 없이).
+# 상담 지시문에 그 공정 지시문 · 공정 설정을 더하고, 그 공정 + 공통 자료를 먼저 찾는다 (공종 에이전트 하위 호출은 후속)
+BY_TRADE = {c.name: c for c in TRADES.values()}
+TRADE_PROMPTS = {
+    n: (_DIR / f"{c.prompt}.md").read_text(encoding="utf-8") for n, c in BY_TRADE.items()
+}
 
 MAX_TOOL_ROUNDS = 4  # 에이전트별 도구 호출 상한 (AGENTS.md 4장)
 MAX_CALLS = 6  # 턴당 LLM 호출 (도구 4번 + 답 쓰기 + 다시 쓰라는 부탁 한 번)
@@ -124,6 +131,26 @@ def _profile_text(p: v2.V2AskProfile, q: v2.V2QuoteIn | None) -> str:
         except AppError:
             pass
     return "\n".join(lines)
+
+
+def _trade_text(name: str) -> str:
+    c = BY_TRADE[name]
+    return "\n".join(
+        [
+            f"## 공정 설정 ({c.name})",
+            f"주의점: {' / '.join(c.cautions)}",
+            f"실측 때 정할 것: {' / '.join(c.survey_vars)}",
+            f"고객 준비: {' / '.join(c.prep)}",
+        ]
+    )
+
+
+def route(b: v2.V2AskIn) -> str | None:
+    """일반 상담에서 공정 하나가 분명하면 그 공정. 둘 다거나 모르면 공정 없이 상담 지시문만 쓴다"""
+    if b.kind != "chat":
+        return None
+    t = bm25.trade_of(b.message)
+    return t if t in BY_TRADE else None
 
 
 def _materials_text(ms: list[v2.V2AskMaterial]) -> str:
@@ -295,7 +322,7 @@ async def _search_tool(turn: dict, args: dict) -> dict:
     if not query:
         return {"error": "query를 넣어 줘"}
     queries = [str(x)[:80] for x in args.get("queries") or [] if isinstance(x, str)][:3]
-    trade = args.get("trade") if args.get("trade") in SEARCH_TRADES else None
+    trade = args.get("trade") if args.get("trade") in SEARCH_TRADES else turn.get("trade")
     r = await _search(query, queries=queries, trade=trade)
     _remember(turn, r.hits)
     if not r.hits:
@@ -430,9 +457,10 @@ async def start(
     sure = intent is not None and (
         intent.source == "rule" or intent.confidence >= settings.intent_confidence_threshold
     )
-    first = await _search(b.message)
+    trade = route(b)
+    first = await _search(b.message, trade=trade)
     system, allowed, calc = _system(
-        b, today, HINTS.get(intent.label, "") if sure and intent else "", first
+        b, today, HINTS.get(intent.label, "") if sure and intent else "", first, trade
     )
     content: list[dict] = [{"type": "image", "data": d} for d in b.images]
     content.append({"type": "text", "text": b.message})
@@ -460,6 +488,7 @@ async def start(
         "plan": b.plan.model_dump(mode="json") if b.plan else None,
         "cons": None,
         "intent": _intent_out(intent).model_dump() if intent else None,
+        "trade": trade,
     }
     _remember(turn, first.hits)
     return await _run(secrets.token_urlsafe(16), turn)
@@ -483,7 +512,7 @@ def _intent_out(i: Intent) -> v2.V2IntentOut:
 
 
 def _system(
-    b: v2.V2AskIn, today: date, hint: str, first: bm25.Result
+    b: v2.V2AskIn, today: date, hint: str, first: bm25.Result, trade: str | None = None
 ) -> tuple[str, list[str], list[str]]:
     """지시문, 숫자 검사에서 허용할 글(계산 결과 · 자료), 계산 엔진 결과(공사 기간 근거).
 
@@ -511,11 +540,14 @@ def _system(
         calc = [now, json.dumps(p.model_dump(mode="json"))]
         return system, [*calc, f"오늘 {today.isoformat()}", refs], calc
     guide = "\n".join(f"{i}. {n}: {t}" for i, (n, t) in enumerate(GUIDE, 1))
+    own = TRADE_PROMPTS[trade].strip() if trade else ""
     rules = "\n".join(
-        x for x in (PROMPTS["chat"].strip(), hint, IMAGE_RULE if b.images else "") if x
+        x for x in (PROMPTS["chat"].strip(), own, hint, IMAGE_RULE if b.images else "") if x
     )
     profile, materials = _profile_text(b.profile, b.quote), _materials_text(b.materials)
     data = [profile, "## 공정 순서\n" + guide, materials, refs]
+    if trade:
+        data.insert(1, _trade_text(trade))
     system = rules + "\n\n" + "\n\n".join(data)
     return system, [profile, materials, refs], []
 
@@ -585,17 +617,21 @@ async def _done(turn: dict, failed: bool = False) -> v2.V2AskOut:
     kind = turn["kind"]
     intent = v2.V2IntentOut(**turn["intent"]) if turn.get("intent") else None
     cons = v2.V2ConsIn.model_validate(turn["cons"]) if turn.get("cons") else None
+    trade = turn.get("trade")
     if failed or not turn["text"].strip():
-        return v2.V2AskOut(done=True, text=FAILED[kind], failed=True, intent=intent, cons=cons)
+        return v2.V2AskOut(
+            done=True, text=FAILED[kind], failed=True, intent=intent, cons=cons, trade=trade
+        )
     # 공사 기간 숫자는 계산 엔진 결과(calc)에 있어야만 통과한다
     g = guard.check(turn["text"], "\n".join(turn["allowed"]), "\n".join(turn.get("calc") or []))
     if not g.text:
         return v2.V2AskOut(
-            done=True, text=FAILED[kind], failed=True, intent=intent, dropped=g.dropped, cons=cons
-        )
+            done=True, text=FAILED[kind], failed=True, intent=intent, dropped=g.dropped, cons=cons,
+            trade=trade,
+        )  # fmt: skip
     text, cites_dropped, sources = await _cites(turn, g.text)
     suggest = await _suggest(turn, sources) if kind == "chat" else []
     return v2.V2AskOut(
         done=True, text=text, intent=intent, dropped=g.dropped, cons=cons,
-        sources=sources, cites_dropped=cites_dropped, suggest=suggest,
+        sources=sources, cites_dropped=cites_dropped, suggest=suggest, trade=trade,
     )  # fmt: skip

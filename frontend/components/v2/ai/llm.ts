@@ -24,6 +24,7 @@ export type AskOut = {
   sources: AskSource[];
   cites_dropped: number;
   suggest: { text: string; ref: string | null }[];
+  trade?: string | null; // 답한 공정 담당 (도배 · 목공)
 };
 export type AskSource = { ref: string; source_type: string; title: string; publisher: string; date: string; section: string; url: string; official: boolean };
 export type AskBody = {

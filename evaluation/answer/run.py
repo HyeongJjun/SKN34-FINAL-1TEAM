@@ -81,7 +81,9 @@ async def main() -> None:
             rec.clear()
             rec.update(calls=[], shown={}, searches=[])
             t0 = time.perf_counter()
-            body = v2.V2AskIn(message=q["text"], quote=QUOTE, profile=PROFILE)
+            # 공정 담당 세트는 질문마다 고객 상태를 바꾼다
+            profile = {**PROFILE, **(q.get("profile") or {})}
+            body = v2.V2AskIn(message=q["text"], quote=QUOTE, profile=profile)
             out = await ask.start(f"eval-{q['id']}", body, date(2026, 11, 13))
             for _ in range(6):  # 화면 도구는 실행한 셈 친다
                 if out.done or not out.turn:
@@ -96,8 +98,10 @@ async def main() -> None:
             c = cost(model, usage)
             total += c
             row = {
-                **{k: q[k] for k in ("id", "split", "kind", "set", "trade", "text", "answer_type", "note")},
-                "gold": [g["ref"] for g in q["gold"] if g["grade"] == 2],
+                **{k: q.get(k) for k in ("id", "split", "kind", "set", "trade", "text", "answer_type", "note",
+                                         "expect", "must_not")},
+                "gold": [g["ref"] for g in q.get("gold") or [] if g["grade"] == 2],
+                "agent": out.trade,
                 "answer": out.text, "failed": out.failed, "gate": out.gate,
                 "intent": out.intent.model_dump() if out.intent else None,
                 "dropped": out.dropped, "cites_dropped": out.cites_dropped,

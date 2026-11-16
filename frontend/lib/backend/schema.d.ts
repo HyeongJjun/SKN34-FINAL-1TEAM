@@ -4432,6 +4432,8 @@ export interface components {
              * @default []
              */
             suggest: components["schemas"]["V2AskSuggest"][];
+            /** Trade */
+            trade?: string | null;
         };
         /**
          * V2AskProfile
