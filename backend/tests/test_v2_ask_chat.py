@@ -1,8 +1,9 @@
-"""v2 상담 한 턴을 대화 표에 잇기 (C안, #111): 지난 대화 · 남의 대화 404 · 번호표(rev) 409."""
+"""v2 상담 한 턴을 대화 표에 잇기 (C안, #111): 지난 대화 · 남의 대화 404 · 번호표(rev) 409 · 재개 한 번만(#119)."""
 
 import pytest
 
 from app.agent import llm
+from app.v2 import ask
 from tests.conftest import query
 from tests.helpers import signup
 from tests.test_v2_ask import FakeLLM, call
@@ -94,3 +95,33 @@ def test_failed_answer_and_doc_buttons_leave_no_chat(api, fake):
     doc = api.post("/v2/ask", json=body).json()
     assert doc["done"] and doc["chat_id"] is None
     assert query("select count(*) as n from chats")[0]["n"] == 0
+
+
+TOOL_TURN = {"tool_calls": [call("suggest_questions", {"questions": ["벽지 고르기"]})]}
+RESULT = {"results": [{"id": "c1", "content": "{}"}]}
+
+
+def test_resume_taken_by_other_request_is_404_before_llm(api, fake, monkeypatch):
+    f = fake(TOOL_TURN, {"text": "실크는 닦기 쉬워요."})
+    signup(api)
+    turn = api.post("/v2/ask", json={"message": ASK}).json()["turn"]
+
+    async def lost(*keys):  # 같은 턴 재개가 겹쳐 다른 요청이 먼저 턴을 가져갔다
+        return 0
+
+    monkeypatch.setattr(ask.redis, "delete", lost)
+    r = api.post(f"/v2/ask/{turn}", json=RESULT)
+    assert r.status_code == 404, r.text
+    assert len(f.seen) == 1  # 재개 쪽 LLM은 부르지 않았다
+
+
+def test_wrong_results_keep_turn_for_retry(api, fake):
+    fake(TOOL_TURN, {"text": "실크는 닦기 쉬워요."})
+    signup(api)
+    turn = api.post("/v2/ask", json={"message": ASK}).json()["turn"]
+    bad = api.post(f"/v2/ask/{turn}", json={"results": [{"id": "x", "content": "{}"}]})
+    assert bad.status_code == 422
+    out = api.post(f"/v2/ask/{turn}", json=RESULT).json()
+    assert out["done"] and out["text"] == "실크는 닦기 쉬워요."
+    # 끝난 턴을 다시 보내면 404 (LLM 다시 안 부름)
+    assert api.post(f"/v2/ask/{turn}", json=RESULT).status_code == 404
