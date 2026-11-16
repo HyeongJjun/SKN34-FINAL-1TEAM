@@ -98,8 +98,6 @@ agent/                   에이전트. 기능 service를 import하지 않는다
   schemas.py             의도 · 에이전트 입출력 Pydantic 모델
   trade_agent.py         공종 에이전트: 공정별 설정 + 검색으로 조건 · 주의점 · 근거 번호. 고객에게 말하지 않는다
   trades/                공정별 설정 dobae.py · mokgong.py. 견적 설명 · 공정표 역할도 읽는다
-  graph.py · orchestrator.py · quote_explanation_agent.py · schedule_agent.py · extract.py
-                         C안에서 쓰지 않는 옛 뼈대. 정리는 따로 한다
 knowledge/               지식 검색(BM25 + 임베딩)과 적재
 mcp_server.py            믿집 일정 MCP 서버
 ```

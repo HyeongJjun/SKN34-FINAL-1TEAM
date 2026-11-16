@@ -39,7 +39,6 @@ AI 상담(C안, #110)을 나눠 만들 때 지킬 약속이다. 규칙 원문은
   2. 새 줄 더하기만이면 기능 PR에 같이 둔다. PR 본문에 고친 공용 파일을 적는다.
   3. 기존 줄을 바꾸거나 지우면 그 변경만 담은 PR을 따로 올려 먼저 병합한다.
   4. 나머지는 dev로 rebase해서 받는다.
-- `agent/graph.py` · `orchestrator.py` · `quote_explanation_agent.py` · `schedule_agent.py` · `extract.py`는 C안에서 쓰지 않는다. 정리는 따로 한다.
 
 ## 3. 공종 에이전트 모양
 
