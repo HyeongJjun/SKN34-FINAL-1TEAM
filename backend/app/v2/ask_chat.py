@@ -39,7 +39,8 @@ async def start(user_id: uuid.UUID, b: v2.V2AskIn, today: date) -> v2.V2AskOut:
 
 
 async def resume(user_id: uuid.UUID, turn_id: str, b: v2.V2AskResumeIn) -> v2.V2AskOut:
-    turn = await ask.take(turn_id, str(user_id))  # 같은 턴 재개가 겹치면 늦은 쪽은 여기서 404
+    # 같은 턴 재개가 겹치면 늦은 쪽은 여기서 404, 결과 id가 틀리면 지우지 않고 422
+    turn = await ask.take(turn_id, str(user_id), [r.id for r in b.results])
     out = await ask.resume(str(user_id), turn_id, b, turn)
     meta = turn["chat"]
     return await _finish(user_id, out, meta)
