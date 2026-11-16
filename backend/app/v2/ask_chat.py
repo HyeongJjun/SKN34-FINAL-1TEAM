@@ -3,7 +3,7 @@
 열기(get_for · recent) → ask.start / resume(LLM ↔ 도구, DB 세션을 쥐지 않음) → 끝난 턴만 저장(save_turn).
 - 열 때 본 rev · 질문은 ask 턴 정보("chat")에 같이 둔다. 화면 도구를 기다리는 동안에도 남는다
 - 새 대화는 첫 턴을 저장할 때 만든다. 범위 밖 · 실패로 끝난 질문 때문에 빈 대화가 남지 않게
-- 실패한 답은 저장하지 않는다. rev가 그대로라 다음 질문은 그대로 이어진다
+- 실패한 답 · 범위 밖 고정 안내는 저장하지 않는다. rev · waiting이 그대로라 다음 질문은 그대로 이어진다 (#128)
 - 되물었는지는 답 끝의 [되물음] 표시로 안다(chat 지시문). 표시는 떼고, 그 역할 라벨을 waiting에 남긴다
   다음 턴 관문이 waiting을 받아 짧은 답("32평")도 같은 역할로 보낸다 (#120)
 - 대화 표에는 일반 상담(kind=chat)만 쌓는다. 견적서 · 공정표 화면 버튼의 설명은 한 번으로 끝난다
@@ -61,7 +61,7 @@ def asked_back(text: str, dropped: list[str]) -> tuple[str, bool]:
 
 async def _finish(user_id: uuid.UUID, out: v2.V2AskOut, meta: dict) -> v2.V2AskOut:
     chat_id = uuid.UUID(meta["id"]) if meta["id"] else None
-    if not out.done or out.failed or not meta["keep"]:
+    if not out.done or out.failed or out.gate == "out" or not meta["keep"]:
         return out.model_copy(update={"chat_id": chat_id})
     intent = Intent.model_validate(out.intent.model_dump()) if out.intent else None
     text, asked = asked_back(out.text, out.dropped)

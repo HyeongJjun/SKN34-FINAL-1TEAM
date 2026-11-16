@@ -89,6 +89,31 @@ def test_answer_without_mark_leaves_no_waiting(api, fake):
     assert _waiting(chat_id) is None
 
 
+OUT = "주식 추천해줘"  # 학습 모델이 범위 밖으로 확신하는 문장 (기다리던 역할이 있어도 옮긴다)
+
+
+def test_out_of_scope_first_question_makes_no_chat(api, fake):
+    f = fake()
+    signup(api)
+    out = api.post("/v2/ask", json={"message": OUT}).json()
+    assert out["gate"] == "out" and out["chat_id"] is None and f.seen == []
+    assert query("select count(*) as n from chats")[0]["n"] == 0
+
+
+def test_out_of_scope_in_chat_saves_nothing(api, fake):
+    """범위 밖 안내는 대화 이력에 남지 않고 rev · waiting도 그대로다 (#128)."""
+    fake({"text": "합지는 종이 벽지예요."})
+    signup(api)
+    chat_id = api.post("/v2/ask", json={"message": ASK}).json()["chat_id"]
+    query("update chats set waiting = 'trade' where id = $1", chat_id)
+    state = "select rev, waiting from chats where id = $1"
+    before = dict(query(state, chat_id)[0])
+    out = api.post("/v2/ask", json={"message": OUT, "chat_id": chat_id}).json()
+    assert out["gate"] == "out" and out["chat_id"] == chat_id
+    assert dict(query(state, chat_id)[0]) == before
+    assert len(_messages(chat_id)) == 2
+
+
 @pytest.mark.parametrize(
     "answer",
     [
