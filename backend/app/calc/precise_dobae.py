@@ -10,6 +10,7 @@ from decimal import Decimal
 from app.calc.common import (
     BASIS_LABEL,
     COUNTED,
+    PYEONG_M2,
     AreaBasis,
     Line,
     Step,
@@ -21,7 +22,15 @@ from app.calc.common import (
 from app.calc.dobae import GRADE_PAPER, DobaePrices
 from app.calc.dobae import Grade as PaperGrade
 from app.calc.plan_qty import PlanQty
-from app.calc.precise_common import Grade, PriceBasis, V2Line, num, team_basis
+from app.calc.precise_common import (
+    Grade,
+    PriceBasis,
+    SilkPaper,
+    V2Line,
+    num,
+    silk_amount,
+    team_basis,
+)
 
 
 @dataclass(frozen=True)
@@ -34,6 +43,9 @@ class V2DobaeInput:
     balcony_ext: bool = False  # 도면이 있으면 도면 면적에 이미 들어 있어 쓰지 않는다
     plan: PlanQty | None = None
     plan_name: str = ""
+    silk: SilkPaper | None = (
+        None  # 고른 실크벽지. 있으면 벽지 줄을 그 평당 값으로 센다 (합지는 무시)
+    )
 
 
 @dataclass(frozen=True)
@@ -114,18 +126,25 @@ def quote(inp: V2DobaeInput, p: DobaePrices) -> V2DobaeQuote:
         src["ceiling"],
         calc=ceil_calc,
     )
-    add(
-        "paper",
-        f"도배지 ({GRADE_PAPER[g]})",
-        paper_qty,
-        "㎡",
-        p.paper[g],
-        won(paper_qty * p.paper[g]),
-        "included",
-        src[f"paper_{g}"],
-        "assumed" if g == "economy" else "public",
-        f"바를 면적 {num(paper_area)}㎡ × 소요량 {num(p.paper_ratio)}",
-    )
+    paper_calc = f"바를 면적 {num(paper_area)}㎡ × 소요량 {num(p.paper_ratio)}"
+    if inp.silk is not None and g == "basic":
+        py, amount = silk_amount(paper_qty, inp.silk)
+        paper_calc += f" = {num(paper_qty)}㎡ ÷ {num(PYEONG_M2)}"
+        add("paper", inp.silk.name, py, "평", inp.silk.per_py, amount, "included",
+            inp.silk.source, "pick", paper_calc)  # fmt: skip
+    else:
+        add(
+            "paper",
+            f"도배지 ({GRADE_PAPER[g]})",
+            paper_qty,
+            "㎡",
+            p.paper[g],
+            won(paper_qty * p.paper[g]),
+            "included",
+            src[f"paper_{g}"],
+            "assumed" if g == "economy" else "public",
+            paper_calc,
+        )
     add(
         "primer",
         "초배지",

@@ -12,11 +12,11 @@ AI 상담(C안, #110)을 나눠 만들 때 지킬 약속이다. 규칙 원문은
 | 의도 라벨 | 역할 | 하는 일 | 지시문 |
 | --- | --- | --- | --- |
 | `orchestrator` | 가이드 | 처음 궁금증 · 시작 순서 · 기본 정보 · 제출 서류, 복합 요청 | `v2/prompts/guide_v*.md` |
-| `trade` | 공정 상담 | 우리 집 조건 묻기 · 공정 간 조정. 공종 에이전트를 부른다(후속) | `v2/prompts/trade_v*.md` |
+| `trade` | 공정 상담 | 우리 집 조건 묻기 · 공정 간 조정. 공종 에이전트를 부른다(후속) | `v2/prompts/trade_dobae_v*.md` · `trade_mokgong_v*.md` |
 | `quote_explanation` | 견적 설명 | 계산 엔진 금액 풀이만 | `v2/prompts/quote_explanation_v*.md` |
 | `schedule` | 공정표 | 말을 제약으로 바꾸기 · 결과 설명. 일정 MCP | `v2/prompts/schedule_v*.md` |
 
-- 지금은 가이드 · 공정 상담이 `chat_v2.md` 하나를 같이 쓰고, 관문 라벨에 맞는 역할 힌트만 붙인다. 나누는 것은 eval을 붙인 `prompt` PR로 한다.
+- 지금은 가이드 · 공정 상담이 `chat_v3.md` 하나를 같이 쓰고, 관문 라벨에 맞는 역할 힌트를 붙인다. 공정 상담은 질문 낱말로 공정 하나가 분명하면 그 공정 지시문(`trade_dobae_v1` · `trade_mokgong_v1`)과 공정 설정을 더한다(공정은 코드가 고른다). 나누는 것은 eval을 붙인 `prompt` PR로 한다.
 - 역할마다 쓸 수 있는 도구는 `v2/ask_tools.py`의 `BY_KIND`가 정한다.
 
 ## 2. 파일 나누기
@@ -25,7 +25,7 @@ AI 상담(C안, #110)을 나눠 만들 때 지킬 약속이다. 규칙 원문은
 | --- | --- |
 | 한 턴 · 관문 | `v2/ask.py` · `v2/ask_chat.py` · `v2/guard.py`, `agent/gate.py` · `route.py` · `intent.py`, `evaluation/intent` |
 | 가이드 | `v2/prompts/guide_v*.md`(지금 `chat_v*.md`), `evaluation/guide` · `orchestrator` |
-| 공종 | `agent/trade_agent.py` · `trades/dobae.py` · `trades/mokgong.py`, `v2/prompts/trade_v*.md`, `evaluation/trade` |
+| 공종 | `agent/trade_agent.py` · `trades/dobae.py` · `trades/mokgong.py`, `v2/prompts/trade_*_v*.md`, `evaluation/trade` |
 | 견적 설명 (담당 미정) | `v2/prompts/quote_explanation_v*.md`, `evaluation/quote_explanation` |
 | 공정표 | `v2/prompts/schedule_v*.md`, `mcp_server.py`, `evaluation/schedule` |
 | 지식 검색 · 추천 질문 | `knowledge/`, `evaluation/rag` · `answer` |
@@ -64,9 +64,9 @@ AI 상담(C안, #110)을 나눠 만들 때 지킬 약속이다. 규칙 원문은
 
 ## 6. 데이터와 도구
 
-- 도구는 `v2/ask_tools.py`가 정한다. 지금 서버 도구는 계산 엔진 둘(`price_reference` · `set_schedule_constraints`)이고 서버가 바로 실행한다. 화면 도구(고객 상태 저장 · 단계 카드 · 자료 검색 `search_knowledge` · 추천 질문 `suggest_questions`)는 브라우저가 실행해 결과만 돌려준다.
-- 자료 검색은 지금 브라우저가 화면에 든 자료로 찾는다. 서버 지식 검색(`knowledge.service`) 도구와 공종 에이전트 도구는 후속 구현 목표다.
-- 숫자 근거는 서버가 만든 값(계산 엔진 결과 · 서버가 다시 읽은 근거 원문)만 쓰는 것이 목표다. 지금은 화면 도구 결과(자료 검색 포함)도 숫자 검사의 허용 글에 들어가고, 공사 기간 숫자만 계산 엔진 결과에 있어야 남는다. 서버 검색으로 옮길 때 화면 도구 결과를 근거에서 뺀다(#124).
+- 도구는 `v2/ask_tools.py`가 정한다. 서버 도구는 계산 엔진 둘(`price_reference` · `set_schedule_constraints`)과 지식 검색(`search_knowledge`)이고 서버가 바로 실행한다. 화면 도구(고객 상태 제안 · 단계 카드)는 브라우저가 실행해 결과만 돌려준다. 고객 상태 도구는 제안만 하고, 고객이 [담기]를 눌러야 저장한다.
+- 자료 검색은 서버가 한다. 턴을 시작할 때 첫 근거를 찾아 넣고, 도구 검색은 `knowledge.service` → 활성 버전(`knowledge.repository`) → PostgreSQL이다. 공정이 분명하면 그 공정 + 공통 자료를 먼저 본다. 공종 에이전트 도구는 후속 구현 목표다.
+- 숫자 근거는 서버가 만든 값(계산 엔진 결과 · 서버가 찾은 근거 원문)만 쓰는 것이 목표다. 지식 자료의 기간 숫자는 공사 기간 근거에 넣지 않는다. 화면 도구 결과도 아직 숫자 검사의 허용 글에 들어가며, 이를 빼는 것은 남았다(#124).
 - 견적 · 공정표 정보는 화면이 보낸 입력으로 서버가 다시 계산한다. 기능 service는 import하지 않는다.
 - 일정 MCP는 공정표 역할만 부른다.
 - 업체가 쓴 글은 지시문에 넣지 않고 데이터로만 넘긴다.
@@ -85,7 +85,7 @@ AI 상담(C안, #110)을 나눠 만들 때 지킬 약속이다. 규칙 원문은
 | --- | --- | --- |
 | 1. 열기 | `ask_chat.start`. 일반 상담(`kind=chat`)이고 `chat_id`가 있을 때만 내 대화를 연다(`get_for`). 남의 대화 · 없는 대화는 404. `rev` · `waiting` · 지난 대화(`recent`)를 들고 간다. 새 대화는 여기서 만들지 않는다 | 짧은 세션, 닫고 나온다 |
 | 2. 관문 | `ask.start` → `gate.classify(message, waiting)`(일반 상담 · 사진 없을 때만). 범위 밖은 고정 안내. 기다리던 역할을 이어 받은 의도(출처 `rule`)는 신뢰도와 상관없이 역할 힌트를 붙인다 | 없음 |
-| 3. 실행 | 지시문(`chat_v2` 등) + 지난 대화 + 이번 질문으로 LLM ↔ 도구. 서버 도구는 바로 실행한다. 화면 도구를 부르면 턴을 Redis에 두고 `done=false` · `turn` · `tool_calls`로 응답한다 | 쥐지 않는다 |
+| 3. 실행 | 지시문(`chat_v3` 등) + 지난 대화 + 이번 질문으로 LLM ↔ 도구. 서버 도구는 바로 실행한다. 화면 도구를 부르면 턴을 Redis에 두고 `done=false` · `turn` · `tool_calls`로 응답한다 | 쥐지 않는다 |
 | 3-1. 재개 | 브라우저가 `/v2/ask/{turn}`로 결과를 보낸다 → `ask_chat.resume` → `ask.take` → `ask.resume`으로 3을 이어 간다 | 쥐지 않는다 |
 | 4. 검사 | 출력 검사(`v2/guard.py`): 숫자 · 근거 · 금지 표현 · 가림. 남은 글이 없으면 실패 | 없음 |
 | 5. 되물음 판정 | `ask_chat.asked_back`: 답이 `[되물음]`으로 끝나고 출력 검사가 뺀 문장이 없으면 되물음. 표시는 어디 있든 뗀다. 떼고 남은 글이 없으면 실패 | 없음 |
@@ -129,7 +129,7 @@ AI 상담(C안, #110)을 나눠 만들 때 지킬 약속이다. 규칙 원문은
 | `dropped` | 출력 검사로 뺀 문장의 이유 |
 | `cons` | 공정표 상담이 바꾼 조건 |
 
-- 추천 질문은 응답 칸이 아니라 화면 도구(`suggest_questions`)로 보낸다
+- `sources`는 답에 남은 [K번호] 근거, `suggest`는 이어 물을 질문 0~3개(일반 상담만, 서버가 질문 은행에서 답할 수 있는 것만 고른다), `trade`는 코드가 고른 공정(없으면 비움)
 - 지금은 답을 한 번에 보낸다. 글자 단위 흘려보내기는 나중에 더한다
 
 **rev와 Redis 턴**
@@ -159,9 +159,9 @@ AI 상담(C안, #110)을 나눠 만들 때 지킬 약속이다. 규칙 원문은
 - 견적 설명 담당
 - 사용자별 일일 토큰 제한을 어디서 셀지(`v2/ask.py` 또는 `llm.py`)
 - 공종 에이전트가 넘기는 브리프 모양과 저장 자리(#85)
-- 공종 에이전트 하위 호출 · 서버 지식 검색 도구(지금 자료 검색은 화면 도구)
+- 공종 에이전트 하위 호출
 - 화면 도구 결과를 숫자 근거에서 빼기(#124)
 - 범위 밖 고정 안내를 대화 이력에 저장하지 않기(#128, 결정됨)
 - 의도를 못 정하면(Jev 실패) 선택지로 되묻기(#123)
 - `waiting` 만료(지금은 다음 턴에 덮어쓸 때까지 남는다)
-- 가이드 · 공정 상담 지시문을 `chat_v2.md`에서 나누는 시점
+- 가이드 · 공정 상담 지시문을 `chat_v3.md`에서 나누는 시점

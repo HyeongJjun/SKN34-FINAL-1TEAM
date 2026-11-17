@@ -8,7 +8,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, BaseModel, Field, StrictBool
+from pydantic import AfterValidator, BaseModel, Field, StrictBool, model_validator
 
 from app.calc.plan_qty import SpaceKind
 from app.calc.precise_mokgong import DoorMode, MoldingType
@@ -101,6 +101,8 @@ class V2QuoteIn(BaseModel):
     balcony: bool = False
     mok: V2MokIn | None = None
     tier: Literal["economy", "basic", "premium"] = "basic"
+    # 도배 유형을 고객이 직접 골랐으면 그 값(자재를 고르지 않아도 금액에 이어진다)
+    grade: Literal["economy", "basic"] | None = None
 
 
 # ---- 출력: 견적 ----
@@ -553,6 +555,65 @@ class V2ExtrasOut(BaseModel):
     notes: list[str]
 
 
+# ---- 빠른 예산 (/v2/quick-budget) ----
+class V2QuickIn(BaseModel):
+    """질문 3개 + '더 정확히' 답. 모르는 칸은 비워 두면(null) 계산 엔진이 흔한 값으로 채운다."""
+
+    pyeong: Decimal | None = Field(default=None, ge=5, le=150, max_digits=5, decimal_places=1)
+    area_basis: Literal["supply", "exclusive"] = "supply"
+    plan: V2PlanSelIn | None = None  # 대표 집 카드
+    dobae: StrictBool = True
+    molding: StrictBool = False
+    base: StrictBool = False
+    door: Literal["none", "leaf", "frame"] | None = None
+    grade: Literal["economy", "basic"] | None = None
+    paper: Literal["best", "diamant"] | None = (
+        None  # 실크벽지 종류 (베스띠 · 로하스 / 디아망 · 프리모)
+    )
+    ceiling: StrictBool | None = None
+    occupied: StrictBool | None = None
+
+    @model_validator(mode="after")
+    def _house(self):
+        if self.pyeong is None and self.plan is None:
+            raise ValueError("평형이나 집 카드를 골라 주세요")
+        return self
+
+
+class V2QuickChoiceOut(BaseModel):
+    value: str
+    label: str
+    lo: int
+    hi: int
+
+
+class V2QuickAskOut(BaseModel):
+    key: Literal["door", "ceiling", "occupied", "grade", "paper"]
+    q: str
+    choices: list[V2QuickChoiceOut]
+    spread: int
+    note: str
+
+
+class V2QuickTradeOut(BaseModel):
+    trade: Literal["dobae", "mokgong"]
+    lo: int
+    hi: int
+    n: int
+
+
+class V2QuickOut(BaseModel):
+    """금액은 모두 부가세 포함, 만 원 단위 시장 범위(실견적 중간 50%)"""
+
+    lo: int
+    hi: int
+    trades: list[V2QuickTradeOut]
+    assumed: list[str]
+    alt: V2QuickChoiceOut | None
+    asks: list[V2QuickAskOut]
+    version: str
+
+
 # ---- AI 상담 (/v2/ask) ----
 # 지시문 · 도구 정의는 서버가 정한다. 화면은 질문 · 고객 상태 · 자료(데이터)만 보낸다.
 IMAGE_MAX = 600_000  # base64 글자 수: 긴 변 1280px jpeg 한 장이 넉넉히 들어간다
@@ -576,6 +637,8 @@ class V2AskProfile(BaseModel):
     photos: int = Field(default=0, ge=0, le=50)
     ref_photos: int = Field(default=0, ge=0, le=50)
     plan_name: Short = ""
+    # 첫 화면에서 고른 목적으로 정한 수준. 이번 질문 낱말과 함께 서버가 말하기 깊이를 정한다
+    level: Literal["new", "looking", "experienced"] | None = None
 
 
 class V2AskMaterial(BaseModel):
@@ -590,16 +653,6 @@ class V2AskMaterial(BaseModel):
     tags: list[Annotated[str, Field(max_length=20)]] = Field(default=[], max_length=8)
 
 
-class V2AskRef(BaseModel):
-    ref: str = Field(pattern=r"^K\d{1,5}$")
-    source_type: Short = ""
-    title: Short = ""
-    section: Short = ""
-    publisher: Short = ""
-    date: Annotated[str, Field(max_length=20)] = ""
-    text: str = Field(default="", max_length=2_000)
-
-
 class V2AskIn(BaseModel):
     chat_id: uuid.UUID | None = None  # 이어 갈 대화. 없으면 서버가 새로 만든다
     kind: AskKind = "chat"
@@ -608,8 +661,6 @@ class V2AskIn(BaseModel):
     quote: V2QuoteIn | None = None  # 금액 도구 · 견적 설명이 서버에서 다시 계산한다
     plan: V2PlanIn | None = None  # 공정표 상담
     materials: list[V2AskMaterial] = Field(default=[], max_length=24)
-    refs: list[V2AskRef] = Field(default=[], max_length=6)
-    refs_enough: bool = True
     images: list[B64] = Field(default=[], max_length=2)
 
 
@@ -634,6 +685,26 @@ class V2IntentOut(BaseModel):
     source: str
 
 
+class V2AskSource(BaseModel):
+    """답에 붙은 근거 조각. 서버 지식 자료에서 이번 턴에 보여 준 것만"""
+
+    ref: str
+    source_type: str
+    title: str
+    publisher: str
+    date: str
+    section: str
+    url: str
+    official: bool  # 공공 · 표준 · 제조사 · 협회 자료
+
+
+class V2AskSuggest(BaseModel):
+    """입력창 위 버튼으로 보일 이어 물을 질문. 서버가 답할 수 있는지 검색해 본 것만"""
+
+    text: str
+    ref: str | None = None  # 질문 은행 질문이 묶인 조각
+
+
 class V2AskOut(BaseModel):
     chat_id: uuid.UUID | None = None  # 다음 질문에 같이 보낼 대화 id
     done: bool
@@ -645,6 +716,10 @@ class V2AskOut(BaseModel):
     intent: V2IntentOut | None = None
     dropped: list[str] = []  # 숫자 검사로 뺀 문장의 이유
     cons: V2ConsIn | None = None  # 공정표 상담이 바꾼 조건
+    sources: list[V2AskSource] = []  # 답에 남은 [K번호] 근거
+    cites_dropped: int = 0  # 보여 주지 않았거나 문장과 맞지 않아 뗀 [K번호] 수
+    suggest: list[V2AskSuggest] = []  # 이어 물을 질문 0~3개 (일반 상담만)
+    trade: str | None = None  # 답한 공정 담당 (도배 · 목공). 없으면 일반 상담
 
 
 class V2AskHealthOut(BaseModel):

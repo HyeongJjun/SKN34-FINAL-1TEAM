@@ -11,7 +11,7 @@ from typing import Literal
 
 from app.calc.common import PYEONG_M2, AreaBasis, m2, won
 from app.calc.plan_qty import PlanQty
-from app.calc.precise_common import Grade, num
+from app.calc.precise_common import Grade, SilkPaper, num, silk_amount
 
 Paper = Literal["silk", "hapji"]
 MokItem = Literal["molding", "base", "door", "flatten"]
@@ -119,6 +119,7 @@ class MarketDobaeInput:
     balcony_ext: bool = False
     plan: PlanQty | None = None
     plan_name: str = ""
+    silk: SilkPaper | None = None  # 고른 실크벽지. 있으면 벽지 줄을 그 평당 값으로 센다
 
 
 @dataclass(frozen=True)
@@ -153,6 +154,16 @@ def doors_for(py: Decimal, bounds: tuple[int, ...], counts: tuple[int, ...]) -> 
     return counts[-1]
 
 
+def _paper_line(qty: Decimal, g: Paper, p: MarketDobae, silk: SilkPaper | None) -> MarketLine:
+    if silk is not None and g == "silk":
+        py, amount = silk_amount(qty, silk)
+        note = f"바를 면적 × {num(p.paper_ratio)} = {num(qty)}㎡ ÷ {num(PYEONG_M2)}"
+        return MarketLine("paper", silk.name, py, "평", silk.per_py, amount, note)
+    name = f"벽지 ({'합지' if g == 'hapji' else '실크'})"
+    note = f"바를 면적 × {num(p.paper_ratio)}"
+    return MarketLine("paper", name, qty, "㎡", p.paper[g], won(qty * p.paper[g]), note)
+
+
 def dobae(inp: MarketDobaeInput, book: MarketBook, p: MarketDobae | None = None) -> MarketResult:
     p = p or book.dobae
     g: Paper = "hapji" if inp.grade == "economy" else "silk"
@@ -182,15 +193,7 @@ def dobae(inp: MarketDobaeInput, book: MarketBook, p: MarketDobae | None = None)
         MarketLine(
             "ceiling", "천장 도배 시공", ceil_used, "㎡", lc, won(ceil_used * lc), ceil_note
         ),
-        MarketLine(
-            "paper",
-            f"벽지 ({'합지' if g == 'hapji' else '실크'})",
-            paper_qty,
-            "㎡",
-            p.paper[g],
-            won(paper_qty * p.paper[g]),
-            f"바를 면적 × {num(p.paper_ratio)}",
-        ),
+        _paper_line(paper_qty, g, p, inp.silk),
         MarketLine(
             "sub",
             "초배 · 풀 · 부자재",

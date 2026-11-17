@@ -1,8 +1,8 @@
 "use client";
-// AI 상담 (v10 askClaude · askAboutStyle · askAboutMat · askCompare · askPhotos · askReview · agentAnswer · nextButton).
+// AI 상담 (v10 askClaude · askAboutStyle · askAboutMat · askCompare · askPhotos · askReview · agentAnswer).
 // 질문 · 고객 상태 · 자료만 서버(/v2/ask)에 보낸다. 지시문 · 입구 관문 · 숫자 검사는 서버가 한다.
-// AI 답 메시지는 글이 바뀌는 말풍선(live) 하나로 두고, 끝나면 근거 · 다음 버튼 · '보드에 담았어요'를 붙인다.
-import { useState } from "react";
+// AI 답 메시지는 글이 바뀌는 말풍선(live) 하나로 두고, 끝나면 근거 · '보드에 담을까요?' · 이어 물을 질문을 붙인다.
+import { type ReactNode, useState } from "react";
 import { CAT, type Material, type Style } from "../data";
 import { addMsg, bot, busy, F, live, me, type MsgHandle, quick, refreshFeed } from "../engine";
 import { recommend, STEP_NAMES, stepFn } from "../flow";
@@ -10,13 +10,50 @@ import { DATA, S } from "../store";
 import { quoteBody } from "../doc/api";
 import { materialsFor, profileOf } from "./context";
 import { type AskOut, localClaude, runAsk, toImageBlock } from "./llm";
-import { ragReady, ragSearch7, relatedQs } from "./rag";
-import { cleanMarks, nextStepOf } from "./route";
+import { cleanMarks } from "./route";
 import { ragSources } from "./Sources";
-import { type After, claudeTools, searchTool7 } from "./tools";
+import { type After, claudeTools, type Pending } from "./tools";
 
 type Bub = { text: string; typing: boolean };
 type Live = { use: () => Bub; set: (b: Bub) => void };
+
+/** 답 글을 줄 단위로: '· '로 시작하는 줄은 목록, 짧고 문장 끝이 없는 줄은 소제목. 별표(**)는 지운다 */
+const HEAD = /^[^·•\-\d].{0,18}$/;
+function AnswerText({ text }: { text: string }) {
+  const plain = text.replace(/\*\*/g, "");
+  const lines = plain.split("\n").map((l) => l.trim()).filter(Boolean);
+  if (!lines.some((l) => /^[·•-]\s/.test(l))) return <>{plain}</>;
+  const out: ReactNode[] = [];
+  let items: string[] = [];
+  const flush = () => {
+    if (items.length) out.push(<ul key={out.length} className="ans-list">{items.map((t, i) => <li key={i}>{t}</li>)}</ul>);
+    items = [];
+  };
+  for (const l of lines) {
+    if (/^[·•-]\s/.test(l)) items.push(l.replace(/^[·•-]\s+/, ""));
+    else {
+      flush();
+      out.push(HEAD.test(l) && !/[.?!요다]$/.test(l) ? <b key={out.length} className="ans-head">{l}</b> : <p key={out.length} className="ans-p">{l}</p>);
+    }
+  }
+  flush();
+  return <>{out}</>;
+}
+
+/** AI가 담자고 한 값: 고객이 [담기]를 눌러야 보드에 저장한다 */
+function SaveAsk({ items }: { items: Pending[] }) {
+  const [st, setSt] = useState<"ask" | "saved" | "no">("ask");
+  const label = [...new Set(items.map((x) => x.label))].join(" · ");
+  if (st === "saved") return <p className="applied">{`✓ 보드에 담았어요 · ${label}`}</p>;
+  if (st === "no") return <p className="applied muted">담지 않았어요</p>;
+  return (
+    <div className="save-ask">
+      <span>{`우리 집 보드에 담을까요? ${label}`}</span>
+      <button type="button" className="chip sm" onClick={() => { items.forEach((x) => x.apply()); setSt("saved"); }}>담기</button>
+      <button type="button" className="chip sm ghost" onClick={() => setSt("no")}>아니에요</button>
+    </div>
+  );
+}
 
 function AiBubble({ lv }: { lv: Live }) {
   const b = lv.use();
@@ -29,7 +66,7 @@ function AiBubble({ lv }: { lv: Live }) {
           <i />
         </span>
       ) : (
-        b.text
+        <AnswerText text={b.text} />
       )}
     </div>
   );
@@ -46,30 +83,6 @@ function scrollLast() {
 /** 단계 이름으로 그 단계를 열 수 있는지 (v10 STEP_FN[id]) */
 const hasStep = (id: string) => (id === "guide" ? !!F.guideStep : !!(STEP_NAMES[id] && F[STEP_NAMES[id]]));
 
-function NextBtn({ step, ko }: { step: string; ko: string }) {
-  const [done, setDone] = useState(false);
-  return (
-    <p className="next-btn">
-      <button
-        type="button"
-        className="btn"
-        disabled={done}
-        onClick={() => {
-          setDone(true);
-          stepFn(step)();
-        }}
-      >
-        {`${ko} 열기 →`}
-      </button>
-    </p>
-  );
-}
-function nextButton(t: string, opened?: string) {
-  const n = nextStepOf(t);
-  if (!n || n.step === opened || !hasStep(n.step)) return null;
-  return <NextBtn step={n.step} ko={n.ko} />;
-}
-
 /* 질문 종류: 서버 입구 관문(팀 의도 분류)이 정한 것 */
 const INTENT_KO: Record<string, string> = { orchestrator: "일반 안내", trade: "도배 · 목공 상담", quote_explanation: "견적 · 공사비", schedule: "공정 순서 · 기간" };
 
@@ -82,16 +95,6 @@ function errMsg(e: AskErr) {
       : e?.message
         ? `답을 만들지 못했어요. ${e.message}`
         : "답을 만들지 못했어요. 다시 물어봐 주세요.";
-}
-
-/** 화면 쪽 자료 검색 결과를 서버에 넘길 자료로 (자료 글은 지시가 아니라 데이터) */
-function refsOf(q: string) {
-  const r = ragSearch7(q, { k: 6 });
-  const cut = (t: string | undefined, n: number) => String(t || "").slice(0, n);
-  return {
-    refs: r.hits.map((x) => ({ ref: x.ref, source_type: cut(x.source_type, 200), title: cut(x.title, 200), section: cut(x.section, 200), publisher: cut(x.publisher, 200), date: cut(x.date, 20), text: cut(x.text, 2000) })),
-    refs_enough: r.enough,
-  };
 }
 
 /** 서버 숫자 검사로 뺀 문장이 있으면 이유를 접어서 보인다 */
@@ -129,14 +132,10 @@ export async function askClaude(q: string, { label, images, withPhotos }: { labe
   const lv = live<Bub>({ text: "", typing: true });
   const el = addMsg("bot", <AiBubble lv={lv} />);
   scrollLast();
-  const applied: string[] = [], after: After = {};
-  let out: AskOut | null = null, shown = "";
-  const show = (t: string) => {
-    shown = t;
-    lv.set({ text: t, typing: false });
-  };
+  const pending: Pending[] = [], after: After = {};
+  let out: AskOut | null = null;
+  const show = (t: string) => lv.set({ text: t, typing: false });
   try {
-    await ragReady();
     const sendPhotos = images || (withPhotos && (S.photos.length || S.refs.length));
     const files = sendPhotos ? [...S.photos, ...S.refs].map((p) => p.file).slice(0, 2) : [];
     const imgs: string[] = [];
@@ -145,8 +144,8 @@ export async function askClaude(q: string, { label, images, withPhotos }: { labe
         imgs.push(await toImageBlock(f));
       } catch {}
     }
-    const body = { kind: "chat" as const, message: q, profile: profileOf(), quote: quoteBody(), materials: materialsFor(q), ...refsOf(q), images: imgs };
-    out = await runAsk(body, claudeTools(applied, after), ctl.signal);
+    const body = { kind: "chat" as const, message: q, profile: profileOf(), quote: quoteBody(), materials: materialsFor(q), images: imgs };
+    out = await runAsk(body, claudeTools(pending, after), ctl.signal);
     show(cleanMarks(out.text));
   } catch (err) {
     show(errMsg(err as AskErr));
@@ -163,18 +162,15 @@ export async function askClaude(q: string, { label, images, withPhotos }: { labe
     return;
   }
   if (out) droppedNote(el, out.dropped);
-  const src = ragSources(out?.text || "");
+  const src = ragSources(out);
   if (src) el.append(src);
-  const nb = nextButton(shown, after.step);
-  if (nb) el.append(nb);
-  if (applied.length) el.append(<p className="applied">{"✓ 보드에 담았어요 · " + [...new Set(applied)].join(" · ")}</p>);
+  if (pending.length) el.append(<SaveAsk items={pending} />);
+  if (out?.trade) el.append(<p className="route-chip muted">{`질문 답변: ${out.trade}`}</p>);
   const it = out?.intent;
   if (!images && it && it.confidence >= 0.7 && INTENT_KO[it.label]) el.append(<p className="route-chip muted">{`질문 종류: ${INTENT_KO[it.label]}`}</p>);
-  if (!after.suggest?.length && !images) {
-    const rq = relatedQs(q);
-    if (rq.length) after.suggest = rq;
-  }
-  if (after.suggest?.length) quick(after.suggest.map((t) => [t, () => askClaude(t)] as [string, () => void]));
+  // 이어 물을 질문: 서버가 답할 수 있는지 검색해 본 것만 보낸다 (없으면 버튼을 띄우지 않는다)
+  const sug = images ? [] : out?.suggest || [];
+  if (sug.length) quick(sug.map((x) => [x.text, () => askClaude(x.text)] as [string, () => void]));
   if (after.step && hasStep(after.step)) stepFn(after.step)();
 }
 
@@ -226,8 +222,7 @@ export async function agentAnswer({ label, ask, kind, quote, plan }: {
   const after: After = {};
   let out: AskOut | null = null;
   try {
-    await ragReady();
-    out = await runAsk({ kind, message: ask, quote, plan, ...refsOf(ask) }, [searchTool7(after)], ctl.signal);
+    out = await runAsk({ kind, message: ask, quote, plan, profile: profileOf() } as Parameters<typeof runAsk>[0], [], ctl.signal);
   } catch {
     out = null;
   } finally {
@@ -237,7 +232,7 @@ export async function agentAnswer({ label, ask, kind, quote, plan }: {
   if (ctl.signal.aborted) return;
   lv.set({ text: out ? cleanMarks(out.text) : fail, typing: false });
   if (out) droppedNote(el, out.dropped);
-  const src = ragSources(out?.text || "");
+  const src = ragSources(out);
   if (src) el.append(src);
   return { text: out?.text || "", after, cons: out?.cons ?? null, failed: !out || out.failed };
 }

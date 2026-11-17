@@ -14,6 +14,16 @@ JEV_URL = "https://openrouter.ai/api/alpha/decisions"
 
 _stubs: dict[Role, BaseModel] = {}
 _jev_stub: list[tuple[str, float]] = []
+_embed_stub: list[tuple[str, list[float]]] = []
+EMBED_DIMENSIONS = 1536  # 지식 조각 임베딩과 같은 차원 (data_ingest 기본값)
+
+
+def model_for(role: Role) -> tuple[str, str]:
+    """역할에 맞는 (모델, 추론 effort). 짧은 구조화 출력 역할은 작은 모델로 비용을 줄인다."""
+    light = {r.strip() for r in settings.openai_light_roles.split(",") if r.strip()}
+    if settings.openai_light_model and role in light:
+        return settings.openai_light_model, settings.openai_light_effort
+    return settings.openai_agent_model, settings.openai_reasoning_effort
 
 
 class LLMError(Exception):
@@ -30,9 +40,44 @@ def set_jev_stub(choice: str, confidence: float = 0.9) -> None:
     _jev_stub[:] = [(choice, confidence)]
 
 
+def set_embed_stub(model: str, vector: list[float]) -> None:
+    """LLM_LIVE=false일 때 검색어 임베딩이 돌려줄 (모델, 벡터). 없으면 의미 검색 없이 찾는다."""
+    _embed_stub[:] = [(model, vector)]
+
+
 def clear_stubs() -> None:
     _stubs.clear()
     _jev_stub.clear()
+    _embed_stub.clear()
+
+
+async def embed_texts(texts: list[str]) -> tuple[str, list[list[float]]] | None:
+    """글 여러 개 임베딩 (검색어 · 추천 질문 후보, 한 번에 수백 토큰). 실패하면 None: 부르는 쪽은 임베딩 없이 간다."""
+    if not texts:
+        return None
+    if not settings.llm_live:
+        return (_embed_stub[0][0], [_embed_stub[0][1]] * len(texts)) if _embed_stub else None
+    from openai import AsyncOpenAI, OpenAIError
+
+    model = settings.openai_embedding_model
+    client = AsyncOpenAI(
+        api_key=settings.openai_api_key.get_secret_value(), timeout=10, max_retries=1
+    )
+    try:  # 공급자 오류 · 시간 초과는 조용히 임베딩 없이. 입력값은 남기지 않음
+        r = await client.embeddings.create(
+            model=model, input=[t[:300] for t in texts], dimensions=EMBED_DIMENSIONS
+        )
+        return model, [list(d.embedding) for d in sorted(r.data, key=lambda d: d.index)]
+    except OpenAIError:
+        return None
+    finally:
+        await client.close()
+
+
+async def embed_query(text: str) -> tuple[str, list[float]] | None:
+    """검색어 임베딩 (의미 검색용). 실패하면 None: 부르는 쪽은 키워드로만 찾는다."""
+    r = await embed_texts([text])
+    return (r[0], r[1][0]) if r else None
 
 
 async def jev_choice(text: str, instructions: str, criteria: dict[str, str]) -> tuple[str, float]:
@@ -78,10 +123,11 @@ async def structured[T: BaseModel](
     from langchain_openai import ChatOpenAI
 
     # 설정 오류(빠진 키 이름 · 틀린 값)는 LLMError로 가리지 않고 그대로 낸다
+    name, effort = model_for(role)
     model = ChatOpenAI(
-        model=settings.openai_agent_model,
+        model=name,
         api_key=settings.openai_api_key,
-        reasoning_effort=settings.openai_reasoning_effort,
+        reasoning_effort=effort,
         timeout=30,
         max_retries=1,
     ).with_structured_output(schema, method="json_schema", strict=True)
@@ -99,10 +145,16 @@ async def chat_tools(system: str, messages: list[dict], tools: list[dict]) -> di
 
     messages: [{role: user | assistant | tool, content: 글 | [{type: text, text} | {type: image, data}],
     tool_calls?: [{id, name, arguments}], tool_call_id?}], tools: [{name, description, parameters}].
-    돌려주는 것: {text, tool_calls: [{id, name, arguments}], stop: tool_calls | stop | refusal}.
+    돌려주는 것: {text, tool_calls: [{id, name, arguments}], stop: tool_calls | stop | refusal,
+    usage: {input, cached, output}} (usage는 비용 기록용, 모르면 0).
     """
     if not settings.llm_live:
-        return {"text": CHAT_STUB_TEXT, "tool_calls": [], "stop": "stop"}
+        return {
+            "text": CHAT_STUB_TEXT,
+            "tool_calls": [],
+            "stop": "stop",
+            "usage": {"input": 0, "cached": 0, "output": 0},
+        }
     from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
     from langchain_openai import ChatOpenAI
 
@@ -162,7 +214,13 @@ async def chat_tools(system: str, messages: list[dict], tools: list[dict]) -> di
     if refusal and not text:
         text = refusal
     stop = "tool_calls" if calls else "refusal" if refusal else "stop"
-    return {"text": text or "", "tool_calls": calls, "stop": stop}
+    u = r.usage_metadata or {}
+    usage = {
+        "input": u.get("input_tokens", 0),
+        "cached": (u.get("input_token_details") or {}).get("cache_read", 0),
+        "output": u.get("output_tokens", 0),
+    }
+    return {"text": text or "", "tool_calls": calls, "stop": stop, "usage": usage}
 
 
 def _stub[T: BaseModel](role: Role, schema: type[T]) -> T:

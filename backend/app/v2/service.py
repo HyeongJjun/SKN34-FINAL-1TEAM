@@ -7,12 +7,12 @@ AI는 agent.llm.chat_tools 한 번 부르기만 한다(도구는 화면이 실�
 from datetime import date, timedelta
 from decimal import Decimal
 
-from app.calc import market_band, precise_mokgong, v2_check, v2_plan, v2_tools
-from app.calc.common import FORMULA_VERSION, from_entered
+from app.calc import market_band, precise_mokgong, quick_budget, v2_check, v2_plan, v2_tools
+from app.calc.common import FORMULA_VERSION, from_entered, pyeong_to_m2
 from app.calc.plan_qty import PlanOptions, from_plan
 from app.calc.v2_quote import V2Books, V2Plan, V2QuoteInput, build, inputs, market_input
 from app.refprice import v2_ref
-from app.refprice.book import DOBAE_2026H2, MOKGONG_2026H2
+from app.refprice.book import DOBAE_2026H2, MOKGONG_2026H2, SILK_2026, SILK_DEFAULT
 from app.refprice.floor_plans import plans
 from app.refprice.holidays import HOLIDAYS
 from app.refprice.market import (
@@ -41,6 +41,8 @@ def books() -> V2Books:
         materials=v2_ref.materials(),
         cat_ko=v2_ref.CAT_KO,
         dobae_removal_calc=v2_ref.DOBAE_REMOVAL_CALC,
+        silk=SILK_2026,
+        silk_default=SILK_DEFAULT,
     )
 
 
@@ -105,6 +107,7 @@ def _quote_input(q: v2.V2QuoteIn) -> V2QuoteInput:
         mok=sel,
         door_count_set=count_set,
         door_removal=bool(q.mok and q.mok.door.mode in ("replace", "overlay")),
+        grade=q.grade,
     )
 
 
@@ -190,3 +193,39 @@ def extras_range(b: v2.V2ExtrasIn) -> v2.V2ExtrasOut:
         MARKET_2026_11.mokgong, dict(b.picks), c.doors if c else 0, c.with_door if c else False
     )
     return v2.V2ExtrasOut(lo=r.lo, hi=r.hi, notes=r.notes)
+
+
+SILK_BY_KEY = {s.key: s for s in SILK_2026.values()}
+
+
+def quick(b: v2.V2QuickIn) -> v2.V2QuickOut:
+    """빠른 예산: 집 카드를 골랐으면 그 평면에서 잰 수량, 아니면 평형으로 어림한다."""
+    plan, name, area = None, "", None
+    if b.plan is not None:
+        info = plans().get(b.plan.id)
+        if info is None:
+            raise AppError(404, "not_found", "도면을 찾을 수 없어요.")
+        kinds = tuple(b.plan.kinds) if b.plan.kinds is not None else None
+        opts = PlanOptions(expanded=b.plan.expanded, ceiling=True, kinds=kinds)
+        plan, name, area = from_plan(info.plan, opts), f"{info.name} {info.type}", info.supply_m2
+    inp = quick_budget.QuickIn(
+        area_m2=area if area is not None else pyeong_to_m2(b.pyeong),  # type: ignore[arg-type]
+        area_basis="supply" if area is not None else b.area_basis,
+        dobae=b.dobae,
+        molding=b.molding,
+        base=b.base,
+        door=b.door,
+        grade=b.grade,
+        ceiling=b.ceiling,
+        occupied=b.occupied,
+        paper=SILK_BY_KEY.get(b.paper) if b.paper else None,
+        papers=tuple(SILK_2026.values()),
+        plan=plan,
+        plan_name=name,
+        part=b.plan is not None and b.plan.kinds is not None,
+    )
+    try:
+        r = quick_budget.quick(inp, MARKET_2026_11)
+    except ValueError as e:
+        raise AppError(422, "invalid", str(e)) from e
+    return v2.V2QuickOut.model_validate(r, from_attributes=True)

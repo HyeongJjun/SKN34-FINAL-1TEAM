@@ -13,16 +13,16 @@ export function Home() {
       <section className="hero">
         <div className="hero-t">
           <h1>
-            사진으로 고르는
+            질문 세 개로 보는
             <br />
-            우리 집 인테리어
+            우리 집 도배 금액
           </h1>
           <div className="cta">
             <a className="btn btn-pri" href="#chat" onClick={() => goChat("new")}>시작하기</a>
-            <a className="btn" href="#chat" onClick={() => goChat("quick")}>자재부터 볼게요</a>
+            <a className="btn" href="#chat" onClick={() => goChat("budget")}>예산만 볼게요</a>
           </div>
           <ol className="flow-mini" aria-label="진행 순서">
-            {["스타일", "집 정보", "자재", "견적서 · 공정표"].map((t, k) => (
+            {["궁금한 것 고르기", "질문 세 개", "금액 범위", "표준견적서 · 공정표"].map((t, k) => (
               <li key={t}>
                 <span>{k + 1}</span>
                 {t}

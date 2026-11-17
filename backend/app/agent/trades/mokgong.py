@@ -8,4 +8,5 @@ MOKGONG = TradeConfig(
     cautions=("목공을 도배보다 먼저 끝내요",),
     survey_vars=("몰딩 · 걸레받이 길이", "방문 개수 · 크기"),
     prep=("바꿀 방문 고르기",),
+    prompt="trade_mokgong_v1",
 )

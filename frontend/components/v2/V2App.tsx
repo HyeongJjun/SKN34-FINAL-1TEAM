@@ -3,7 +3,7 @@
 // 첫 화면(#)과 상담 화면(#chat)을 주소 뒤 #으로 나눈다. 단계 화면은 F 표의 함수가 대화에 카드로 붙인다.
 import { useEffect, useRef, useState } from "react";
 import { Board, BoardBand } from "./Board";
-import { type Material, MODE_LABEL, STEP_INDEX, STEPS, type StyleData } from "./data";
+import { type Material, MODE_LABEL, shownMaterials, STEP_INDEX, STEPS, type StyleData } from "./data";
 import { bot, busy, closeAllOverlays, F, Feed, me, Overlays, Quick, quick, resetFeed, Toast, useFeed } from "./engine";
 import { stepFn } from "./flow";
 import { Home } from "./home/Home";
@@ -17,7 +17,7 @@ import s from "./v2.module.css";
 /** 첫 화면에서 상담을 어떻게 시작할지 (v10 startMode · pendingAsk · pendingTool · pendingLook).
     new: 새 인테리어, resume: 저장된 건(caseId) 열기, open: 연 뒤 바로 볼 문서 */
 export const start = {
-  mode: null as null | "new" | "resume" | "quick" | "ask" | "tool" | "look",
+  mode: null as null | "new" | "resume" | "quick" | "budget" | "ask" | "tool" | "look",
   ask: "",
   tool: "",
   look: "",
@@ -58,7 +58,7 @@ async function startFlow() {
   const { caseId, open } = start;
   Object.assign(start, { mode: null, caseId: "", open: "" });
   await flush(); // 하던 건의 남은 저장부터 보낸다
-  if (mode === "new" || mode === "quick" || mode === "look") freshCase();
+  if (mode === "new" || mode === "quick" || mode === "budget" || mode === "look") freshCase();
   if (mode === "resume" && caseId) {
     try {
       const c = await openCase(caseId);
@@ -85,6 +85,11 @@ async function startFlow() {
     await bot("스탠다드로 골라 뒀어요. 평형 · 예산은 위 단계를 눌러 바꿀 수 있어요.");
     return F.matStep();
   }
+  if (mode === "budget") {
+    S.goal = "budget";
+    S.level = "looking";
+    return F.budgetStep();
+  }
   if (mode === "ask" && start.ask) {
     const q = start.ask;
     start.ask = "";
@@ -107,6 +112,43 @@ async function startFlow() {
   F.welcome();
 }
 
+/** 첫 질문으로 들어온 고객의 여정 띠: 궁금한 것 → 금액 범위 → 표준견적서 → 공정표 */
+const JOURNEY: [string, string, () => void][] = [
+  ["goal", "궁금한 것", () => F.welcome()],
+  ["budget", "금액 범위", () => F.budgetStep()],
+  ["quote", "표준견적서", () => F.quoteStep()],
+  ["sched", "공정표", () => F.schedStep()],
+];
+const journeyAt = (step: string) => (step === "sched" ? 3 : step === "quote" || step === "materials" || step === "done" ? 2 : step === "info" ? 1 : 0);
+const journeyFar = () => (S.far >= 7 ? 3 : S.far >= 6 ? 2 : S.far >= 1 || S.quick ? 1 : 0);
+
+function JourneySteps() {
+  useV2();
+  const now = journeyAt(S.step), far = Math.max(journeyFar(), now);
+  return (
+    <nav className="steps" aria-label="진행 단계">
+      {JOURNEY.map(([id, ko, go], i) => {
+        const done = i <= far && i !== now;
+        return (
+          <button
+            key={id}
+            type="button"
+            className={i === now ? "now" : done ? "done" : ""}
+            aria-current={i === now ? "step" : undefined}
+            disabled={i > far}
+            title={i > far ? "앞 단계를 마치면 열려요" : done ? `${ko} 다시 보기` : undefined}
+            onClick={() => {
+              if (done && !busy.asking) go();
+            }}
+          >
+            {ko}
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
 function Steps() {
   useV2();
   const ref = useRef<HTMLElement>(null);
@@ -115,6 +157,7 @@ function Steps() {
     const el = ref.current, cur = el?.querySelector<HTMLElement>(".now");
     if (el && cur && el.scrollWidth > el.clientWidth) el.scrollLeft = Math.max(0, cur.offsetLeft - el.clientWidth / 2 + cur.offsetWidth / 2);
   });
+  if (S.goal) return <JourneySteps />;
   return (
     <nav className="steps" aria-label="상담 진행" ref={ref}>
       {STEPS.map(([id, ko], i) => {
@@ -125,7 +168,8 @@ function Steps() {
             type="button"
             className={i === now ? "now" : done ? "done" : ""}
             aria-current={i === now ? "step" : undefined}
-            title={done ? `${ko} 고치기` : undefined}
+            disabled={!done && i !== now}
+            title={done ? `${ko} 고치기` : i !== now ? "앞 단계를 마치면 열려요" : undefined}
             onClick={() => {
               if (done && !busy.asking) stepFn(id)();
             }}
@@ -300,7 +344,7 @@ export function V2App({ userId }: { userId: string }) {
         return r.json() as Promise<{ materials: Material[]; styles: Record<string, StyleData> }>;
       })
       .then((d) => {
-        DATA.materials = d.materials;
+        DATA.materials = shownMaterials(d.materials);
         DATA.styles = d.styles;
         DATA.ready = true;
         touch();
