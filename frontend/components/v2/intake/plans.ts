@@ -21,7 +21,9 @@ export const pp9Sub = (p: PlanBrief) => [`방 ${p.rooms} · 욕실 ${p.baths}`, 
 /* 상담 범위가 '일부만'이면 그 공간 종류만(거실 · 방 = 거실 · 방 · 복도 · 드레스룸) */
 export const PP9_KINDS: Record<string, string[]> = { room: ["living", "room", "hall", "dress"], kitchen: ["kitchen"], entry: ["entry"], bath: ["bath"], window: [] };
 export function pp9Kinds(): string[] | null {
-  if (S.scope?.kind !== "part" || !S.scope.spaces?.length) return null;
+  if (S.scope?.kind !== "part") return null;
+  if (S.scope.kinds?.length) return S.scope.kinds;
+  if (!S.scope.spaces?.length) return null;
   return [...new Set(S.scope.spaces.flatMap((sp) => PP9_KINDS[sp] || []))];
 }
 export const pp9ScopeKo = () => (pp9Kinds() ? SPACES.filter((x) => S.scope.spaces.includes(x.id)).map((x) => x.ko).join(" · ") + "만" : "집 전체");

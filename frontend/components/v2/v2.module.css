@@ -96,6 +96,7 @@
 .root :global(.steps button.done) { color: var(--ink-sub); cursor: pointer; }
 .root :global(.steps button.done::before) { background: var(--ink); }
 .root :global(.steps button.now) { color: var(--accent); font-weight: 700; }
+.root :global(.steps button:disabled) { opacity: .5; }
 .root :global(.steps button.now::before) { background: var(--accent); }
 .root :global(.reset-ask) { display: flex; gap: 6px; align-items: center; font-size: var(--fs-xs); color: var(--ink-sub); white-space: nowrap; }
 .root :global(.msgs) { display: flex; flex-direction: column; gap: 20px; padding: 24px 0; flex: 1; }
@@ -109,7 +110,13 @@
 .root :global(.msg:not(.me) .bubble) { padding-top: 3px; }
 .root :global(.msg.me .bubble) { background: var(--surface-2); padding: 10px 16px; border-radius: 18px 18px 4px 18px; }
 .root :global(.bubble.ai) { background: none; }
+.root :global(.bubble .ans-head) { display: block; margin-top: 10px; font-size: var(--fs-sm); }
+.root :global(.bubble .ans-head:first-child) { margin-top: 0; }
+.root :global(.bubble .ans-list) { margin: 4px 0 0; padding-left: 18px; white-space: normal; }
+.root :global(.bubble .ans-list li) { margin: 2px 0; }
+.root :global(.bubble .ans-p) { margin: 6px 0 0; white-space: normal; }
 .root :global(.applied) { font-size: var(--fs-xs); color: var(--ok); }
+.root :global(.save-ask) { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: var(--fs-sm); margin-top: 8px; }
 .root :global(.card) { background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 20px; min-width: 0; display: grid; gap: 16px; }
 .root :global(.card h3) { font-size: var(--fs-lg); }
 .root :global(.card.done) { opacity: .55; pointer-events: none; }
@@ -499,9 +506,19 @@
 .root :global(.qc .doc-opts) { flex-wrap: wrap; min-width: 0; }
 .root :global(.qc .doc-opts .chk) { flex-wrap: wrap; max-width: 100%; min-width: 0; white-space: normal; }
 .root :global(.qc .chk .cnt) { width: 48px; flex: none; }
+/* 받은 견적: 만 원 칸 · 포함 항목 단추 */
+.root :global(.qc) { display: grid; gap: 12px; }
+.root :global(.qc-amt) { display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-md); }
+.root :global(.qc-amt > span) { white-space: nowrap; }
+.root :global(.qc-amt .inp) { width: 140px; min-height: 44px; font-size: var(--fs-md); text-align: right; }
+.root :global(.qc-py) { align-items: center; gap: 8px; }
+.root :global(.qc-py .inp) { width: 96px; min-height: 40px; }
+.root :global(.qc-won) { margin: -4px 0 0; font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+.root :global(.qc-incl) { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); }
+.root :global(.qc-incl > span) { font-size: var(--fs-xs); }
+.root :global(.qc-incl .chip) { min-height: 40px; }
+.root :global(.qc .btn-pri[disabled]) { opacity: .5; cursor: not-allowed; }
 .root :global(.route-chip) { font-size: var(--fs-xs, 12px); margin-top: 6px; }
-.root :global(.next-btn) { margin: 10px 0 0; }
-.root :global(.next-btn .btn) { min-height: 44px; }
 .root :global(.srcs) { font-size: var(--fs-xs); color: var(--ink-sub); max-width: 620px; }
 .root :global(.srcs summary) { cursor: pointer; color: var(--accent); min-height: 40px; display: inline-flex; align-items: center; }
 .root :global(.srcs ol) { margin: 4px 0 0; padding-left: 18px; display: grid; gap: 4px; }

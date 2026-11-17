@@ -225,7 +225,7 @@ function ScopeCard() {
               setErr(true);
               return;
             }
-            Object.assign(S.scope, { kind, spaces: kind === "part" ? spaces : [], cats: kind === "part" ? cats : [] });
+            Object.assign(S.scope, { kind, spaces: kind === "part" ? spaces : [], cats: kind === "part" ? cats : [], kinds: null });
             setDone(true);
             touch();
             flashBoard();

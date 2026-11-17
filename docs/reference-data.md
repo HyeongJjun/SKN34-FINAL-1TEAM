@@ -38,6 +38,16 @@
 - `dataset_id`와 `dataset_kind`는 `ref_dataset_versions`의 `id`와 `kind`를 함께 참조한다. 종류는 각각 `floorplan`, `unit_price`, `productivity`, `wage`, `knowledge`다.
 - 계산용 행 4개 테이블의 `parent_key`는 같은 버전·같은 테이블의 상위 행을 참조한다. 표 제목·주석·합계·문맥도 저장하므로 모든 행이 계산 대상은 아니다.
 
+### 상담 지식 자료 (v2)
+
+| CSV | 만드는 법 | 저장소 |
+| --- | --- | --- |
+| `data/consult/consult_knowledge_rag.csv` | `data/consult/rag5.json` → `python -m app.knowledge.json_csv` | 올림 |
+| `data/local/interior_guide_book_rag.csv` | 로컬 책 자료 → 같은 변환 | 올리지 않음(저작권, `data/local/`는 git 제외) |
+
+- 적재 · 활성화는 위 자료와 같이 `app.data_ingest`로 한다. 검색 번호는 상담 자료 K1~, 팀 `*_rag.csv` K2001~, 로컬 자료 K5001~다(`knowledge/sources.py`).
+- 검색에만 쓰는 열(`ref` · `doc` · `trades` · `hints` · `rel` · `doc_date` · `page_known`)은 표에 열을 더하지 않고 행의 `provenance`에 남는다.
+
 ## 조회와 버전 선택 규칙
 
 다음은 기능 연결 시 지켜야 할 규칙이다. DB 제약만으로 행의 계산 적합성이나 검색 품질까지 보장되지는 않는다.
@@ -55,8 +65,8 @@
 
 - 계산: 기능 service가 기준 자료를 조회해 입력을 준비하고 `calc`에 전달한다. `calc`는 DB·HTTP·시계를 모르는 순수 함수로 금액·수량·기간·날짜를 계산한다.
 - 지식 검색
-  - 현재: v2 상담의 자료 검색(`search_knowledge`)은 브라우저가 실행하는 화면 도구다. 화면에 든 자료로 찾고 결과만 서버에 돌려준다. `knowledge.service`를 거치지 않는다.
-  - 후속: `v2/ask_tools.py`의 서버 도구 → `knowledge.service` → `knowledge.repository` → PostgreSQL 순서로 연결한다. 서버가 찾은 원문만 숫자 근거로 쓴다(#124).
+  - v2 상담의 자료 검색(`search_knowledge`)은 서버 도구다. `v2/ask_tools.py` → `knowledge.service` → `knowledge.repository`(활성 버전만) → PostgreSQL. 키워드(BM25)와 임베딩 가까운 조각을 RRF로 합친다.
+  - 지식 자료의 기간 숫자는 공사 기간 근거로 쓰지 않는다. 화면 도구 결과를 숫자 근거에서 빼는 것은 남았다(#124).
   - 시방서 검색용 외부 MCP 서버를 추가하지 않는다.
 - 에이전트는 DB나 기능 service를 직접 호출하지 않는다. 프로젝트의 필수 입력은 코드가 먼저 읽어 전달하고, 추가 자료는 도구로 제공한다. 도구가 출처와 버전을 포함한 결과를 반환하도록 구현한다.
 - 견적 설명 역할은 저장된 계산 결과를 설명한다. RAG 본문이나 LLM이 만든 숫자로 견적 금액을 대체하지 않는다.

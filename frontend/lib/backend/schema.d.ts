@@ -841,6 +841,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v2/quick-budget": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v2 빠른 예산 */
+        post: operations["v2_quick_v2_quick_budget_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v2/ask": {
         parameters: {
             query?: never;
@@ -4338,16 +4355,6 @@ export interface components {
              */
             materials: components["schemas"]["V2AskMaterial"][];
             /**
-             * Refs
-             * @default []
-             */
-            refs: components["schemas"]["V2AskRef"][];
-            /**
-             * Refs Enough
-             * @default true
-             */
-            refs_enough: boolean;
-            /**
              * Images
              * @default []
              */
@@ -4427,6 +4434,23 @@ export interface components {
              */
             dropped: string[];
             cons?: components["schemas"]["V2ConsIn"] | null;
+            /**
+             * Sources
+             * @default []
+             */
+            sources: components["schemas"]["V2AskSource"][];
+            /**
+             * Cites Dropped
+             * @default 0
+             */
+            cites_dropped: number;
+            /**
+             * Suggest
+             * @default []
+             */
+            suggest: components["schemas"]["V2AskSuggest"][];
+            /** Trade */
+            trade?: string | null;
         };
         /**
          * V2AskProfile
@@ -4487,41 +4511,8 @@ export interface components {
              * @default
              */
             plan_name: string;
-        };
-        /** V2AskRef */
-        V2AskRef: {
-            /** Ref */
-            ref: string;
-            /**
-             * Source Type
-             * @default
-             */
-            source_type: string;
-            /**
-             * Title
-             * @default
-             */
-            title: string;
-            /**
-             * Section
-             * @default
-             */
-            section: string;
-            /**
-             * Publisher
-             * @default
-             */
-            publisher: string;
-            /**
-             * Date
-             * @default
-             */
-            date: string;
-            /**
-             * Text
-             * @default
-             */
-            text: string;
+            /** Level */
+            level?: ("new" | "looking" | "experienced") | null;
         };
         /** V2AskResultIn */
         V2AskResultIn: {
@@ -4534,6 +4525,38 @@ export interface components {
         V2AskResumeIn: {
             /** Results */
             results: components["schemas"]["V2AskResultIn"][];
+        };
+        /**
+         * V2AskSource
+         * @description 답에 붙은 근거 조각. 서버 지식 자료에서 이번 턴에 보여 준 것만
+         */
+        V2AskSource: {
+            /** Ref */
+            ref: string;
+            /** Source Type */
+            source_type: string;
+            /** Title */
+            title: string;
+            /** Publisher */
+            publisher: string;
+            /** Date */
+            date: string;
+            /** Section */
+            section: string;
+            /** Url */
+            url: string;
+            /** Official */
+            official: boolean;
+        };
+        /**
+         * V2AskSuggest
+         * @description 입력창 위 버튼으로 보일 이어 물을 질문. 서버가 답할 수 있는지 검색해 본 것만
+         */
+        V2AskSuggest: {
+            /** Text */
+            text: string;
+            /** Ref */
+            ref?: string | null;
         };
         /** V2BandOut */
         V2BandOut: {
@@ -5838,6 +5861,106 @@ export interface components {
             /** Source */
             source: string;
         };
+        /** V2QuickAskOut */
+        V2QuickAskOut: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "door" | "ceiling" | "occupied" | "grade" | "paper";
+            /** Q */
+            q: string;
+            /** Choices */
+            choices: components["schemas"]["V2QuickChoiceOut"][];
+            /** Spread */
+            spread: number;
+            /** Note */
+            note: string;
+        };
+        /** V2QuickChoiceOut */
+        V2QuickChoiceOut: {
+            /** Value */
+            value: string;
+            /** Label */
+            label: string;
+            /** Lo */
+            lo: number;
+            /** Hi */
+            hi: number;
+        };
+        /**
+         * V2QuickIn
+         * @description 질문 3개 + '더 정확히' 답. 모르는 칸은 비워 두면(null) 계산 엔진이 흔한 값으로 채운다.
+         */
+        V2QuickIn: {
+            /** Pyeong */
+            pyeong?: number | string | null;
+            /**
+             * Area Basis
+             * @default supply
+             * @enum {string}
+             */
+            area_basis: "supply" | "exclusive";
+            plan?: components["schemas"]["V2PlanSelIn"] | null;
+            /**
+             * Dobae
+             * @default true
+             */
+            dobae: boolean;
+            /**
+             * Molding
+             * @default false
+             */
+            molding: boolean;
+            /**
+             * Base
+             * @default false
+             */
+            base: boolean;
+            /** Door */
+            door?: ("none" | "leaf" | "frame") | null;
+            /** Grade */
+            grade?: ("economy" | "basic") | null;
+            /** Paper */
+            paper?: ("best" | "diamant") | null;
+            /** Ceiling */
+            ceiling?: boolean | null;
+            /** Occupied */
+            occupied?: boolean | null;
+        };
+        /**
+         * V2QuickOut
+         * @description 금액은 모두 부가세 포함, 만 원 단위 시장 범위(실견적 중간 50%)
+         */
+        V2QuickOut: {
+            /** Lo */
+            lo: number;
+            /** Hi */
+            hi: number;
+            /** Trades */
+            trades: components["schemas"]["V2QuickTradeOut"][];
+            /** Assumed */
+            assumed: string[];
+            alt: components["schemas"]["V2QuickChoiceOut"] | null;
+            /** Asks */
+            asks: components["schemas"]["V2QuickAskOut"][];
+            /** Version */
+            version: string;
+        };
+        /** V2QuickTradeOut */
+        V2QuickTradeOut: {
+            /**
+             * Trade
+             * @enum {string}
+             */
+            trade: "dobae" | "mokgong";
+            /** Lo */
+            lo: number;
+            /** Hi */
+            hi: number;
+            /** N */
+            n: number;
+        };
         /** V2QuoteIn */
         V2QuoteIn: {
             /** Pyeong */
@@ -5869,6 +5992,8 @@ export interface components {
              * @enum {string}
              */
             tier: "economy" | "basic" | "premium";
+            /** Grade */
+            grade?: ("economy" | "basic") | null;
         };
         /** V2QuoteOut */
         V2QuoteOut: {
@@ -8332,6 +8457,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["V2ExtrasOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_quick_v2_quick_budget_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2QuickIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2QuickOut"];
                 };
             };
             /** @description Validation Error */

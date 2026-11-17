@@ -1,4 +1,4 @@
-// 첫 화면 자주 묻는 질문의 정해진 답. 근거 자료(public/v2/rag5.json · 도배 시방서)에 있는 사실만 쉬운 말로 옮겼다.
+// 첫 화면 자주 묻는 질문의 정해진 답. 근거 자료(data/consult/rag5.json · 도배 시방서)에 있는 사실만 쉬운 말로 옮겼다.
 // 자료에 없는 것은 짓지 않고 noBasis로 '확인하지 못했어요'라고 보인다. 답 글의 숫자는 근거 번호 [n].
 
 export type FaqRef = { src: string; pub: string; date?: string; url?: string };

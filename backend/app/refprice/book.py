@@ -9,6 +9,7 @@ from decimal import Decimal
 from app.calc.common import won
 from app.calc.dobae import DobaePrices
 from app.calc.mokgong import MokgongPrices
+from app.calc.precise_common import SilkPaper
 
 _WAGE_HELPER = 172_698  # 보통인부 2026.9.1 시중노임단가 (대한건설협회)
 # 목재창호 설치 여닫이 1.0~3.0㎡ 원/개소: 단가표 재료비 3,294 + 노무비 79,045 (문 자재는 따로)
@@ -44,6 +45,17 @@ DOBAE_2026H2 = DobaePrices(
         "none": "공공 단가가 없어 업체 견적에서 확인해요",
     },
 )
+
+# 실크벽지 두 종류 평당 자재값. 지금은 업체 도배 견적서 1건(2026-11, 사용자 제공 이미지) 값이고,
+# 실견적 자료가 더 모이면 바꾼다. 화면 자재 id(wall-silk-*)로 고른다 (frontend/public/v2/data.json · v2_materials.json)
+_SILK_SRC = "업체 도배 견적서 1건 (2026-11) · 실크벽지 평당 자재값"
+SILK_2026 = {
+    "wall-silk-best": SilkPaper("best", "실크벽지 (LX 베스띠 or 개나리 로하스)", 9_500, _SILK_SRC),
+    "wall-silk-diamant": SilkPaper(
+        "diamant", "실크벽지 (LX 디아망 or 개나리 프리모)", 15_000, _SILK_SRC
+    ),
+}
+SILK_DEFAULT = "wall-silk-best"
 
 MOKGONG_2026H2 = MokgongPrices(
     version="2026H2",

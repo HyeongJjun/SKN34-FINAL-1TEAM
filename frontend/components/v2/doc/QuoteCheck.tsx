@@ -35,12 +35,20 @@ export function QuoteCheck({ q }: { q: Quote }) {
       {label}
     </label>
   );
+  // 금액은 만 원 단위로 받는다 (견적서에 보통 '250만 원'처럼 적혀 있다). 원으로 바꿔 API에 보낸다
+  const won = Math.round((+amt || 0) * 10000);
+  const tog = (key: string, label: string) => (
+    <button key={key} type="button" className="chip" aria-pressed={!!on[key]} onClick={() => setOn({ ...on, [key]: !on[key] })}>
+      {on[key] ? "✓ " : ""}
+      {label}
+    </button>
+  );
   const go = async () => {
     const ex: Record<string, number> = {};
     for (const e of extras) if (on["x-" + e.key]) ex[e.key] = Math.max(1, Math.min(9, Math.round(+(cnt["x-" + e.key] || 1))));
     const scope = sel === "dobae" ? { ceiling: !!on.ceiling, removal: !!on.removal, moving: !!on.moving } : { casing9: !!on.casing9, removal: !!on.removal, etc: !!on.etc, extras: ex };
     try {
-      const res = await fetchCheck({ quote: quoteBody(), trade: sel, amount: +amt || 0, mode, scope });
+      const res = await fetchCheck({ quote: quoteBody(), trade: sel, amount: won, mode, scope });
       if (res.warn) return setOut({ warn: res.warn });
       if (res.supply != null && res.lo != null && res.hi != null && res.where) V5.checks.push({ trade: res.trade, supply: res.supply, lo: res.lo, hi: res.hi, where: res.where });
       setOut({ res });
@@ -51,28 +59,41 @@ export function QuoteCheck({ q }: { q: Quote }) {
   return (
     <section className="doc-trade qc">
       <h4 className="doc-sec">
-        받은 견적 맞춰 보기<small>업체 금액과 포함 범위를 넣으면 같은 범위의 시장 기준과 비교해요</small>
+        받은 견적 맞춰 보기<small>같은 평수 · 범위의 시장 기준과 비교해요</small>
       </h4>
       <div className="form-grid">
-        <Fld label="공정">
-          <select className="sort" aria-label="공정" value={sel} onChange={(e) => pick(e.target.value)}>
-            {q.precise.map((t) => <option key={t.trade} value={t.trade}>{t.ko}</option>)}
-          </select>
-        </Fld>
-        <Fld label="받은 금액(원)">
-          <input className="inp" type="number" min="0" inputMode="numeric" placeholder="예: 2500000" aria-label="받은 견적 금액" value={amt} onChange={(e) => setAmt(e.target.value)} />
-        </Fld>
-        <Fld label="부가세">
-          <select className="sort" aria-label="부가세" value={mode} onChange={(e) => setMode(e.target.value as CheckReq["mode"])}>
-            <option value="unknown">부가세 말이 없음</option>
-            <option value="excluded">부가세 별도</option>
-            <option value="included">부가세 포함</option>
-          </select>
+        {q.precise.length > 1 ? (
+          <Fld label="공정">
+            <select className="sort" aria-label="공정" value={sel} onChange={(e) => pick(e.target.value)}>
+              {q.precise.map((t) => <option key={t.trade} value={t.trade}>{t.ko}</option>)}
+            </select>
+          </Fld>
+        ) : null}
+        <Fld label="받은 금액">
+          <span className="qc-amt">
+            <input className="inp" type="number" min="0" step="1" inputMode="decimal" placeholder="예: 250" aria-label="받은 견적 금액(만 원)" value={amt} onChange={(e) => setAmt(e.target.value)} />
+            <span>만 원</span>
+          </span>
         </Fld>
       </div>
+      {won ? <p className="muted qc-won">{`${fmt(won)}원으로 맞춰 봐요`}</p> : null}
+      <div className="seg" role="group" aria-label="부가세">
+        {([["unknown", "부가세 모름"], ["excluded", "부가세 별도"], ["included", "부가세 포함"]] as const).map(([v, ko]) => (
+          <button key={v} type="button" aria-pressed={mode === v} onClick={() => setMode(v as CheckReq["mode"])}>{ko}</button>
+        ))}
+      </div>
+      {sel === "dobae" ? (
+        <div className="qc-incl">
+          <b>견적에 들어 있는 것</b>
+          <span className="muted">견적서에 적힌 것만 눌러 켜 주세요</span>
+          <div className="chips">
+            {[tog("ceiling", "천장 도배"), tog("removal", "기존 벽지 철거"), tog("moving", "짐 이동 · 정리")]}
+          </div>
+        </div>
+      ) : null}
       <div className="doc-opts">
         {sel === "dobae"
-          ? [chk("ceiling", "천장 포함"), chk("removal", "기존 벽지 철거 포함"), chk("moving", "짐 이동 · 정리 포함")]
+          ? null
           : [
               chk("casing9", "9mm 문선으로"),
               chk("removal", "철거 · 폐기물 포함"),
@@ -101,7 +122,7 @@ export function QuoteCheck({ q }: { q: Quote }) {
             ]}
       </div>
       <div className="row">
-        <button type="button" className="btn btn-pri btn-sm" onClick={go}>맞춰 보기</button>
+        <button type="button" className="btn btn-pri" disabled={!won} onClick={go}>맞춰 보기</button>
       </div>
       <div className="qc-out" aria-live="polite">
         {out && "warn" in out ? <p className="warn-line">{out.warn}</p> : out ? <Result res={out.res} /> : null}

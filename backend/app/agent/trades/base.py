@@ -13,3 +13,4 @@ class TradeConfig:
     cautions: tuple[str, ...]  # 공정별 주의점
     survey_vars: tuple[str, ...]  # 실측 때 확정하는 것
     prep: tuple[str, ...]  # 고객 준비 사항
+    prompt: str = ""  # v2 상담에서 이 공정 담당이 쓰는 지시문 (app/v2/prompts/<prompt>.md)

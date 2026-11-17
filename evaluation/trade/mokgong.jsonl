@@ -1,0 +1,9 @@
+{"id": "tm01", "split": "dev", "trade": "목공", "text": "방문은 문짝만 바꿔도 돼요?", "profile": {}, "expect": ["문짝만 · 문틀까지 차이", "문틀 상태를 실측 때 확인"], "must_not": ["도배 이야기 덧붙임"]}
+{"id": "tm02", "split": "dev", "trade": "목공", "text": "몰딩은 꼭 바꿔야 해요?", "profile": {"level": "new"}, "expect": ["바꿔야 할 때 · 그대로 둬도 될 때", "몰딩을 쉬운 말로 풀이", "조건 하나만 되물음"], "must_not": ["금액 먼저 꺼냄"]}
+{"id": "tm03", "split": "dev", "trade": "목공", "text": "천장 평탄화는 어떤 상태면 안 해도 괜찮아요?", "profile": {}, "expect": ["평탄화가 필요한 상태를 자료대로", "실측 때 확인"], "must_not": ["자료에 없는 수치 단정"]}
+{"id": "tm04", "split": "dev", "trade": "목공", "text": "걸레받이 교체하면 바닥도 뜯어야 해요?", "profile": {"pyeong": 32, "scope": "도배 · 목공", "living": "비우고 공사"}, "expect": ["걸레받이와 바닥재 관계를 짧게", "범위 밖 바닥 공사는 자세히 말하지 않음"], "must_not": ["바닥재 시공 방법 길게 설명"]}
+{"id": "tm05", "split": "dev", "trade": "목공", "text": "석고보드 벽에 못 박아도 돼요?", "profile": {}, "expect": ["석고보드 고정 · 보강을 자료대로", "근거(시방서 · LH 석고보드) 인용"], "must_not": ["제품 추천"]}
+{"id": "tm06", "split": "dev", "trade": "목공", "text": "문틀에 필름만 붙이면 안 돼요?", "profile": {}, "expect": ["필름은 바꾸지 않고 덮는 방법으로 짧게", "문틀 상태에 따라 갈린다고 되물음"], "must_not": ["필름 업체 추천"]}
+{"id": "tm07", "split": "heldout", "trade": "목공", "text": "문짝만 바꿀 때 치수는 어떻게 재요?", "profile": {}, "expect": ["문틀 안쪽 · 경첩 면 · 여유를 자료대로", "근거 인용"], "must_not": ["자료에 없는 공차 숫자"]}
+{"id": "tm08", "split": "heldout", "trade": "목공", "text": "목공 견적이 표준견적서보다 훨씬 높아요", "profile": {"pyeong": 32, "scope": "도배 · 목공", "living": "비우고 공사"}, "expect": ["price_reference 숫자로 비교", "업체에 물어볼 것"], "must_not": ["새 금액 계산"]}
+{"id": "tm09", "split": "heldout", "trade": "목공", "text": "목재 함수율은 얼마여야 해요?", "profile": {}, "expect": ["자료에 있는 기준만 인용", "없으면 확인하지 못했다고 함"], "must_not": ["숫자 지어냄"]}

@@ -27,6 +27,7 @@ export function profileOf() {
     photos: S.photos.length,
     ref_photos: S.refs.length,
     plan_name: S.plan?.name || "",
+    level: S.level ?? null,
   };
 }
 
