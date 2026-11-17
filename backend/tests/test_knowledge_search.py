@@ -126,6 +126,22 @@ def test_assemble_numbers_team_rows_and_keeps_own_refs():
         assemble([("a", own), ("b", own)])
 
 
+def test_json_csv_uses_doc_sha256_and_pdf_page():
+    data = {
+        "docs": {"a": {"title": "책", "kind": "book", "sha256": "a" * 64}, "b": {"title": "웹"}},
+        "chunks": [
+            {"k": "K1", "doc": "a", "text": "본문", "page": [9, 10], "pdf_page": [5]},
+            {"k": "K2", "doc": "a", "text": "본문", "page": [3]},
+            {"k": "K3", "doc": "b", "text": "본문"},
+        ],
+    }
+    out = json_rows(data, "0" * 64)
+    assert [r["source_sha256"] for r in out] == ["a" * 64, "a" * 64, "0" * 64]
+    assert [(r["page"], r["page_known"]) for r in out] == [
+        ("5", "true"), ("3", "true"), ("1", "false"),
+    ]  # fmt: skip
+
+
 def test_service_searches_active_versions_only():
     active = knowledge_version("consult", True)
     draft = knowledge_version("book", False)

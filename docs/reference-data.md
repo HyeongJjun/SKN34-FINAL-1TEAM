@@ -47,6 +47,7 @@
 
 - 적재 · 활성화는 위 자료와 같이 `app.data_ingest`로 한다. 검색 번호는 상담 자료 K1~, 팀 `*_rag.csv` K2001~, 로컬 자료 K5001~다(`knowledge/sources.py`).
 - 검색에만 쓰는 열(`ref` · `doc` · `trades` · `hints` · `rel` · `doc_date` · `page_known`)은 표에 열을 더하지 않고 행의 `provenance`에 남는다.
+- 원본이 파일 하나인 자료(로컬 책 등)는 JSON의 `docs[문서].sha256`에 원본 파일의 SHA-256을, 조각의 `pdf_page`에 원본 파일의 쪽을 담는다. 변환하면 CSV의 `source_sha256` · `page`가 그 값이 된다. 없으면 JSON 파일의 해시와 `page`를 쓴다(웹 자료를 묶은 상담 자료).
 
 ## 조회와 버전 선택 규칙
 
