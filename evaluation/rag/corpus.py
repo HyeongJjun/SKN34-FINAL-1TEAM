@@ -12,6 +12,7 @@
 
 import argparse
 import csv
+import hashlib
 import json
 import sys
 from dataclasses import asdict
@@ -27,6 +28,10 @@ LOCAL = ROOT / "data/local"
 OUT = Path(__file__).parent / ".cache/corpus.json"
 
 
+def _digest(hashes) -> str:
+    return hashlib.sha256("\n".join(sorted(set(hashes))).encode()).hexdigest()
+
+
 def read(path: Path) -> tuple[str, list[dict[str, str]]]:
     with path.open(encoding="utf-8-sig", newline="") as f:
         return path.stem, list(csv.DictReader(f))
@@ -36,14 +41,12 @@ def build(with_local: bool) -> dict:
     dirs = DIRS + ([LOCAL] if with_local and LOCAL.is_dir() else [])
     datasets = [read(p) for d in dirs for p in sorted(d.glob("*_rag.csv"))]
     chunks, docs = assemble(datasets)
-    # 자료 버전: 예전 CSV는 source_version 열, 지금 CSV는 원본 SHA-256 앞 12자
+    # 자료 버전: 예전 CSV는 source_version 열, 지금 CSV는 행들의 원본 SHA-256을 모두 합친 해시 앞 12자
+    # (문서마다 원본 해시가 다르면 첫 행만 보면 첫 문서만 따라간다)
     versions = sorted(
-        {
-            r.get("source_version") or f"{key}@{r['source_sha256'][:12]}"
-            for key, rows in datasets
-            for r in rows[:1]
-            if "ref" in r
-        }
+        rows[0].get("source_version") or f"{key}@{_digest(r['source_sha256'] for r in rows)[:12]}"
+        for key, rows in datasets
+        if rows and "ref" in rows[0]
     )
     team = sum(1 for c in chunks if 2001 <= int(c.ref[1:]) < 5000)
     return {
