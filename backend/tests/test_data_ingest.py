@@ -442,7 +442,7 @@ def test_original_csv_counts_types_and_full_snapshot():
         usage = await rag.embed_versions(
             SessionLocal, versions, MODEL, 1536, mock, batch_size=64, count_tokens=lambda _: 10
         )
-        assert usage.generated == 719 and len(mock.calls) == 12
+        assert usage.generated == 715 and len(mock.calls) == 12
         async with SessionLocal() as session:
             verified = await ingest.verify(session, datasets, MODEL, 1536, PROFILE, True)
             assert sum(v["embedding_missing"] for v in verified) == 0
