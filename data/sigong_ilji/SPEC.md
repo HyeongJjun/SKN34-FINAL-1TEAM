@@ -12,7 +12,8 @@
 2. 쪽 지도 → `map.json`: `{"7": {"part": "PART 1 <장 제목>", "q": "Q2 <질문 제목>", "text": true}}`
 3. 1차 읽기 → `a/pNNN.json`, 2차 읽기(같은 규칙, 따로) → `b/pNNN.json`
 4. `tools/diff.py a b diff.md` → 어긋난 곳만 300dpi로 다시 보고 `a/`를 고침
-5. `tools/merge.py a sigong_ilji.json` → `json_csv` → `sigong_ilji_rag.csv`
+5. `tools/merge.py a sigong_ilji.json ../../sigong_ilji/joins.json` → `json_csv` → `sigong_ilji_rag.csv`
+   - `joins.json`: 쪽 경계에서 끊긴 조각을 잇는 쪽과 사이 글자(`""` 붙임 · `" "` 띄움 · `"\n"` 줄바꿈). 이 파일이 있어야 같은 CSV가 다시 나온다
 6. 적재: `data_ingest ... --directory ../data/local --dataset sigong_ilji_rag`
 
 ## 쪽 JSON (`a/pNNN.json`)
@@ -34,7 +35,7 @@
 - 펼침면 왼쪽 → 오른쪽, 쪽 안에서 왼쪽 단 끝까지 → 오른쪽 단
 - 표: 행마다 `- 열: 값 | 열: 값`, 표 제목 · 각주(*) 포함
 - 체크리스트: 항목마다 `- 항목: 설명`. 빈 줄 · 빈칸 쓰는 자리는 뺌. `topics`에 `checklist`
-- 쪽 머리 꼬리표(오늘의집 핵심 정리 · 100인의 시공 노트) · 쪽 번호 · 사진 · 장식은 뺌. 뜻 있는 사진 설명만 남김
+- 쪽 머리 꼬리표(책의 코너 이름) · 쪽 번호 · 사진 · 장식은 뺌. 뜻 있는 사진 설명만 남김
 - 쪽 파일에는 그 쪽 글만 넣음. 앞 쪽에서 이어진 글은 앞 쪽 이미지에서 소제목을 확인해 같은 `sec`를 씀(1차 · 2차 비교가 쪽 단위라서)
 - 문맥 머리 · `sec`의 Q 제목은 `map.json`의 `q`. 펼침면 안에서 Q가 바뀌면(`note`의 "왼쪽은 Qn") 왼쪽 글은 그 Q로
 - 크리에이터 인터뷰(파란 배경 집 소개 기획, map `note`에 표시): `sec`는 `크리에이터 인터뷰 > <인터뷰 제목>`, Q 제목을 붙이지 않음, `doc`은 `cases`, 이름 · 닉네임은 빼고 "크리에이터"로
