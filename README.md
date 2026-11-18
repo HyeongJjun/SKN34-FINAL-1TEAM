@@ -1,12 +1,13 @@
 # 🏠 믿집 (MitJip)
 
 > **반셀프 인테리어를 위한 표준견적, 공정 관리 서비스**
-> 공공 기준으로 계산한 **표준견적서**와 업체 **가견적·실측 견적**을 같은 양식으로 비교하고, 계약 뒤에는 **공정표와 업체 일정**까지 한 곳에서 관리하는 AI 에이전트 서비스
+> 공공 기준의 **표준견적서**와 업체가 입력한 **가견적·실측 견적서**를 비교하고, 업체별 공사 일정까지 관리하도록 돕는 반셀프 인테리어 서비스
 
 SK Networks Family AI Camp 34기 · FINAL 1팀
 
-<!-- TODO: 메인 화면 스크린샷 또는 시연 GIF -->
-<!-- ![믿집 메인](docs/images/main.png) -->
+**현재 코드 기준(2026-11-18, `dev` 커밋 `1a3e656`):** 기존 고객·업체 흐름에는 도배·목공 표준견적, 업체 승인·선택, 실측 요청, 견적서 파일, 업체 확정과 날짜 수락 API·화면이 있습니다. 별도 `/v2` 상담 화면은 **도배만 노출**하며, 견적·공정표 계산과 JSON 방식 AI 대화·선택값 저장을 연결합니다. **하나의 공종 하위 에이전트를 도배·목공 설정으로 운영하는 구조**, SSE, 일정 MCP와 실서비스 worker 작업은 후속입니다. 현재 기능별 판정·테스트·이슈·PR 근거는 [기능 개발표](docs/feature-roadmap.md)를 확인하세요. 이 설명은 AWS 배포 및 전체 수동 QA 완료를 뜻하지 않습니다.
+
+**문서 입구:** [전체 문서 목차](docs/README.md) · [API 안내·97개 엔드포인트](docs/api/README.md) · [개발 환경과 실행](docs/development.md) · [개발·배포 흐름](docs/development-flow.md) · [테스트와 QA](docs/testing.md) · [기준 데이터 적재](docs/reference-data.md)
 
 ---
 
@@ -116,7 +117,7 @@ SK Networks Family AI Camp 34기 · FINAL 1팀
 
 ### 차별점 1. 표준견적서: 상담 전에 보는 공정한 비교 기준
 
-경쟁 서비스의 기준 가격은 상담 뒤 · 자기 회사 기준이지만, 믿집은 **상담 전 · 공공 기준**입니다. 공공 기준 단가 × 우리 집 면적으로 계산하고, 줄마다 공공 출처를 붙입니다. **같은 조건이면 언제나 같은 금액**이 나옵니다.
+믿집은 상담 전에도 계산 엔진으로 **공공 기준 참고 금액**을 계산합니다. 금액은 입력 조건과 계산 엔진에 등록된 단가·가정에 따르며, 실제 시공 업체가 청구하는 확정 금액은 아닙니다. 자료의 적재·활성 여부와 계산용 고정 단가의 차이는 [기준 데이터 안내](docs/reference-data.md)에 정리했습니다.
 
 | 항목 | 출처 |
 | --- | --- |
@@ -127,7 +128,7 @@ SK Networks Family AI Camp 34기 · FINAL 1팀
 
 ### 차별점 2. 공정별 AI 상담: 같은 조건 · 같은 칸으로 비교
 
-경쟁 서비스는 견적을 모아 주기만 해서 조건 · 양식이 다르면 고객이 직접 맞대야 합니다. 믿집은 견적에 필요한 조건을 에이전트가 대신 물어 **같은 조건**으로 맞추고, 실측 견적서는 **같은 칸**으로 받습니다.
+견적에 필요한 조건을 상담과 화면에서 정리하고 계산 결과로 보여 줍니다. 실측 견적서는 업체가 **자신의 양식 파일**을 제출하며, 금액·부가세 방식 등 요약 칸을 별도로 입력합니다. 실측 파일 전체를 공통 행 양식으로 변환하는 OCR 기능은 아직 없습니다.
 
 1. **모르는 조건은 대신 물어봄** — 기존 벽지를 뜯을지 · 덧바를지처럼 견적에 필요한 것
 2. **모르면 '실측 후'로 남김** — 억지로 정하지 않고 실측 때 업체가 확인
@@ -135,7 +136,7 @@ SK Networks Family AI Camp 34기 · FINAL 1팀
 
 ### 차별점 3. 공정표: 반셀프도 일정 관리를 받음
 
-경쟁 서비스는 업체에 통째로 맡길 때만 일정을 관리해 줍니다. 믿집은 목공 → 도배 순서를 계산한 **반셀프 공정표**를 만들고, 업체가 확정 또는 연기로 회신하면 **연기는 고객 승인 뒤 재조정**합니다. 예상 공정표는 반나절 단위로 계산해 하루 단위로 보여 줍니다.
+믿집은 목공 → 도배의 순서를 계산한 **예상 공정표**를 만들고, 확정된 업체의 공사 날짜 제안과 고객 수락·변경 요청을 기록합니다. 일정 MCP로 여러 업체의 연기를 자동 조율하는 기능은 후속입니다. 계산 엔진은 반나절 작업량을 하루 단위 일정으로 보여 줍니다.
 
 | 근거 | 데이터 |
 | --- | --- |
@@ -152,15 +153,15 @@ SK Networks Family AI Camp 34기 · FINAL 1팀
 | --- | --- | --- |
 | 고객 | 프로젝트 시작 | 집 정보 입력, 공정 선택 |
 | 고객 | 표준견적서 · 예상 공정표 | 공공 기준 단가로 계산한 참고 금액과 예상 일정 |
-| 고객 | AI 상담 | 오케스트레이터가 시작 순서 · 서류를 안내하고, 공정별 서브에이전트가 조건을 묻고 주의점을 안내 |
-| 고객 | 업체 추천 | 조건 필터 + 점수로 3곳 추천, 추천 사유 제공 |
-| 고객 | 견적 비교 | 표준견적서 ↔ 가견적 ↔ 실측 견적 항목별 비교와 AI 설명 |
-| 고객 | 공정표 관리 | 확정 공정표, 업체 연기 요청 승인, 자동 재조정 |
-| 업체 | 가견적 · 실측 견적 제출 | 표준 행 양식으로 작성 |
-| 업체 | 일정 관리 | 공사기간 등록, 일정 확정 또는 연기 요청 |
-| 관리자 | 업체 승인 · 회원 관리 | 사업자등록증 확인 후 업체 기능 승인 |
+| 고객 | v2 AI 상담(구현, 검증 별도) | `chat_v3` 단일 대화 루프, 도배·목공 공정 힌트, 근거 검색, 화면 도구, 한 번에 JSON 응답 |
+| 고객 | 업체 고르기 | 해당 공종 업체 목록·가견적과 업체 상세 확인, 실측 요청(공정당 최대 3곳) |
+| 고객 | 견적 비교 | 표준견적·가견적·업체가 제출한 실측 견적 파일과 금액 요약 비교 |
+| 고객 | 공정표 관리 | 예상·확정 공정표 계산, 날짜 제안·수락·변경 요청, 작업 완료 확인 |
+| 업체 | 가견적 · 실측 견적 제출 | 자체 확인 단가 묶음 관리, 자체 견적서 파일 제출·버전 보관 및 요약 금액 입력 |
+| 업체 | 일정 관리 | 공사 날짜·인원 제안 및 재제출 |
+| 관리자 | 업체 심사 | 사업자등록증 첨부 신청에 대한 승인·보완·거절. 회원 목록 화면의 실제 DB 연결은 부분 구현 |
 
-<!-- TODO: 기능별 스크린샷 -->
+상태와 검증의 구분은 [기능 개발표](docs/feature-roadmap.md)를 기준으로 합니다. `/v2` 화면은 현재 도배만 보여 주며, 기존 고객·업체 흐름의 목공 지원과 구분됩니다.
 
 ---
 
@@ -169,78 +170,73 @@ SK Networks Family AI Camp 34기 · FINAL 1팀
 ```mermaid
 flowchart LR
     A[집 정보 · 공정 선택] --> B[표준견적서 · 예상 공정표]
-    B --> C[AI 상담]
-    C --> D[업체 추천]
-    D --> E[가견적 요청]
-    E --> F[업체 가견적 제출]
-    F --> G[실측 요청]
-    G --> H[업체 실측 견적 제출]
-    H -->|다시 고르기| D
-    H -->|확정| I[공사기간 등록]
-    I --> J[확정 공정표]
-    J --> K{업체별 일정 확인}
-    K -->|확정| L[전체 확정 ✅]
-    K -->|연기| M[고객 승인 → 공정표 재조정]
-    M --> K
+    B --> C[업체 목록 · 가견적 확인]
+    C --> D[실측 요청]
+    D --> E[업체의 견적서 파일 · 요약 입력]
+    E -->|다시 고르기| C
+    E -->|업체 확정| F[업체가 공사 날짜 제안]
+    F --> G{고객 확인}
+    G -->|다른 날짜 요청| F
+    G -->|수락| H[확정 공정표 버전]
+    H --> I[작업 완료 · 고객 확인]
 ```
 
 ---
 
 ## 🤖 AI 에이전트 구조
 
-**"질문은 안내원이 받고, 공정 질문은 전문가에게"** — 금액 계산, 공정표 생성, 업체 추천은 코드와 계산 엔진이 맡고, 에이전트는 대화 · 설명 · 조건 정리를 맡습니다.
+현재 `/v2` 상담은 **오케스트레이터 한 개의 LLM 대화 루프**입니다. 코드가 의도를 분류하고 도배·목공 단어와 지시문을 더하며, 숫자 계산과 근거 검색은 서버 도구로 처리합니다. 독립 공종 하위 호출은 아직 연결되지 않았습니다.
 
 ```mermaid
 flowchart TB
-    U[고객 메시지<br/>채팅 · 로그인 고객] --> G[입구 관문<br/>코드 라우터 + 의도 분류 모델]
-    G -->|범위 밖| X[LLM 없이 코드 문구로 안내]
-    G --> O[오케스트레이터<br/>안내원 역할 · 요청 나누기 · 결과 취합]
-    O -->|안내 답변| OUT
-    O --> T[공종별 에이전트 · 메인<br/>코드 분기로 공정 판별]
-    T --> W[목공 서브에이전트<br/>조건 되묻기 · 견적 설명 · 일정 조건]
-    T --> P[도배 서브에이전트<br/>조건 되묻기 · 견적 설명 · 일정 조건]
-    W --> T
-    P --> T
-    T --> O
-    O --> V[출력 검사<br/>형식 · 숫자 확인]
-    V --> OUT[화면]
-    W -.-> K[(지식 검색<br/>pgvector)]
-    P -.-> K
-    T -.-> R[업체 추천<br/>코드 점수]
+    U[로그인 고객 · /v2 화면] --> API[/api/v2/ask/]
+    API --> G[코드 라우팅 · 의도 분류 · 필요하면 Jev]
+    G -->|범위 밖| X[고정 문구 · 이력 미저장]
+    G --> O[단일 LLM 루프 · chat_v3 · 공정별 힌트]
+    O --> K[서버 도구 · 계산 · 지식 검색]
+    K --> O
+    O -->|화면 도구 요청| C[브라우저 실행 · Redis 턴 재개]
+    C --> O
+    O --> V[숫자 · 인용 · 개인정보 검사]
+    V --> DB[(chats · chat_messages)]
+    V --> OUT[JSON 답변 · 화면]
 ```
 
 | 구성 | 역할 |
 | --- | --- |
 | **입구 관문** | 코드 라우터 + 의도 분류 모델. 범위 밖 요청은 LLM 없이 안내 |
-| **오케스트레이터** | 처음 고객의 시작 순서 · 서류(동의서, 행위허가)를 단계로 안내하고 버튼으로 표준견적서 · 공정표 화면에 연결. 금액은 말하지 않고 계산한 화면으로 안내. 공정 요청은 공종별 에이전트로 넘기고, 돌아온 답을 목공 → 도배 순서로 정리해 질문을 한 카드로 묶음 |
-| **공종별 에이전트 (메인)** | 코드 분기로 공정을 골라 서브에이전트에 분배, 모르면 되물음. 프로젝트 정보는 코드가 먼저 읽어 넘김 |
-| **목공 · 도배 서브에이전트** | 공정별 상담 · 견적 설명 · 일정 조건. 금액 · 날짜는 넣지 않고, 물을 것과 주의점을 정해진 형식으로 답함 |
-| **출력 검사** | 형식과 숫자 확인. 숫자가 저장된 값과 다르면 그 문장은 내보내지 않음 |
+| **단일 상담 루프** | `v2/ask.py`가 `chat_v3`와 역할 힌트·도구 호출을 관리. `v2/ask_chat.py`는 완료한 일반 대화만 저장 |
+| **공정별 설정** | 도배·목공 설정과 지시문은 존재하고 코드가 질문에 맞춰 붙임. `trade_agent.py`는 실패를 반환하는 뼈대 |
+| **서버 도구** | 기준금액·일정 조건 계산, 활성 RAG 검색(BM25 + pgvector 결과 결합) |
+| **화면 도구** | 고객 값 제안·단계 카드 요청을 브라우저가 실행하고 서버 턴을 재개. 실제 값 저장에는 화면 확인이 필요 |
+| **출력 검사** | 숫자·출처·민감 정보 등을 검사. 모델 응답의 실제 품질은 유료 평가·화면 QA로 별도 확인 |
 
-### 서브에이전트가 하는 일
+### 단일 공종 하위 에이전트 계획 (미구현)
 
-| 할 일 | 언제 | 목공 | 도배 | 지키는 것 |
-| --- | --- | --- | --- | --- |
-| 상담 | 공정을 고른 뒤 채팅 | 몰딩, 걸레받이 길이, 문틀 교체 | 바탕면, 기존 벽지 철거, 도배 유형 | 모르면 '실측 후'로 남김 |
-| 견적 설명 | 견적서 안 질문 버튼, 견적 도착 뒤 | 정목수 · 부목수 품 차이 | 자재 줄이 '따로 계산'인 이유 | 금액은 저장된 값만 |
-| 일정 조건 | 공정표 계산 전 | 작업 일수, 자재 반입 | 목공 뒤 시공, 건조 시간 | 날짜는 계산 엔진만 |
+팀의 목표는 **공종 에이전트 한 개**가 공정별 설정(`trades/dobae.py`, `trades/mokgong.py`)과 지식 검색 결과를 받아 공정별 조건·주의점·근거 번호를 정해진 형태로 오케스트레이터에 돌려주는 것입니다. 고객에게는 오케스트레이터 하나만 답합니다. 현재 `trade_agent.py`는 실패 반환 뼈대이며 실제 하위 호출이 없습니다.
 
-### 오케스트레이션 예시
+| 설정 | 확인할 조건 예시 | 결과에 포함할 내용 |
+| --- | --- | --- |
+| 목공 | 몰딩·걸레받이 길이, 문틀 교체 여부 | 빠진 조건, 시공 주의점, 근거 번호 |
+| 도배 | 바탕면 상태, 기존 벽지 철거 여부, 도배 유형 | 빠진 조건, 시공 주의점, 근거 번호 |
+
+### 목표 호출 흐름 예시 (현재 실행되는 호출 아님)
 
 ```
-고객 → 입구 관문 → 오케스트레이터 → 공종별 에이전트
-  → 목공 서브에이전트  할 일: 거실 몰딩 교체 조건 정리 (32평, 준공 2008년)
-       ↳ 물을 것: 천장 몰딩 길이, 걸레받이 교체 여부 / 주의: 몰딩이 끝나야 도배 가능
-  → 도배 서브에이전트  할 일: 거실 도배 조건 정리 (같은 프로젝트 정보)
-       ↳ 물을 것: 기존 벽지 철거 여부, 도배 유형 / 주의: 목공 끝난 뒤 시공, 바탕면 확인
-→ 오케스트레이터가 목공 → 도배 순서를 확인하고 질문을 한 카드로 묶어 고객에게
+고객 질문 → 입구 관문 → 오케스트레이터
+  → 공종 에이전트 한 개
+     → 코드가 공정 선택: 목공 · 도배
+     → 공정별 설정 + 지식 검색 결과로 조건 · 주의점 · 근거 번호 구성
+     → 구조화한 결과를 오케스트레이터에 반환
+  → 오케스트레이터가 출처를 붙여 한 답으로 전달
 ```
 
-- 서브에이전트 추가 = 설정 하나 추가 = 공정 하나 추가
-- 할 일마다 평가 세트를 두고, 호출은 에이전트별 도구 4회 · 턴당 하위 호출 3회로 제한합니다.
-- 의도 분류 신뢰도가 낮으면 보조 모델로 한 번 더 판단하고, 보조 모델이 실패하면 고객에게 되묻습니다.
-- 지식 검색은 PostgreSQL **pgvector** 기반 RAG를 사용합니다.
-- 일정 기능은 **MCP 서버**(`mcp_server.py`)로도 제공합니다.
+- 현재 상담 한 턴에는 도구 호출 **라운드** 최대 4회(`MAX_TOOL_ROUNDS`)와 LLM 호출 최대 6회(`MAX_CALLS`)를 적용합니다. 사용자별 상담 요청은 시간당 최대 60회(`ASK_PER_HOUR`, 로컬 환경 예외)입니다. 공종 하위 호출 3회와 일일 토큰 한도는 팀이 정한 후속 제한입니다.
+- 의도 분류 신뢰도가 낮으면 Jev 보조 분류를 사용합니다. Jev 실패 뒤 선택지로 되묻는 개선은 후속입니다.
+- 검색은 활성화한 DB 자료를 대상으로 BM25와 pgvector 결과를 결합합니다. 데이터 적재·활성 여부는 환경마다 다릅니다.
+- 일정 MCP 서버 파일(`mcp_server.py`)은 현재 비어 있으며 서버·클라이언트 연결이 없습니다. 답변은 SSE가 아닌 JSON으로 한 번에 전달됩니다.
+
+실제 호출·DB 저장·계약과 목표 하위 호출의 차이는 [AI 상담 협약](docs/agent-contract.md) 및 [v2 구조](docs/v2/structure.md)에 기록했습니다.
 
 ---
 
@@ -284,20 +280,22 @@ flowchart TB
 
 ### 전처리 흐름
 
-원본 12개는 프로젝트 폴더 밖에 별도로 보관하고, 검색 · 비교 · 검증이 되는 CSV 12개로 구조화했습니다. 저장소에는 전처리 결과만 올리며, 원본 PDF·엑셀은 올리지 않습니다.
+가이드북 CSV는 공유할 수 있지만 시공일지는 원본과 CSV 모두 저장소에 올리지 않습니다. 원본 PDF·엑셀은 저장소 밖에, 이미지·쪽별 JSON 등 작업 중간 파일은 Git에서 제외한 로컬 작업 폴더에 보관합니다. 아래 표는 시공일지를 제외한 공유 자료 목록이며, 보관 규칙은 [기준 데이터 사용 안내](docs/reference-data.md#상담-지식-자료-v2)를 따릅니다.
 
 ```
 01 원본 수집 → 02 원본 확인 → 03 데이터 추출 → 04 데이터 분류
-(PDF·Excel 12개)  (해시·페이지·시트·출처)  (PDF 본문·표, Excel 셀·수식)  (RAG용 8개, 정형 4개)
+(공유 기준 자료 + 안내서)  (해시·페이지·시트·출처)  (PDF 본문·표, Excel 셀·수식)  (RAG용 9개, 정형 4개)
 → 05 표준화 → 06 CSV 생성 → 07 검증 → 08 메타데이터
-(수치·단위 통일, 원본 값 보존)  (CSV 12개)  (누락·중복·수치 변형)  (불명확 값 표시, 계산 가능 여부)
+(수치·단위 통일, 원본 값 보존)  (CSV 13개)  (누락·중복·수치 변형)  (출처·버전·적용 조건)
 ```
 
 | 최종 산출물 | |
 | --- | --- |
-| 결과 | CSV 12개 · 레코드 **55,593개** (RAG 8 + 정형 4) |
+| 결과 | CSV 13개 · 레코드 **55,652개** (RAG 9개·716행 + 정형 4개·54,936행) |
 | 원본 추적 | 해시 · 페이지 · 셀 위치 |
-| 활용 | PostgreSQL · pgvector에 적재해 표준견적 · 공정표에 사용 |
+| 활용 | PostgreSQL · pgvector에 적재. 활성 RAG 자료는 검색에 사용하며 정형 자료 4종은 현재 비활성으로 유지 |
+
+상담 자료 `data/consult/consult_knowledge_rag.csv`는 위 집계와 별도로 관리합니다.
 
 - 원본을 바꾸지 않고 구조화
 - 정확한 조회 · 계산은 정형 데이터, 시공 기준 · 규정 검색은 RAG
@@ -308,9 +306,7 @@ flowchart TB
 
 ## 🏗 시스템 아키텍처
 
-<!-- TODO: 아키텍처 이미지로 교체 가능 -->
-
-운영(스테이징)은 **EC2 한 대에 Docker Compose**, 데이터는 **RDS**, 파일은 **S3**에 둡니다. 로컬은 `compose.yaml`로 DB까지 컨테이너로 띄웁니다.
+스테이징 배포 구성은 **EC2의 Docker Compose**, **RDS**, **S3**를 사용하도록 작성돼 있습니다. 이 문서 작업에서 실제 AWS 가동·배포 SHA는 확인하지 않았습니다. 로컬은 `compose.yaml`과 `compose.override.yaml`로 DB까지 실행합니다.
 
 ```mermaid
 flowchart LR
@@ -321,18 +317,17 @@ flowchart LR
     Web --> API
     API --> PG[(PostgreSQL 17 + pgvector<br/>운영: RDS)]
     API --> Redis[(Redis<br/>큐 · 요청 제한 · 캐시)]
-    Redis --> Worker[arq worker<br/>견적 설명 · 단가 수집 · 알림]
+    Redis --> Worker[arq worker<br/>ping · 시연 자동응답]
     Worker --> PG
     API --> S3[(파일 저장소<br/>운영: S3 · 로컬: 디스크)]
     API --> LLM[LLM API]
-    Worker --> LLM
 ```
 
 | 구성 | 역할 |
 | --- | --- |
 | `frontend/` (Next.js) | 화면만 담당. DB 접근 · LLM 호출 · 금액 계산 없음 |
 | `backend/app/` (FastAPI) | 유일한 공개 API. 기능 패키지 + 계산 엔진 `calc` + 에이전트 `agent` |
-| `worker.py` (arq) | 대화 밖의 느린 작업 (LLM 설명, 기준 단가 수집, 알림) |
+| `worker.py` (arq) | 현재 연결 확인 `ping`, `DEMO_AUTO` 시연 업체 자동응답만 등록. 일반 LLM 설명·단가 수집·발송 작업은 미구현 |
 | PostgreSQL + pgvector | 원본 데이터와 지식 검색. 운영은 RDS |
 | Redis | 큐 · 요청 제한 · 짧은 캐시 (지워져도 되는 데이터만) |
 | S3 | 운영 파일 저장소 (사업자등록증 · 사진 등) |
@@ -345,7 +340,7 @@ flowchart LR
 | --- | --- |
 | **Frontend** | ![Next.js](https://img.shields.io/badge/Next.js_16-000000?logo=nextdotjs&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white) ![React](https://img.shields.io/badge/React_19-61DAFB?logo=react&logoColor=black) |
 | **Backend** | ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white) ![Python](https://img.shields.io/badge/Python_3.12-3776AB?logo=python&logoColor=white) ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-D71F00?logo=sqlalchemy&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?logo=uv&logoColor=white) |
-| **AI** | <!-- LLM 공급자 / 프레임워크 확정 후 기입 --> ![MCP](https://img.shields.io/badge/MCP-000000) ![pgvector](https://img.shields.io/badge/pgvector-4169E1) |
+| **AI** | OpenAI SDK(대화·임베딩), 의도 분류 모델, Jev 보조 분류, ![pgvector](https://img.shields.io/badge/pgvector-4169E1) 검색. 일정 MCP 패키지는 의존성만 있고 서버는 미구현 |
 | **Database** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL_17-4169E1?logo=postgresql&logoColor=white) ![Redis](https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white) |
 | **Infra** | ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white) ![AWS](https://img.shields.io/badge/AWS_EC2-FF9900?logo=amazonaws&logoColor=white) ![RDS](https://img.shields.io/badge/AWS_RDS-527FFF?logo=amazonrds&logoColor=white) ![S3](https://img.shields.io/badge/AWS_S3-569A31?logo=amazons3&logoColor=white) ![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?logo=cloudflare&logoColor=white) ![Caddy](https://img.shields.io/badge/Caddy-1F88C0?logo=caddy&logoColor=white) |
 | **CI/CD** | ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?logo=githubactions&logoColor=white) |
@@ -357,21 +352,24 @@ flowchart LR
 ```
 SKN34-FINAL-1TEAM/
 ├── frontend/                # Next.js 웹
-│   ├── app/                 # 화면(라우트): start · projects/[id](standard · plan · vendors · request · quotes · measure · schedule · history) · my · vendor · admin
-│   ├── components/          # 화면 조각 (site · start · project · vendors · my · auth · admin · chat)
+│   ├── app/                 # 화면 라우트: start · projects/[id] · my · vendor · admin · v2
+│   ├── components/          # 화면 조각 + v2 상담·자재·견적·공정표
 │   └── lib/                 # 세션 · API 호출 · 표시 형식
 ├── backend/                 # FastAPI API
 │   ├── app/
-│   │   ├── agent/           # 오케스트레이터 · 공종별 에이전트 · 목공/도배 서브에이전트
-│   │   ├── calc/            # 표준견적 · 견적 차이 · 업체 점수 · 공정표 계산 엔진
+│   │   ├── agent/           # 의도 관문 · LLM 호출 · 공정별 설정 (하위 에이전트 뼈대)
+│   │   ├── calc/            # 도배·목공 표준견적 · 가견적 · v2 미리보기 · 공정표 계산
 │   │   ├── knowledge/       # RAG 지식 적재 · 검색
-│   │   ├── chat/            # 대화 (SSE · 에이전트 도구)
-│   │   ├── project/ vendor/ auth/ account/ files/ shared/
-│   │   ├── mcp_server.py    # 믿집 일정 MCP 서버
-│   │   └── worker.py        # arq worker
+│   │   ├── chat/            # 대화 저장과 rev 충돌 보호 (독립 SSE 라우터 미등록)
+│   │   ├── v2/              # /v2/* 계산·대화 API · case 저장 · 출력 검사
+│   │   ├── project/ vendor/ auth/ account/ files/ quote/ visit/ schedule/ shared/
+│   │   ├── mcp_server.py    # 0바이트, 일정 MCP 미구현
+│   │   └── worker.py        # ping · 시연(DEMO_AUTO) 등록
 │   ├── migrations/          # Alembic
 │   └── tests/
-├── evaluation/              # 에이전트별 eval (intent · orchestrator · guide · trade · quote_explanation · schedule · rag)
+├── evaluation/              # intent · rag · answer · trade · ask_back 평가 자료와 실행기
+├── data/                    # 공유 가능한 processed CSV와 기준 자료 문서, 로컬 전용 자료는 Git 제외
+├── docs/                    # 기능 개발표 · 구조 · ERD · 상담 · 기준 데이터 · 개발/QA 안내
 ├── deploy/aws/              # 스테이징 배포 (compose · Caddyfile)
 ├── infra/aws/               # 인프라 정의
 ├── compose.yaml
@@ -383,25 +381,17 @@ SKN34-FINAL-1TEAM/
 
 ## 🚀 실행 방법
 
-### 사전 준비
+### Docker로 시작
 
-- Docker / Docker Compose
+Docker Desktop과 Docker Compose가 필요합니다. 저장소 루트에서 `.env.example`을 `.env`로 복사하고 `POSTGRES_PASSWORD`를 설정한 다음 실행합니다(기존 `.env`는 덮어쓰지 않습니다).
 
-### 실행
-
-```bash
-cp .env.example .env   # SEED_PASSWORD에 시험 계정 비밀번호(8자 이상)를 넣는다
-docker compose up -d --build
-docker compose watch web   # 화면 코드를 고치면 바로 반영한다 (이 창은 켜 둔다)
+```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+# .env의 POSTGRES_PASSWORD를 설정한 뒤
+docker compose up --build --watch
 ```
 
-- 웹 http://localhost:3000 · API 문서 http://localhost:8000/docs
-- 화면(web)은 폴더를 연결하지 않고, `docker compose watch`가 바뀐 파일만 컨테이너로 복사해요. 고치면 1초 안팎에 반영돼요(Turbopack). watch 없이 `up`만 하면 이미지를 만든 때의 화면 코드로 떠요.
-- 컨테이너에서 만든 파일은 PC로 돌아오지 않아요. `pnpm gen:api`처럼 파일을 만드는 명령은 PC의 `frontend`에서 돌립니다.
-- 화면을 더 빨리 고치려면 웹만 PC에서 띄워요: `docker compose stop web` 뒤 `cd frontend && pnpm dev --port 3100` (http://localhost:3100)
-- `port is already allocated` 오류가 나면 그 포트를 이미 다른 프로그램이 쓰는 거예요. `.env`의 `*_HOST_PORT`를 바꾸고 다시 실행합니다.
-- 시험 계정(로컬 전용, 자동 생성): `admin@` · `customer@` · `vendor@` · `vendor-pending@mitjip.local`, 비밀번호는 `.env`의 `SEED_PASSWORD`. 다시 만들 때 `docker compose exec api python -m app.seed`
-- 실제 관리자 계정: `docker compose exec api python -m app.auth.cli create-admin --email <메일> --name 관리자`
+기본 주소는 웹 `http://localhost:3000`, 로컬 API 문서 `http://localhost:8000/docs`입니다. `--watch`가 웹 수정 파일을 반영합니다. 중지할 때 `docker compose down`을 사용합니다. PC 직접 실행·포트·시연 계정·환경변수·데이터 적재는 [개발 환경과 실행](docs/development.md)을 참고하세요.
 
 ---
 
@@ -412,7 +402,7 @@ docker compose watch web   # 화면 코드를 고치면 바로 반영한다 (이
 3. 로컬·CI에서 통합 검증 후 공식 저장소 `dev` → `main` PR을 만들고 merge commit으로 병합합니다.
 4. `main`의 Push CI가 성공하면 해당 main 커밋을 AWS에 자동배포하고 서버 상태를 확인합니다.
 
-`dev` 병합만으로 AWS에 배포되지는 않습니다. 기본 브랜치 목표는 `dev`이며, 실제 설정과 기존 CD를 바꾸는 순서는 [개발 흐름 전환 절차](docs/development-flow.md)에 있습니다. 별도 운영 환경(`prod`)은 아직 없습니다.
+`dev` 병합만으로 AWS에 배포되지는 않습니다. 현재 GitHub 기본 브랜치는 `dev`이고, 일상 절차는 [개발·배포 흐름](docs/development-flow.md)에 있습니다. 이전 설정 전환 절차는 [과거 기록](docs/archive/2026-11-dev-main-transition.md)에 보관했습니다. 별도 운영 환경(`prod`)은 아직 없습니다.
 
 작업 규칙은 [AGENTS.md](AGENTS.md), 팀 작업 방법은 [CONTRIBUTING.md](CONTRIBUTING.md)에 있습니다.
 
@@ -420,32 +410,15 @@ docker compose watch web   # 화면 코드를 고치면 바로 반영한다 (이
 
 ## 📊 평가
 
-`evaluation/`에 에이전트별 eval 세트를 두고 dev와 held-out을 2:1로 나눕니다. CI에서는 유료 LLM 호출 없이 스텁(`LLM_LIVE=false`)으로만 돌립니다.
+`evaluation/`에는 의도 분류(`intent`), 검색(`rag`), 답변 품질(`answer`), 공정별 답(`trade`), 되물음(`ask_back`) 평가 자료와 실행기가 있습니다. 팀이 계획한 가이드·오케스트레이터·일정·견적 설명의 개별 eval 전부가 완성됐다고 보지는 않습니다. CI는 스텁(`LLM_LIVE=false`)을 사용해 유료 LLM을 호출하지 않습니다.
 
-| eval 세트 | 개수 |
-| --- | ---: |
-| 의도 분류 (`intent`) | 200 |
-| 가이드 (`guide`) | 50 |
-| RAG (`rag`) | 30 |
-| 오케스트레이터 (`orchestrator`) | 30 |
-| 공정표 (`schedule`) | 15 |
-| 공종 (`trade`) | 10 |
-| 견적 설명 (`quote_explanation`) | 문제 행 시나리오 |
-
-<!-- TODO: evaluation/run.py 실행 방법 기입 (아직 비어 있음) -->
-
-| 대상 | 지표 | 결과 |
-| --- | --- | --- |
-| 의도 분류 | Accuracy / F1 | <!-- TODO --> |
-| RAG 검색 | Recall@k | <!-- TODO --> |
-| 견적 설명 | 정확성 · 근거 일치 | <!-- TODO --> |
-| 공정표 | 제약 위반 수 | <!-- TODO --> |
+실행 명령과 평가 범위는 [테스트와 QA](docs/testing.md), 실제 측정 기록과 데이터 조건은 [RAG 평가](evaluation/rag/README.md) · [답변 평가](evaluation/answer/README.md) · [공정 평가](evaluation/trade/README.md)를 참고하세요. 이전 평가 수치를 현재 모델 품질이나 실서비스 QA의 합격으로 옮기지 않습니다.
 
 ---
 
 ## 📅 개발 일정
 
-11/27까지 기능을 완료하고, 마지막 주는 시연과 테스트에 씁니다.
+아래는 프로젝트 초기에 수립한 **당시 목표 일정**입니다. 날짜가 지났다고 해당 기능이 완성된 것은 아닙니다. 당시의 목공·도배 개별 서브에이전트 구상은 현재 팀의 **단일 공종 에이전트 + 공정별 설정** 설계로 변경됐습니다. 현재 완료·진행·미구현은 [기능 개발표](docs/feature-roadmap.md)로 확인합니다.
 
 | 기간 | 단계 | 할 일 |
 | --- | --- | --- |
@@ -478,7 +451,7 @@ docker compose watch web   # 화면 코드를 고치면 바로 반영한다 (이
 
 | 단계 | 모델 | 내용 | 수익원 |
 | --- | --- | --- | --- |
-| 1단계 · 지금 (MVP) | 업체 등록 수수료 | 고객 무료, 업체 등록 수수료. 사용자 · 견적 데이터를 쌓음 | 업체 등록비 |
+| 1단계 · 사업화 구상 | 업체 등록 수수료 | 고객 무료, 업체 등록 수수료를 검토. 현재 결제·수수료 징수 기능은 없음 | 업체 등록비(계획) |
 | 2단계 · 고도화 | 견적 검토비 + 업체 광고 | 견적 설명 정확도를 검증한 뒤 고객 견적 검토비(B2C), 업체 광고비(B2B) | + 견적 검토비, 업체 광고비 |
 | 3단계 · 커뮤니티 | 후기 커뮤니티 광고 | 확정된 거래만 후기 작성 → 믿을 수 있는 후기. 후기가 쌓여야 광고가 붙음 | + 커뮤니티 광고 |
 | 4단계 · 확장 | 에스크로 결제 수수료 | 공사 대금을 믿집에 맡기고 공정마다 업체에 지급. PG사 에스크로 제휴로 시작 | + 에스크로 수수료 |
@@ -489,4 +462,4 @@ docker compose watch web   # 화면 코드를 고치면 바로 반영한다 (이
 
 ## 📝 회고
 
-<!-- TODO: 최종 발표 뒤 작성 -->
+최종 발표 뒤 팀 회고를 기록할 예정입니다.
