@@ -1,6 +1,6 @@
 # 기능 개발표 — 믿집
 
-[문서 목차](README.md) · [API 안내](api/README.md) · [API 목록](api/endpoints.md) · [v2 구조](v2/structure.md) · [v2 ERD](v2/erd.md) · [개발 흐름](development-flow.md) · [개발 안내](development.md) · [검증 안내](testing.md) · [에이전트 협약](agent-contract.md) · [기준 데이터](reference-data.md) · [이번 근거 점검](verification/2026-11-18-documentation.md)
+[문서 목차](README.md) · [API 안내·목록](api/README.md) · [v2 구조](v2/structure.md) · [v2 ERD](v2/erd.md) · [팀 기여 가이드](../CONTRIBUTING.md) · [개발 안내](development.md) · [검증 안내](testing.md) · [에이전트 협약](agent-contract.md) · [기준 데이터](reference-data.md) · [이번 근거 점검](verification/2026-11-18-documentation.md)
 
 > 기준: 2026-11-18, `dev` 커밋 `1a3e65661924e93225914ebb4b440bbd8330cc2a` (PR #141 병합). 현재 코드와 라우터 등록·화면 호출을 먼저 확인하고 이슈·PR 병합 기록과 CI를 대조했다. 아래는 서비스 기능별 실제 동작을 한 행에 기록한다.
 

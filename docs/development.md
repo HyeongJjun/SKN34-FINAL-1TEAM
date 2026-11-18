@@ -1,6 +1,6 @@
 # 개발 환경과 실행
 
-[문서 목록](README.md) · [개발 흐름](development-flow.md) · [테스트와 QA](testing.md)
+[문서 목록](README.md) · [기여·배포 가이드](../CONTRIBUTING.md) · [테스트와 QA](testing.md)
 
 ## 준비
 

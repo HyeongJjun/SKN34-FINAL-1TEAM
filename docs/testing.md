@@ -47,7 +47,7 @@ pnpm build
 
 API를 바꿨으면 로컬 API를 실행한 뒤 `pnpm gen:api`로 생성 타입을 갱신한다. `lib/backend/schema.d.ts`를 손으로 고치지 않는다.
 
-API 계약은 FastAPI `/openapi.json`의 **메서드·경로와 입력/성공 응답 스키마**를 기준으로 검사한다. 실행 시 오류 응답은 [공통 오류 문서](api/common.md)의 `error.code`·`fields` 형태도 별도로 확인해야 한다. 현재 FastAPI 커스텀 422 오류 형식과 자동 OpenAPI의 `HTTPValidationError`(`detail`) 스키마는 완전히 같지 않다. 로그인 쿠키, 역할·업체 승인, 본인 소유권, Origin 검사, 버전 409는 [API 엔드포인트 목록](api/endpoints.md)과 [업무 호출 흐름](api/workflows.md)을 기준으로 확인한다.
+API 계약은 FastAPI `/openapi.json`의 **메서드·경로와 입력/성공 응답 스키마**를 기준으로 검사한다. 실행 시 오류 응답은 [API 안내](api/README.md#오류와-요청-제한)의 `error.code`·`fields` 형태도 별도로 확인해야 한다. 현재 FastAPI 커스텀 422 오류 형식과 자동 OpenAPI의 `HTTPValidationError`(`detail`) 스키마는 완전히 같지 않다. 로그인 쿠키, 역할·업체 승인, 본인 소유권, Origin 검사, 버전 409와 호출 순서는 [단일 API 안내](api/README.md)를 따른다.
 
 ## 화면 QA 기록
 

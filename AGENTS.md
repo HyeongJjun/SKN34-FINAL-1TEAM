@@ -219,7 +219,7 @@ mcp_server.py            일정 MCP 예정 파일(현재 비어 있음)
 ## 6. Git · 이슈 · PR
 
 - 팀 저장소(upstream)를 fork한 내 저장소(origin)에서 작업한다.
-- 기능 개발 기준과 기능 PR 대상은 팀 `dev`다. `dev`에서 통합·검증하고 `main`은 검증한 배포 버전을 보관한다. 현재 GitHub 기본 브랜치는 `dev`다(2026-11-18 확인). 일상 절차는 [개발·통합·배포 흐름](docs/development-flow.md)을 따른다. 과거 전환 절차는 [보존 기록](docs/archive/2026-11-dev-main-transition.md)에 있다.
+- 기능 개발 기준과 기능 PR 대상은 팀 `dev`다. `dev`에서 통합·검증하고 `main`은 검증한 배포 버전을 보관한다. 현재 GitHub 기본 브랜치는 `dev`다(2026-11-18 확인). 일상 절차는 [팀 기여 가이드](CONTRIBUTING.md)를 따른다. 과거 전환 절차는 [보존 기록](docs/archive/2026-11-dev-main-transition.md)에 있다.
 - 순서: 이슈 생성 → 최신 `dev`에서 작업 브랜치 생성 → 구현·검증·이슈 본문 작성 → 작성자 본인이 최신 dev로 rebase → 이슈를 연결한 dev PR → CI · 승인 1명 · squash 병합 → 이슈 종료.
 - 로컬·CI에서 검증한 뒤 공식 저장소 `dev` → `main` 승격 PR을 만들고 merge commit으로 병합한다. 포함한 작업 PR과 배포 영향을 명시한다. `main` Push CI 성공 → 해당 main 커밋의 AWS 자동배포 → 서버 상태 확인 순서다.
 - dev 병합은 AWS에 배포하지 않는다. 서버에서 발견한 문제도 작업 이슈·dev 대상 수정 PR로 처리한 뒤 main으로 승격한다. 별도 운영 환경(`prod`)은 아직 없다.
