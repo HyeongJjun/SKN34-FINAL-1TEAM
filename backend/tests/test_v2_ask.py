@@ -114,6 +114,9 @@ def test_home_info_keeps_only_what_customer_said(api, fake):
     fake({"tool_calls": [call("set_home_info", said)]})
     out = api.post("/v2/ask", json={"message": "40평 빈집이에요"}).json()
     assert out["tool_calls"][0]["arguments"] == {"pyeong": 40, "living": "vacant"}
+    fake({"tool_calls": [call("set_home_info", guess)]})
+    out = api.post("/v2/ask", json={"message": "벽지가 살짝 들떴는데 40평이에요"}).json()
+    assert out["tool_calls"][0]["arguments"] == {"pyeong": 40}
 
 
 def test_resume_finishes(api, fake):

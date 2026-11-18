@@ -619,7 +619,7 @@ async def _run(turn_id: str, turn: dict) -> v2.V2AskOut:
 
 # 담기 제안에서 고객이 이번 말에 하지 않은 칸은 뺀다. 모델이 빈칸을 짐작해 채운다(평형만 말해도 '빈집')
 HOME_CUES = {
-    "living": re.compile(r"살|거주|빈\s*집|비어|이사"),
+    "living": re.compile(r"살면서|살고|거주|빈\s*집|비어\s*있|이사"),  # '살짝' · '몇 살'은 아님
     "move": re.compile(r"이사|입주|\d+\s*월"),
 }
 
