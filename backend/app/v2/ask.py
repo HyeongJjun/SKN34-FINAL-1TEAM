@@ -31,7 +31,7 @@ from app.v2.level import level_text
 
 _DIR = Path(__file__).with_name("prompts")
 PROMPT_VERSION = {
-    "chat": "chat_v3",
+    "chat": "chat_v4",
     "quote_explanation": "quote_explanation_v2",
     "schedule": "schedule_v1",
 }
