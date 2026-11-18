@@ -142,6 +142,26 @@ def test_json_csv_uses_doc_sha256_and_pdf_page():
     ]  # fmt: skip
 
 
+def test_json_csv_puts_common_nine_columns_first():
+    data = {
+        "docs": {
+            "a": {"title": "안내", "date": "2025-06-05"},
+            "b": {"title": "웹", "date": "2026"},
+        },
+        "chunks": [
+            {"k": "K1", "doc": "a", "text": "본문", "page": [3, 4], "topics": ["text", "defect"]},
+            {"k": "K2", "doc": "b", "text": "본문", "topics": ["standard_spec", "table"]},
+        ],
+    }
+    out = json_rows(data, "0" * 64)
+    assert list(out[0])[:9] == [
+        "id", "source", "source_sha256", "effective_date", "content", "section", "page", "category", "trade",
+    ]  # fmt: skip
+    assert [(r["page"], r["category"], r["effective_date"], r["doc_date"]) for r in out] == [
+        ("3,4", "defect", "2025-06-05", "2025-06-05"), ("1", "table", "", "2026"),
+    ]  # fmt: skip
+
+
 def test_service_searches_active_versions_only():
     active = knowledge_version("consult", True)
     draft = knowledge_version("book", False)
