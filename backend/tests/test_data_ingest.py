@@ -404,7 +404,7 @@ def test_empty_snapshot_removes_all_current_rows(tmp_path):
 
 
 def test_original_csv_counts_types_and_full_snapshot():
-    expected = [310, 6756, 46358, 51, 25, 1512, 64, 264, 92, 33, 99, 29]
+    expected = [310, 6756, 46358, 51, 25, 1512, 64, 264, 92, 33, 99, 29, 63, 1156]
     datasets = ingest.discover(DATA)
     assert [len(d.hashes) for d in datasets] == expected
 
@@ -414,8 +414,8 @@ def test_original_csv_counts_types_and_full_snapshot():
             versions.append(await ingest.load_dataset(SessionLocal, dataset, MODEL, 1536, PROFILE))
         async with SessionLocal() as session:
             verified = await ingest.verify(session, datasets, MODEL, 1536, PROFILE)
-            assert sum(v["rows"] for v in verified) == 55593
-            assert sum(v["embedding_missing"] for v in verified) == 657
+            assert sum(v["rows"] for v in verified) == 56812
+            assert sum(v["embedding_missing"] for v in verified) == 1876
         assert (
             await db_query("select count(*) n from ref_unit_price_rows where normalized_value<0")
         )[0]["n"] == 2
@@ -442,21 +442,21 @@ def test_original_csv_counts_types_and_full_snapshot():
         usage = await rag.embed_versions(
             SessionLocal, versions, MODEL, 1536, mock, batch_size=64, count_tokens=lambda _: 10
         )
-        assert usage.generated == 656 and len(mock.calls) == 11
+        assert usage.generated == 1875 and len(mock.calls) == 30
         async with SessionLocal() as session:
             verified = await ingest.verify(session, datasets, MODEL, 1536, PROFILE, True)
             assert sum(v["embedding_missing"] for v in verified) == 0
         assert (
             await db_query("select count(*) n from rag_chunks where vector_dims(embedding)=1536")
-        )[0]["n"] == 657
+        )[0]["n"] == 1876
         again = await rag.embed_versions(
             SessionLocal, versions, MODEL, 1536, mock, batch_size=64, count_tokens=lambda _: 10
         )
-        assert again.generated == 0 and len(mock.calls) == 11
+        assert again.generated == 0 and len(mock.calls) == 30
         # 실제 원본 전체도 재실행 시 새 버전·중복 행이 생기지 않는다.
         for dataset in datasets:
             await ingest.load_dataset(SessionLocal, dataset, MODEL, 1536, PROFILE)
-        assert (await db_query("select count(*) n from ref_dataset_versions"))[0]["n"] == 12
+        assert (await db_query("select count(*) n from ref_dataset_versions"))[0]["n"] == 14
 
     asyncio.run(run())
 
