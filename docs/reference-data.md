@@ -44,8 +44,10 @@
 | --- | --- | --- |
 | `data/consult/consult_knowledge_rag.csv` | `data/consult/rag5.json` → `python -m app.knowledge.json_csv` | 올림 |
 | `data/local/interior_guide_book_rag.csv` | 로컬 책 자료 → 같은 변환 | 올리지 않음(저작권, `data/local/`는 git 제외) |
+| `data/local/sigong_ilji_rag.csv` | 시공일지(스캔본) 쪽별 JSON → 쪽 묶기(번호 · 형식 통일) → 같은 변환 | 올리지 않음(공유 금지) |
 
-- 적재 · 활성화는 위 자료와 같이 `app.data_ingest`로 한다. 검색 번호는 상담 자료 K1~, 팀 `*_rag.csv` K2001~, 로컬 자료 K5001~다(`knowledge/sources.py`).
+- 적재 · 활성화는 위 자료와 같이 `app.data_ingest`로 한다. 검색 번호는 상담 자료 K1~, 팀 `*_rag.csv` K2001~, 로컬 자료는 가이드북 K5001~ · 시공일지 K6000~다(`knowledge/sources.py`). 로컬 자료는 `--directory ../data/local --dataset <파일 이름>`으로 하나씩 적재한다.
+- 시공일지는 사례 · 후기 · 금액 표 조각을 `source_type` `platform`으로 둔다. 검색이 비용 · 법 · 안전 질문에서 이 종류를 빼므로 책 금액이 상담 금액 근거로 쓰이지 않는다.
 - 열은 공통 9열(`id` · `source` · `source_sha256` · `effective_date` · `content` · `section` · `page` · `category` · `trade`) 뒤에 검색 전용 열을 둔다.
   - `page`는 쪽 번호를 `,`로 잇는다. 쪽을 모르면 `1`과 `page_known=false`이고, 쪽을 알면 검색 결과의 절 뒤에 쪽이 붙는다.
   - `effective_date`는 문서 날짜가 `YYYY-MM-DD`일 때만 넣고, 그 밖의 날짜 글은 `doc_date`에만 둔다.
