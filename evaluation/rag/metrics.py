@@ -84,6 +84,7 @@ def main() -> None:
         by_id = {q["id"]: q for q in qs}
         for g in extra:
             by_id[g["qid"]]["gold"].append({k: g[k] for k in ("ref", "grade", "why")})
+        print(f"추가 정답 {len(extra)}줄 (set = {a.questions.stem})")  # 0줄이면 파일 이름 확인
     if not any(q["gold"] for q in qs):
         raise SystemExit("정답(gold)이 아직 없어요")
     split_sets = [("dev", {"dev"})] + ([("held-out", {"heldout"})] if a.final else [])
