@@ -8,7 +8,9 @@
   - `expect`: `answer` | `no_source`(가격 · 업체 추천 · 범위 밖처럼 자료로 답하면 안 되거나 자료가 없는 질문)
   - `gold`: 정답 조각 `{ref, grade, why}`. grade 2 = 직접 답, 1 = 부분 관련. 후보(여러 검색의 상위 15개 합집합) + 말뭉치 낱말 검색으로 사람 대신 판정해 넣었다
   - `from`: 질문 출처 (`book` 시공 안내서, `mokgong_qa:q-…` 팀 목공 고객 질문, `written` 직접 씀)
-- `corpus.py`: 서버 적재용 CSV로 합친 말뭉치 만들기 (화면 자료 `data/consult` K1~ · 팀 자료 `data/processed` K2001~ · 로컬 추가 자료 `data/local`(git 제외) K5001~). 번호 규칙은 서버와 같은 `backend/app/knowledge/sources.py`. 결과는 `.cache/`(git 제외)
+- `questions_sigong.jsonl`: 시공일지(로컬 자료)로 답할 질문 60개 (도배 15 · 목공 15 · 공통 30, dev 40 · held-out 20). 책 조각을 보고 고객 말로 새로 썼다. 정답 후보 = 시공일지 있음 · 없음 · hints 뺌 세 검색 위 12개 합집합 + 쓸 때 본 조각(1,311개, 상담 · 시방서 조각 포함)
+- `gold_sigong.jsonl`: 기존 두 세트 dev 질문에 시공일지 조각을 따로 판정한 정답 225개 `{set, qid, ref, grade, why}`. 시공일지를 넣은 검색 위 10개에 든 시공일지 조각 953개를 판정했다. 기존 질문 파일은 바꾸지 않고 `metrics.py --extra-gold`로 더한다
+- `corpus.py`: 서버 적재용 CSV로 합친 말뭉치 만들기 (화면 자료 `data/consult` K1~ · 팀 자료 `data/processed` K2001~ · 로컬 추가 자료 `data/local`(git 제외) 가이드북 K5001~ · 시공일지 K6000~). 번호 규칙은 서버와 같은 `backend/app/knowledge/sources.py`. 결과는 `.cache/`(git 제외)
 - `rank_server.py`: 서버 검색(`backend/app/knowledge/bm25.py`)으로 질문마다 순위 뽑기 (DB 없이, 의미 검색 없이)
 - `dense.py`: 질문 임베딩 → DB(pgvector)에서 의미 검색 순위 (`.cache/dense.json`, 유료: 질문 90개 약 2천 토큰)
 - `hybrid.py`: 키워드 + 의미 검색 합치기 무게를 dev로 고르고(`--final`로 held-out 한 번) 확인
@@ -23,6 +25,8 @@ python evaluation/rag/metrics.py evaluation/rag/.cache/rank_server.json
 - 화면 자료 CSV 다시 만들기: `cd backend && uv run python -m app.knowledge.json_csv ../data/consult/rag5.json ../data/consult/consult_knowledge_rag.csv`
 - held-out은 마지막에 한 번만: `--final`
 - 로컬 추가 자료(책)가 없으면 K5001~ 정답은 찾을 수 없어 점수가 낮게 나온다. 책 조각이 있는 로컬에서 잰다
+- 로컬 자료를 빼고 비교: `python evaluation/rag/corpus.py --no-local --out evaluation/rag/.cache/corpus_nolocal.json` 뒤 `rank_server.py --corpus …`
+- 시공일지 추가 판정까지 넣어 재기: `metrics.py … --questions evaluation/rag/questions_300.jsonl --extra-gold evaluation/rag/gold_sigong.jsonl`
 
 ## 기준선 (2026-11-13, dev 58문항)
 | 검색 | hit@1 | hit@5 | recall@5 | MRR | nDCG@5 |
@@ -82,3 +86,34 @@ python evaluation/rag/metrics.py evaluation/rag/.cache/rank_server.json
 - held-out 99문항(한 번만 봄): 지금 0.748 → 고른 설정 0.758 (도배 0.769 → 0.795, 목공 0.633 그대로, 공통 0.834 그대로)
 - 공정을 넘기지 않고 낱말로 고를 때도 같은 무게를 써서 dev 0.713이 됐다
 - 차이는 dev 2~3문항이라 크지 않다. 딱 잘라 나누면 크게 잃는다는 것이 이 평가의 핵심이다
+
+## 시공일지 추가 (2026-11-17, #134)
+- 시공일지(스캔본 218쪽, 공유 금지)를 로컬 자료로 더했다: 1,156조각, K6000~ (`data/local/sigong_ilji_rag.csv`, git 제외)
+- 키워드 검색(`rank_server.py --trade`)만 잰 값이다. 의미 검색은 DB 적재 · 임베딩 뒤에 다시 잰다
+- 이 PC에는 가이드북(K5001~)이 없어서 "없음"은 가이드북도 빠진 말뭉치다
+
+기존 두 세트 dev (시공일지 추가 판정 `--extra-gold` 반영)
+
+| 세트 | 지표 | 시공일지 없음 | 있음 | 있음, hints 뺌 |
+|---|---|---|---|---|
+| 90 (58문항) | hit@5 | 0.500 | 0.552 | 0.517 |
+| | nDCG@5 | 0.309 | 0.362 | 0.333 |
+| 300 (150문항) | hit@5 | 0.633 | 0.647 | 0.647 |
+| | recall@5 | 0.326 | 0.364 | 0.354 |
+| | nDCG@5 | 0.368 | 0.411 | 0.410 |
+
+- 추가 판정 없이 재면 300 세트 hit@5가 0.662 → 0.568로 떨어져 보인다. 위로 올라온 시공일지 조각이 판정되지 않아 틀림으로 세어진 탓이었다(판정한 953개 중 225개가 근거)
+- 시공일지와 상관없이 만든 질문이라 이 표가 "도움이 되는가"의 기준이다
+
+`questions_sigong.jsonl` (시공일지 조각을 보고 쓴 질문이라 '있음'이 유리한 것이 당연하다. 시공일지 조각이 찾히는지만 본다)
+
+| 나눔 | 지표 | 시공일지 없음 | 있음 | 있음, hints 뺌 |
+|---|---|---|---|---|
+| dev 40 | hit@5 | 0.450 | 0.725 | 0.725 |
+| | nDCG@5 | 0.273 | 0.523 | 0.439 |
+| held-out 20 (한 번만 봄) | hit@5 | 0.450 | 0.750 | 0.650 |
+| | nDCG@5 | 0.282 | 0.581 | 0.425 |
+
+- 직접 답(grade 2)이 있는 질문 58 / 60. grade 2 정답 155개 중 41개는 상담 · 시방서 조각이다
+- hints는 맨 위 정확도(hit@1 · nDCG)를 올린다. 질문을 hints를 보지 않고 썼지만 고객 말투가 비슷해서 생기는 이득일 수 있어 뺀 값도 둔다
+- 판정은 사람이 아니라 Claude 서브에이전트가 했다(기준은 90 · 300 세트와 같음). 표본을 사람이 확인해야 한다

@@ -2,6 +2,7 @@
 
     python evaluation/rag/metrics.py evaluation/rag/.cache/rank_base.json evaluation/rag/.cache/rank_current.json
     python evaluation/rag/metrics.py ... --final     # held-out까지 (마지막에 한 번만)
+    python evaluation/rag/metrics.py ... --questions evaluation/rag/questions_300.jsonl --extra-gold evaluation/rag/gold_sigong.jsonl
 
 지표 (정답 grade 2 = 직접 답, 1 = 부분 관련)
 - hit@1 · hit@5: 위 1 · 5개 안에 grade 2 조각이 있는 질문 비율
@@ -10,6 +11,7 @@
 - ndcg@5: grade를 점수로 쓴 nDCG
 - 답 없음(no_source) 질문과 정답 조각이 없는 질문은 위 지표에서 빼고, 검색이 '자료 부족(enough=false)'이라고 한 비율을 따로 본다
 - 계산 엔진(engine) 질문은 검색으로 재지 않는다 (금액 · 기간은 계산 엔진이 답한다)
+- --extra-gold: 나중에 더한 자료의 조각을 따로 판정한 정답({set, qid, ref, grade, why})을 질문 파일 이름(set)이 같을 때 더한다
 """
 
 import argparse
@@ -72,8 +74,16 @@ def main() -> None:
     ap.add_argument("ranks", nargs="+", type=Path)
     ap.add_argument("--questions", type=Path, default=HERE / "questions.jsonl")
     ap.add_argument("--final", action="store_true", help="held-out까지 본다 (마지막에 한 번)")
+    ap.add_argument(
+        "--extra-gold", type=Path, help="추가 판정 정답 JSONL (set이 질문 파일 이름과 같은 줄만)"
+    )
     a = ap.parse_args()
     qs = load_questions(a.questions)
+    if a.extra_gold:
+        extra = [g for g in load_questions(a.extra_gold) if g["set"] == a.questions.stem]
+        by_id = {q["id"]: q for q in qs}
+        for g in extra:
+            by_id[g["qid"]]["gold"].append({k: g[k] for k in ("ref", "grade", "why")})
     if not any(q["gold"] for q in qs):
         raise SystemExit("정답(gold)이 아직 없어요")
     split_sets = [("dev", {"dev"})] + ([("held-out", {"heldout"})] if a.final else [])
