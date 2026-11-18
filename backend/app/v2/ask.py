@@ -50,6 +50,8 @@ ASK_PER_HOUR = 60  # 사용자별 시간당 질문 수 (APP_ENV=local이면 세�
 TOO_MANY = "AI에게 너무 많이 물었어요. 잠시 뒤에 다시 해 주세요."
 GONE = "질문이 끝났거나 없어요. 다시 물어봐 주세요."
 OUT_TEXT = "지금은 아파트 도배와 목공만 도와드려요. 견적 · 공정표 · 업체 고르기는 물어봐 주세요."
+EMPTY_TEXT = "어떤 점이 궁금한지 한 줄로 적어 주세요."
+WORD = re.compile(r"[가-힣ㄱ-ㅎA-Za-z0-9]")  # 자음만 쓴 대답(ㅇㅇ · ㄴㄴ · ㅇㅋ)은 낱말로 본다
 FAILED = {
     "chat": "답을 만들지 못했어요. 다시 물어봐 주세요.",
     "quote_explanation": "설명을 만들지 못했어요. 계산 결과는 견적서에서 그대로 볼 수 있어요.",
@@ -61,7 +63,7 @@ QUOTE_CONSTS = "10% 2.5 3.3058 1.2 0.25 0.8 1.08 0.85 0.96 2.4 1.8 1.1 1.04 10.2
 # 팀 의도 라벨 → 지시문에 붙이는 힌트 (확신할 때만)
 HINTS = {
     "quote_explanation": "질문 종류(입구 관문): 견적 · 공사비. price_reference 도구를 먼저 쓰고 그 숫자만 말해.",
-    "schedule": "질문 종류(입구 관문): 공정 순서 · 기간. 기간 · 날짜 숫자는 지어내지 말고, 순서는 자료로 답한 뒤 "
+    "schedule": "질문 종류(입구 관문): 공정 순서 · 기간. 기간은 price_reference의 기간_일만 말하고 날짜는 지어내지 말고, 순서는 자료로 답한 뒤 "
     "공정표(show_step 'sched')로 안내해.",
     "trade": "질문 종류(입구 관문): 도배 · 목공 상담. 조건 · 주의점은 search_knowledge 자료로 답해.",
 }
@@ -234,14 +236,18 @@ def _quote_facts(q: v2.V2QuoteOut, budget: int | None) -> str:
 
 
 def _price_reference(q: v2.V2QuoteIn | None, today: date) -> dict:
-    if q is None:
-        return {"error": "집 정보가 없어 계산하지 못했어요. 평형부터 알려 달라고 해."}
+    # 평형을 모르면 계산 엔진이 32평으로 잡는다. 그 금액을 고객 집 금액처럼 말하지 않게 계산하지 않는다
+    if q is None or (q.pyeong is None and q.plan is None):
+        return {
+            "error": "평형을 아직 몰라 계산하지 않았어요. 금액 · 기간을 말하지 말고 평형부터 물어봐."
+        }
     r = service.quote(q, today)
     return {
         "평형": r.inp.py,
         "공정": [
             {
                 "공정": t.ko,
+                "기간_일": t.days,
                 "표준견적서_부가세포함": t.total,
                 "시장기준_부가세별도": t.band.mk.supply,
                 "보통범위_부가세별도": [t.band.lo, t.band.hi],
@@ -443,6 +449,9 @@ async def start(
         await ratelimit.hit(ratelimit.key("v2-ask", user_id), ASK_PER_HOUR, 3600, TOO_MANY)
     intent: Intent | None = None
     if b.kind == "chat" and not b.images:
+        # "?" · "ㅠㅠ"처럼 낱말이 없으면 LLM을 부르지 않는다 (앞 답을 스스로 고치는 일을 막는다). 저장하지 않는다
+        if not WORD.search(b.message):
+            return v2.V2AskOut(done=True, text=EMPTY_TEXT, gate="out")
         intent = await agent_gate.classify(b.message, waiting)
         if intent is not None and intent.label == "out_of_scope":
             return v2.V2AskOut(done=True, text=OUT_TEXT, gate="out", intent=_intent_out(intent))

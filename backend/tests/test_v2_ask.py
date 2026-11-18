@@ -137,6 +137,47 @@ def test_price_tool_runs_on_server_and_guard_drops_made_up_numbers(api, fake):
     assert "2만 원이면" not in out["text"] and len(out["dropped"]) == 1
 
 
+def test_price_tool_without_pyeong_gives_no_amount(api, fake):
+    """평형을 모르면 계산 엔진이 32평으로 잡으므로 금액을 넘기지 않는다"""
+    f = fake({"tool_calls": [call("price_reference")]}, {"text": "평형이 어떻게 되세요?"})
+    signup(api)
+    no_py = {k: v for k, v in QUOTE.items() if k != "pyeong"}
+    out = api.post("/v2/ask", json={"message": "도배 얼마예요?", "quote": no_py}).json()
+    tool = json.loads(f.seen[1]["messages"][-1]["content"])
+    assert "error" in tool and "공정" not in tool
+    assert out["text"] == "평형이 어떻게 되세요?"
+
+
+def test_price_tool_gives_days_from_engine(api, fake):
+    """공사 기간은 계산 엔진 결과(price_reference)에 있어야 출력 검사를 통과한다"""
+
+    def answer(messages):
+        dobae = json.loads(messages[-1]["content"])["공정"][1]
+        return {"text": f"도배는 작업 {dobae['기간_일']}일이에요."}
+
+    fake({"tool_calls": [call("price_reference")]}, answer)
+    signup(api)
+    out = api.post("/v2/ask", json={"message": "도배 며칠 걸려요?", "quote": QUOTE}).json()
+    assert out["text"].startswith("도배는 작업") and out["dropped"] == []
+
+
+@pytest.mark.parametrize("message", ["?", "ㅠㅠ", "..."])
+def test_no_word_message_answers_without_llm(api, fake, message):
+    f = fake()
+    signup(api)
+    out = api.post("/v2/ask", json={"message": message}).json()
+    assert out["done"] and out["gate"] == "out" and out["text"] == ask.EMPTY_TEXT
+    assert f.seen == []
+
+
+def test_consonant_reply_goes_to_llm(api, fake):
+    """되물음에 'ㅇㅇ'(네)로 답해도 고정 안내로 끊지 않는다"""
+    f = fake({"text": "네, 천장까지 할게요."})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": "ㅇㅇ"}).json()
+    assert out["text"] == "네, 천장까지 할게요." and len(f.seen) == 1
+
+
 def test_numbers_in_customer_message_are_allowed(api, fake):
     fake({"text": "350만 원 견적이면 부가세 포함인지 먼저 물어보세요."})
     signup(api)
