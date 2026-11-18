@@ -46,7 +46,12 @@
 | `data/local/interior_guide_book_rag.csv` | 로컬 책 자료 → 같은 변환 | 올리지 않음(저작권, `data/local/`는 git 제외) |
 
 - 적재 · 활성화는 위 자료와 같이 `app.data_ingest`로 한다. 검색 번호는 상담 자료 K1~, 팀 `*_rag.csv` K2001~, 로컬 자료 K5001~다(`knowledge/sources.py`).
-- 검색에만 쓰는 열(`ref` · `doc` · `trades` · `hints` · `rel` · `doc_date` · `page_known`)은 표에 열을 더하지 않고 행의 `provenance`에 남는다.
+- 열은 공통 9열(`id` · `source` · `source_sha256` · `effective_date` · `content` · `section` · `page` · `category` · `trade`) 뒤에 검색 전용 열을 둔다.
+  - `page`는 쪽 번호를 `,`로 잇는다. 쪽을 모르면 `1`과 `page_known=false`이고, 쪽을 알면 검색 결과의 절 뒤에 쪽이 붙는다.
+  - `effective_date`는 문서 날짜가 `YYYY-MM-DD`일 때만 넣고, 그 밖의 날짜 글은 `doc_date`에만 둔다.
+  - `category`는 영어 코드 하나다. 표 조각은 `table`, 아니면 JSON 주제(`topics`)의 첫 값이다.
+- 검색에만 쓰는 열(`source_org` · `source_url` · `source_type` · `ref` · `doc` · `trades` · `hints` · `rel` · `doc_date` · `page_known`)은 표에 열을 더하지 않고 행의 `provenance`에 남는다. `ref`를 빼면 팀 자료 규칙으로 읽혀 번호가 K2001~로 바뀌고 문서 종류 · 공정 · hints가 사라지므로 빼지 않는다.
+- 9열만 있는 CSV도 적재 · 검색된다(출처 기관 · 주소는 빈 값).
 - 원본이 파일 하나인 자료(로컬 책 등)는 JSON의 `docs[문서].sha256`에 원본 파일의 SHA-256을, 조각의 `pdf_page`에 원본 파일의 쪽을 담는다. 변환하면 CSV의 `source_sha256` · `page`가 그 값이 된다. 없으면 JSON 파일의 해시와 `page`를 쓴다(웹 자료를 묶은 상담 자료).
 
 ## 조회와 버전 선택 규칙
