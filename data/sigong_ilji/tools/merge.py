@@ -27,7 +27,10 @@ TOPICS = {"budget", "table", "case_note", "case_summary", "quote_review", "check
 END = re.compile(r"[.?!。…”’\"')\]]\s*$")
 
 
-MONEY = re.compile(r"\d[\d,]*\s*(만|억|천)\s*원|\d[\d,]*\s*원\b|\d+억")
+# 원 뒤에 조사(을 · 이 …)가 붙어도 금액으로 본다. \b는 한글 조사 앞에서 걸리지 않아 쓰지 않는다 ("3원칙"은 금액 아님)
+MONEY = re.compile(
+    r"\d[\d,]*\s*(만|억|천)\s*원|\d[\d,]*\s*원(?=[을이은에도과의만씩\s.,)~/]|$)|\d+억"
+)
 TALK = re.compile(r"^.*?(크리에이터 인터뷰|시공 선배 이야기)\s*>\s*")
 
 
