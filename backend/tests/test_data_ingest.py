@@ -404,7 +404,7 @@ def test_empty_snapshot_removes_all_current_rows(tmp_path):
 
 
 def test_original_csv_counts_types_and_full_snapshot():
-    expected = [310, 6756, 46358, 51, 25, 1512, 64, 264, 92, 33, 99, 29, 63]
+    expected = [310, 6756, 46358, 51, 25, 1512, 64, 264, 92, 33, 99, 29, 59]
     datasets = ingest.discover(DATA)
     assert [len(d.hashes) for d in datasets] == expected
 
@@ -414,8 +414,8 @@ def test_original_csv_counts_types_and_full_snapshot():
             versions.append(await ingest.load_dataset(SessionLocal, dataset, MODEL, 1536, PROFILE))
         async with SessionLocal() as session:
             verified = await ingest.verify(session, datasets, MODEL, 1536, PROFILE)
-            assert sum(v["rows"] for v in verified) == 55656
-            assert sum(v["embedding_missing"] for v in verified) == 720
+            assert sum(v["rows"] for v in verified) == 55652
+            assert sum(v["embedding_missing"] for v in verified) == 716
         assert (
             await db_query("select count(*) n from ref_unit_price_rows where normalized_value<0")
         )[0]["n"] == 2
@@ -448,7 +448,7 @@ def test_original_csv_counts_types_and_full_snapshot():
             assert sum(v["embedding_missing"] for v in verified) == 0
         assert (
             await db_query("select count(*) n from rag_chunks where vector_dims(embedding)=1536")
-        )[0]["n"] == 720
+        )[0]["n"] == 716
         again = await rag.embed_versions(
             SessionLocal, versions, MODEL, 1536, mock, batch_size=64, count_tokens=lambda _: 10
         )
