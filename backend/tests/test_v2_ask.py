@@ -103,6 +103,19 @@ def test_client_tool_round_trip_and_owner(api, fake):
     )
 
 
+def test_home_info_keeps_only_what_customer_said(api, fake):
+    """'40평이에요'에 모델이 거주 여부 · 지역까지 채워도 화면에는 평형만 간다"""
+    guess = {"pyeong": 40, "region": "", "living": "vacant", "move": ""}
+    fake({"tool_calls": [call("set_home_info", guess)]})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": "40평이에요"}).json()
+    assert out["tool_calls"][0]["arguments"] == {"pyeong": 40}
+    said = {"pyeong": 40, "region": "", "living": "vacant", "move": ""}
+    fake({"tool_calls": [call("set_home_info", said)]})
+    out = api.post("/v2/ask", json={"message": "40평 빈집이에요"}).json()
+    assert out["tool_calls"][0]["arguments"] == {"pyeong": 40, "living": "vacant"}
+
+
 def test_resume_finishes(api, fake):
     fake({"tool_calls": [call("show_step", {"step": "quote"})]}, {"text": "실크는 닦기 쉬워요."})
     signup(api)

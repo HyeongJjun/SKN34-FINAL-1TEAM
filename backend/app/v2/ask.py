@@ -239,7 +239,9 @@ def _price_reference(q: v2.V2QuoteIn | None, today: date) -> dict:
     # 평형을 모르면 계산 엔진이 32평으로 잡는다. 그 금액을 고객 집 금액처럼 말하지 않게 계산하지 않는다
     if q is None or (q.pyeong is None and q.plan is None):
         return {
-            "error": "평형을 아직 몰라 계산하지 않았어요. 금액 · 기간을 말하지 말고 평형부터 물어봐."
+            "error": "화면에 평형이 아직 없어 계산하지 않았어요. 금액 · 기간은 말하지 마. "
+            "고객이 자기 집 평형을 말했으면 set_home_info(pyeong만)로 담기를 제안하고 '담기'를 누르면 "
+            "계산된다고 안내해. 말하지 않았으면 평형부터 물어봐."
         }
     r = service.quote(q, today)
     return {
@@ -597,6 +599,8 @@ async def _run(turn_id: str, turn: dict) -> v2.V2AskOut:
                 else:
                     out = _set_cons(turn, args, today)
             else:
+                if c["name"] == "set_home_info":
+                    c = {**c, "arguments": _home_args(c.get("arguments") or {}, turn["question"])}
                 client.append(c)
                 continue
             content = json.dumps(out, ensure_ascii=False)
@@ -611,6 +615,26 @@ async def _run(turn_id: str, turn: dict) -> v2.V2AskOut:
             return v2.V2AskOut(done=False, turn=turn_id, tool_calls=calls_out)
     await _drop(turn_id)
     return await _done(turn)
+
+
+# 담기 제안에서 고객이 이번 말에 하지 않은 칸은 뺀다. 모델이 빈칸을 짐작해 채운다(평형만 말해도 '빈집')
+HOME_CUES = {
+    "living": re.compile(r"살|거주|빈\s*집|비어|이사"),
+    "move": re.compile(r"이사|입주|\d+\s*월"),
+}
+
+
+def _home_args(args: dict, question: str) -> dict:
+    out = {}
+    for k, v in args.items():
+        if v in ("", None):
+            continue
+        if k == "region" and str(v)[:2] not in question:
+            continue
+        if k in HOME_CUES and not HOME_CUES[k].search(question):
+            continue
+        out[k] = v
+    return out
 
 
 def _quote_in(turn: dict) -> v2.V2QuoteIn | None:
