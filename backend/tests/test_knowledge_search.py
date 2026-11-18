@@ -162,6 +162,24 @@ def test_json_csv_puts_common_nine_columns_first():
     ]  # fmt: skip
 
 
+def test_assemble_reads_nine_column_rows_and_known_pages():
+    nine = [
+        {"id": "A", "source": "기준.pdf", "source_sha256": "0" * 64, "effective_date": "", "content": "하나",
+         "section": "1절", "page": "2,3", "category": "general", "trade": "도배"},
+    ]  # fmt: skip
+    own = json_rows(
+        {"docs": {"d": {"title": "책"}},
+         "chunks": [{"k": "K7", "doc": "d", "text": "본문", "sec": "벽지", "pdf_page": [12]},
+                    {"k": "K8", "doc": "d", "text": "본문", "sec": "초배"}]},
+        "0" * 64,
+    )  # fmt: skip
+    chunks, docs = assemble([("13_new_rag", nine), ("consult", own)])
+    assert [(c.ref, c.sec) for c in chunks] == [
+        ("K7", "벽지 · 12쪽"), ("K8", "초배"), ("K2001", "1절 · 2,3쪽"),
+    ]  # fmt: skip
+    assert docs["team:13_new_rag"].pub == "" and docs["team:13_new_rag"].url == ""
+
+
 def test_service_searches_active_versions_only():
     active = knowledge_version("consult", True)
     draft = knowledge_version("book", False)
