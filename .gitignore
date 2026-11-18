@@ -47,6 +47,10 @@ backend/data/
 # 로컬 전용 RAG 추가 자료 (저작권 있는 책 본문 등, 공개 저장소에 올리지 않음)
 data/local/
 
+# 시공일지 CSV는 위치와 무관하게 로컬 전용
+*[sS][iI][gG][oO][nN][gG]_[iI][lL][jJ][iI]*.[cC][sS][vV]
+*시공일지*.[cC][sS][vV]
+
 # RAG 평가 캐시 (합친 말뭉치, 로컬 추가 자료 포함 가능)
 evaluation/rag/.cache/
 evaluation/answer/.cache/

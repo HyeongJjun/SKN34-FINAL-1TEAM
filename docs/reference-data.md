@@ -23,7 +23,7 @@
 
 원본 PDF·엑셀은 프로젝트 폴더 밖에서 별도로 보관하고 저장소에 올리지 않는다. `data/raw/`는 사용하지 않으며 Git 추적에서도 제외한다. 저장소에는 `data/processed/`의 전처리 결과를 두고, 출처 파일명·페이지·해시 등 추적 정보는 유지한다.
 
-`data/processed/`의 CSV 12개와 DB 테이블 6개는 일대일 관계가 아니다.
+`data/processed/`의 CSV 13개는 총 55,656행(정형 54,936행, RAG 720행)이며 DB 테이블 6개와 일대일 관계가 아니다. 시공일지 CSV는 이 목록에 포함하지 않고 로컬에만 보관한다.
 
 | CSV | 데이터 행 테이블 | 상태 처리 |
 | --- | --- | --- |
@@ -32,6 +32,7 @@
 | `03_standard_productivity.csv` | `ref_productivity_rows` | 적재·활성화 시 `False` 유지 |
 | `06_construction_wages.csv` | `ref_wage_rows` | 적재·활성화 시 `False` 유지 |
 | `04`, `05`, `07`~`12`의 `*_rag.csv` 8개 | `rag_chunks` | 적재 시 `False`, 검증·활성화 후 `True` |
+| `13_interior_guide_book_rag.csv` 63행 | `rag_chunks` | 적재 시 `False`, 검증·활성화 후 `True` |
 
 - 현재 미사용 정형 자료 4종은 파일별 `dataset_key`로 구분한다(`app/data_ingest.py`의 `INACTIVE_DATASETS`). `load --execute`와 `verify --require-embeddings --activate`를 실행하면 선택한 해당 자료의 모든 버전을 `False`로 유지하며, 기존 활성 버전도 비활성으로 바꾼다. 테이블과 데이터 행은 삭제하지 않는다. 읽기 전용 명령은 상태를 바꾸지 않는다.
 - 데이터 행 5개 테이블은 `(dataset_id, record_key)`가 기본 키다. `record_key`만으로는 버전 간 행을 식별할 수 없다.
@@ -43,10 +44,11 @@
 | CSV | 만드는 법 | 저장소 |
 | --- | --- | --- |
 | `data/consult/consult_knowledge_rag.csv` | `data/consult/rag5.json` → `python -m app.knowledge.json_csv` | 올림 |
-| `data/local/interior_guide_book_rag.csv` | 로컬 책 자료 → 같은 변환 | 올리지 않음(저작권, `data/local/`는 git 제외) |
+| `data/processed/13_interior_guide_book_rag.csv` | 가이드북 전처리 결과 63행 | 공유 허용 |
 | `data/local/sigong_ilji_rag.csv` | 시공일지(스캔본) 쪽별 JSON → 쪽 묶기(번호 · 형식 통일) → 같은 변환 | 올리지 않음(공유 금지) |
 
-- 적재 · 활성화는 위 자료와 같이 `app.data_ingest`로 한다. 검색 번호는 상담 자료 K1~, 팀 `*_rag.csv` K2001~, 로컬 자료는 가이드북 K5001~ · 시공일지 K6000~다(`knowledge/sources.py`). 로컬 자료는 `--directory ../data/local --dataset <파일 이름>`으로 하나씩 적재한다.
+- 가이드북 CSV는 공유할 수 있지만 시공일지는 원본과 결과 CSV 모두 저장소에 올리지 않는다. 시공일지는 `data/local/`에만 두며 파일명을 바꿔 업로드하지 않는다.
+- 적재 · 활성화는 위 자료와 같이 `app.data_ingest`로 한다. 검색 번호는 상담 자료 K1~, 팀 자료 K2001~, 가이드북 K5001~ · 시공일지 K6000~다(`knowledge/sources.py`). 가이드북은 `--directory ../data/processed --dataset 13_interior_guide_book_rag`, 시공일지는 `--directory ../data/local --dataset sigong_ilji_rag`로 적재한다. 기존 `14_sigong_ilji_rag` 적재본이 있으면 같은 자료를 중복 활성화하지 않는다.
 - 시공일지는 사례 · 후기 · 금액 표 조각을 `source_type` `platform`으로 둔다. 검색이 비용 · 법 · 안전 질문에서 이 종류를 빼므로 책 금액이 상담 금액 근거로 쓰이지 않는다.
 - 열은 공통 9열(`id` · `source` · `source_sha256` · `effective_date` · `content` · `section` · `page` · `category` · `trade`) 뒤에 검색 전용 열을 둔다.
   - `page`는 쪽 번호를 `,`로 잇는다. 쪽을 모르면 `1`과 `page_known=false`이고, 쪽을 알면 검색 결과의 절 뒤에 쪽이 붙는다.

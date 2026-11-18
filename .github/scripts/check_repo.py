@@ -14,6 +14,7 @@ TEXT_SUFFIXES = {
 }
 TEXT_NAMES = {".editorconfig", ".gitattributes", ".gitignore", "Dockerfile"}
 ENV_EXAMPLES = {".env.example", ".env.sample", ".env.template"}
+PRIVATE_SOURCE_SHA256 = b"65eced5777b0bbc3cda2c8763c2bb8b652934531607046a238711b818b2a5571"
 
 
 def tracked_files() -> list[Path]:
@@ -23,6 +24,14 @@ def tracked_files() -> list[Path]:
 
 def check_file(path: Path) -> list[str]:
     problems = []
+    if path.suffix.lower() == ".csv":
+        if "sigong_ilji" in path.name.lower() or "시공일지" in path.name:
+            problems.append(f"{path}: 시공일지 CSV는 저장소에 올릴 수 없습니다")
+        elif path.is_file():
+            # 파일명을 바꿔도 원본 출처가 같은 CSV는 차단한다. 본문은 출력하지 않는다.
+            with path.open("rb") as stream:
+                if any(PRIVATE_SOURCE_SHA256 in line for line in stream):
+                    problems.append(f"{path}: 공유 금지 원본의 CSV가 추적되고 있습니다")
     if path.name == ".env" or (
         path.name.startswith(".env.") and path.name not in ENV_EXAMPLES
     ):
