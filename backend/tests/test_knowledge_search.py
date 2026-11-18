@@ -126,6 +126,60 @@ def test_assemble_numbers_team_rows_and_keeps_own_refs():
         assemble([("a", own), ("b", own)])
 
 
+def test_json_csv_uses_doc_sha256_and_pdf_page():
+    data = {
+        "docs": {"a": {"title": "책", "kind": "book", "sha256": "a" * 64}, "b": {"title": "웹"}},
+        "chunks": [
+            {"k": "K1", "doc": "a", "text": "본문", "page": [9, 10], "pdf_page": [5]},
+            {"k": "K2", "doc": "a", "text": "본문", "page": [3]},
+            {"k": "K3", "doc": "b", "text": "본문"},
+        ],
+    }
+    out = json_rows(data, "0" * 64)
+    assert [r["source_sha256"] for r in out] == ["a" * 64, "a" * 64, "0" * 64]
+    assert [(r["page"], r["page_known"]) for r in out] == [
+        ("5", "true"), ("3", "true"), ("1", "false"),
+    ]  # fmt: skip
+
+
+def test_json_csv_puts_common_nine_columns_first():
+    data = {
+        "docs": {
+            "a": {"title": "안내", "date": "2025-06-05"},
+            "b": {"title": "웹", "date": "2026"},
+        },
+        "chunks": [
+            {"k": "K1", "doc": "a", "text": "본문", "page": [3, 4], "topics": ["text", "defect"]},
+            {"k": "K2", "doc": "b", "text": "본문", "topics": ["standard_spec", "table"]},
+        ],
+    }
+    out = json_rows(data, "0" * 64)
+    assert list(out[0])[:9] == [
+        "id", "source", "source_sha256", "effective_date", "content", "section", "page", "category", "trade",
+    ]  # fmt: skip
+    assert [(r["page"], r["category"], r["effective_date"], r["doc_date"]) for r in out] == [
+        ("3,4", "defect", "2025-06-05", "2025-06-05"), ("1", "table", "", "2026"),
+    ]  # fmt: skip
+
+
+def test_assemble_reads_nine_column_rows_and_known_pages():
+    nine = [
+        {"id": "A", "source": "기준.pdf", "source_sha256": "0" * 64, "effective_date": "", "content": "하나",
+         "section": "1절", "page": "2,3", "category": "general", "trade": "도배"},
+    ]  # fmt: skip
+    own = json_rows(
+        {"docs": {"d": {"title": "책"}},
+         "chunks": [{"k": "K7", "doc": "d", "text": "본문", "sec": "벽지", "pdf_page": [12]},
+                    {"k": "K8", "doc": "d", "text": "본문", "sec": "초배"}]},
+        "0" * 64,
+    )  # fmt: skip
+    chunks, docs = assemble([("13_new_rag", nine), ("consult", own)])
+    assert [(c.ref, c.sec) for c in chunks] == [
+        ("K7", "벽지 · 12쪽"), ("K8", "초배"), ("K2001", "1절 · 2,3쪽"),
+    ]  # fmt: skip
+    assert docs["team:13_new_rag"].pub == "" and docs["team:13_new_rag"].url == ""
+
+
 def test_service_searches_active_versions_only():
     active = knowledge_version("consult", True)
     draft = knowledge_version("book", False)

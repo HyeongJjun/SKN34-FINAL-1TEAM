@@ -27,13 +27,19 @@ def _split(v: str | None) -> tuple[str, ...]:
     return tuple(x for x in (v or "").split(";") if x)
 
 
+def _sec(r: dict[str, str], known: bool = True) -> str:
+    """절 뒤에 쪽 번호. 쪽을 모르는 행(page_known false, page는 임시값 1)은 절만"""
+    page = (r.get("page") or "") if known else ""
+    return " · ".join(x for x in (r.get("section") or "", f"{page}쪽" if page else "") if x)
+
+
 def _own(key: str, r: dict[str, str]) -> tuple[Chunk, Doc]:
     doc = Doc(
-        title=r["source"], pub=r["source_org"], date=r.get("doc_date") or "",
-        kind=r["source_type"], rel=r.get("rel") or "", url=r["source_url"],
+        title=r["source"], pub=r.get("source_org") or "", date=r.get("doc_date") or "",
+        kind=r.get("source_type") or "", rel=r.get("rel") or "", url=r.get("source_url") or "",
     )  # fmt: skip
     chunk = Chunk(
-        ref=r["ref"], doc=r["doc"], text=r["content"], sec=r["section"],
+        ref=r["ref"], doc=r["doc"], text=r["content"], sec=_sec(r, r.get("page_known") == "true"),
         hints=tuple(json.loads(r.get("hints") or "[]")), trades=_split(r.get("trades")),
         rid=f"{key}/{r['id']}",
     )  # fmt: skip
@@ -60,13 +66,12 @@ def assemble(
         doc = f"team:{key}"
         rows = sorted(rows, key=lambda r: r["id"])
         docs[doc] = Doc(
-            title=rows[0]["source"].replace(".pdf", ""), pub=rows[0]["source_org"],
-            kind=kind, rel="high", url=rows[0]["source_url"],
+            title=rows[0]["source"].replace(".pdf", ""), pub=rows[0].get("source_org") or "",
+            kind=kind, rel="high", url=rows[0].get("source_url") or "",
         )  # fmt: skip
         for r in rows:
-            sec = " · ".join(x for x in (r["section"], f"{r['page']}쪽" if r["page"] else "") if x)
             chunks.append(
-                Chunk(ref=f"K{k}", doc=doc, text=r["content"], sec=sec, trades=trades,
+                Chunk(ref=f"K{k}", doc=doc, text=r["content"], sec=_sec(r), trades=trades,
                       rid=f"{key}/{r['id']}")
             )  # fmt: skip
             k += 1
