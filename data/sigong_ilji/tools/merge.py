@@ -98,6 +98,9 @@ def join(pages: list[tuple[int, list[dict]]], joins: dict[str, str]) -> list[str
         assert a["sec"] == b["sec"], f"{key}: 다음 쪽 첫 조각과 sec가 달라요"
         a["body"] = a_body + joins[key] + b_body + (b_src or a_src)
         a["pages"] += b["pages"]
+        # 뒤 조각이 사례거나, 이어 붙여 금액이 생기면(쪽 경계에서 갈린 "1,5" + "00만 원") 사례로 둔다
+        if b["doc"] == "cases" or MONEY.search(a["body"]):
+            a["doc"] = "cases"
         for k in ("trades", "hints"):  # topics는 앞 조각 한 값 유지
             a[k] += [x for x in b[k] if x not in a[k]]
         nxt.pop(0)
