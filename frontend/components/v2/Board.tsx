@@ -34,6 +34,9 @@ function facts() {
   ].filter(Boolean) as string[];
 }
 
+/** 보드에 보일 자재 공정: 자재 단계까지 갔거나, 그 전이라도 고른 자재가 있을 때 (견본만 보다가 고른 것) */
+const boardCats = () => (S.far >= 5 || scopeCats().some((c) => S.picks[c.id]) ? scopeCats() : []);
+
 function Swatch({ c }: { c: Cat }) {
   const m = matOf(S.picks[c.id]);
   if (!m)
@@ -80,7 +83,7 @@ export function Board() {
 
   const st = styleOf(S.style);
   const fs = facts();
-  const cats = S.far >= 5 ? scopeCats() : [];
+  const cats = boardCats();
   const picked = cats.filter((c) => S.picks[c.id]).length;
   const photos = [...S.photos, ...S.refs];
   const plan = S.plan?.kind === "type" ? PLANS.find((p) => p.id === S.plan?.id) : null;
@@ -155,7 +158,7 @@ export function BoardBand() {
   useV2();
   const st = styleOf(S.style);
   const fs = facts();
-  const cats = S.far >= 5 ? scopeCats() : [];
+  const cats = boardCats();
   const picked = cats.filter((c) => S.picks[c.id]).length;
   return (
     <button type="button" className="board-band" onClick={() => boardUi.setOpen(true)}>

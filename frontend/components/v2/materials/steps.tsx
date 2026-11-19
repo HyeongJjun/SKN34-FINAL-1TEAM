@@ -9,24 +9,30 @@ import { DATA, S, useV2 } from "@/components/v2/store";
 import { MatCard } from "./MatCard";
 import { listReset, loadMok, M, redraw, resetMatState } from "./state";
 
-export async function matStep() {
+/** view: 견본만 본다(상담 답의 '벽지 견본 보기'). 추천 자재를 골라 두지 않고 진행 단계도 그대로 둔다 */
+export async function matStep(view = false) {
   const ep = feedEpoch.n;
   await loadMok(); // 목공 처음 자재(등급별)를 알아야 추천을 맞출 수 있다
   if (!stillHere(ep)) return;
-  setStep("materials");
-  if (!M.cardId) autoPick();
-  else fillPicks();
+  if (view !== true) {
+    setStep("materials");
+    if (!M.cardId) autoPick();
+    else fillPicks();
+  }
   M.full = false;
   M.cat = M.cat && scopeCats().some((c) => c.id === M.cat) ? M.cat : scopeCats()[0].id;
   listReset();
   const id = ++M.cardId;
   redraw(true);
-  await bot(`${TIERS[S.tier]}으로 골라 뒀어요. 바꿀 것만 눌러 주세요.`, <MatCard key={`mat${id}`} id={id} />);
-  quick([
-    ["다 골랐어요", () => finish()],
+  const say = view === true ? "자재 견본이에요. 마음에 드는 걸 눌러 골라 보세요." : `${TIERS[S.tier]}으로 골라 뒀어요. 바꿀 것만 눌러 주세요.`;
+  await bot(say, <MatCard key={`mat${id}`} id={id} />);
+  const btns: Parameters<typeof quick>[0] = [
     ["추천 자재를 비교해 주세요", () => F.askCompare(M.cat), true],
     ["자재 크게 보기", () => setMatFull(true)],
-  ]);
+  ];
+  // 견본만 볼 때는 '다 골랐어요'를 두지 않는다: 누르면 진행 단계가 자재까지 넘어간다
+  if (view !== true) btns.unshift(["다 골랐어요", () => finish()]);
+  quick(btns);
   if (matchMedia("(max-width: 760px)").matches) setMatFull(true);
 }
 
