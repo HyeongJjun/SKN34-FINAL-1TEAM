@@ -618,7 +618,9 @@ async def _run(turn_id: str, turn: dict) -> v2.V2AskOut:
                 # 걸러서 담을 칸이 없으면 화면까지 보내지 않는다 (화면은 빈 제안을 오류로 돌려준다)
                 out = {"error": "고객이 말한 집 정보가 없어요. 담기 제안 없이 답해."}
             else:
-                client.append(c)
+                # 근거 칸(living_said)은 모델 기록에만 남기고 화면에는 보내지 않는다
+                args = {k: v for k, v in c["arguments"].items() if k != "living_said"}
+                client.append({**c, "arguments": args})
                 continue
             content = json.dumps(out, ensure_ascii=False)
             turn["messages"].append({"role": "tool", "tool_call_id": c["id"], "content": content})
@@ -635,53 +637,44 @@ async def _run(turn_id: str, turn: dict) -> v2.V2AskOut:
 
 
 # 담기 제안에서 고객이 말하지 않은 칸은 뺀다. 모델이 빈칸을 짐작해 채운다(평형만 말해도 '빈집')
-HOME_CUES = {
-    # 공사 중 어디 있을지를 말했는지 본다: 살 예정 · 지내 · 머물 · 집에 (계속) 있 · 나가 있 · 본가 · 숙소 ·
-    # 빈집 · 비울/비워 · 이사 ('살짝' · '몇 살' · '집 전체' · '재고가 있'은 아님)
-    "living": re.compile(
-        r"살(?:면서|고|아|\s*(?:예정|거|건|겁|계획))|거주|지내|머물|집에\s*(?:계속\s*|그대로\s*)?있|나가\s*있"
-        r"|본가|친정|시댁|숙소|호텔|빈\s*집|비(?:어|워|울|우)|이사"
-    ),
-    "move": re.compile(r"이사|입주|\d+\s*월"),
-}
-# 앞 답의 되물음에 '네' · '아니요'로 시작해 답한 말("네 맞아요"도). 이때는 앞 답이 그 칸을 물었는지도 본다
+MOVE_CUE = re.compile(r"이사|입주|\d+\s*월")
+# 앞 답의 되물음에 '네' · '아니요'로 시작해 답한 말("네 맞아요"도). 이때는 앞 AI 질문도 근거로 본다
 SHORT_REPLY = re.compile(
     r"^\s*(?:네|넵|예|응|ㅇㅇ|ㅇㅋ|맞아요|맞습니다|그래요|아니요|아뇨|ㄴㄴ)(?![가-힣])"
 )
-# 아직 안 정한 말("집에 있을지 모르겠어요")은 거주 단서가 있어도 담지 않는다 (지시문대로 되묻게)
-UNSURE = re.compile(r"모르|미정|고민|정하지|정\s*못|안\s*정했|글쎄")
-# 미정은 거주 이야기가 있는 마디에서만 본다. "거주할 예정이고, 벽지는 모르겠어요"의 미정은 벽지 이야기다
-CLAUSE = re.compile(r"[,.!?\n]|고\s|데\s|지만\s")
-STAY_WORD = re.compile(
-    r"살|거주|지내|머물|집에|집을|집\s*비|비(?:어|워|울|우)|나가|본가|숙소|호텔|이사|있을지"
-)
 
 
-def _living_said(question: str, prev: str) -> bool:
-    """고객이 공사 중 거주 여부를 정해서 말했는지. 네 · 아니요 답이면 앞 AI 질문이 거주를 물었는지 본다"""
-    if SHORT_REPLY.match(question):
-        return bool(HOME_CUES["living"].search(prev)) and not UNSURE.search(question)
-    unsure = any(UNSURE.search(c) and STAY_WORD.search(c) for c in CLAUSE.split(question))
-    return bool(HOME_CUES["living"].search(question)) and not unsure
+def _quoted(quote: str, source: str) -> bool:
+    """모델이 근거로 옮긴 말이 실제 대화에 있는지 (띄어쓰기 차이는 무시)"""
+    q, s = re.sub(r"\s+", "", quote), re.sub(r"\s+", "", source)
+    return len(q) >= 2 and q in s
 
 
 def _home_args(args: dict, question: str, prev: str = "") -> dict:
-    """prev: 바로 앞 AI 답. 고객이 네 · 아니요로 답했을 때 그 답이 무엇을 물었는지 본다"""
+    """prev: 바로 앞 AI 답. 고객이 네 · 아니요로 답했을 때 그 답이 무엇을 물었는지 본다.
+
+    거주(living)는 뜻 판단(살다 · 사다, 미정)을 모델에 맡기고, 근거로 옮긴 말(living_said)이
+    고객 말(네 · 아니요 답이면 앞 AI 질문까지)에 실제로 있는지만 본다. 거주를 남기면 근거 칸도
+    같이 남긴다(모델이 자기 호출에서 근거가 빠진 걸 보고 다시 부르지 않게. 화면에는 보내지 않는다).
+    """
     said = f"{prev}\n{question}" if SHORT_REPLY.match(question) else question
     out = {}
     for k, v in args.items():
         if not v:  # 빈칸 · 0
             continue
+        if k == "living_said":
+            continue  # 거주를 남길 때만 아래에서 같이 넣는다
         if k == "pyeong" and not (isinstance(v, int | float) and 10 <= v <= 90):
             continue  # 화면은 10~90 밖이면 오류 ('105동'을 평형으로 넣는 경우)
         if k == "region" and str(v)[:2] not in said:
             continue
-        if k == "living":
-            if not _living_said(question, prev):
-                continue
-        elif k in HOME_CUES and not HOME_CUES[k].search(said):
+        if k == "living" and not _quoted(str(args.get("living_said") or ""), said):
+            continue
+        if k == "move" and not MOVE_CUE.search(said):
             continue
         out[k] = v
+    if "living" in out:
+        out["living_said"] = args["living_said"]
     return out
 
 

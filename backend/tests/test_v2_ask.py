@@ -104,89 +104,61 @@ def test_client_tool_round_trip_and_owner(api, fake):
 
 
 def test_home_info_keeps_only_what_customer_said(api, fake):
-    """'40평이에요'에 모델이 거주 여부 · 지역까지 채워도 화면에는 평형만 간다"""
+    """'40평이에요'에 모델이 거주 여부 · 지역까지 채워도(근거 없이) 화면에는 평형만 간다"""
     guess = {"pyeong": 40, "region": "", "living": "vacant", "move": ""}
     fake({"tool_calls": [call("set_home_info", guess)]})
     signup(api)
     out = api.post("/v2/ask", json={"message": "40평이에요"}).json()
     assert out["tool_calls"][0]["arguments"] == {"pyeong": 40}
-    said = {"pyeong": 40, "region": "", "living": "vacant", "move": ""}
-    fake({"tool_calls": [call("set_home_info", said)]})
-    out = api.post("/v2/ask", json={"message": "40평 빈집이에요"}).json()
-    assert out["tool_calls"][0]["arguments"] == {"pyeong": 40, "living": "vacant"}
-    fake({"tool_calls": [call("set_home_info", guess)]})
-    out = api.post("/v2/ask", json={"message": "벽지가 살짝 들떴는데 40평이에요"}).json()
-    assert out["tool_calls"][0]["arguments"] == {"pyeong": 40}
 
 
 @pytest.mark.parametrize(
-    ("message", "living"),
+    ("message", "said", "kept"),
     [
-        ("40평이고 공사 중 계속 살 예정이에요", "living"),
-        ("공사 중 집을 비울 예정이에요", "vacant"),
-        ("공사하는 동안 집 비워요", "vacant"),
-        ("살면서 공사하려고요", "living"),
-        ("공사 중에도 집에 있을 거예요", "living"),
-        ("공사하는 동안 계속 집에 있어요", "living"),
-        ("공사 기간엔 본가에 가 있을게요", "vacant"),
-        ("공사할 때는 나가 있을 거예요", "vacant"),
-        ("공사 중엔 호텔에서 머물 거예요", "vacant"),
-        # 다른 항목(벽지 등)이 미정이어도 거주 이야기는 남긴다 (리뷰 #140)
-        ("40평이고 공사 중에도 거주할 예정이고, 벽지는 아직 뭘 고를지 모르겠어요", "living"),
-        ("공사 중에도 거주할 예정이고 벽지는 아직 모르겠어요", "living"),
-        ("벽지는 고민인데 공사할 때는 집 비울 거예요", "vacant"),
-        ("40평이고 공사 중에도 집에 있고 벽지는 아직 모르겠어요", "living"),
-        ("공사할 땐 지내고 벽지는 미정이에요", "living"),
-        ("공사 중엔 집 비우고 벽지는 고민이에요", "vacant"),
-        ("공사 중에도 계속 살 건데 벽지는 모르겠어요", "living"),
+        # 근거가 고객 말에 있으면 남긴다 (뜻 판단은 모델 몫. 띄어쓰기 차이는 무시)
+        (
+            "40평이고 공사 중 거주할 예정이고 벽지는 어떤 걸 살지 모르겠어요",
+            "공사 중 거주할 예정",
+            True,
+        ),
+        ("공사할 땐 집 비울 거예요", "집비울 거예요", True),
+        # 근거가 없거나, 고객 말에 없는 말을 지어냈으면 뺀다
+        ("40평이에요", "", False),
+        ("40평이에요", "공사 중에도 거주할 예정", False),
+        ("벽지는 실크로 살 거예요", "살", False),
     ],
 )
-def test_home_info_keeps_clear_living(api, fake, message, living):
-    """공사 중 거주 여부를 분명히 말하면 거주 칸을 남긴다 (리뷰 #140). 모델이 넣은 평형 0은 뺀다"""
-    f = fake({"tool_calls": [call("set_home_info", {"pyeong": 0, "living": living})]})
+def test_home_info_living_needs_quote(api, fake, message, said, kept):
+    """거주는 모델이 옮긴 근거(living_said)가 고객 말에 실제로 있을 때만 남기고, 근거 칸은 화면에 안 보낸다"""
+    args = {"pyeong": 0, "living": "living", "living_said": said}
+    f = fake({"tool_calls": [call("set_home_info", args)]})
     signup(api)
     out = api.post("/v2/ask", json={"message": message}).json()
-    assert out["tool_calls"][0]["arguments"] == {"living": living}
-    # 모델 쪽 대화 기록에도 거른 값만 남는다
-    turn = api.post(f"/v2/ask/{out['turn']}", json={"results": [{"id": "c1", "content": "{}"}]})
-    assert turn.status_code == 200
-    sent = f.seen[-1]["messages"][-2]["tool_calls"][0]["arguments"]
-    assert sent == {"living": living}
+    sent = out["tool_calls"][0]["arguments"] if out.get("tool_calls") else {}
+    assert sent == ({"living": "living"} if kept else {})
+    if kept:  # 모델 쪽 기록에는 근거를 남겨 같은 제안을 다시 부르지 않게 한다 (평형 0은 빠짐)
+        api.post(f"/v2/ask/{out['turn']}", json={"results": [{"id": "c1", "content": "{}"}]})
+        mine = f.seen[-1]["messages"][-2]["tool_calls"][0]["arguments"]
+        assert mine == {"living": "living", "living_said": said}
 
 
 def test_home_info_yes_to_living_question(api, fake):
-    """AI가 '공사 중에도 사세요?'라고 되묻고 고객이 '네'라고만 답해도 거주 칸을 남긴다"""
-    asked = "공사하는 동안에도 집에서 지내실 예정인가요?\n[되물음]"
-    yes = {"tool_calls": [call("set_home_info", {"living": "living"})]}
-    fake({"text": asked}, yes, {"text": "실크는 닦기 쉬워요."}, yes)
+    """AI가 거주를 되묻고 고객이 '네 맞아요'로만 답하면, 근거는 앞 AI 질문에서 찾는다"""
+    q = "공사하는 동안에도 집에서 지내실 예정인가요?"
+    yes = {
+        "tool_calls": [
+            call("set_home_info", {"living": "living", "living_said": "집에서 지내실 예정"})
+        ]
+    }
+    fake({"text": q + "\n[되물음]"}, yes, {"text": "실크는 닦기 쉬워요."}, yes)
     signup(api)
     first = api.post("/v2/ask", json={"message": "도배하려고요"}).json()
     out = api.post("/v2/ask", json={"message": "네 맞아요", "chat_id": first["chat_id"]}).json()
     assert out["tool_calls"][0]["arguments"] == {"living": "living"}
-    # 앞 답이 거주를 묻지 않았으면 '네'만으로는 거주 칸을 남기지 않고, 빈 제안은 화면에 보내지 않는다
+    # 앞 답이 거주를 묻지 않았으면 같은 근거라도 대화에 없어 빼고, 빈 제안은 화면에 보내지 않는다
     other = api.post("/v2/ask", json={"message": "실크 관리는요?"}).json()
     out = api.post("/v2/ask", json={"message": "네", "chat_id": other["chat_id"]}).json()
     assert out["done"] and not out.get("tool_calls")
-
-
-@pytest.mark.parametrize(
-    "message",
-    [
-        "40평이에요",
-        "집 전체 도배해요",
-        "벽지가 살짝 들떴어요",
-        "실크 재고가 있나요?",
-        "공사할 때 집에 있을지는 아직 모르겠어요",
-        "벽지는 정했는데 공사 중에 살지는 아직 고민이에요",
-        "공사 중에 살고 있을지 아직 모르겠어요",
-    ],
-)
-def test_home_info_drops_guessed_living(api, fake, message):
-    """거주 이야기가 없는 말에는 모델이 짐작한 거주 칸을 뺀다"""
-    fake({"tool_calls": [call("set_home_info", {"pyeong": 40, "living": "vacant"})]})
-    signup(api)
-    out = api.post("/v2/ask", json={"message": message}).json()
-    assert out["tool_calls"][0]["arguments"] == {"pyeong": 40}
 
 
 def test_home_info_drops_pyeong_out_of_range(api, fake):

@@ -50,8 +50,10 @@ DEFS: dict[str, dict] = {
         "description": "고객이 자기 집이라고 말한 정보만 담자고 제안한다(고객이 화면에서 담기를 눌러야 저장). "
         "'32평 도배하면 얼마예요?'처럼 가정 · 예시로 든 숫자는 넣지 않는다. 말한 칸만 넣고, 말하지 않은 "
         "지역 · 거주 여부 · 입주 날은 짐작해 넣지 않는다(예: '40평이에요'면 pyeong만). "
-        "living은 공사하는 동안 계속 사는지(living) · 비우는지(vacant) 분명할 때만 넣고, 모호하면 넣지 말고 "
-        "'공사하는 동안 집에서 지내세요, 비우세요?'처럼 되묻는다. 되물음에 '네' · '아니요'로 답하면 그 물음대로 넣는다. "
+        "living은 공사하는 동안 계속 사는지(living) · 비우는지(vacant) 고객이 정해서 말했을 때만 넣고, "
+        "그 근거로 고객이 한 말을 living_said에 글자 그대로 옮긴다. 안 정했거나 모호하면 living을 넣지 말고 "
+        "'공사하는 동안 집에서 지내세요, 비우세요?'처럼 되묻는다. 되물음에 '네' · '아니요'로만 답했으면 "
+        "living_said에는 앞에서 내가 거주를 물은 구절을 그대로 옮긴다. "
         "pyeong은 공급 평형(10~90).",
         "parameters": {
             "type": "object",
@@ -59,6 +61,10 @@ DEFS: dict[str, dict] = {
                 "pyeong": {"type": "number"},
                 "region": {"type": "string"},
                 "living": {"type": "string", "enum": ["living", "vacant"]},
+                "living_said": {
+                    "type": "string",
+                    "description": "living을 넣을 때만: 거주 근거가 된 말을 글자 그대로 (예: '공사 중에도 거주할 예정')",
+                },
                 "move": {
                     "type": "string",
                     "description": "입주 날 YYYY-MM-DD(날을 모르면 YYYY-MM)",
