@@ -3,7 +3,8 @@
 import pytest
 import redis
 
-from app.agent import llm
+from app.agent import intent, llm
+from app.agent.schemas import Intent
 from app.v2 import ask, ask_chat
 from tests.conftest import REDIS_URL, query
 from tests.helpers import signup
@@ -112,6 +113,17 @@ def test_out_of_scope_in_chat_saves_nothing(api, fake):
     assert out["gate"] == "out" and out["chat_id"] == chat_id
     assert dict(query(state, chat_id)[0]) == before
     assert len(_messages(chat_id)) == 2
+
+
+def test_wallpaper_request_reaches_llm(api, fake, monkeypatch):
+    """학습 모델이 범위 밖이라 해도 도배 낱말이 있으면 고정 안내로 끝내지 않는다 (#147)."""
+    # 모델 답을 정해 둔다 (모델을 다시 학습해도 같은 조건으로 본다)
+    said = Intent(label="out_of_scope", confidence=0.91, source="model")
+    monkeypatch.setattr(intent, "predict", lambda _text: said)
+    f = fake({"text": "실크와 합지 중에서 골라 보세요."})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": "벽지 추천해 주세요"}).json()
+    assert out["gate"] is None and out["intent"]["label"] == "trade" and len(f.seen) == 1
 
 
 @pytest.mark.parametrize(
