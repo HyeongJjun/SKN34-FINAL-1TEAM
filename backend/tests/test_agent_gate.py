@@ -46,6 +46,12 @@ def reply_of(message, ctx=NO_PROJECT):
     return found["intent"], asyncio.run(fixed_reply({**state, **found}))["answer"]
 
 
+def model_says(monkeypatch, label, confidence):
+    """학습 모델 답을 정해 둔다. 모델을 다시 학습해도 관문 규칙 테스트가 흔들리지 않게"""
+    found = Intent(label=label, confidence=confidence, source="model")
+    monkeypatch.setattr(intent, "predict", lambda _text: found)
+
+
 def test_model_matches_training_probs():
     model = intent._model()
     for check in model["checks"]:
@@ -170,15 +176,24 @@ def test_gate_knows_route_words():
     "message",
     ["벽지 추천해 주세요", "합지랑 실크 중에 추천해 주세요", "도배지 추천해 주실 수 있어요?"],
 )
-def test_wallpaper_request_is_not_out_of_scope(message, jev_calls):
-    # 학습 모델은 '추천해 주세요'를 범위 밖으로 읽는다. 도배 낱말이 있으면 고정 안내로 끝내지 않는다
-    found = asyncio.run(classify(message))
-    assert found is not None and found.label != "out_of_scope" and jev_calls == []
-
-
-def test_jev_out_of_scope_with_trade_word_goes_to_trade(jev_calls):
+def test_wallpaper_request_is_not_out_of_scope(message):
+    # 실제 모델로 본다. 지금 모델은 '추천해 주세요'를 범위 밖으로 확신한다.
+    # 다시 학습해 신뢰도가 낮아지면 Jev가 보는데, Jev가 범위 밖이라 해도 고정 안내로 끝나면 안 된다
     llm.set_jev_stub("out_of_scope", 0.9)
-    found = asyncio.run(classify("실크벽지 추천 좀요"))  # 모델 신뢰도가 낮아 Jev가 본다
+    found = asyncio.run(classify(message))
+    assert found is not None and found.label != "out_of_scope"
+
+
+def test_confident_out_of_scope_with_trade_word_skips_jev(monkeypatch, jev_calls):
+    model_says(monkeypatch, "out_of_scope", 0.91)
+    found = asyncio.run(classify("벽지 추천해 주세요"))
+    assert (found.label, found.source) == ("trade", "rule") and jev_calls == []
+
+
+def test_jev_out_of_scope_with_trade_word_goes_to_trade(monkeypatch, jev_calls):
+    model_says(monkeypatch, "orchestrator", 0.4)  # 신뢰도가 낮아 Jev가 본다
+    llm.set_jev_stub("out_of_scope", 0.9)
+    found = asyncio.run(classify("벽지 추천해 주세요"))
     assert (found.label, found.source) == ("trade", "rule") and len(jev_calls) == 1
 
 
