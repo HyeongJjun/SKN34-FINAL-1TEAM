@@ -471,6 +471,10 @@ async def start(
     turn = {
         "user": user_id,
         "question": b.message,
+        # 바로 앞 AI 답 ('네'로만 답할 때 무엇을 물었는지 보려고)
+        "prev": next(
+            (h["content"] for h in reversed(history or []) if h["role"] == "assistant"), ""
+        ),
         "kind": b.kind,
         "today": today.isoformat(),
         "chat": chat,
@@ -573,6 +577,18 @@ async def _run(turn_id: str, turn: dict) -> v2.V2AskOut:
             return await _done(turn, failed=True)
         turn["calls"] += 1
         text, calls = r["text"], r["tool_calls"]
+        # 담기 제안은 받자마자 거른다. 모델이 다음 호출에서 거르기 전 값(짐작한 '빈집')을 보고 말하지 않게
+        calls = [
+            {
+                **c,
+                "arguments": _home_args(
+                    c.get("arguments") or {}, turn["question"], turn.get("prev", "")
+                ),
+            }
+            if c["name"] == "set_home_info"
+            else c
+            for c in calls
+        ]
         if text:
             turn["text"] = f"{turn['text']}\n{text}" if turn["text"] else text
         msg: dict = {"role": "assistant", "content": text}
@@ -598,9 +614,10 @@ async def _run(turn_id: str, turn: dict) -> v2.V2AskOut:
                     out = await _search_tool(turn, args)
                 else:
                     out = _set_cons(turn, args, today)
+            elif c["name"] == "set_home_info" and not c["arguments"]:
+                # 걸러서 담을 칸이 없으면 화면까지 보내지 않는다 (화면은 빈 제안을 오류로 돌려준다)
+                out = {"error": "고객이 말한 집 정보가 없어요. 담기 제안 없이 답해."}
             else:
-                if c["name"] == "set_home_info":
-                    c = {**c, "arguments": _home_args(c.get("arguments") or {}, turn["question"])}
                 client.append(c)
                 continue
             content = json.dumps(out, ensure_ascii=False)
@@ -617,21 +634,38 @@ async def _run(turn_id: str, turn: dict) -> v2.V2AskOut:
     return await _done(turn)
 
 
-# 담기 제안에서 고객이 이번 말에 하지 않은 칸은 뺀다. 모델이 빈칸을 짐작해 채운다(평형만 말해도 '빈집')
+# 담기 제안에서 고객이 말하지 않은 칸은 뺀다. 모델이 빈칸을 짐작해 채운다(평형만 말해도 '빈집')
 HOME_CUES = {
-    "living": re.compile(r"살면서|살고|거주|빈\s*집|비어\s*있|이사"),  # '살짝' · '몇 살'은 아님
+    # 공사 중 어디 있을지를 말했는지 본다: 살 예정 · 지내 · 머물 · 집에 (계속) 있 · 나가 있 · 본가 · 숙소 ·
+    # 빈집 · 비울/비워 · 이사 ('살짝' · '몇 살' · '집 전체' · '재고가 있'은 아님)
+    "living": re.compile(
+        r"살(?:면서|고|아|\s*(?:예정|거|계획))|거주|지내|머물|집에\s*(?:계속\s*|그대로\s*)?있|나가\s*있"
+        r"|본가|친정|시댁|숙소|호텔|빈\s*집|비(?:어|워|울|우)|이사"
+    ),
     "move": re.compile(r"이사|입주|\d+\s*월"),
 }
+# 앞 답의 되물음에 '네' · '아니요'로 시작해 답한 말("네 맞아요"도). 이때는 앞 답이 그 칸을 물었는지도 본다
+SHORT_REPLY = re.compile(
+    r"^\s*(?:네|넵|예|응|ㅇㅇ|ㅇㅋ|맞아요|맞습니다|그래요|아니요|아뇨|ㄴㄴ)(?![가-힣])"
+)
+# 아직 안 정한 말("집에 있을지 모르겠어요")은 거주 단서가 있어도 담지 않는다 (지시문대로 되묻게)
+UNSURE = re.compile(r"모르|미정|고민|정하지|정\s*못|안\s*정했|글쎄")
 
 
-def _home_args(args: dict, question: str) -> dict:
+def _home_args(args: dict, question: str, prev: str = "") -> dict:
+    """prev: 바로 앞 AI 답. 고객이 네 · 아니요로 답했을 때 그 답이 무엇을 물었는지 본다"""
+    said = f"{prev}\n{question}" if SHORT_REPLY.match(question) else question
     out = {}
     for k, v in args.items():
-        if v in ("", None):
+        if not v:  # 빈칸 · 0
             continue
-        if k == "region" and str(v)[:2] not in question:
+        if k == "pyeong" and not (isinstance(v, int | float) and 10 <= v <= 90):
+            continue  # 화면은 10~90 밖이면 오류 ('105동'을 평형으로 넣는 경우)
+        if k == "region" and str(v)[:2] not in said:
             continue
-        if k in HOME_CUES and not HOME_CUES[k].search(question):
+        if k in HOME_CUES and not HOME_CUES[k].search(said):
+            continue
+        if k == "living" and UNSURE.search(question):
             continue
         out[k] = v
     return out
