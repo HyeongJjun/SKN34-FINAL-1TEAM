@@ -240,6 +240,32 @@ def test_mask_covers_email_rrn_account_but_not_dates():
     assert check.mask("1503호예요") == "(동호수 가림)예요"
 
 
+@pytest.mark.parametrize(
+    ("prefix", "number", "should_mask"),
+    [
+        ("국민은행 ", "1234567890", True),
+        ("국민은행    ", "123456789012", True),
+        ("신한은행\t", "12345678901234", True),
+        ("우리은행\n", "123456789012", True),
+        ("농협은행    : \t", "123456789012", True),
+        ("카카오뱅크：  ", "123456789012", True),
+        ("국민 ", "123456-78-901234", True),
+        ("국민은행 ", "123456789", False),
+        ("국민은행    ", "123456789012345", False),
+    ],
+)
+def test_mask_account_spacing_colon_and_digit_limits(prefix, number, should_mask):
+    before = f"제 계좌는 {prefix}{number}입니다."
+    replacement = "(계좌 가림)" if should_mask else number
+    assert check.mask(before) == f"제 계좌는 {prefix}{replacement}입니다."
+
+
+@pytest.mark.parametrize("prefix", ["국민은행    ", "우리은행    :   ", "카카오뱅크    ：   "])
+def test_mask_account_does_not_mask_dates_after_bank_prefix(prefix):
+    text = f"계좌 안내 {prefix}2026-11-18입니다."
+    assert check.mask(text) == text
+
+
 @pytest.fixture
 def llm_stub(monkeypatch):
     calls: list[list] = []
