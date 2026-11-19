@@ -137,7 +137,15 @@ def test_route_only_words_are_in_scope_too(message):
     assert route.keep_in_scope(message, out).label == "trade"
 
 
-@pytest.mark.parametrize("message", ["실크 스카프 추천해 줘", "사진 테두리 예쁘게 꾸며 줘"])
+@pytest.mark.parametrize(
+    "message",
+    [
+        "실크 스카프 추천해 줘",
+        "사진 테두리 예쁘게 꾸며 줘",
+        "주문선택 화면에서 결제해 주세요",  # '문선'이 다른 말 속에 있다
+        "중앙분리대 사고 났어요 보험 처리해 주세요",  # '분리대'
+    ],
+)
 def test_everyday_word_alone_stays_out_of_scope(message):
     # '실크' · '테두리'처럼 일상에서도 쓰는 낱말만으로는 범위 안으로 보지 않는다
     out = Intent(label="out_of_scope", confidence=0.9, source="model")
@@ -159,6 +167,8 @@ NOT_GATE_WORDS = {
     "단열": "창호 · 보일러에도 쓴다",
     "목재": "가구에도 쓴다",
     "칸막이": "사무실 · 욕실 칸막이",
+    "문선": "주문선택 · 전문선처럼 다른 말 속에 들어간다",
+    "분리대": "중앙분리대",
 }
 
 
