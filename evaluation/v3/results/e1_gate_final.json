@@ -1,0 +1,768 @@
+{
+ "threshold": 0.7,
+ "intent_v3": {
+  "dev": {
+   "규칙만": {
+    "n": 133,
+    "accuracy": 0.812,
+    "acc_ci95": [
+     0.737,
+     0.869
+    ],
+    "macro_f1": 0.772,
+    "ask_back": 0,
+    "acc_when_answered": 0.812,
+    "per_label": {
+     "guide": {
+      "p": 0.476,
+      "r": 0.769,
+      "n": 13
+     },
+     "trade": {
+      "p": 0.904,
+      "r": 0.94,
+      "n": 50
+     },
+     "quote_explanation": {
+      "p": 0.875,
+      "r": 0.913,
+      "n": 23
+     },
+     "schedule": {
+      "p": 0.769,
+      "r": 0.5,
+      "n": 20
+     },
+     "multi": {
+      "p": 0.75,
+      "r": 0.6,
+      "n": 15
+     },
+     "out_of_scope": {
+      "p": 1.0,
+      "r": 0.917,
+      "n": 12
+     }
+    }
+   },
+   "분류기만(v1)": {
+    "n": 133,
+    "accuracy": 0.684,
+    "acc_ci95": [
+     0.601,
+     0.757
+    ],
+    "macro_f1": 0.596,
+    "ask_back": 0,
+    "acc_when_answered": 0.684,
+    "per_label": {
+     "guide": {
+      "p": 0.323,
+      "r": 0.769,
+      "n": 13
+     },
+     "trade": {
+      "p": 1.0,
+      "r": 0.6,
+      "n": 50
+     },
+     "quote_explanation": {
+      "p": 0.958,
+      "r": 1.0,
+      "n": 23
+     },
+     "schedule": {
+      "p": 0.857,
+      "r": 0.9,
+      "n": 20
+     },
+     "multi": {
+      "p": null,
+      "r": 0.0,
+      "n": 15
+     },
+     "out_of_scope": {
+      "p": 0.37,
+      "r": 0.833,
+      "n": 12
+     }
+    }
+   },
+   "분류기 + 12공종 낱말": {
+    "n": 133,
+    "accuracy": 0.782,
+    "acc_ci95": [
+     0.704,
+     0.844
+    ],
+    "macro_f1": 0.668,
+    "ask_back": 0,
+    "acc_when_answered": 0.782,
+    "per_label": {
+     "guide": {
+      "p": 0.323,
+      "r": 0.769,
+      "n": 13
+     },
+     "trade": {
+      "p": 1.0,
+      "r": 0.86,
+      "n": 50
+     },
+     "quote_explanation": {
+      "p": 0.958,
+      "r": 1.0,
+      "n": 23
+     },
+     "schedule": {
+      "p": 0.857,
+      "r": 0.9,
+      "n": 20
+     },
+     "multi": {
+      "p": null,
+      "r": 0.0,
+      "n": 15
+     },
+     "out_of_scope": {
+      "p": 0.714,
+      "r": 0.833,
+      "n": 12
+     }
+    }
+   },
+   "v3 관문(설계안)": {
+    "n": 133,
+    "accuracy": 0.887,
+    "acc_ci95": [
+     0.822,
+     0.93
+    ],
+    "macro_f1": 0.865,
+    "ask_back": 4,
+    "acc_when_answered": 0.915,
+    "per_label": {
+     "guide": {
+      "p": 0.714,
+      "r": 0.769,
+      "n": 13
+     },
+     "trade": {
+      "p": 0.961,
+      "r": 0.98,
+      "n": 50
+     },
+     "quote_explanation": {
+      "p": 0.957,
+      "r": 0.957,
+      "n": 23
+     },
+     "schedule": {
+      "p": 0.895,
+      "r": 0.85,
+      "n": 20
+     },
+     "multi": {
+      "p": 0.818,
+      "r": 0.6,
+      "n": 15
+     },
+     "out_of_scope": {
+      "p": 1.0,
+      "r": 0.917,
+      "n": 12
+     }
+    }
+   }
+  },
+  "heldout": {
+   "규칙만": {
+    "n": 67,
+    "accuracy": 0.806,
+    "acc_ci95": [
+     0.696,
+     0.883
+    ],
+    "macro_f1": 0.778,
+    "ask_back": 0,
+    "acc_when_answered": 0.806,
+    "per_label": {
+     "guide": {
+      "p": 0.471,
+      "r": 0.8,
+      "n": 10
+     },
+     "trade": {
+      "p": 0.955,
+      "r": 0.875,
+      "n": 24
+     },
+     "quote_explanation": {
+      "p": 0.923,
+      "r": 1.0,
+      "n": 12
+     },
+     "schedule": {
+      "p": 1.0,
+      "r": 0.4,
+      "n": 10
+     },
+     "multi": {
+      "p": 0.8,
+      "r": 0.8,
+      "n": 5
+     },
+     "out_of_scope": {
+      "p": 0.833,
+      "r": 0.833,
+      "n": 6
+     }
+    }
+   },
+   "분류기만(v1)": {
+    "n": 67,
+    "accuracy": 0.746,
+    "acc_ci95": [
+     0.631,
+     0.835
+    ],
+    "macro_f1": 0.65,
+    "ask_back": 0,
+    "acc_when_answered": 0.746,
+    "per_label": {
+     "guide": {
+      "p": 0.533,
+      "r": 0.8,
+      "n": 10
+     },
+     "trade": {
+      "p": 1.0,
+      "r": 0.625,
+      "n": 24
+     },
+     "quote_explanation": {
+      "p": 0.917,
+      "r": 0.917,
+      "n": 12
+     },
+     "schedule": {
+      "p": 1.0,
+      "r": 1.0,
+      "n": 10
+     },
+     "multi": {
+      "p": null,
+      "r": 0.0,
+      "n": 5
+     },
+     "out_of_scope": {
+      "p": 0.4,
+      "r": 1.0,
+      "n": 6
+     }
+    }
+   },
+   "분류기 + 12공종 낱말": {
+    "n": 67,
+    "accuracy": 0.851,
+    "acc_ci95": [
+     0.747,
+     0.917
+    ],
+    "macro_f1": 0.728,
+    "ask_back": 0,
+    "acc_when_answered": 0.851,
+    "per_label": {
+     "guide": {
+      "p": 0.533,
+      "r": 0.8,
+      "n": 10
+     },
+     "trade": {
+      "p": 1.0,
+      "r": 0.917,
+      "n": 24
+     },
+     "quote_explanation": {
+      "p": 0.917,
+      "r": 0.917,
+      "n": 12
+     },
+     "schedule": {
+      "p": 1.0,
+      "r": 1.0,
+      "n": 10
+     },
+     "multi": {
+      "p": null,
+      "r": 0.0,
+      "n": 5
+     },
+     "out_of_scope": {
+      "p": 0.75,
+      "r": 1.0,
+      "n": 6
+     }
+    }
+   },
+   "v3 관문(설계안)": {
+    "n": 67,
+    "accuracy": 0.881,
+    "acc_ci95": [
+     0.782,
+     0.938
+    ],
+    "macro_f1": 0.889,
+    "ask_back": 5,
+    "acc_when_answered": 0.952,
+    "per_label": {
+     "guide": {
+      "p": 0.857,
+      "r": 0.6,
+      "n": 10
+     },
+     "trade": {
+      "p": 0.958,
+      "r": 0.958,
+      "n": 24
+     },
+     "quote_explanation": {
+      "p": 1.0,
+      "r": 1.0,
+      "n": 12
+     },
+     "schedule": {
+      "p": 1.0,
+      "r": 0.9,
+      "n": 10
+     },
+     "multi": {
+      "p": 1.0,
+      "r": 0.8,
+      "n": 5
+     },
+     "out_of_scope": {
+      "p": 0.833,
+      "r": 0.833,
+      "n": 6
+     }
+    }
+   }
+  }
+ },
+ "bank": {
+  "dev": {
+   "규칙만": {
+    "n": 330,
+    "accuracy": 0.879,
+    "acc_ci95": [
+     0.839,
+     0.91
+    ],
+    "macro_f1": 0.385,
+    "ask_back": 0,
+    "acc_when_answered": 0.879,
+    "per_label": {
+     "guide": {
+      "p": 0.652,
+      "r": 0.556,
+      "n": 27
+     },
+     "trade": {
+      "p": 0.938,
+      "r": 0.948,
+      "n": 286
+     },
+     "quote_explanation": {
+      "p": 0.0,
+      "r": null,
+      "n": 0
+     },
+     "schedule": {
+      "p": 0.0,
+      "r": null,
+      "n": 0
+     },
+     "out_of_scope": {
+      "p": 1.0,
+      "r": 0.235,
+      "n": 17
+     }
+    },
+    "trade_first_correct": 0.797,
+    "trade_first_ci95": [
+     0.747,
+     0.84
+    ],
+    "trade_contains": 0.916,
+    "multi_on_single_trade": 2,
+    "out_of_scope_handled": "4/17"
+   },
+   "분류기만(v1)": {
+    "n": 330,
+    "accuracy": 0.203,
+    "acc_ci95": [
+     0.163,
+     0.25
+    ],
+    "macro_f1": 0.12,
+    "ask_back": 0,
+    "acc_when_answered": 0.203,
+    "per_label": {
+     "guide": {
+      "p": 0.137,
+      "r": 0.519,
+      "n": 27
+     },
+     "trade": {
+      "p": 1.0,
+      "r": 0.14,
+      "n": 286
+     },
+     "quote_explanation": {
+      "p": 0.0,
+      "r": null,
+      "n": 0
+     },
+     "schedule": {
+      "p": 0.0,
+      "r": null,
+      "n": 0
+     },
+     "out_of_scope": {
+      "p": 0.076,
+      "r": 0.765,
+      "n": 17
+     }
+    },
+    "trade_first_correct": 0.797,
+    "trade_first_ci95": [
+     0.747,
+     0.84
+    ],
+    "trade_contains": 0.916,
+    "multi_on_single_trade": 0,
+    "out_of_scope_handled": "13/17"
+   },
+   "분류기 + 12공종 낱말": {
+    "n": 330,
+    "accuracy": 0.606,
+    "acc_ci95": [
+     0.552,
+     0.657
+    ],
+    "macro_f1": 0.21,
+    "ask_back": 0,
+    "acc_when_answered": 0.606,
+    "per_label": {
+     "guide": {
+      "p": 0.137,
+      "r": 0.519,
+      "n": 27
+     },
+     "trade": {
+      "p": 0.934,
+      "r": 0.647,
+      "n": 286
+     },
+     "quote_explanation": {
+      "p": 0.0,
+      "r": null,
+      "n": 0
+     },
+     "schedule": {
+      "p": 0.0,
+      "r": null,
+      "n": 0
+     },
+     "out_of_scope": {
+      "p": 0.083,
+      "r": 0.059,
+      "n": 17
+     }
+    },
+    "trade_first_correct": 0.797,
+    "trade_first_ci95": [
+     0.747,
+     0.84
+    ],
+    "trade_contains": 0.916,
+    "multi_on_single_trade": 0,
+    "out_of_scope_handled": "1/17"
+   },
+   "v3 관문(설계안)": {
+    "n": 330,
+    "accuracy": 0.912,
+    "acc_ci95": [
+     0.877,
+     0.938
+    ],
+    "macro_f1": 0.568,
+    "ask_back": 7,
+    "acc_when_answered": 0.932,
+    "per_label": {
+     "guide": {
+      "p": 0.76,
+      "r": 0.704,
+      "n": 27
+     },
+     "trade": {
+      "p": 0.952,
+      "r": 0.962,
+      "n": 286
+     },
+     "multi": {
+      "p": 0.0,
+      "r": null,
+      "n": 0
+     },
+     "out_of_scope": {
+      "p": 1.0,
+      "r": 0.412,
+      "n": 17
+     }
+    },
+    "trade_first_correct": 0.797,
+    "trade_first_ci95": [
+     0.747,
+     0.84
+    ],
+    "trade_contains": 0.916,
+    "multi_on_single_trade": 24,
+    "out_of_scope_handled": "12/17",
+    "policy_flag_recall": {
+     "가격": "17/32",
+     "기간": "12/22",
+     "업체": "0/9",
+     "하자": "8/79"
+    },
+    "ask_back_questions_flagged": "20/23"
+   }
+  },
+  "heldout": {
+   "규칙만": {
+    "n": 163,
+    "accuracy": 0.822,
+    "acc_ci95": [
+     0.756,
+     0.873
+    ],
+    "macro_f1": 0.332,
+    "ask_back": 0,
+    "acc_when_answered": 0.822,
+    "per_label": {
+     "guide": {
+      "p": 0.25,
+      "r": 0.444,
+      "n": 9
+     },
+     "trade": {
+      "p": 0.934,
+      "r": 0.888,
+      "n": 143
+     },
+     "quote_explanation": {
+      "p": 0.0,
+      "r": null,
+      "n": 0
+     },
+     "schedule": {
+      "p": 0.0,
+      "r": null,
+      "n": 0
+     },
+     "out_of_scope": {
+      "p": 1.0,
+      "r": 0.273,
+      "n": 11
+     }
+    },
+    "trade_first_correct": 0.755,
+    "trade_first_ci95": [
+     0.679,
+     0.818
+    ],
+    "trade_contains": 0.867,
+    "multi_on_single_trade": 1,
+    "out_of_scope_handled": "3/11"
+   },
+   "분류기만(v1)": {
+    "n": 163,
+    "accuracy": 0.252,
+    "acc_ci95": [
+     0.191,
+     0.323
+    ],
+    "macro_f1": 0.142,
+    "ask_back": 0,
+    "acc_when_answered": 0.252,
+    "per_label": {
+     "guide": {
+      "p": 0.122,
+      "r": 0.556,
+      "n": 9
+     },
+     "trade": {
+      "p": 1.0,
+      "r": 0.182,
+      "n": 143
+     },
+     "quote_explanation": {
+      "p": 0.0,
+      "r": null,
+      "n": 0
+     },
+     "schedule": {
+      "p": 0.0,
+      "r": null,
+      "n": 0
+     },
+     "out_of_scope": {
+      "p": 0.115,
+      "r": 0.909,
+      "n": 11
+     }
+    },
+    "trade_first_correct": 0.755,
+    "trade_first_ci95": [
+     0.679,
+     0.818
+    ],
+    "trade_contains": 0.867,
+    "multi_on_single_trade": 0,
+    "out_of_scope_handled": "10/11"
+   },
+   "분류기 + 12공종 낱말": {
+    "n": 163,
+    "accuracy": 0.644,
+    "acc_ci95": [
+     0.568,
+     0.714
+    ],
+    "macro_f1": 0.257,
+    "ask_back": 0,
+    "acc_when_answered": 0.644,
+    "per_label": {
+     "guide": {
+      "p": 0.122,
+      "r": 0.556,
+      "n": 9
+     },
+     "trade": {
+      "p": 0.933,
+      "r": 0.678,
+      "n": 143
+     },
+     "quote_explanation": {
+      "p": 0.0,
+      "r": null,
+      "n": 0
+     },
+     "schedule": {
+      "p": 0.0,
+      "r": null,
+      "n": 0
+     },
+     "out_of_scope": {
+      "p": 0.333,
+      "r": 0.273,
+      "n": 11
+     }
+    },
+    "trade_first_correct": 0.755,
+    "trade_first_ci95": [
+     0.679,
+     0.818
+    ],
+    "trade_contains": 0.867,
+    "multi_on_single_trade": 0,
+    "out_of_scope_handled": "3/11"
+   },
+   "v3 관문(설계안)": {
+    "n": 163,
+    "accuracy": 0.853,
+    "acc_ci95": [
+     0.79,
+     0.899
+    ],
+    "macro_f1": 0.55,
+    "ask_back": 8,
+    "acc_when_answered": 0.897,
+    "per_label": {
+     "guide": {
+      "p": 0.467,
+      "r": 0.778,
+      "n": 9
+     },
+     "trade": {
+      "p": 0.962,
+      "r": 0.874,
+      "n": 143
+     },
+     "multi": {
+      "p": 0.0,
+      "r": null,
+      "n": 0
+     },
+     "out_of_scope": {
+      "p": 0.778,
+      "r": 0.636,
+      "n": 11
+     }
+    },
+    "trade_first_correct": 0.755,
+    "trade_first_ci95": [
+     0.679,
+     0.818
+    ],
+    "trade_contains": 0.867,
+    "multi_on_single_trade": 9,
+    "out_of_scope_handled": "9/11",
+    "policy_flag_recall": {
+     "가격": "7/13",
+     "기간": "4/5",
+     "업체": "0/7",
+     "하자": "5/30"
+    },
+    "ask_back_questions_flagged": "12/19"
+   }
+  }
+ },
+ "curve_dev": [
+  {
+   "t": 0.5,
+   "accuracy": 0.895,
+   "macro_f1": 0.858,
+   "ask_back": 2,
+   "acc_when_answered": 0.908
+  },
+  {
+   "t": 0.6,
+   "accuracy": 0.895,
+   "macro_f1": 0.858,
+   "ask_back": 2,
+   "acc_when_answered": 0.908
+  },
+  {
+   "t": 0.7,
+   "accuracy": 0.887,
+   "macro_f1": 0.865,
+   "ask_back": 4,
+   "acc_when_answered": 0.915
+  },
+  {
+   "t": 0.8,
+   "accuracy": 0.887,
+   "macro_f1": 0.866,
+   "ask_back": 4,
+   "acc_when_answered": 0.915
+  },
+  {
+   "t": 0.9,
+   "accuracy": 0.857,
+   "macro_f1": 0.832,
+   "ask_back": 5,
+   "acc_when_answered": 0.891
+  }
+ ]
+}

@@ -177,7 +177,8 @@ def test_reject_then_reapply_with_same_number(api):
         "trades": ["dobae", "mokgong"],
         "areas": [{"sido": "seoul", "sgg": "노원구"}, {"sido": "seoul", "sgg": "도봉구"}],
     }
-    assert api.post(f"{APP}/reapply", json={**form, "biz_no": "1112223333"}).status_code == 422
+    # v3(VS02): 다시 신청에서 번호를 고칠 수 있어 10자리는 받는다. 형식이 틀린 번호만 422
+    assert api.post(f"{APP}/reapply", json={**form, "biz_no": "111-222"}).status_code == 422
     bad = api.post(f"{APP}/reapply", json={**form, "areas": [{"sido": "seoul", "sgg": "없는구"}]})
     assert bad.json()["error"]["code"] == "region"
     r = api.post(f"{APP}/reapply", json=form)

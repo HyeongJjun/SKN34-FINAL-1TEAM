@@ -1,0 +1,18 @@
+/* 내 공사 카드(C42 폰 한 줄 · D09 웹 2열). 색 · 글자는 토큰만. */
+.grid { display: grid; gap: var(--mj-gap-group); margin: 0; padding: 0; list-style: none; }
+@media (min-width: 1024px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+}
+.card { display: flex; flex-direction: column; gap: 12px; }
+.head { display: flex; flex-direction: column; gap: 2px; }
+.title { margin: 0; }
+.name {
+  display: inline-flex; align-items: center; gap: 4px; min-height: 44px; align-self: flex-start;
+  font-size: var(--mj-type-title-s); font-weight: var(--mj-weight-bold); line-height: var(--mj-lh-title);
+  color: var(--mj-text); text-decoration: none; overflow-wrap: anywhere;
+}
+.name:hover { color: var(--mj-link-hover); }
+.name:focus-visible { outline: 2px solid var(--mj-focus); outline-offset: 2px; border-radius: 4px; }
+.todo { display: flex; flex-direction: column; gap: 8px; }
+.todoText { margin: 0; font-size: var(--mj-type-body); font-weight: var(--mj-weight-bold); color: var(--mj-text); }
+.todoBtn { display: flex; }

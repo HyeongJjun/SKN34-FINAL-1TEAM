@@ -1,6 +1,8 @@
 """프로젝트(집 정보) 만들기 · 보기 · 고치기.
 
 표준견적서는 quote, 공정표는 schedule이 이 프로젝트를 읽어 만든다(rev가 바뀌면 새 버전).
+v3: 몸통은 지금 화면(ProjectCreate)과 v3 기본 정보(HomeInfoIn, 손님 계산과 같은 칸) 둘 다 받는다.
+손님 답 옮기기는 Idempotency-Key(= projects.client_key)로 한 번만 만든다(dev-03).
 """
 
 import uuid
@@ -17,6 +19,8 @@ from app.project import repository as repo
 from app.project.models import (
     CHECK_KEYS,
     CHECK_LABELS,
+    FACES,
+    SPACE_NAMES,
     Project,
     ProjectCheck,
     ProjectFile,
@@ -26,6 +30,9 @@ from app.project.models import (
 )
 from app.project.schemas import (
     DobaeOut,
+    EmdOut,
+    HomeInfoIn,
+    HomeInfoOut,
     MokgongOut,
     PhotoOut,
     ProjectBrief,
@@ -37,12 +44,14 @@ from app.project.schemas import (
     SpaceOut,
     TradesOut,
     WhenIn,
+    check_home,
 )
 from app.shared.clock import now_utc
-from app.shared.errors import AppError
-from app.shared.regions import is_region, region_label
+from app.shared.errors import AppError, app_error
+from app.shared.regions import emd_list, is_region, region_label
 
 LOCKED = "실측을 요청한 뒤에는 집 정보를 고칠 수 없어요."
+Body = ProjectCreate | HomeInfoIn
 
 
 async def _check(
@@ -93,6 +102,49 @@ def _fill(p: Project, data: ProjectCreate) -> None:
     p.end_date = data.when.end
     p.occupied = data.occupied
     p.budget = data.budget
+    p.emd = None  # v3 칸 (v2 몸통으로 고치면 v3 기본 정보가 없어진다)
+    p.budget_won = None
+
+
+def _fill_home(p: Project, data: HomeInfoIn) -> None:
+    """v3 기본 정보 → 프로젝트 칸. 면적은 ㎡ + 기준만, 희망일은 날짜 · 모름만 쓴다(data-model 3장)."""
+    p.sido = data.sido
+    p.sgg = data.sgg
+    p.emd = data.emd
+    p.house_type = data.housing
+    p.built_year = None
+    p.size_band = None
+    p.area_basis = data.area_basis
+    p.area_m2 = data.area_m2
+    p.balcony_ext = False
+    p.start_kind = "date" if data.start_date else "unknown"
+    p.start_date = data.start_date
+    p.end_date = None
+    p.occupied = data.occupied
+    p.budget = None
+    p.budget_won = data.budget_won
+
+
+async def _write_home_parts(s: AsyncSession, p: Project, data: HomeInfoIn) -> None:
+    """도배 공정 한 줄(범위 · 면 · 벽지) + 부분 공사면 고른 공간(종류)과 공정 × 공간 연결"""
+    ids: list[uuid.UUID] = []
+    for i, kind in enumerate(data.spaces):
+        row = ProjectSpace(project_id=p.id, name=SPACE_NAMES[kind], sort=i, kind=kind)
+        s.add(row)
+        await s.flush()
+        ids.append(row.id)
+    s.add(
+        ProjectTrade(
+            project_id=p.id,
+            trade=data.trade,
+            items=[],
+            grade=data.grade,
+            scope=data.scope,
+            faces=[f for f in FACES if f in data.faces],
+        )
+    )
+    await s.flush()
+    s.add_all([ProjectTradeSpace(project_id=p.id, trade=data.trade, space_id=i) for i in ids])
 
 
 async def _write_parts(s: AsyncSession, p: Project, data: ProjectCreate) -> None:
@@ -147,36 +199,88 @@ async def _commit(s: AsyncSession) -> None:
         await s.commit()
     except IntegrityError as exc:  # 같은 사진으로 동시에 두 번 만들면 파일 PK가 막는다
         await s.rollback()
+        if "uq_projects_client_key" in str(exc.orig):  # 같은 멱등 키 (잠금을 지나 온 드문 경우)
+            raise app_error("in_progress") from exc
         raise AppError(409, "file_used", "이미 다른 프로젝트에 붙인 파일이 있어요.") from exc
 
 
-async def create(s: AsyncSession, owner: User, data: ProjectCreate, today: date) -> ProjectOut:
-    await _check(s, owner, data, today)
-    no = await repo.next_code_no(s)
-    p = Project(owner_id=owner.id, code=f"MJ-{today:%y%m}-{no:04d}")
-    _fill(p, data)
+async def _validate(
+    s: AsyncSession,
+    owner: User,
+    data: Body,
+    today: date,
+    project_id: uuid.UUID | None = None,
+) -> None:
+    """몸통 모양에 맞춰 검사한다(v3: 지역 · 동 · 희망일, 지금 화면: 지역 · 날짜 · 파일)."""
+    if isinstance(data, HomeInfoIn):
+        check_home(data, today)
+    else:
+        await _check(s, owner, data, today, project_id)
+
+
+async def _write(s: AsyncSession, p: Project, data: Body) -> None:
+    """칸 · 공간 · 공정 · 파일을 쓴다 (고치기면 부르는 쪽이 먼저 지운다)."""
+    if isinstance(data, HomeInfoIn):
+        _fill_home(p, data)
+    else:
+        _fill(p, data)
     s.add(p)
     await s.flush()
-    await _write_parts(s, p, data)
+    if isinstance(data, HomeInfoIn):
+        await _write_home_parts(s, p, data)
+    else:
+        await _write_parts(s, p, data)
+
+
+async def create_once(
+    s: AsyncSession, owner: User, data: Body, today: date, key: uuid.UUID | None = None
+) -> tuple[ProjectOut, bool]:
+    """공사 만들기. key(Idempotency-Key)가 같은 공사가 있으면 그 공사를 돌려준다(새로 만들지 않음).
+    같은 키 요청이 아직 처리 중이면 409 in_progress. 돌려주는 값: (공사, 새로 만들었는지)."""
+    if key is not None:
+        got = await repo.by_client_key(s, owner.id, key)
+        if got is None:
+            if not await repo.try_key_lock(s, owner.id, key):
+                raise app_error("in_progress")
+            got = await repo.by_client_key(s, owner.id, key)  # 잠그는 사이 먼저 끝났을 수 있다
+        if got is not None:
+            return await _out(s, got), False
+    await _validate(s, owner, data, today)
+    no = await repo.next_code_no(s)
+    v3 = isinstance(data, HomeInfoIn)
+    source = ("guest" if key is not None else "member") if v3 else "v2"
+    p = Project(
+        owner_id=owner.id,
+        code=f"MJ-{today:%y%m}-{no:04d}",
+        source=source,
+        client_key=key,
+    )
+    await _write(s, p, data)
     await _commit(s)
-    return await _out(s, p)
+    return await _out(s, p), True
+
+
+async def create(
+    s: AsyncSession, owner: User, data: Body, today: date, key: uuid.UUID | None = None
+) -> ProjectOut:
+    return (await create_once(s, owner, data, today, key))[0]
 
 
 async def update(
-    s: AsyncSession, owner: User, project_id: uuid.UUID, data: ProjectCreate, today: date
+    s: AsyncSession, owner: User, project_id: uuid.UUID, data: Body, today: date
 ) -> ProjectOut:
-    """집 정보 고치기: 실측을 요청하기 전까지만. 공간 · 공정 · 파일은 통째로 바꾸고 rev를 올린다."""
+    """집 정보 고치기: 실측을 요청하기 전까지만(뒤에는 409 locked). 공간 · 공정 · 파일은 통째로 바꾸고
+    rev를 올린다(표준견적서 · 공정표가 새 버전이 된다). 만든 길(source)은 그대로 둔다."""
     p = await repo.get_for_update(s, project_id)
     if p is None or p.owner_id != owner.id:
         raise AppError(404, "not_found", "프로젝트를 찾을 수 없어요.")
     if p.locked_at is not None:
-        raise AppError(409, "locked", LOCKED)
-    await _check(s, owner, data, today, project_id)
-    _fill(p, data)
+        raise app_error("locked", LOCKED)
+    await _validate(s, owner, data, today, project_id)
     p.rev += 1
     await repo.clear_parts(s, p.id)
     await s.flush()
-    await _write_parts(s, p, data)
+    await _write(s, p, data)
     await _commit(s)
     return await _out(s, p)
 
@@ -208,6 +312,31 @@ def _size(p: Project) -> SizeIn:
     return SizeIn(band=p.size_band) if p.size_band else SizeIn(basis=p.area_basis, m2=p.area_m2)
 
 
+def _home(p: Project, spaces: list, trades: list, links: list) -> HomeInfoOut | None:
+    """v3 기본 정보(넣은 그대로). v3 몸통으로 만든 공사만(source guest · member), v2 공사는 None.
+    동은 비어 있을 수 있다(지금 화면은 시 · 군 · 구까지만 받는다)."""
+    t = next((t for t in trades if t.trade == "dobae"), None)
+    if p.source == "v2" or t is None or p.area_m2 is None or p.area_basis is None:
+        return None
+    linked = {link.space_id for link in links if link.trade == "dobae"}
+    return HomeInfoOut(
+        trade=t.trade,
+        scope=t.scope,
+        spaces=[sp.kind for sp in spaces if sp.kind and sp.id in linked],
+        faces=list(t.faces),
+        housing=p.house_type,
+        sido=p.sido,
+        sgg=p.sgg,
+        emd=p.emd,
+        area_m2=p.area_m2,
+        area_basis=p.area_basis,
+        occupied=p.occupied,
+        grade=t.grade,
+        budget_won=p.budget_won,
+        start_date=p.start_date,
+    )
+
+
 async def _out(s: AsyncSession, p: Project) -> ProjectOut:
     spaces, trades, links, files = await repo.parts(s, p.id)
     tr = TradesOut()
@@ -218,6 +347,10 @@ async def _out(s: AsyncSession, p: Project) -> ProjectOut:
         else:
             tr.mokgong = MokgongOut(spaces=ids, items=list(t.items))
     return ProjectOut(
+        source=p.source,
+        emd=p.emd,
+        budget_won=p.budget_won,
+        home=_home(p, spaces, trades, links),
         id=p.id,
         code=p.code,
         rev=p.rev,
@@ -247,6 +380,14 @@ async def get_for(s: AsyncSession, user: User, project_id: uuid.UUID) -> Project
     if p is None or (p.owner_id != user.id and user.role != "admin"):
         raise AppError(404, "not_found", "프로젝트를 찾을 수 없어요.")
     return await _out(s, p)
+
+
+def emds(sido: str, sgg: str) -> list[EmdOut]:
+    """GET /regions/{sido}/{sgg}: 읍면동 목록(B6 자료, 법정동 코드 순). 자료가 없는 시 · 군 · 구는 404."""
+    rows = emd_list(sido, sgg)
+    if not rows:
+        raise app_error("not_found", "동 목록이 없는 지역이에요.")
+    return [EmdOut(name=r["name"], code=r["code"]) for r in rows]
 
 
 async def get_out(s: AsyncSession, project_id: uuid.UUID) -> ProjectOut:

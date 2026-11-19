@@ -1,0 +1,14 @@
+{
+ "questions": 30,
+ "tasks": 18,
+ "outputs_found": 18,
+ "status": {
+  "kept": 18
+ },
+ "llm_kept_rate": 1.0,
+ "fallback_to_free": 0,
+ "dropped_reasons": {},
+ "cites_dropped": 0,
+ "pii_masked_sentences": 0,
+ "bad_output_lines": 0
+}

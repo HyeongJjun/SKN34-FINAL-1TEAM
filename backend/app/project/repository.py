@@ -1,10 +1,25 @@
 import uuid
 
-from sqlalchemy import delete, select, text
+from sqlalchemy import delete, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models import User
 from app.project.models import Project, ProjectFile, ProjectSpace, ProjectTrade, ProjectTradeSpace
+
+
+async def by_client_key(s: AsyncSession, owner_id: uuid.UUID, key: uuid.UUID) -> Project | None:
+    """손님 답 옮기기 멱등 키로 이미 만든 공사 (UNIQUE(owner_id, client_key))"""
+    q = select(Project).where(Project.owner_id == owner_id, Project.client_key == key)
+    return (await s.execute(q.execution_options(populate_existing=True))).scalar_one_or_none()
+
+
+async def try_key_lock(s: AsyncSession, owner_id: uuid.UUID, key: uuid.UUID) -> bool:
+    """같은 멱등 키 요청이 처리 중인지: 트랜잭션 잠금(advisory)을 잡아 보고, 못 잡으면 False.
+    잡은 잠금은 commit · rollback 때 풀린다."""
+    name = f"project:{owner_id}:{key}"
+    return bool(
+        await s.scalar(select(func.pg_try_advisory_xact_lock(func.hashtextextended(name, 0))))
+    )
 
 
 async def attached_file_ids(s: AsyncSession, ids: list[uuid.UUID]) -> set[uuid.UUID]:

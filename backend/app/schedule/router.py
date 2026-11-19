@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import AsyncIterator
 from datetime import date
 from typing import Annotated, Literal
 
@@ -11,10 +12,11 @@ from app.auth.deps import current_user, require_role
 from app.auth.models import User
 from app.db import get_session
 from app.schedule import service
-from app.schedule.models import CREW_MAX
+from app.schedule.models import CREW_MAX, EXTRA_AMOUNT_MAX
 from app.schedule.schemas import (
     AcceptIn,
     AckIn,
+    AnswerIn,
     CheckIn,
     CompareDealOut,
     ConfirmIn,
@@ -23,9 +25,12 @@ from app.schedule.schemas import (
     DatesIn,
     DealOut,
     DocsOut,
+    DoneIn,
     ExtraIn,
+    ExtraPreviewOut,
     InboxPageOut,
     JobOut,
+    LogItemOut,
     MyProjectOut,
     OverviewOut,
     PlanOut,
@@ -41,6 +46,22 @@ from app.visit.schemas import InboxSummaryOut, ReselectOut
 router = APIRouter(tags=["공정표 · 업체 확정"])
 customer_only = require_role("customer")
 Trade = Literal["dobae", "mokgong"]
+ICS = {200: {"content": {"text/calendar": {"schema": {"type": "string"}}}}}
+PHOTO = {200: {"content": {"image/*": {"schema": {"type": "string", "format": "binary"}}}}}
+
+
+async def schedule_session(s: AsyncSession = Depends(get_session)) -> AsyncIterator[AsyncSession]:
+    """요청 세션 + commit 뒤 화면 신호: service가 남긴 신호(service.LATER)를 엔드포인트가 끝나면
+    응답 전에 보낸다(scope="function"). 오류로 끝나면 버린다."""
+    try:
+        yield s
+    except Exception:
+        service.drop_later(s)
+        raise
+    await service.flush_later(s)
+
+
+Session = Depends(schedule_session, scope="function")
 
 
 @router.get(
@@ -52,7 +73,7 @@ async def plan(
     project_id: uuid.UUID,
     kind: Literal["expected", "final"] | None = None,
     user: User = Depends(current_user),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> PlanOut:
     return await service.plan_for(s, user, project_id, today_seoul(), kind)
 
@@ -66,7 +87,7 @@ async def redo_plan(
     project_id: uuid.UUID,
     data: PlanRedo,
     user: User = Depends(current_user),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> PlanOut:
     return await service.redo(s, user, project_id, data, today_seoul())
 
@@ -81,7 +102,7 @@ async def confirm(
     visit_id: uuid.UUID,
     data: ConfirmIn,
     user: User = Depends(customer_only),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> ConfirmOut:
     return await service.confirm(s, user, project_id, visit_id, data, today_seoul())
 
@@ -95,7 +116,7 @@ async def reselect(
     project_id: uuid.UUID,
     deal_id: uuid.UUID,
     user: User = Depends(customer_only),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> ReselectOut:
     return await service.reselect(s, user, project_id, deal_id)
 
@@ -109,7 +130,7 @@ async def deals(
     project_id: uuid.UUID,
     trade: Trade | None = None,
     user: User = Depends(customer_only),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> list[DealOut]:
     return await service.deals_for(s, user, project_id, trade, today_seoul())
 
@@ -123,7 +144,7 @@ async def compare_quotes(
     project_id: uuid.UUID,
     trade: Trade,
     user: User = Depends(customer_only),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> CompareDealOut:
     return await service.compare(s, user, project_id, trade, today_seoul())
 
@@ -131,21 +152,24 @@ async def compare_quotes(
 @router.get(
     "/vendor/visits",
     response_model=InboxPageOut,
-    summary="업체 작업함 · 할 일 · 기다림 · 공사 · 끝남 (끝남은 before 커서로 limit씩)",
+    summary="업체 작업함 · 할 일 · 기다림 · 일정 · 공사 · 끝남 (끝남은 before 커서로 limit씩)",
 )
 async def vendor_inbox(
-    tab: Literal["todo", "waiting", "jobs", "done"] = "todo",
+    tab: Literal["todo", "waiting", "sched", "jobs", "done"] = "todo",
+    sort: Annotated[
+        Literal["due", "new"] | None, Query(description="v3: 기한 가까운 순 · 새 요청 순")
+    ] = None,
     before: AwareDatetime | None = None,
     limit: Annotated[int, Query(ge=1, le=50)] = 20,
     vendor: User = Depends(approved_vendor),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> InboxPageOut:
-    return await service.vendor_inbox(s, vendor, tab, today_seoul(), before, limit)
+    return await service.vendor_inbox(s, vendor, tab, today_seoul(), before, limit, sort)
 
 
 @router.get("/vendor/visits/summary", response_model=InboxSummaryOut, summary="업체 작업함 탭별 수")
 async def vendor_inbox_summary(
-    vendor: User = Depends(approved_vendor), s: AsyncSession = Depends(get_session)
+    vendor: User = Depends(approved_vendor), s: AsyncSession = Session
 ) -> InboxSummaryOut:
     return await service.vendor_summary(s, vendor)
 
@@ -161,7 +185,7 @@ async def vendor_inbox_summary(
 async def schedule(
     project_id: uuid.UUID,
     user: User = Depends(customer_only),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> ScheduleOut:
     return await service.schedule_for(s, user, project_id, today_seoul())
 
@@ -177,7 +201,7 @@ async def accept_dates(
     proposal_id: uuid.UUID,
     data: AcceptIn,
     user: User = Depends(customer_only),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> ScheduleOut:
     return await service.accept_dates(
         s, user, project_id, deal_id, proposal_id, data, today_seoul()
@@ -195,7 +219,7 @@ async def request_dates(
     deal_id: uuid.UUID,
     data: DateRequestIn,
     user: User = Depends(customer_only),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> ScheduleOut:
     return await service.request_dates(s, user, project_id, deal_id, data, today_seoul())
 
@@ -206,7 +230,7 @@ async def request_dates(
 async def job(
     deal_id: uuid.UUID,
     vendor: User = Depends(approved_vendor),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> JobOut:
     return await service.job_for(s, vendor, deal_id, today_seoul())
 
@@ -222,7 +246,7 @@ async def preview_dates(
     end: date,
     crew: Annotated[int, Query(ge=1, le=CREW_MAX)],
     vendor: User = Depends(approved_vendor),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> PreviewOut:
     return await service.preview_dates(s, vendor, deal_id, start, end, crew, today_seoul())
 
@@ -230,13 +254,13 @@ async def preview_dates(
 @router.post(
     "/vendor/jobs/{deal_id}/dates",
     response_model=JobOut,
-    summary="공사 날짜 내기 · 다시 내기 (고객이 수락하기 전까지)",
+    summary="공사 날짜 내기 · 다시 내기 (고객이 수락하기 전까지). v3는 날 목록(days, V11)",
 )
 async def propose_dates(
     deal_id: uuid.UUID,
     data: DatesIn,
     vendor: User = Depends(approved_vendor),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> JobOut:
     return await service.propose_dates(s, vendor, deal_id, data, today_seoul())
 
@@ -248,15 +272,35 @@ async def propose_dates(
     "/vendor/jobs/{deal_id}/extras",
     status_code=201,
     response_model=JobOut,
-    summary="추가 금액 알리기 (공사 날짜 수락 뒤 공사하는 동안, 고치지 않고 새로 올린다)",
+    responses={200: {"model": JobOut, "description": "같은 client_key로 이미 올린 줄 (그대로)"}},
+    summary="추가 금액 알리기 · 고친 판 올리기 (공사 날짜 수락 뒤 공사하는 동안, D23)",
 )
 async def add_extra(
     deal_id: uuid.UUID,
     data: ExtraIn,
+    response: Response,
     vendor: User = Depends(approved_vendor),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> JobOut:
-    return await service.add_extra(s, vendor, deal_id, data, today_seoul())
+    out, created = await service.add_extra(s, vendor, deal_id, data, today_seoul())
+    if not created:
+        response.status_code = 200
+    return out
+
+
+@router.get(
+    "/vendor/jobs/{deal_id}/extras/preview",
+    response_model=ExtraPreviewOut,
+    summary="추가 금액 보내기 전 미리 보기: 공급가 · 부가세 · 합계 · 승인하면 공사 금액 (저장 안 함)",
+)
+async def preview_extra(
+    deal_id: uuid.UUID,
+    entered_amount: Annotated[int, Query(ge=0, le=EXTRA_AMOUNT_MAX, description="적은 금액 (원)")],
+    vat_mode: Literal["included", "excluded", "exempt"] = "excluded",
+    vendor: User = Depends(approved_vendor),
+    s: AsyncSession = Session,
+) -> ExtraPreviewOut:
+    return await service.preview_extra(s, vendor, deal_id, entered_amount, vat_mode)
 
 
 @router.get(
@@ -268,7 +312,7 @@ async def vendor_extra_photo(
     extra_id: uuid.UUID,
     file_id: uuid.UUID,
     vendor: User = Depends(approved_vendor),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> Response:
     return await service.vendor_extra_photo(s, vendor, deal_id, extra_id, file_id)
 
@@ -284,9 +328,25 @@ async def ack_extra(
     extra_id: uuid.UUID,
     data: AckIn,
     user: User = Depends(customer_only),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> TradeExtrasOut:
     return await service.ack_extra(s, user, project_id, deal_id, extra_id, data)
+
+
+@router.post(
+    "/projects/{project_id}/deals/{deal_id}/extras/{extra_id}/answer",
+    response_model=TradeExtrasOut,
+    summary="v3 추가 금액 답하기: 승인 · 거절 · 채팅으로 묻기 (최신 판만, D23)",
+)
+async def answer_extra(
+    project_id: uuid.UUID,
+    deal_id: uuid.UUID,
+    extra_id: uuid.UUID,
+    data: AnswerIn,
+    user: User = Depends(customer_only),
+    s: AsyncSession = Session,
+) -> TradeExtrasOut:
+    return await service.answer_extra(s, user, project_id, deal_id, extra_id, data)
 
 
 @router.get(
@@ -299,7 +359,7 @@ async def customer_extra_photo(
     extra_id: uuid.UUID,
     file_id: uuid.UUID,
     user: User = Depends(customer_only),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> Response:
     return await service.customer_extra_photo(s, user, project_id, deal_id, extra_id, file_id)
 
@@ -310,14 +370,46 @@ async def customer_extra_photo(
 @router.post(
     "/vendor/jobs/{deal_id}/done",
     response_model=JobOut,
-    summary="공사 끝냈어요 · 남은 일 다 했어요 (마지막 공사일부터, 연락처는 오늘부터 1년)",
+    summary="공사 끝냈어요 · 남은 일 다 했어요 (마지막 공사일부터, 남길 말 · 사진, 7일 뒤 자동 끝)",
 )
 async def finish(
     deal_id: uuid.UUID,
+    data: DoneIn | None = None,
     vendor: User = Depends(approved_vendor),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> JobOut:
-    return await service.finish(s, vendor, deal_id, today_seoul())
+    return await service.finish(s, vendor, deal_id, today_seoul(), data)
+
+
+@router.get(
+    "/projects/{project_id}/deals/{deal_id}/photos/{file_id}",
+    response_class=Response,
+    responses=PHOTO,
+    summary="v3 '공사 끝냈어요' 사진 (내 집 공사만, C38)",
+)
+async def customer_done_photo(
+    project_id: uuid.UUID,
+    deal_id: uuid.UUID,
+    file_id: uuid.UUID,
+    user: User = Depends(customer_only),
+    s: AsyncSession = Session,
+) -> Response:
+    return await service.customer_done_photo(s, user, project_id, deal_id, file_id)
+
+
+@router.get(
+    "/vendor/jobs/{deal_id}/photos/{file_id}",
+    response_class=Response,
+    responses=PHOTO,
+    summary="v3 '공사 끝냈어요' 사진 (내 공사만, V13)",
+)
+async def vendor_done_photo(
+    deal_id: uuid.UUID,
+    file_id: uuid.UUID,
+    vendor: User = Depends(approved_vendor),
+    s: AsyncSession = Session,
+) -> Response:
+    return await service.vendor_done_photo(s, vendor, deal_id, file_id)
 
 
 @router.post(
@@ -330,7 +422,7 @@ async def check_work(
     deal_id: uuid.UUID,
     data: CheckIn,
     user: User = Depends(customer_only),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> DealOut:
     return await service.check_work(s, user, project_id, deal_id, data, today_seoul())
 
@@ -344,7 +436,7 @@ async def check_work(
     summary="내 공사 목록 · 단계 요약 · 지금 할 일 · 다음 날짜 (바뀐 날 최근 순)",
 )
 async def my_projects(
-    user: User = Depends(customer_only), s: AsyncSession = Depends(get_session)
+    user: User = Depends(customer_only), s: AsyncSession = Session
 ) -> list[MyProjectOut]:
     return await service.my_projects(s, user, today_seoul())
 
@@ -357,7 +449,7 @@ async def my_projects(
 async def overview(
     project_id: uuid.UUID,
     user: User = Depends(customer_only),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> OverviewOut:
     return await service.overview_for(s, user, project_id, today_seoul())
 
@@ -370,6 +462,54 @@ async def overview(
 async def docs(
     project_id: uuid.UUID,
     user: User = Depends(customer_only),
-    s: AsyncSession = Depends(get_session),
+    s: AsyncSession = Session,
 ) -> DocsOut:
     return await service.docs_for(s, user, project_id, today_seoul())
+
+
+# ---- v3 기록 · 캘린더 ----
+
+
+@router.get(
+    "/projects/{project_id}/log",
+    response_model=list[LogItemOut],
+    summary="v3 한 공사 기록 탭: 실측 일정 · 견적서 · 공사 이력 (시간 순, C63)",
+)
+async def project_log(
+    project_id: uuid.UUID,
+    user: User = Depends(customer_only),
+    s: AsyncSession = Session,
+) -> list[LogItemOut]:
+    return await service.log_for(s, user, project_id)
+
+
+@router.get(
+    "/projects/{project_id}/plan.ics",
+    response_class=Response,
+    responses=ICS,
+    summary="v3 확정 공정표 공사 날 캘린더 파일 (확정 전 404, I1)",
+)
+async def plan_ics(
+    project_id: uuid.UUID,
+    user: User = Depends(customer_only),
+    s: AsyncSession = Session,
+) -> Response:
+    body = await service.plan_ics(s, user, project_id, today_seoul())
+    return Response(
+        body,
+        media_type="text/calendar; charset=utf-8",
+        headers={"content-disposition": 'attachment; filename="mitjip-plan.ics"'},
+    )
+
+
+@router.get(
+    "/vendor/jobs/{deal_id}/log",
+    response_model=list[LogItemOut],
+    summary="v3 업체 공사 한 건 기록 (V23, 내 요청 · 확정만)",
+)
+async def job_log(
+    deal_id: uuid.UUID,
+    vendor: User = Depends(approved_vendor),
+    s: AsyncSession = Session,
+) -> list[LogItemOut]:
+    return await service.job_log(s, vendor, deal_id)

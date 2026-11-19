@@ -1,0 +1,20 @@
+/* 업체 리뷰 · 답글(V24 · V25) */
+.score { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.big { display: inline-flex; align-items: center; gap: 6px; font-size: var(--mj-type-title); font-weight: var(--mj-weight-heavy); }
+.cnt { font-size: var(--mj-type-label); color: var(--mj-text-sub); }
+.on { color: var(--mj-star); }
+.off { color: var(--mj-star-off); }
+.list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--mj-gap-group); }
+.item { display: flex; flex-direction: column; gap: 8px; padding: 18px var(--mj-pad-group); border-radius: var(--mj-radius-group); background: var(--mj-surface); box-shadow: var(--mj-group-edge); min-width: 0; }
+.ih { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.stars { display: inline-flex; align-items: center; }
+.starIcons { display: inline-flex; gap: 1px; }
+.date { font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+.tags { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+.tags li { padding: 4px 10px; border-radius: var(--mj-radius-pill); background: var(--mj-fill); font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); color: var(--mj-text-sub); }
+.body { font-size: var(--mj-type-body); white-space: pre-line; overflow-wrap: anywhere; }
+.reply { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: var(--mj-radius-card); background: var(--mj-surface-sub); }
+.reply b { font-size: var(--mj-type-label); font-weight: var(--mj-weight-bold); }
+.reply p { font-size: var(--mj-type-body); white-space: pre-line; overflow-wrap: anywhere; }
+.rf { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+.sub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: var(--mj-type-label); color: var(--mj-text-sub); }

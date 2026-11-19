@@ -1,0 +1,19 @@
+/* 공사 날짜 · 추가 금액 · 공사 끝 · 리뷰 쓰기(C35 · C37 · C38 · C39 · C52). 색 · 글자는 토큰만. */
+.big { font-size: var(--mj-type-amount-m); font-weight: var(--mj-weight-heavy); letter-spacing: var(--mj-track-amount); line-height: var(--mj-lh-tight); }
+.bigAmount { display: block; }
+.cal { min-width: 0; }
+.links { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.err { display: flex; align-items: flex-start; gap: 6px; font-size: var(--mj-type-label); color: var(--mj-danger); }
+.err svg { flex: none; margin-top: 2px; }
+.sheetSub { font-size: var(--mj-type-label); color: var(--mj-text-sub); }
+.sheetBody { display: flex; flex-direction: column; gap: 16px; }
+.sheetNote { font-size: var(--mj-type-caption); color: var(--mj-text-mute); line-height: var(--mj-lh-ui); }
+.pickCal { padding-top: 4px; }
+.textBtn { align-self: flex-start; }
+.photos { display: flex; flex-direction: column; gap: 8px; }
+.thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.thumb { position: relative; width: 88px; height: 88px; overflow: hidden; border-radius: var(--mj-radius-field); background: var(--mj-fill); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumbX { position: absolute; top: 2px; right: 2px; display: grid; place-items: center; width: var(--mj-hit-min); height: var(--mj-hit-min); padding: 0; border: 0; border-radius: 50%; background: var(--mj-surface); color: var(--mj-text); box-shadow: var(--mj-shadow-raise); cursor: pointer; }
+/* 날짜 + 조사('11.22(일)에')가 두 줄로 갈라지지 않게 */
+.nw { white-space: nowrap; }

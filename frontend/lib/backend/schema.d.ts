@@ -21,6 +21,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ai/turns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** AI 칸에 묻기 (SSE: token · card · done) */
+        post: operations["turn_ai_turns_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ai/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 내 AI 대화 목록 */
+        get: operations["threads_ai_threads_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ai/threads/{chat_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** AI 대화 이어 보기 */
+        get: operations["thread_ai_threads__chat_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ai/faq": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 로그인 전 자주 묻는 질문 칩 */
+        get: operations["faq_ai_faq_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/signup": {
         parameters: {
             query?: never;
@@ -124,6 +192,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/guest/standard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 로그인 전 표준견적서 계산 (저장 안 함 · IP 요청 제한 · 4KB · 지역 밖 422)
+         * @description IP 한도(429)는 router 의존성, 본문 4KB(413)는 입구(BodyLimit)에서 막는다. DB · 로그에 입력을 쓰지 않는다.
+         */
+        post: operations["guest_standard_guest_standard_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/notifications": {
         parameters: {
             query?: never;
@@ -209,6 +297,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/regions/{sido}/{sgg}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** v3 읍면동 목록 (B6 자료, 자료가 없는 시 · 군 · 구는 404) */
+        get: operations["region_emds_regions__sido___sgg__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projects": {
         parameters: {
             query?: never;
@@ -219,7 +324,10 @@ export interface paths {
         /** 내 공사 목록 · 단계 요약 · 지금 할 일 · 다음 날짜 (바뀐 날 최근 순) */
         get: operations["my_projects_projects_get"];
         put?: never;
-        /** 프로젝트 만들기 */
+        /**
+         * 프로젝트 만들기 (같은 Idempotency-Key면 200 같은 공사)
+         * @description 손님 답 옮기기(v3 몸통 + Idempotency-Key)는 source guest, 키 없는 v3 몸통은 member, 지금 화면 몸통은 v2.
+         */
         post: operations["create_project_projects_post"];
         delete?: never;
         options?: never;
@@ -241,7 +349,10 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** 집 정보 고치기 (실측 요청 전까지, 만든 사람만) */
+        /**
+         * 집 정보 고치기 (실측 요청 전까지, 만든 사람만)
+         * @description 첫 실측 요청 뒤에는 409 locked (C50). 몸통 모양은 만들기와 같다.
+         */
         patch: operations["update_project_projects__project_id__patch"];
         trace?: never;
     };
@@ -272,6 +383,330 @@ export interface paths {
         /** 표준견적서 (믿집 계산, 만든 사람 · 관리자) */
         get: operations["standard_projects__project_id__standard_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 내 실시간 줄기 (SSE, 로그인 필요, Last-Event-ID부터 이어 보냄, 사용자마다 5줄기) */
+        get: operations["stream_stream_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 신고 (채팅 · 업체 · 링크, 내 대화 · 볼 수 있는 업체 · 보이는 링크만, 같은 글은 처리 전 한 번) */
+        post: operations["report_reports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 관리자 신고 목록 (처리 기다림 · 처리함 · 종류) */
+        get: operations["admin_reports_admin_reports_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/reports/{report_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 관리자 신고 자세히 (신고된 글은 데이터로만, 신고한 사람은 이름 없이) */
+        get: operations["admin_report_admin_reports__report_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/reports/{report_id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 관리자 신고 처리 (경고 · 쓰기 막기 · 업체 멈춤 · 링크 숨김 · 문제없음, 두 번째 409 already) */
+        post: operations["resolve_admin_reports__report_id__resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 관리자 회원 목록 (고객 · 업체, 이름 · 이메일로 찾기 · 상태 · 가입 최근 순 50명씩) */
+        get: operations["members_admin_members_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/members/{user_id}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 관리자 회원 정지 (세션 지움, 관리자 계정 403, 이미면 409 already) */
+        post: operations["suspend_member_admin_members__user_id__suspend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/members/{user_id}/unsuspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 관리자 회원 정지 풀기 (이미면 409 already) */
+        post: operations["unsuspend_member_admin_members__user_id__unsuspend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/vendors/{vendor_id}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 관리자: 업체 기능 멈추기 (new 새 요청만 · all 진행 중 대화도 닫기, admin_actions) */
+        post: operations["admin_suspend_vendor_admin_vendors__vendor_id__suspend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/vendors/{vendor_id}/unsuspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 관리자: 업체 기능 멈춤 풀기 (멈춤으로 닫은 대화는 다시 열림) */
+        post: operations["admin_unsuspend_vendor_admin_vendors__vendor_id__unsuspend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/vendors/{vendor_id}/links/{sort}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 관리자: 외부 리뷰 링크 보여요 · 숨김 (본 주소 보호, admin_actions 기록 · 업체 알림) */
+        post: operations["admin_check_link_admin_vendors__vendor_id__links__sort__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/reviews/{review_id}/hide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 관리자: 리뷰 숨김 (공개한 기준 코드만, admin_actions 기록) */
+        post: operations["hide_review_admin_reviews__review_id__hide_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/reviews/{review_id}/show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 관리자: 숨긴 리뷰 다시 보이기 */
+        post: operations["show_review_admin_reviews__review_id__show_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/vendors/{vendor_id}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 업체 리뷰 전체 (최신순 · 낮은 별점부터, 숨긴 리뷰 빠짐, 최신순만 before 커서) */
+        get: operations["vendor_reviews_for_customer_projects__project_id__vendors__vendor_id__reviews_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/deals/{deal_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 리뷰 쓰기 (끝난 공사의 고객만, 끝나지 않았으면 403 · 두 번째 409 already) */
+        post: operations["write_review_projects__project_id__deals__deal_id__review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reviews/{review_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 내 리뷰 지우기 */
+        delete: operations["delete_review_reviews__review_id__delete"];
+        options?: never;
+        head?: never;
+        /** 내 리뷰 고치기 ('수정됨') */
+        patch: operations["edit_review_reviews__review_id__patch"];
+        trace?: never;
+    };
+    "/reviews/{review_id}/photos/{file_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 리뷰 사진 (보이는 리뷰는 로그인한 고객, 숨긴 리뷰는 쓴 사람 · 그 업체 · 관리자만) */
+        get: operations["review_photo_reviews__review_id__photos__file_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendor/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 업체 리뷰 · 답글 기다림 수 (V24) */
+        get: operations["my_reviews_vendor_reviews_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendor/reviews/{review_id}/reply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 답글 달기 · 고치기 (리뷰마다 하나, 처음이면 201 · 고객 알림) */
+        put: operations["reply_vendor_reviews__review_id__reply_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -372,7 +807,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 업체 작업함 · 할 일 · 기다림 · 공사 · 끝남 (끝남은 before 커서로 limit씩) */
+        /** 업체 작업함 · 할 일 · 기다림 · 일정 · 공사 · 끝남 (끝남은 before 커서로 limit씩) */
         get: operations["vendor_inbox_vendor_visits_get"];
         put?: never;
         post?: never;
@@ -493,7 +928,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 공사 날짜 내기 · 다시 내기 (고객이 수락하기 전까지) */
+        /** 공사 날짜 내기 · 다시 내기 (고객이 수락하기 전까지). v3는 날 목록(days, V11) */
         post: operations["propose_dates_vendor_jobs__deal_id__dates_post"];
         delete?: never;
         options?: never;
@@ -510,8 +945,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 추가 금액 알리기 (공사 날짜 수락 뒤 공사하는 동안, 고치지 않고 새로 올린다) */
+        /** 추가 금액 알리기 · 고친 판 올리기 (공사 날짜 수락 뒤 공사하는 동안, D23) */
         post: operations["add_extra_vendor_jobs__deal_id__extras_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendor/jobs/{deal_id}/extras/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 추가 금액 보내기 전 미리 보기: 공급가 · 부가세 · 합계 · 승인하면 공사 금액 (저장 안 함) */
+        get: operations["preview_extra_vendor_jobs__deal_id__extras_preview_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -552,6 +1004,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{project_id}/deals/{deal_id}/extras/{extra_id}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v3 추가 금액 답하기: 승인 · 거절 · 채팅으로 묻기 (최신 판만, D23) */
+        post: operations["answer_extra_projects__project_id__deals__deal_id__extras__extra_id__answer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projects/{project_id}/deals/{deal_id}/extras/{extra_id}/files/{file_id}": {
         parameters: {
             query?: never;
@@ -578,8 +1047,42 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 공사 끝냈어요 · 남은 일 다 했어요 (마지막 공사일부터, 연락처는 오늘부터 1년) */
+        /** 공사 끝냈어요 · 남은 일 다 했어요 (마지막 공사일부터, 남길 말 · 사진, 7일 뒤 자동 끝) */
         post: operations["finish_vendor_jobs__deal_id__done_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/deals/{deal_id}/photos/{file_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** v3 '공사 끝냈어요' 사진 (내 집 공사만, C38) */
+        get: operations["customer_done_photo_projects__project_id__deals__deal_id__photos__file_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendor/jobs/{deal_id}/photos/{file_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** v3 '공사 끝냈어요' 사진 (내 공사만, V13) */
+        get: operations["vendor_done_photo_vendor_jobs__deal_id__photos__file_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -632,6 +1135,161 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** v3 한 공사 기록 탭: 실측 일정 · 견적서 · 공사 이력 (시간 순, C63) */
+        get: operations["project_log_projects__project_id__log_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/plan.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** v3 확정 공정표 공사 날 캘린더 파일 (확정 전 404, I1) */
+        get: operations["plan_ics_projects__project_id__plan_ics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendor/jobs/{deal_id}/log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** v3 업체 공사 한 건 기록 (V23, 내 요청 · 확정만) */
+        get: operations["job_log_vendor_jobs__deal_id__log_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 내 채팅 목록 (최근 순) */
+        get: operations["threads_threads_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/threads/{thread_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 대화 머리 (남의 대화 404) */
+        get: operations["thread_threads__thread_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/threads/{thread_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 글 목록 (after_seq · before_seq, 기본 50 · 최대 100, seq 오름차순) */
+        get: operations["messages_threads__thread_id__messages_get"];
+        put?: never;
+        /** 글 보내기 (같은 client_key면 200 같은 글, 읽기만 409 read_only, 쓰기 막힘 403) */
+        post: operations["post_message_threads__thread_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/threads/{thread_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 여기까지 읽었어요 (줄지 않음, 내 다른 기기에 read 이벤트) */
+        post: operations["read_threads__thread_id__read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/threads/{thread_id}/files/{file_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 채팅 사진 (대화 두 사람만, 그 대화의 사진만, 아니면 404) */
+        get: operations["thread_file_threads__thread_id__files__file_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/threads/{thread_id}/block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 고객이 업체 차단 (대화 읽기만 blocked, 이미면 409 already) */
+        post: operations["block_threads__thread_id__block_post"];
+        /** 차단 풀기 (차단으로 닫힌 대화만 다시 열림, 차단 안 했으면 409 already) */
+        delete: operations["unblock_threads__thread_id__block_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1075,7 +1733,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 거절 뒤 다시 신청 (같은 계정 · 같은 사업자등록번호) */
+        /** 거절 뒤 다시 신청 (같은 계정, 사업자등록번호도 고칠 수 있음 · 다른 업체 번호면 409) */
         post: operations["reapply_vendor_application_reapply_post"];
         delete?: never;
         options?: never;
@@ -1178,7 +1836,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 가견적 단가 확인했어요 (고치는 중 → 고객 가견적에 씀, 예전 묶음은 보관) */
+        /**
+         * 가견적 단가 확인했어요 (몸통 없으면 고치는 중 → 확인, 몸통 있으면 v3 '확인하고 저장')
+         * @description v3: 몸통(본 판 + 줄 1201~1208)이면 '확인하고 저장' 한 번(D02, 본 판이 아니면 409 stale).
+         *     몸통이 없으면 지금 길(고치는 중인 묶음을 확인).
+         */
         post: operations["confirm_prices_vendor_prices__trade__confirm_post"];
         delete?: never;
         options?: never;
@@ -1215,6 +1877,24 @@ export interface paths {
         post?: never;
         /** 가견적 근거 파일 빼기 */
         delete: operations["remove_price_file_vendor_price_files__file_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendor/review-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 내 외부 리뷰 링크 (3개까지, 상태 포함) */
+        get: operations["review_links_vendor_review_links_get"];
+        /** 외부 리뷰 링크 통째로 저장 (https만 · 3개까지, 바뀐 링크는 확인 중) */
+        put: operations["save_review_links_vendor_review_links_put"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1281,7 +1961,7 @@ export interface paths {
         /** 이 집 실측 요청 · 업체 연락처 · 보낼 문구 · 남은 칸 */
         get: operations["visits_projects__project_id__visits_get"];
         put?: never;
-        /** 실측 요청 보내기 · 공정마다 3곳까지, 연락처는 고른 업체에만 */
+        /** 실측 요청 보내기 · v3는 담은 업체에 희망 기간 · 사진 · 고른 벽지로 (옛 몸통은 v2 길) */
         post: operations["request_visits_projects__project_id__visits_post"];
         delete?: never;
         options?: never;
@@ -1330,8 +2010,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 받은 실측 요청 자세히 (고객 연락처는 보낸 요청이 열려 있을 때만) */
+        /** 받은 실측 요청 자세히 (집은 구 · 동까지, 고객 이름 · 연락처 없음). ?start=&end=&excluded=로 보내기 전 열린 칸을 미리 센다 */
         get: operations["vendor_visit_vendor_visits__visit_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendor/visits/{visit_id}/photos/{file_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 요청 사진 보기 (그 요청을 받은 업체만, 위치 정보는 올릴 때 지움) */
+        get: operations["vendor_visit_photo_vendor_visits__visit_id__photos__file_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1443,6 +2140,347 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{project_id}/shortlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** v3 담은 업체 · 칸 (공종마다 3칸) */
+        get: operations["shortlist_projects__project_id__shortlist_get"];
+        put?: never;
+        /** v3 업체 담기 (409 already · slots_full · no_estimate · paper_unsupported · blocked_retry · locked) */
+        post: operations["add_shortlist_projects__project_id__shortlist_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/shortlist/{vendor_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** v3 담기 빼기 (요청이 살아 있으면 409 locked, 요청 취소부터) */
+        delete: operations["remove_shortlist_projects__project_id__shortlist__vendor_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/visits/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** v3 요청서 · AI 초안: 희망 기간(공사 시작 희망일 − 28일 ~ − 14일) · 담은 업체 */
+        get: operations["visit_draft_projects__project_id__visits_draft_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/visits/{visit_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** v3 날짜 고르기 · 확정 · 제안 · 겹침 없음 화면 (열린 반나절 · 추천은 계산 엔진) */
+        get: operations["visit_pick_view_projects__project_id__visits__visit_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/visits/{visit_id}/pick": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v3 반나절 고르기: 바로 확정이면 booked, 아니면 picked(48시간 잡아 둠). 409 slot_taken · stale · expired */
+        post: operations["pick_visit_projects__project_id__visits__visit_id__pick_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/visits/{visit_id}/proposal/pick": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v3 업체가 제안한 날 고르기 (proposed → booked, 409 slot_taken) */
+        post: operations["pick_proposal_projects__project_id__visits__visit_id__proposal_pick_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/visits/{visit_id}/repick": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v3 제안 대신 업체 기간에서 다시 고르기 (proposed → offered) */
+        post: operations["repick_visit_projects__project_id__visits__visit_id__repick_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/visits/{visit_id}/again": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v3 한 번 더 요청 (기한 지남 · 취소 뒤, 시도 2까지. 그 뒤 409 blocked_retry) */
+        post: operations["request_again_projects__project_id__visits__visit_id__again_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/visits/{visit_id}/visited": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v3 실측 받았어요 · 업체가 안 왔어요 (반나절이 끝난 뒤, L09. 그 전 409) */
+        post: operations["visited_projects__project_id__visits__visit_id__visited_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/visits/{visit_id}/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v3 확정한 실측 일정 바꾸기 요청 (열린 요청 하나, 409 already) */
+        post: operations["request_change_projects__project_id__visits__visit_id__changes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/visits/{visit_id}/changes/{change_id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v3 바꾸기 요청 거두기 */
+        post: operations["withdraw_change_projects__project_id__visits__visit_id__changes__change_id__withdraw_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/visits/{visit_id}/changes/{change_id}/pick": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v3 업체가 바꾸기 요청에 낸 다른 날 고르기 (countered → accepted) */
+        post: operations["pick_change_projects__project_id__visits__visit_id__changes__change_id__pick_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/visits/{visit_id}/requote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v3 유효기간 지난 견적서 다시 받기 (D20, 업체 알림) */
+        post: operations["requote_projects__project_id__visits__visit_id__requote_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/visits/{visit_id}/ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** v3 실측 확정 캘린더 파일 (.ics, 주소 없음, 확정 전 404) */
+        get: operations["visit_ics_projects__project_id__visits__visit_id__ics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendor/visits/{visit_id}/window": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v3 기간 답하기 (requested → offered, 409 expired · stale) */
+        post: operations["answer_window_vendor_visits__visit_id__window_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendor/visits/{visit_id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v3 고객이 고른 날 수락 (picked → booked, 잡아 둔 기한 지남 409 expired) */
+        post: operations["accept_visit_vendor_visits__visit_id__accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendor/visits/{visit_id}/propose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v3 다른 날 제안 (picked → proposed, 반나절 1~3개 · 희망 기간 밖 422) */
+        post: operations["propose_visit_vendor_visits__visit_id__propose_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendor/visits/{visit_id}/changes/{change_id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v3 일정 바꾸기 요청 받기 (그 반나절이 차 있으면 409 slot_taken) */
+        post: operations["accept_change_vendor_visits__visit_id__changes__change_id__accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendor/visits/{visit_id}/changes/{change_id}/propose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v3 일정 바꾸기 요청에 다른 날 내기 (open → countered) */
+        post: operations["counter_change_vendor_visits__visit_id__changes__change_id__propose_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendor/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** v3 업체 일정 탭: 반나절별 확정 · 잡아 둠 + 동네 · 면적 (from ~ to, 62일 안) */
+        get: operations["vendor_schedule_vendor_schedule_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health/live": {
         parameters: {
             query?: never;
@@ -1495,7 +2533,10 @@ export interface components {
              */
             seen_version: number;
         };
-        /** AckIn */
+        /**
+         * AckIn
+         * @description 옛 길(/ack). v3 화면은 AnswerIn(/answer)을 쓴다.
+         */
         AckIn: {
             /**
              * Ack
@@ -1503,6 +2544,160 @@ export interface components {
              * @enum {string}
              */
             ack: "ok" | "talk";
+        };
+        /** AdminActionOut */
+        AdminActionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Action */
+            action: string;
+            /** Note */
+            note: string | null;
+            /** Admin Name */
+            admin_name: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /**
+         * AfterStepOut
+         * @description v3 실측 뒤 작은 단계 5칸 (C43): 견적서 비교 · 업체 확정 · 공사 날짜 · 공사 · 끝 확인
+         */
+        AfterStepOut: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "quote" | "confirm" | "dates" | "work" | "check";
+            /** Label */
+            label: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "done" | "now" | "todo";
+        };
+        /** AiContext */
+        AiContext: {
+            /** Screen */
+            screen?: ("home" | "start" | "standard" | "standard_guest" | "vendors" | "vendor" | "visits" | "visit_request" | "pick" | "quotes" | "plan" | "schedule" | "thread") | null;
+            /** Project Id */
+            project_id?: string | null;
+            /**
+             * Ids
+             * @default []
+             */
+            ids: string[];
+        };
+        /**
+         * AiFaqOut
+         * @description 로그인 전 자주 묻는 질문 칩(카드 파일만 읽음, 서버 계산 없음).
+         */
+        AiFaqOut: {
+            /** Id */
+            id: string;
+            /** Question */
+            question: string;
+            /** Sentences */
+            sentences: string[];
+            /**
+             * Tip
+             * @default
+             */
+            tip: string;
+            /**
+             * Sources
+             * @default []
+             */
+            sources: components["schemas"]["AiSource"][];
+            /**
+             * Actions
+             * @default []
+             */
+            actions: string[];
+        };
+        /** AiMessageOut */
+        AiMessageOut: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "user" | "assistant";
+            /** Text */
+            text: string;
+            /** Turn */
+            turn: number;
+        };
+        /** AiSource */
+        AiSource: {
+            /** Ref */
+            ref: string;
+            /** Title */
+            title: string;
+            /**
+             * Kind
+             * @default
+             */
+            kind: string;
+        };
+        /** AiThreadDetailOut */
+        AiThreadDetailOut: {
+            /**
+             * Chat Id
+             * Format: uuid
+             */
+            chat_id: string;
+            /** Rev */
+            rev: number;
+            /** Messages */
+            messages: components["schemas"]["AiMessageOut"][];
+        };
+        /** AiThreadOut */
+        AiThreadOut: {
+            /**
+             * Chat Id
+             * Format: uuid
+             */
+            chat_id: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Preview */
+            preview: string;
+        };
+        /** AiTurnIn */
+        AiTurnIn: {
+            /** Client Key */
+            client_key: string;
+            /** Text */
+            text: string;
+            /** Chat Id */
+            chat_id?: string | null;
+            /**
+             * @default {
+             *       "ids": []
+             *     }
+             */
+            context: components["schemas"]["AiContext"];
+            button?: components["schemas"]["Button"] | null;
+        };
+        /**
+         * AnswerIn
+         * @description v3 추가 금액 답 (C37, D23): 승인 · 거절 · 채팅으로 묻기. 최신 판에만.
+         */
+        AnswerIn: {
+            /**
+             * Answer
+             * @enum {string}
+             */
+            answer: "approve" | "reject" | "ask";
         };
         /**
          * ApplicationOut
@@ -1554,6 +2749,54 @@ export interface components {
             sgg: string;
             /** Label */
             label: string;
+        };
+        /**
+         * BoardRowOut
+         * @description 실측 일정 상태판의 업체 한 곳 (C14 · D03 비교표의 열)
+         */
+        BoardRowOut: {
+            /**
+             * Visit Id
+             * Format: uuid
+             */
+            visit_id: string;
+            /** Vendor Id */
+            vendor_id: string | null;
+            /** Vendor Name */
+            vendor_name: string;
+            /** Attempt */
+            attempt: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "requested" | "offered" | "picked" | "proposed" | "booked" | "visited" | "quoted" | "chosen" | "declined" | "expired" | "cancelled" | "no_show" | "closed";
+            next: components["schemas"]["VisitNextOut"];
+            window: components["schemas"]["WindowOut"] | null;
+            booked: components["schemas"]["BookedOut"] | null;
+            proposal: components["schemas"]["VisitProposalOut"] | null;
+            change: components["schemas"]["ChangeOut"] | null;
+            can: components["schemas"]["VisitCanOut"];
+            /**
+             * Estimate Total
+             * @description 요청 때 고정한 가견적
+             */
+            estimate_total: number | null;
+            /**
+             * Thread Id
+             * @description 실측이 확정되면 열리는 채팅
+             */
+            thread_id: string | null;
+            quote: components["schemas"]["QuoteBriefOut"] | null;
+            /** Cancel Code */
+            cancel_code: ("changed" | "other_vendor" | "late_quote" | "other") | null;
+            /** Expired Reason */
+            expired_reason: ("reply" | "pick") | null;
+            /**
+             * Expired Due At
+             * @description 기한이 지나 끝난 요청의 그 기한 시각 (답 없음 = 업체 답 기한 · 고르기 없음 = 고르기 기한)
+             */
+            expired_due_at?: string | null;
         };
         /** Body_upload_files_post */
         Body_upload_files_post: {
@@ -1609,6 +2852,33 @@ export interface components {
              */
             name?: string | null;
         };
+        /**
+         * BookedOut
+         * @description 잡아 둔 · 확정한 반나절
+         */
+        BookedOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * Half
+             * @enum {string}
+             */
+            half: "am" | "pm";
+            /**
+             * Kind
+             * @description hold: 업체 수락 기다림
+             * @enum {string}
+             */
+            kind: "hold" | "booked";
+            /**
+             * Hold Until
+             * @description 잡아 둔 기한 (수락 기다릴 때)
+             */
+            hold_until: string | null;
+        };
         /** BudgetOut */
         BudgetOut: {
             /** Band */
@@ -1620,6 +2890,89 @@ export interface components {
             status: "within" | "over" | "open";
             /** Over By */
             over_by: number | null;
+        };
+        /**
+         * Button
+         * @description 화면 버튼으로 온 요청. 관문을 건너뛴다(source=button).
+         */
+        Button: {
+            /**
+             * Route
+             * @enum {string}
+             */
+            route: "guide" | "trade" | "quote_explanation" | "schedule" | "multi" | "out_of_scope" | "ask_back";
+            /** Trade */
+            trade?: ("dobae" | "mokgong" | "floor" | "tile" | "bath" | "kitchen" | "paint" | "film" | "electric" | "window" | "demolition" | "plumbing" | "common") | null;
+            /** Slot */
+            slot?: string | null;
+            /** Value */
+            value?: string | null;
+        };
+        /**
+         * CancelIn
+         * @description 실측 취소 이유 (C30). 그 밖이면 한 줄
+         */
+        CancelIn: {
+            /**
+             * Code
+             * @enum {string}
+             */
+            code: "changed" | "other_vendor" | "late_quote" | "other";
+            /** Note */
+            note?: string | null;
+        };
+        /**
+         * ChangeOut
+         * @description 확정 뒤 일정 바꾸기 요청 (C28 · V20)
+         */
+        ChangeOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Visit Id
+             * Format: uuid
+             */
+            visit_id: string;
+            /**
+             * From Day
+             * Format: date
+             */
+            from_day: string;
+            /**
+             * From Half
+             * @enum {string}
+             */
+            from_half: "am" | "pm";
+            /**
+             * To Day
+             * Format: date
+             */
+            to_day: string;
+            /**
+             * To Half
+             * @enum {string}
+             */
+            to_half: "am" | "pm";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "accepted" | "countered" | "withdrawn" | "expired";
+            /**
+             * Due At
+             * Format: date-time
+             */
+            due_at: string;
+            /** @description 업체가 다른 날을 냈으면 (countered) */
+            proposal: components["schemas"]["VisitProposalOut"] | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /**
          * CheckIn
@@ -1672,6 +3025,11 @@ export interface components {
              * @description 받은 것(받은 순) 먼저, 그다음 기다리는 곳
              */
             vendors: components["schemas"]["CompareRowOut"][];
+            /**
+             * Gap Total
+             * @description 받은 견적서(최신 버전) 합계의 가장 큰 값 − 가장 작은 값 (2곳 이상일 때, 믿집 계산. C33 '두 곳이 40만 7,000원 차이 나요')
+             */
+            gap_total?: number | null;
             /** @description 그 공정의 업체 확정 (없으면 비어 있다) */
             deal: components["schemas"]["DealOut"] | null;
         };
@@ -1733,6 +3091,34 @@ export interface components {
              * @description 유효기간이 오늘(서울)보다 앞
              */
             expired: boolean;
+            /**
+             * Diff Vs Estimate
+             * @description 가견적과 차이 (믿집 계산, 고객이 낼 금액 기준)
+             */
+            diff_vs_estimate?: number | null;
+            /**
+             * Visit Day
+             * @description 실측일
+             */
+            visit_day?: string | null;
+            /**
+             * Valid Soon
+             * @description 유효기간 3일 안
+             * @default false
+             */
+            valid_soon: boolean;
+            /**
+             * Valid Soon At
+             * @description 유효기간 알림 시각 (3일 · 1일 전 18:00, 이른 것 먼저, 지난 시각은 빼고)
+             * @default []
+             */
+            valid_soon_at: string[];
+            /**
+             * Requote At
+             * @description '다시 받기' 요청한 때
+             */
+            requote_at?: string | null;
+            rating?: components["schemas"]["RatingOut"] | null;
         };
         /** ConfirmIn */
         ConfirmIn: {
@@ -1757,6 +3143,19 @@ export interface components {
             quote_expired: boolean;
         };
         /**
+         * ConfirmPricesIn
+         * @description '확인하고 저장' 한 번 (D02): 본 판 + 줄 전부. 본 판 + 1이 아니면 409 stale. 10배 경고는 저장된다.
+         */
+        ConfirmPricesIn: {
+            /**
+             * Base Version
+             * @description 화면이 본 확인 묶음 판 (처음이면 0)
+             */
+            base_version: number;
+            /** Lines */
+            lines: components["schemas"]["PriceLineV3In"][];
+        };
+        /**
          * ContactOut
          * @description 업체 연락처. 실측을 요청한 고객에게만, 연락처 공개 규칙(visit.service)을 지날 때만 보인다.
          */
@@ -1777,21 +3176,6 @@ export interface components {
             visit_fee: number | null;
             /** Visit Fee Refund */
             visit_fee_refund: boolean;
-        };
-        /**
-         * CustomerContactOut
-         * @description 고객이 보내기로 고른 연락처 (요청이 닫히면 바로 가려진다)
-         */
-        CustomerContactOut: {
-            /** Name */
-            name: string;
-            /** Phone */
-            phone: string | null;
-            /**
-             * Address
-             * @description 자세히에서만: 서울 노원구 상계주공 101동 1203호
-             */
-            address: string | null;
         };
         /**
          * DateRequestIn
@@ -1835,19 +3219,24 @@ export interface components {
         };
         /**
          * DatesIn
-         * @description 업체가 공사 날짜 내기 (수락 전에는 다시 낼 수 있다)
+         * @description 업체가 공사 날짜 내기 (수락 전에는 다시 낼 수 있다). v3는 날을 하나씩(days) 낸다(V11).
          */
         DatesIn: {
             /**
              * Start
-             * Format: date
+             * @description 옛 길: 시작일 (days가 없으면 필수)
              */
-            start: string;
+            start?: string | null;
             /**
              * End
-             * Format: date
+             * @description 옛 길: 끝나는 날 (days가 없으면 필수)
              */
-            end: string;
+            end?: string | null;
+            /**
+             * Days
+             * @description v3: 공사 날 목록 (날 수 = 견적서 공사 기간 · 공휴일 · 겹침은 계산 엔진, 422)
+             */
+            days?: string[] | null;
             /**
              * Crew
              * @description 하루 작업 인원
@@ -1856,6 +3245,7 @@ export interface components {
             /**
              * Method
              * @description 믿집에서 내기 · 고객과 통화로 정함
+             * @default app
              * @enum {string}
              */
             method: "app" | "call";
@@ -1881,6 +3271,25 @@ export interface components {
              * @description 화면이 본 열린 요청 (그사이 바뀌었으면 409)
              */
             request_id?: string | null;
+        };
+        /**
+         * DayHalvesOut
+         * @description 날짜 고르기 달력의 하루 (L03: 반나절마다 남은 칸 수도 준다)
+         */
+        DayHalvesOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Am */
+            am: boolean;
+            /** Pm */
+            pm: boolean;
+            /** Am Left */
+            am_left: number;
+            /** Pm Left */
+            pm_left: number;
         };
         /**
          * DealOut
@@ -1947,6 +3356,59 @@ export interface components {
              * @description 남은 일 (고객이 적은 글, 남은 일 상태일 때)
              */
             fixing_note: string | null;
+            /**
+             * Work Days
+             * @description 수락한 공사 날 (하나씩)
+             * @default []
+             */
+            work_days: string[];
+            /**
+             * Done Note
+             * @description 업체 '남길 말' (V13)
+             */
+            done_note?: string | null;
+            /**
+             * Done Posted At
+             * @description '공사 끝냈어요'를 올린 때
+             */
+            done_posted_at?: string | null;
+            /**
+             * Auto Done At
+             * @description 고객이 확인하지 않으면 자동으로 끝나는 때 (올린 때 + 7일, D24)
+             */
+            auto_done_at?: string | null;
+            /**
+             * Done Remind At
+             * @description 자동으로 끝나기 전에 한 번 알리는 때 (올린 때 + 4일, D24 · C38)
+             */
+            done_remind_at?: string | null;
+            /**
+             * Review Open
+             * @description 리뷰를 쓸 수 있음 (끝남 + 아직 안 씀)
+             * @default false
+             */
+            review_open: boolean;
+            /**
+             * Review Id
+             * @description 쓴 리뷰
+             */
+            review_id?: string | null;
+            /**
+             * Thread Id
+             * @description 이 업체와의 채팅
+             */
+            thread_id?: string | null;
+            /**
+             * Done Photos
+             * @description '공사 끝냈어요' 사진 (GET /projects/{id}/deals/{did}/photos/{file_id}, C38)
+             * @default []
+             */
+            done_photos: string[];
+            /**
+             * Grand Total
+             * @description 공사 금액: 확정 금액 + 승인한 추가 금액 (부가세 포함, 계산 엔진, C37 · C38)
+             */
+            grand_total?: number | null;
         };
         /** DecisionOut */
         DecisionOut: {
@@ -1970,6 +3432,11 @@ export interface components {
              * @enum {string}
              */
             code: "full" | "out_of_area" | "other";
+            /**
+             * Note
+             * @description v3: 그 밖일 때 한 줄
+             */
+            note?: string | null;
         };
         /** DobaeIn */
         DobaeIn: {
@@ -2015,6 +3482,54 @@ export interface components {
             quotes: components["schemas"]["QuoteDocOut"][];
             /** Extras */
             extras: components["schemas"]["TradeExtrasOut"][];
+        };
+        /**
+         * DoneIn
+         * @description v3 '공사 끝냈어요' (V13): 끝낸 날 · 남길 말 · 사진(POST /files kind=done_photo)
+         */
+        DoneIn: {
+            /**
+             * Done On
+             * @description 비우면 오늘
+             */
+            done_on?: string | null;
+            /**
+             * Note
+             * @description 남길 말 (고객에게 보여요)
+             */
+            note?: string | null;
+            /** Photo File Ids */
+            photo_file_ids?: string[];
+        };
+        /** DraftVendorOut */
+        DraftVendorOut: {
+            /**
+             * Vendor Id
+             * Format: uuid
+             */
+            vendor_id: string;
+            /** Name */
+            name: string;
+            /** Estimate Total */
+            estimate_total: number | null;
+            /** Grade */
+            grade: ("economy" | "basic") | null;
+        };
+        /**
+         * EmdOut
+         * @description 읍면동 한 줄 (B6 자료)
+         */
+        EmdOut: {
+            /**
+             * Name
+             * @description 상계동
+             */
+            name: string;
+            /**
+             * Code
+             * @description 행정동 코드 (있을 때만)
+             */
+            code?: string | null;
         };
         /**
          * EstimateDetailOut
@@ -2129,6 +3644,92 @@ export interface components {
             left_out: string[];
         };
         /**
+         * EstimateV3LineOut
+         * @description 가견적 v3 줄 (업체 단가 × 계산 엔진 수량)
+         */
+        EstimateV3LineOut: {
+            /** Code */
+            code: string;
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Qty */
+            qty: string;
+            /** Unit */
+            unit: string;
+            /** Unit Price */
+            unit_price: number | null;
+            /**
+             * Amount
+             * @description 포함 · 빼기 줄은 0
+             */
+            amount: number;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "price" | "included" | "excluded";
+            /** Included In */
+            included_in: string | null;
+            /**
+             * In Standard
+             * @description 표준견적서에 같은 일이 있는 줄. False(퍼티 · 식대 · 운송비)는 비교 %에서 빼고 '표준견적서에 없는 줄'로 따로 보여요
+             * @default true
+             */
+            in_standard: boolean;
+        };
+        /**
+         * EstimateV3Out
+         * @description 가견적 v3 (믿집 계산). 간이 · 면세 업체는 부가세 0(L02).
+         */
+        EstimateV3Out: {
+            /**
+             * Rows Ver
+             * @constant
+             */
+            rows_ver: "dobae_v3";
+            /**
+             * Set Id
+             * @description 쓴 확인 묶음 (요청 때 고정한다)
+             */
+            set_id: string | null;
+            /** Version */
+            version: number | null;
+            /**
+             * Grade
+             * @enum {string}
+             */
+            grade: "economy" | "basic";
+            /**
+             * Tax Kind
+             * @enum {string}
+             */
+            tax_kind: "general" | "simplified" | "exempt";
+            /** Lines */
+            lines: components["schemas"]["EstimateV3LineOut"][];
+            /** Supply */
+            supply: number;
+            /** Vat */
+            vat: number;
+            /**
+             * Total
+             * @description 고객이 낼 금액 (부가세 포함)
+             */
+            total: number;
+            /**
+             * Vs Standard Pct
+             * @description 표준견적서 대비 % (표준에 없는 줄은 뺀다)
+             */
+            vs_standard_pct: string | null;
+            /**
+             * Paper Ok
+             * @description 고른 벽지 줄이 '빼기'가 아니에요. False면 '이 벽지는 안 해요' (담기 409 paper_unsupported)
+             * @default true
+             */
+            paper_ok: boolean;
+        };
+        /**
          * ExtraIn
          * @description 업체가 추가 금액 알리기. 한 번 올리면 고치지 않는다(잘못 올렸으면 새로 올린다).
          */
@@ -2155,6 +3756,16 @@ export interface components {
              * @enum {string}
              */
             vat_mode: "included" | "excluded" | "exempt";
+            /**
+             * Client Key
+             * @description v3: 같은 줄 두 번 막는 키 (같은 키면 200 같은 줄)
+             */
+            client_key?: string | null;
+            /**
+             * Replaces
+             * @description v3: 고칠 앞 판 id (새 판이 되고 앞 판은 superseded, D23)
+             */
+            replaces?: string | null;
             /**
              * File Ids
              * @description 공사 사진 (POST /files kind=work_photo)
@@ -2188,7 +3799,7 @@ export interface components {
             total: number;
             /**
              * Ack
-             * @description 확인 기다림 · 확인했어요 · 업체와 이야기 중
+             * @description 옛 화면 값: 확인 기다림 · 확인했어요 · 업체와 이야기 중
              * @enum {string}
              */
             ack: "pending" | "ok" | "talk";
@@ -2201,6 +3812,35 @@ export interface components {
             created_at: string;
             /** Photos */
             photos: components["schemas"]["ExtraPhotoOut"][];
+            /**
+             * Answer
+             * @description v3 답: 기다림 · 승인 · 거절 · 채팅으로 물음
+             * @default pending
+             * @enum {string}
+             */
+            answer: "pending" | "approved" | "rejected" | "asked";
+            /**
+             * Group Id
+             * @description 판 묶음 (첫 판 id)
+             */
+            group_id?: string | null;
+            /**
+             * Version
+             * @description 판 번호
+             * @default 1
+             */
+            version: number;
+            /**
+             * Superseded
+             * @description 새 판이 나와 지난 판
+             * @default false
+             */
+            superseded: boolean;
+            /**
+             * After Total
+             * @description 승인하면 공사 금액 (공사 금액 + 이 금액, 계산 엔진, C37). 답을 기다리거나 물어본 최신 판만
+             */
+            after_total?: number | null;
         };
         /** ExtraPhotoOut */
         ExtraPhotoOut: {
@@ -2216,6 +3856,37 @@ export interface components {
             /** Size */
             size: number;
         };
+        /**
+         * ExtraPreviewOut
+         * @description 추가 금액 보내기 전 미리 보기 (계산 엔진, B3): 간이 업체는 부가세 0, 면세 업체는 면세만.
+         */
+        ExtraPreviewOut: {
+            /** Supply */
+            supply: number;
+            /** Vat */
+            vat: number;
+            /**
+             * Total
+             * @description 부가세 포함
+             */
+            total: number;
+            /**
+             * Tax Kind
+             * @description 업체 과세 유형 (일반 · 간이 · 면세)
+             * @enum {string}
+             */
+            tax_kind: "general" | "simplified" | "exempt";
+            /**
+             * Grand Total
+             * @description 지금 공사 금액 (확정 금액 + 승인한 추가 금액)
+             */
+            grand_total: number | null;
+            /**
+             * After Total
+             * @description 이 금액을 고객이 승인하면 공사 금액
+             */
+            after_total: number | null;
+        };
         /** FailedOut */
         FailedOut: {
             /**
@@ -2225,10 +3896,10 @@ export interface components {
             vendor_id: string;
             /**
              * Code
-             * @description unavailable: 지금 믿집에서 일할 수 없는 업체 · already: 이미 요청한 업체
+             * @description unavailable: 지금 믿집에서 일할 수 없는 업체 · already: 이미 요청한 업체 · (v3) not_shortlisted: 담지 않은 업체 · no_estimate · paper_unsupported · blocked_retry
              * @enum {string}
              */
-            code: "unavailable" | "already";
+            code: "unavailable" | "already" | "not_shortlisted" | "no_estimate" | "paper_unsupported" | "blocked_retry";
         };
         /** FaqIn */
         FaqIn: {
@@ -2277,6 +3948,108 @@ export interface components {
              */
             end_by: string | null;
         };
+        /**
+         * GuestLineOut
+         * @description 표준견적서 줄 (계산 엔진). 합계에는 included · separate만 들어간다.
+         */
+        GuestLineOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Qty */
+            qty: string | null;
+            /**
+             * Unit
+             * @description ㎡ · 벽지 평 · 품 · 식 (도배지 줄은 '벽지 평', D07 A)
+             */
+            unit: string;
+            /** Unit Price */
+            unit_price: number | null;
+            /** Amount */
+            amount: number | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "included" | "bundled" | "separate" | "optional" | "after_visit" | "excluded";
+            /**
+             * Basis
+             * @description 공공 기준 · 시장 데이터 기준(도배지 시장 평균) · 팀 가정값 · 공공 단가 없음
+             * @enum {string}
+             */
+            basis: "public" | "market" | "assumed" | "none";
+            /**
+             * Source
+             * @description 출처 이름 (벽지 시장 평균 가격 2026.11 …)
+             */
+            source: string;
+        };
+        /**
+         * GuestStandardOut
+         * @description 저장하지 않는 계산 결과. DB · 로그에 입력을 남기지 않는다.
+         */
+        GuestStandardOut: {
+            /** Formula Ver */
+            formula_ver: string;
+            /** Price Ver */
+            price_ver: string;
+            /**
+             * Market Ver
+             * @description 벽지 시장 평균 가격 판 (도배지 줄)
+             */
+            market_ver?: string | null;
+            /**
+             * Share Ver
+             * @description 공간 몫 표 판 (부분 공사일 때만)
+             */
+            share_ver?: string | null;
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "full" | "partial";
+            /** Area M2 */
+            area_m2: string;
+            /** Area Basis */
+            area_basis: string;
+            /**
+             * Pyeong
+             * @description 표시용 평 (계산 엔진)
+             */
+            pyeong: string;
+            /** Lines */
+            lines: components["schemas"]["GuestLineOut"][];
+            /** Supply */
+            supply: number;
+            /** Vat */
+            vat: number;
+            /**
+             * Total
+             * @description 부가세 포함
+             */
+            total: number;
+            /**
+             * Days
+             * @description 예상 공사 일수 (반나절 단위)
+             */
+            days: string;
+            /**
+             * Man Day
+             * @description 품 (0.5 단위 올림)
+             */
+            man_day: string;
+            /**
+             * Budget Fit
+             * @description 넣은 예산 안 · 밖 (예산을 안 넣었으면 비움)
+             */
+            budget_fit: ("within" | "over") | null;
+            /**
+             * Assumptions
+             * @description 계산에 쓴 가정 (화면 '이렇게 셌어요')
+             */
+            assumptions: string[];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -2292,6 +4065,124 @@ export interface components {
             /** Name */
             name: string;
         };
+        /**
+         * HomeInfoIn
+         * @description v3 기본 정보 (C02 · D11). 로그인 전 손님 계산(POST /guest/standard)과 가입 뒤 공사 만들기
+         *     (POST /projects, 머리 Idempotency-Key = 기기 답의 key)가 같은 칸을 쓴다. 금액은 서버 계산 엔진이 다시 센다.
+         */
+        HomeInfoIn: {
+            /**
+             * Trade
+             * @default dobae
+             * @constant
+             */
+            trade: "dobae";
+            /**
+             * Scope
+             * @default full
+             * @enum {string}
+             */
+            scope: "full" | "partial";
+            /**
+             * Spaces
+             * @description 부분 공사일 때 고른 공간 (전체면 비움)
+             * @default []
+             */
+            spaces: ("living" | "kitchen" | "master" | "room1" | "room2" | "hall" | "entry" | "dress")[];
+            /**
+             * Faces
+             * @description 전체는 벽 + 천장
+             * @default [
+             *       "wall",
+             *       "ceiling"
+             *     ]
+             */
+            faces: ("wall" | "ceiling")[];
+            /**
+             * Housing
+             * @description 아파트만 (나머지는 화면에서 '준비 중')
+             * @default apt
+             * @constant
+             */
+            housing: "apt";
+            /** Sido */
+            sido: string;
+            /** Sgg */
+            sgg: string;
+            /**
+             * Emd
+             * @description 읍면동 (옛 화면 호환). 지금 화면은 시 · 군 · 구까지만 받아 비워 둬요
+             */
+            emd?: string | null;
+            /**
+             * Area M2
+             * @description ㎡ (평은 화면 도움)
+             */
+            area_m2: number | string;
+            /**
+             * Area Basis
+             * @enum {string}
+             */
+            area_basis: "supply" | "exclusive";
+            /**
+             * Occupied
+             * @description 짐이 있는 집
+             */
+            occupied: boolean;
+            /**
+             * Grade
+             * @description 합지(economy) · 실크(basic)
+             * @enum {string}
+             */
+            grade: "economy" | "basic";
+            /**
+             * Budget Won
+             * @description 예산(원, 만 원 단위). 비우면 '아직 몰라요'
+             */
+            budget_won?: number | null;
+            /**
+             * Start Date
+             * @description 공사 시작 희망일 (모르면 비움)
+             */
+            start_date?: string | null;
+        };
+        /**
+         * HomeInfoOut
+         * @description 저장한 v3 기본 정보 (넣은 그대로). v2로 만든 공사는 비어 있다.
+         */
+        HomeInfoOut: {
+            /** Trade */
+            trade: string;
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "full" | "partial";
+            /** Spaces */
+            spaces: ("living" | "kitchen" | "master" | "room1" | "room2" | "hall" | "entry" | "dress")[];
+            /** Faces */
+            faces: ("wall" | "ceiling")[];
+            /** Housing */
+            housing: string;
+            /** Sido */
+            sido: string;
+            /** Sgg */
+            sgg: string;
+            /** Emd */
+            emd: string | null;
+            /** Area M2 */
+            area_m2: string;
+            /** Area Basis */
+            area_basis: string;
+            /** Occupied */
+            occupied: boolean;
+            /** Grade */
+            grade: ("economy" | "basic") | null;
+            /** Budget Won */
+            budget_won: number | null;
+            /** Start Date */
+            start_date: string | null;
+        };
         /** InboxPageOut */
         InboxPageOut: {
             /** Items */
@@ -2301,7 +4192,8 @@ export interface components {
         };
         /**
          * InboxRowOut
-         * @description 업체 작업함 한 줄. 공사 탭은 확정 정보가 더 들어 있다.
+         * @description 업체 작업함 한 줄 (V03 · D04). 고객 이름 · 휴대폰 · 주소 · 아파트 · 동호수 칸은 없다(B3: 집은
+         *     구 · 동까지만). 공사 탭은 확정 정보가 더 들어 있다.
          */
         InboxRowOut: {
             /**
@@ -2316,7 +4208,7 @@ export interface components {
             received_at: string;
             /**
              * Code
-             * @description 요청 번호 (연락처가 없으면 고객이 이 번호를 말한다)
+             * @description 요청 번호
              */
             code: string;
             /** Trade */
@@ -2342,7 +4234,10 @@ export interface components {
              * @description 아직 열어 보지 않은 새 요청
              */
             new: boolean;
-            /** Share Contact */
+            /**
+             * Share Contact
+             * @description 고객이 연락처를 보냈는지 (연락처는 요청 자세히에서만)
+             */
             share_contact: boolean;
             /** Closed At */
             closed_at: string | null;
@@ -2355,7 +4250,38 @@ export interface components {
              * @description 견적서를 보낸 뒤 기다린 날 (서울 날짜)
              */
             waiting_days: number | null;
-            customer: components["schemas"]["CustomerContactOut"] | null;
+            /**
+             * Area Label
+             * @description 노원구 상계동 · 공급 69.4㎡ (calc.visit_view.area_label)
+             */
+            area_label?: string | null;
+            /**
+             * Home
+             * @description 아파트 · 도배 전체 · 빈 집
+             */
+            home?: string | null;
+            /** Wish Start */
+            wish_start?: string | null;
+            /** Wish End */
+            wish_end?: string | null;
+            /**
+             * Work Wish On
+             * @description 공사 시작 희망일 (L04)
+             */
+            work_wish_on?: string | null;
+            /** Estimate Total */
+            estimate_total?: number | null;
+            /**
+             * Budget Won
+             * @description 고객 예산 (D03 B)
+             */
+            budget_won?: number | null;
+            /** @description 상태 아이콘 + 글자 (N4 C) */
+            state?: components["schemas"]["StateTagOut"] | null;
+            /** @description 다음 할 일 · 기한 */
+            next?: components["schemas"]["VendorNextOut"] | null;
+            /** Attempt */
+            attempt?: number | null;
             /** Deal Id */
             deal_id?: string | null;
             /** Deal Status */
@@ -2416,6 +4342,17 @@ export interface components {
              * @description 고객이 알린 남은 일
              */
             fixing_note?: string | null;
+            /**
+             * Work Days
+             * @description 수락한 공사 날 (하나씩)
+             * @default []
+             */
+            work_days: string[];
+            /**
+             * Deal Total
+             * @description 확정 금액 (확정한 견적서, 부가세 포함)
+             */
+            deal_total?: number | null;
         };
         /** InboxSummaryOut */
         InboxSummaryOut: {
@@ -2432,6 +4369,12 @@ export interface components {
             jobs: number;
             /** @description 최근 30일: 받은 요청 · 보낸 견적서 · 확정 */
             recent: components["schemas"]["RecentOut"];
+            /**
+             * Sched
+             * @description v3 일정 탭: 앞으로 잡힌 실측 (1단계에서 채움)
+             * @default 0
+             */
+            sched: number;
         };
         /**
          * JobOut
@@ -2466,7 +4409,7 @@ export interface components {
             start_date: string | null;
             /** End Date */
             end_date: string | null;
-            /** @description 집 · 고객 (연락처는 공개 규칙대로) */
+            /** @description 집 · 요청 (고객 이름 · 연락처 · 주소는 없다, 채팅으로, B3) */
             visit: components["schemas"]["VendorVisitDetailOut"];
             /** @description 확정한 견적서 버전 */
             quote: components["schemas"]["QuoteBriefOut"];
@@ -2521,6 +4464,42 @@ export interface components {
              * @description '공사 끝냈어요'를 누를 수 있는지 (마지막 공사일부터, 공사 중 · 남은 일일 때)
              */
             can_finish: boolean;
+            /**
+             * Work Days
+             * @description 수락한 공사 날 (하나씩)
+             * @default []
+             */
+            work_days: string[];
+            /** Done Note */
+            done_note?: string | null;
+            /** Done Posted At */
+            done_posted_at?: string | null;
+            /**
+             * Auto Done At
+             * @description 자동으로 끝나는 때 (D24)
+             */
+            auto_done_at?: string | null;
+            /**
+             * Done Photos
+             * @description 공사 끝 사진
+             * @default []
+             */
+            done_photos: string[];
+            /**
+             * Thread Id
+             * @description 이 고객과의 채팅
+             */
+            thread_id?: string | null;
+            /**
+             * Grand Total
+             * @description 공사 금액: 확정 금액 + 승인한 추가 금액 (부가세 포함, 계산 엔진)
+             */
+            grand_total?: number | null;
+            /**
+             * Day No
+             * @description 오늘이 공사 몇째 날인지 (1부터, 공사 날 목록 기준). 오늘이 공사 날이 아니면 비어 있다
+             */
+            day_no?: number | null;
         };
         /** LicenseOut */
         LicenseOut: {
@@ -2541,12 +4520,77 @@ export interface components {
              */
             created_at: string;
         };
+        /**
+         * LinkCheckIn
+         * @description 관리자 링크 확인 (A01)
+         */
+        LinkCheckIn: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "shown" | "hidden";
+            /** Note */
+            note?: string | null;
+            /**
+             * Url
+             * @description 관리자가 본 주소. 그사이 업체가 주소를 고쳤으면 409 stale (고친 링크를 보이지 않게)
+             */
+            url?: string | null;
+        };
         /** LinkIn */
         LinkIn: {
             /** Label */
             label?: string | null;
             /** Url */
             url: string;
+        };
+        /**
+         * LogItemOut
+         * @description 기록 탭 한 줄 (C63 · I2 · V23). 글은 화면이 code · 날로 만든다.
+         */
+        LogItemOut: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Actor
+             * @enum {string}
+             */
+            actor: "customer" | "vendor" | "mijip";
+            /** Vendor Name */
+            vendor_name: string | null;
+            /** Trade */
+            trade: string | null;
+            /**
+             * Code
+             * @description visit_events · deal_events 코드 (asked · answered · booked …)
+             */
+            code: string;
+            /** Day */
+            day: string | null;
+            /** Half */
+            half: ("am" | "pm") | null;
+            /** Day To */
+            day_to: string | null;
+            /**
+             * Amount
+             * @description 금액이 있는 기록 (견적서 · 추가 금액, 부가세 포함)
+             */
+            amount: number | null;
+            /**
+             * Half To
+             * @description 두 번째 반나절 (제안 반나절 둘: '12.16 오후 · 12.17 오전', C63)
+             */
+            half_to?: ("am" | "pm") | null;
+            /**
+             * Days
+             * @description 날 목록 (업체가 낸 공사 날 · 고객이 고른 날: '1.4(월) · 1.5(화)')
+             * @default []
+             */
+            days: string[];
         };
         /** LoginIn */
         LoginIn: {
@@ -2593,6 +4637,127 @@ export interface components {
             name?: string | null;
             /** Phone */
             phone?: string | null;
+        };
+        /** MemberNoteIn */
+        MemberNoteIn: {
+            /** Note */
+            note?: string | null;
+        };
+        /** MemberPageOut */
+        MemberPageOut: {
+            /** Items */
+            items: components["schemas"]["MemberRowOut"][];
+            /** Next Before */
+            next_before: string | null;
+        };
+        /**
+         * MemberRowOut
+         * @description 관리자 회원 한 줄 (A03). 이메일 가림은 B7 결정을 따른다.
+         */
+        MemberRowOut: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "customer" | "vendor" | "admin";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "suspended";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Project Count */
+            project_count: number;
+        };
+        /** MemberStateOut */
+        MemberStateOut: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "suspended";
+        };
+        /**
+         * MessageIn
+         * @description 글 보내기. client_key가 같으면 저장하지 않고 처음 글을 200으로 돌려준다.
+         */
+        MessageIn: {
+            /**
+             * Client Key
+             * Format: uuid
+             */
+            client_key: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "text" | "photo";
+            /** Body */
+            body?: string | null;
+            /**
+             * File Id
+             * @description POST /files kind=chat_photo
+             */
+            file_id?: string | null;
+        };
+        /**
+         * MessageOut
+         * @description 글 한 줄. warn(믿집 밖 거래 주의 줄)은 고객 화면에만 들어 있다(D05 A).
+         */
+        MessageOut: {
+            /** Seq */
+            seq: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * From
+             * @enum {string}
+             */
+            from: "me" | "them" | "system";
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "text" | "photo" | "system";
+            /** Body */
+            body: string | null;
+            /**
+             * File Id
+             * @description 사진 (GET /threads/{tid}/files/{file_id})
+             */
+            file_id: string | null;
+            /** System Code */
+            system_code: string | null;
+            /** Ref Id */
+            ref_id: string | null;
+            /** Warn */
+            warn: "offsite" | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
         };
         /** MokgongIn */
         MokgongIn: {
@@ -2663,7 +4828,7 @@ export interface components {
             phase: "estimate" | "progress" | "work" | "done";
             /**
              * Current
-             * @description 가장 늦은 공정의 지금 단계 (6단계 중)
+             * @description 가장 늦은 공정의 지금 단계 번호, 1부터 (1~6, 다 마치면 6, C40)
              */
             current: number;
             todo: components["schemas"]["TodoOut"] | null;
@@ -2681,6 +4846,40 @@ export interface components {
             grades: {
                 [key: string]: string | null;
             };
+            /**
+             * Emd
+             * @description 읍면동
+             */
+            emd?: string | null;
+            /**
+             * Vendors
+             * @description 업체별 요약 + 기한
+             * @default []
+             */
+            vendors: components["schemas"]["VendorStepOut"][];
+        };
+        /**
+         * MyVisitOut
+         * @description 내 다른 실측 (달력에 같이 보임)
+         */
+        MyVisitOut: {
+            /**
+             * Visit Id
+             * Format: uuid
+             */
+            visit_id: string;
+            /** Vendor Name */
+            vendor_name: string;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * Half
+             * @enum {string}
+             */
+            half: "am" | "pm";
         };
         /**
          * NeedOut
@@ -2777,6 +4976,24 @@ export interface components {
              */
             end: string;
         };
+        /** OtherWindowOut */
+        OtherWindowOut: {
+            /**
+             * Visit Id
+             * Format: uuid
+             */
+            visit_id: string;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+        };
         /**
          * OverviewOut
          * @description 한 공사 화면 (WProjectB)
@@ -2815,6 +5032,18 @@ export interface components {
             contacts: components["schemas"]["VendorContactOut"][];
             /** Checks */
             checks: components["schemas"]["ProjectCheckOut"][];
+            /**
+             * After Steps
+             * @description 실측 뒤 작은 단계 5칸
+             * @default []
+             */
+            after_steps: components["schemas"]["AfterStepOut"][];
+            /**
+             * Vendors
+             * @description 업체별 요약 + 기한
+             * @default []
+             */
+            vendors: components["schemas"]["VendorStepOut"][];
         };
         /** PeriodOut */
         PeriodOut: {
@@ -2858,6 +5087,25 @@ export interface components {
              * Format: uuid
              */
             space_id: string;
+        };
+        /** PickOut */
+        PickOut: {
+            /**
+             * Visit Id
+             * Format: uuid
+             */
+            visit_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "booked" | "picked";
+            booked: components["schemas"]["BookedOut"];
+            /**
+             * Thread Id
+             * @description 바로 확정이면 열린 채팅
+             */
+            thread_id: string | null;
         };
         /** PlanBlockOut */
         PlanBlockOut: {
@@ -3065,10 +5313,28 @@ export interface components {
             title: string;
             /** Space */
             space?: string | null;
-            /** Pyeong */
+            /**
+             * Pyeong
+             * @description 옛 칸 (v3는 area_m2)
+             */
             pyeong?: number | null;
             /** Taken On */
             taken_on?: string | null;
+            /**
+             * Area M2
+             * @description v3: 면적은 ㎡로 (V16)
+             */
+            area_m2?: number | string | null;
+            /**
+             * Paper
+             * @description 합지 · 실크
+             */
+            paper?: ("economy" | "basic") | null;
+            /**
+             * Area Basis
+             * @description v3: 면적 기준 공급 · 전용 (C47 '공급 79.3㎡', 면적을 넣을 때만). 고칠 때 안 보내면 그대로
+             */
+            area_basis?: ("supply" | "exclusive") | null;
             /**
              * Id
              * Format: uuid
@@ -3084,10 +5350,28 @@ export interface components {
             title: string;
             /** Space */
             space?: string | null;
-            /** Pyeong */
+            /**
+             * Pyeong
+             * @description 옛 칸 (v3는 area_m2)
+             */
             pyeong?: number | null;
             /** Taken On */
             taken_on?: string | null;
+            /**
+             * Area M2
+             * @description v3: 면적은 ㎡로 (V16)
+             */
+            area_m2?: number | string | null;
+            /**
+             * Paper
+             * @description 합지 · 실크
+             */
+            paper?: ("economy" | "basic") | null;
+            /**
+             * Area Basis
+             * @description v3: 면적 기준 공급 · 전용 (C47 '공급 79.3㎡', 면적을 넣을 때만). 고칠 때 안 보내면 그대로
+             */
+            area_basis?: ("supply" | "exclusive") | null;
             /**
              * File Id
              * Format: uuid
@@ -3100,10 +5384,28 @@ export interface components {
             title: string;
             /** Space */
             space?: string | null;
-            /** Pyeong */
+            /**
+             * Pyeong
+             * @description 옛 칸 (v3는 area_m2)
+             */
             pyeong?: number | null;
             /** Taken On */
             taken_on?: string | null;
+            /**
+             * Area M2
+             * @description v3: 면적은 ㎡로 (V16)
+             */
+            area_m2?: string | null;
+            /**
+             * Paper
+             * @description 합지 · 실크
+             */
+            paper?: ("economy" | "basic") | null;
+            /**
+             * Area Basis
+             * @description v3: 면적 기준 공급 · 전용 (C47 '공급 79.3㎡', 면적을 넣을 때만). 고칠 때 안 보내면 그대로
+             */
+            area_basis?: ("supply" | "exclusive") | null;
             /**
              * Id
              * Format: uuid
@@ -3114,6 +5416,11 @@ export interface components {
              * Format: uuid
              */
             file_id: string;
+            /**
+             * Area Text
+             * @description 화면 글 '공급 79.3㎡' (기준이 없으면 '79.3㎡', 면적이 없으면 비어 있다)
+             */
+            area_text?: string | null;
         };
         /**
          * PreviewOut
@@ -3195,6 +5502,29 @@ export interface components {
             /** Source File Id */
             source_file_id: string | null;
         };
+        /**
+         * PriceLineV3In
+         * @description v3 단가 줄 한 줄: 받는 법(mode)에 따라 단가 · 포함 대상이 있다 (빈 단가는 422)
+         */
+        PriceLineV3In: {
+            /**
+             * Key
+             * @description putty · paper_hapji · paper_silk · material · labor · meal · truck
+             */
+            key: string;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "price" | "included" | "excluded";
+            /**
+             * Unit Price
+             * @description 원, 부가세 빼고
+             */
+            unit_price?: number | null;
+            /** Included In */
+            included_in?: string | null;
+        };
         /** PriceRowOut */
         PriceRowOut: {
             /** Key */
@@ -3203,6 +5533,54 @@ export interface components {
             name: string;
             /** Unit */
             unit: string;
+        };
+        /**
+         * PriceRowV3Out
+         * @description v3 단가표 한 줄 + '공급 69.4㎡ 집이면' 예시 (계산 엔진)
+         */
+        PriceRowV3Out: {
+            /**
+             * Code
+             * @description 화면 코드 1201 · 1203 · 1204 … (표시값)
+             */
+            code: string;
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /**
+             * Unit
+             * @description 벽지 평 · 품 · 대처럼 분명히
+             */
+            unit: string;
+            /**
+             * Mode
+             * @description 아직 안 넣었으면 비어 있다
+             */
+            mode: ("price" | "included" | "excluded") | null;
+            /** Unit Price */
+            unit_price: number | null;
+            /** Included In */
+            included_in: string | null;
+            /** Example Qty */
+            example_qty: string;
+            /** Example Amount */
+            example_amount: number;
+            /**
+             * Warn
+             * @description 시장 기준보다 10배 넘게 다름 (L01, 저장은 된다)
+             */
+            warn: ("too_high" | "too_low") | null;
+            /**
+             * Warn High
+             * @description 이 값보다 크면 '10배쯤' 경고 (기준 단가 × 10, 화면이 저장 전에 씀)
+             */
+            warn_high?: number | null;
+            /**
+             * Warn Low
+             * @description 이 값보다 작으면 '10분의 1쯤' 경고 (기준 단가 ÷ 10 올림)
+             */
+            warn_low?: number | null;
         };
         /**
          * PriceSetIn
@@ -3248,6 +5626,40 @@ export interface components {
             files: components["schemas"]["PriceFileOut"][];
             draft: components["schemas"]["PriceSetOut"] | null;
             confirmed: components["schemas"]["PriceSetOut"] | null;
+            /** @description v3 단가표 1201~1208 (1단계에서 채움) */
+            v3?: components["schemas"]["PricesV3Out"] | null;
+        };
+        /**
+         * PricesV3Out
+         * @description 업체 단가표 화면 v3 (D02). 옛 v2 묶음만 있으면 빈 v3 표 + 안내(needs_setup)
+         */
+        PricesV3Out: {
+            /**
+             * Rows Ver
+             * @constant
+             */
+            rows_ver: "dobae_v3";
+            /**
+             * Version
+             * @description 지금 확인 묶음 판 (없으면 0). 확인할 때 base_version으로 보낸다
+             */
+            version: number;
+            /** Confirmed At */
+            confirmed_at: string | null;
+            /**
+             * Needs Setup
+             * @description v3 단가를 아직 확인하지 않았어요
+             */
+            needs_setup: boolean;
+            /** Lines */
+            lines: components["schemas"]["PriceRowV3Out"][];
+            /** @description 예시 집(공급 69.4㎡ · 실크) 가견적 */
+            example: components["schemas"]["EstimateV3Out"] | null;
+            /**
+             * Example Home
+             * @description 예시 집 이름 '공급 69.4㎡ 집' (D02 열 '… 집이면' · 아래 '… 집 가견적')
+             */
+            example_home: string;
         };
         /**
          * ProfileIn
@@ -3295,10 +5707,26 @@ export interface components {
             visit_fee_refund: boolean;
             /**
              * Tax Kind
+             * @description 일반 · 간이(부가세를 따로 안 붙임) · 면세
              * @default general
              * @enum {string}
              */
-            tax_kind: "general" | "exempt";
+            tax_kind: "general" | "simplified" | "exempt";
+            /**
+             * Instant Default
+             * @description v3: 기간 답하기 '바로 확정' 처음 값 (비우면 그대로)
+             */
+            instant_default?: boolean | null;
+            /**
+             * Visit Capacity
+             * @description v3: 반나절 한 칸에 받는 실측 수 1~3 (L03, 비우면 그대로)
+             */
+            visit_capacity?: number | null;
+            /**
+             * Intro
+             * @description v3: 한 줄 소개 60자 (V15). 줄바꿈은 한 칸으로, 빈 글이면 지우고 null이면 그대로
+             */
+            intro?: string | null;
             /** Interior License */
             interior_license?: string | null;
             /** Insurance */
@@ -3377,6 +5805,26 @@ export interface components {
             site_url: string | null;
             /** Contact Url */
             contact_url: string | null;
+            /**
+             * Instant Default
+             * @description '바로 확정' 처음 값
+             */
+            instant_default?: boolean | null;
+            /**
+             * Visit Capacity
+             * @description 반나절 한 칸에 받는 실측 수
+             */
+            visit_capacity?: number | null;
+            /**
+             * Suspended At
+             * @description 관리자가 업체 기능을 멈춘 때
+             */
+            suspended_at?: string | null;
+            /**
+             * Intro
+             * @description 한 줄 소개 (V15, 비었으면 비어 있다)
+             */
+            intro?: string | null;
         };
         /** ProjectCheckIn */
         ProjectCheckIn: {
@@ -3482,6 +5930,25 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Source
+             * @description 만든 길: 옛 v2 · 손님 답 옮김 · 가입 뒤 바로
+             * @default v2
+             * @enum {string}
+             */
+            source: "v2" | "guest" | "member";
+            /**
+             * Emd
+             * @description 읍면동
+             */
+            emd?: string | null;
+            /**
+             * Budget Won
+             * @description 예산(원)
+             */
+            budget_won?: number | null;
+            /** @description v3 기본 정보 (넣은 그대로) */
+            home?: components["schemas"]["HomeInfoOut"] | null;
         };
         /**
          * ProposalOut
@@ -3543,6 +6010,27 @@ export interface components {
             created_at: string;
             /** Decided At */
             decided_at: string | null;
+            /**
+             * Days
+             * @description v3: 업체가 하나씩 고른 공사 날 (V11)
+             * @default []
+             */
+            days: string[];
+        };
+        /**
+         * ProposeIn
+         * @description 다른 날 제안 (V07): 반나절 1~3개 · 고객 희망 기간 안
+         */
+        ProposeIn: {
+            /**
+             * Reason Code
+             * @enum {string}
+             */
+            reason_code: "other_site" | "no_crew" | "other";
+            /** Note */
+            note?: string | null;
+            /** Slots */
+            slots: components["schemas"]["SlotIn"][];
         };
         /**
          * PublicProfileOut
@@ -3713,6 +6201,26 @@ export interface components {
              * @description 견적 유효기간 (이날까지)
              */
             valid_until?: string | null;
+            /**
+             * Incl Removal
+             * @description 기존 벽지 철거 포함
+             */
+            incl_removal?: boolean | null;
+            /**
+             * Incl Waste
+             * @description 폐기물 처리 포함
+             */
+            incl_waste?: boolean | null;
+            /**
+             * Paper Spec
+             * @description 벽지 제조사 · 규격 (LX 베스띠 · 폭 106cm)
+             */
+            paper_spec?: string | null;
+            /**
+             * Warranty Months
+             * @description 하자 보수 기간(개월)
+             */
+            warranty_months?: number | null;
         };
         /** QuoteFileOut */
         QuoteFileOut: {
@@ -3783,8 +6291,42 @@ export interface components {
             file_links: string[];
         };
         /**
+         * RatingOut
+         * @description 별점 요약 (읽을 때 계산, 반올림은 계산 엔진). 숨긴 리뷰는 뺀다.
+         */
+        RatingOut: {
+            /**
+             * Avg
+             * @description 소수 한 자리 (리뷰가 없으면 비움)
+             */
+            avg: string | null;
+            /** Count */
+            count: number;
+            /**
+             * Done Count
+             * @description 믿집에서 끝낸 공사 수
+             */
+            done_count: number;
+            /**
+             * Tags
+             * @description 칩별 수: seam · on_time · kind · tidy
+             */
+            tags: {
+                [key: string]: number;
+            };
+        };
+        /** ReadIn */
+        ReadIn: {
+            /**
+             * Seq
+             * @description 읽은 마지막 글 (줄지 않는다)
+             */
+            seq: number;
+        };
+        /**
          * ReapplyIn
-         * @description 거절된 업체가 같은 계정 · 같은 사업자등록번호로 다시 신청. 새 등록증은 먼저 POST /files (kind=license).
+         * @description 거절된 업체가 같은 계정으로 다시 신청. 사업자등록번호도 고칠 수 있다(VS02, 비우면 그대로).
+         *     새 등록증은 먼저 POST /files (kind=license).
          */
         ReapplyIn: {
             /**
@@ -3806,6 +6348,11 @@ export interface components {
             trades: ("dobae" | "mokgong")[];
             /** Areas */
             areas: components["schemas"]["AreaIn"][];
+            /**
+             * Biz No
+             * @description v3: 고친 사업자등록번호 10자리 (- 는 빼도 된다, 비우면 지금 번호 그대로)
+             */
+            biz_no?: string | null;
             /** License File Id */
             license_file_id?: string | null;
         };
@@ -3817,6 +6364,239 @@ export interface components {
             quoted: number;
             /** Chosen */
             chosen: number;
+        };
+        /**
+         * RecommendOut
+         * @description 추천 반나절 (계산 엔진, AI는 설명만)
+         */
+        RecommendOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * Half
+             * @enum {string}
+             */
+            half: "am" | "pm";
+            /**
+             * Target
+             * Format: date
+             * @description 기준 날 (공사 시작 희망일 − 20일)
+             */
+            target: string;
+            /**
+             * Basis
+             * @enum {string}
+             */
+            basis: "start_minus_20" | "earliest";
+        };
+        /** ReplyIn */
+        ReplyIn: {
+            /** Body */
+            body: string;
+        };
+        /** ReplyOut */
+        ReplyOut: {
+            /** Body */
+            body: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Edited At */
+            edited_at: string | null;
+        };
+        /**
+         * ReportDetailOut
+         * @description 신고 자세히. 신고된 글(evidence)은 데이터로만 보여 준다(지시문으로 다루지 않음).
+         */
+        ReportDetailOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "chat" | "vendor" | "link";
+            /**
+             * Reason Code
+             * @enum {string}
+             */
+            reason_code: "offsite" | "abuse" | "promise" | "other" | "wrong_place" | "not_vendor";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "resolved" | "dismissed";
+            /** Action */
+            action: ("warn" | "mute_chat" | "suspend_new" | "suspend_all" | "hide_link" | "none") | null;
+            /** Reporter Role */
+            reporter_role: ("customer" | "vendor") | null;
+            /** Vendor Id */
+            vendor_id: string | null;
+            /** Vendor Name */
+            vendor_name: string | null;
+            /** Thread Id */
+            thread_id: string | null;
+            /** Block */
+            block: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Resolved At */
+            resolved_at: string | null;
+            /**
+             * Reporter Label
+             * @description 신고한 사람 (이름 없이): '수유동 고객' · '고객' · 업체 상호 · '탈퇴한 회원'
+             */
+            reporter_label: string;
+            /** Note */
+            note: string | null;
+            /**
+             * Evidence
+             * @description 신고 때 사본: 채팅 글 · 링크 주소
+             */
+            evidence: string | null;
+            /** Link Sort */
+            link_sort: number | null;
+            /**
+             * Link Label
+             * @description 링크 신고: 지금 링크 이름 (링크가 없어졌으면 비움)
+             */
+            link_label: string | null;
+            /**
+             * Link Url
+             * @description 링크 신고: 지금 링크 주소 (없어졌으면 비움)
+             */
+            link_url: string | null;
+            /** Admin Note */
+            admin_note: string | null;
+            /** History */
+            history: components["schemas"]["AdminActionOut"][];
+        };
+        /**
+         * ReportIn
+         * @description 신고 (C31 · C11 · C48). 채팅이면 글 사본을 남기고, block이면 대화를 읽기만(blocked)으로.
+         */
+        ReportIn: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "chat" | "vendor" | "link";
+            /** Thread Id */
+            thread_id?: string | null;
+            /** Message Id */
+            message_id?: string | null;
+            /** Vendor Id */
+            vendor_id?: string | null;
+            /**
+             * Link Sort
+             * @description 외부 리뷰 링크 번호
+             */
+            link_sort?: number | null;
+            /**
+             * Reason Code
+             * @description 채팅 · 업체: offsite · abuse · promise · other / 링크: wrong_place · not_vendor · other
+             * @enum {string}
+             */
+            reason_code: "offsite" | "abuse" | "promise" | "other" | "wrong_place" | "not_vendor";
+            /** Note */
+            note?: string | null;
+            /**
+             * Block
+             * @description 신고하면서 차단도 (채팅만)
+             * @default false
+             */
+            block: boolean;
+        };
+        /** ReportOut */
+        ReportOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "chat" | "vendor" | "link";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "resolved" | "dismissed";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ReportPageOut */
+        ReportPageOut: {
+            /** Items */
+            items: components["schemas"]["ReportRowOut"][];
+            /**
+             * Counts
+             * @description 처리 기다림 · 처리함 · 종류별 수
+             */
+            counts: {
+                [key: string]: number;
+            };
+        };
+        /**
+         * ReportRowOut
+         * @description 관리자 신고 목록 한 줄 (A02)
+         */
+        ReportRowOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "chat" | "vendor" | "link";
+            /**
+             * Reason Code
+             * @enum {string}
+             */
+            reason_code: "offsite" | "abuse" | "promise" | "other" | "wrong_place" | "not_vendor";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "resolved" | "dismissed";
+            /** Action */
+            action: ("warn" | "mute_chat" | "suspend_new" | "suspend_all" | "hide_link" | "none") | null;
+            /** Reporter Role */
+            reporter_role: ("customer" | "vendor") | null;
+            /** Vendor Id */
+            vendor_id: string | null;
+            /** Vendor Name */
+            vendor_name: string | null;
+            /** Thread Id */
+            thread_id: string | null;
+            /** Block */
+            block: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Resolved At */
+            resolved_at: string | null;
         };
         /** RequestTextOut */
         RequestTextOut: {
@@ -3858,6 +6638,19 @@ export interface components {
             slots_left: number;
         };
         /**
+         * ResolveIn
+         * @description 신고 처리 (A02): none이면 dismissed. suspend_all이면 진행 중 요청을 닫고 고객에게 다시 고르기 안내
+         */
+        ResolveIn: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "warn" | "mute_chat" | "suspend_new" | "suspend_all" | "hide_link" | "none";
+            /** Note */
+            note?: string | null;
+        };
+        /**
          * ResubmitIn
          * @description 보완 요청에 다시 보내기. 관리자가 고른 사유에 맞게 열린 칸만 받는다(열리지 않은 칸은 422).
          */
@@ -3868,6 +6661,33 @@ export interface components {
             owner_name?: string | null;
             /** License File Id */
             license_file_id?: string | null;
+        };
+        /**
+         * ReviewEditIn
+         * @description 리뷰 고치기 (보낸 칸만 바꾼다, '수정됨'이 붙는다)
+         */
+        ReviewEditIn: {
+            /** Rating */
+            rating?: number | null;
+            /** Tags */
+            tags?: ("seam" | "on_time" | "kind" | "tidy")[] | null;
+            /** Body */
+            body?: string | null;
+            /** Photo File Ids */
+            photo_file_ids?: string[] | null;
+        };
+        /**
+         * ReviewHideIn
+         * @description 관리자 숨김: 공개한 기준 코드만 (C49)
+         */
+        ReviewHideIn: {
+            /**
+             * Code
+             * @enum {string}
+             */
+            code: "abuse" | "privacy" | "unrelated" | "paid";
+            /** Note */
+            note?: string | null;
         };
         /**
          * ReviewIn
@@ -3888,6 +6708,98 @@ export interface components {
              * @description 등록증에서 읽은 개업일 (선택)
              */
             opened_on?: string | null;
+        };
+        /**
+         * ReviewItemOut
+         * @description 리뷰 한 줄 (C48 · V24). 탈퇴한 고객은 이름이 '탈퇴한 고객'(L08)
+         */
+        ReviewItemOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Rating */
+            rating: number;
+            /** Tags */
+            tags: ("seam" | "on_time" | "kind" | "tidy")[];
+            /** Body */
+            body: string | null;
+            /**
+             * Author Label
+             * @description 김○○ · 탈퇴한 고객
+             */
+            author_label: string;
+            /**
+             * Context Label
+             * @description 노원구 아파트 · 실크 (만든 때 사본)
+             */
+            context_label: string;
+            /** Photos */
+            photos: string[];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Edited
+             * @description '수정됨'
+             */
+            edited: boolean;
+            reply: components["schemas"]["ReplyOut"] | null;
+        };
+        /** ReviewLinkAdminOut */
+        ReviewLinkAdminOut: {
+            /** Sort */
+            sort: number;
+            /** Label */
+            label: string | null;
+            /** Url */
+            url: string;
+            /**
+             * Status
+             * @description 고객 화면에는 shown만 나간다
+             * @enum {string}
+             */
+            status: "checking" | "shown" | "hidden";
+            /** Note */
+            note: string | null;
+            /** Checked At */
+            checked_at: string | null;
+        };
+        /** ReviewLinkIn */
+        ReviewLinkIn: {
+            /** Label */
+            label?: string | null;
+            /**
+             * Url
+             * @description https:// 주소만
+             */
+            url: string;
+        };
+        /** ReviewLinkOut */
+        ReviewLinkOut: {
+            /** Sort */
+            sort: number;
+            /** Label */
+            label: string | null;
+            /** Url */
+            url: string;
+            /**
+             * Status
+             * @description 고객 화면에는 shown만 나간다
+             * @enum {string}
+             */
+            status: "checking" | "shown" | "hidden";
+        };
+        /**
+         * ReviewLinksIn
+         * @description 외부 리뷰 링크 통째로 저장 (3개까지). 바뀐 링크는 '확인 중'이 된다.
+         */
+        ReviewLinksIn: {
+            /** Links */
+            links?: components["schemas"]["ReviewLinkIn"][];
         };
         /**
          * ReviewOut
@@ -3922,6 +6834,45 @@ export interface components {
              */
             at: string;
         };
+        /**
+         * ReviewPageOut
+         * @description 업체 리뷰 전체 (C48): 숨긴 리뷰는 빠진다
+         */
+        ReviewPageOut: {
+            /**
+             * Vendor Id
+             * Format: uuid
+             */
+            vendor_id: string;
+            rating: components["schemas"]["RatingOut"];
+            /** Items */
+            items: components["schemas"]["ReviewItemOut"][];
+            /**
+             * Next Before
+             * @description 다음 쪽 커서 (없으면 끝)
+             */
+            next_before: string | null;
+            /**
+             * Links
+             * @description 외부 리뷰 링크 (보여요만)
+             */
+            links: components["schemas"]["ReviewLinkOut"][];
+        };
+        /** ReviewStateOut */
+        ReviewStateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "shown" | "hidden";
+            /** Hidden Code */
+            hidden_code: ("abuse" | "privacy" | "unrelated" | "paid") | null;
+        };
         /** ReviewSummaryOut */
         ReviewSummaryOut: {
             /** Pending */
@@ -3930,6 +6881,40 @@ export interface components {
             needs_info: number;
             /** Done */
             done: number;
+        };
+        /**
+         * ReviewWriteIn
+         * @description 리뷰 쓰기 (C39): 공사가 끝난(done) 그 공사의 고객만, 공사마다 한 번
+         */
+        ReviewWriteIn: {
+            /** Rating */
+            rating: number;
+            /** Tags */
+            tags?: ("seam" | "on_time" | "kind" | "tidy")[];
+            /** Body */
+            body?: string | null;
+            /**
+             * Photo File Ids
+             * @description POST /files kind=review_photo
+             */
+            photo_file_ids?: string[];
+        };
+        /**
+         * SameNameOut
+         * @description 같은 상호 · 등록번호 · 대표자인 다른 업체 (A01)
+         */
+        SameNameOut: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Biz Name */
+            biz_name: string | null;
+            /** Status */
+            status: string;
+            /** Match */
+            match: ("biz_name" | "biz_no" | "owner_name")[];
         };
         /** ScheduleOut */
         ScheduleOut: {
@@ -3958,16 +6943,113 @@ export interface components {
              * @description 목공 → 도배 순, 확정한 공정만
              */
             trades: components["schemas"]["TradeDatesOut"][];
+            /**
+             * Request Due Preview
+             * @description 지금 다른 날짜를 요청하면 업체가 새 날짜를 올릴 기한 (요청 + 48시간, 계산 엔진, C52)
+             */
+            request_due_preview?: string | null;
+        };
+        /** ShortlistCountOut */
+        ShortlistCountOut: {
+            /** Count */
+            count: number;
+            /**
+             * Left
+             * @description 더 담을 수 있는 칸 (3칸까지)
+             */
+            left: number;
+        };
+        /** ShortlistIn */
+        ShortlistIn: {
+            /**
+             * Trade
+             * @enum {string}
+             */
+            trade: "dobae" | "mokgong";
+            /**
+             * Vendor Id
+             * Format: uuid
+             */
+            vendor_id: string;
+            /**
+             * Grade
+             * @description v3 고른 벽지 (C11, 도배만). 비면 공사 벽지
+             */
+            grade?: ("economy" | "basic") | null;
+        };
+        /** ShortlistItemOut */
+        ShortlistItemOut: {
+            /**
+             * Vendor Id
+             * Format: uuid
+             */
+            vendor_id: string;
+            /** Name */
+            name: string;
+            /**
+             * Slot
+             * @description 칸 번호 1~3
+             */
+            slot: number;
+            /**
+             * Grade
+             * @description 담을 때 고른 벽지 (비면 공사 벽지)
+             */
+            grade?: ("economy" | "basic") | null;
+            /**
+             * Estimate Total
+             * @description 그 벽지로 센 가견적 (믿집 계산)
+             */
+            estimate_total: number | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "ok" | "no_estimate" | "paper_unsupported" | "blocked_retry";
+            /**
+             * Visit Id
+             * @description 이 업체에 보낸 살아 있는 요청 (없으면 비움)
+             */
+            visit_id: string | null;
+            /** Visit Status */
+            visit_status: ("requested" | "offered" | "picked" | "proposed" | "booked" | "visited" | "quoted" | "chosen" | "declined" | "expired" | "cancelled" | "no_show" | "closed") | null;
+            /**
+             * Added At
+             * Format: date-time
+             */
+            added_at: string;
+        };
+        /**
+         * ShortlistOut
+         * @description 담은 업체 (공사 · 공종마다 3칸)
+         */
+        ShortlistOut: {
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Trade */
+            trade: string;
+            /** Items */
+            items: components["schemas"]["ShortlistItemOut"][];
+            /** Count */
+            count: number;
+            /** Left */
+            left: number;
         };
         /**
          * SignupIn
-         * @description 일반 회원가입
+         * @description 일반 회원가입. 휴대폰은 넣지 않아도 돼요(9판 C05 '휴대폰 (선택)', 업체에는 가지 않음 · security.md 7.1).
          */
         SignupIn: {
             /** Name */
             name: string;
-            /** Phone */
-            phone: string;
+            /**
+             * Phone
+             * @description 비우면 저장하지 않아요
+             */
+            phone?: string | null;
             /** Email */
             email: string;
             /** Password */
@@ -3996,6 +7078,43 @@ export interface components {
             basis?: ("supply" | "exclusive") | null;
             /** M2 */
             m2?: string | null;
+        };
+        /**
+         * SlotIn
+         * @description 반나절 하나
+         */
+        SlotIn: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * Half
+             * @enum {string}
+             */
+            half: "am" | "pm";
+        };
+        /** SlotOut */
+        SlotOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * Half
+             * @enum {string}
+             */
+            half: "am" | "pm";
+        };
+        /**
+         * SlotsIn
+         * @description 바꾸기 요청에 다른 날 내기 (V20)
+         */
+        SlotsIn: {
+            /** Slots */
+            slots: components["schemas"]["SlotIn"][];
         };
         /** SpaceIn */
         SpaceIn: {
@@ -4053,6 +7172,11 @@ export interface components {
             state: string;
             /** Source */
             source: string;
+            /**
+             * Basis
+             * @description v3: public · market · assumed · none (줄 근거)
+             */
+            basis?: string | null;
         };
         /** StandardOut */
         StandardOut: {
@@ -4089,6 +7213,43 @@ export interface components {
             /** Total */
             total: number;
             budget: components["schemas"]["BudgetOut"] | null;
+            /**
+             * Scope
+             * @description 전체 · 부분
+             */
+            scope?: ("full" | "partial") | null;
+            /**
+             * Spaces
+             * @description 부분 공사 공간 kind 사본
+             * @default []
+             */
+            spaces: string[];
+            /**
+             * Faces
+             * @description 벽 · 천장 사본
+             * @default []
+             */
+            faces: string[];
+            /**
+             * Share Ver
+             * @description 공간 몫 표 판 (부분일 때만)
+             */
+            share_ver?: string | null;
+            /**
+             * Market Ver
+             * @description 벽지 시장 평균 가격 판 (도배지 줄)
+             */
+            market_ver?: string | null;
+            /**
+             * Budget Fit
+             * @description 예산(원) 안 · 밖 (예산이 없으면 비움)
+             */
+            budget_fit?: ("within" | "over") | null;
+            /**
+             * Days
+             * @description 예상 공사 일수 (C07 '예상 2일', 반나절 단위 · 계산 엔진, 손님 계산 days와 같은 값. 여러 공정이면 공정별 일수의 합)
+             */
+            days?: string | null;
         };
         /** StandardTradeOut */
         StandardTradeOut: {
@@ -4127,6 +7288,22 @@ export interface components {
              */
             end: string;
         };
+        /**
+         * StateTagOut
+         * @description 상태 아이콘 + 글자 (N4 C)
+         */
+        StateTagOut: {
+            /**
+             * Icon
+             * @enum {string}
+             */
+            icon: "todo" | "wait" | "ok" | "done" | "late";
+            /**
+             * Label
+             * @description 해요체 화면 말 (영어 상태값을 보이지 않는다)
+             */
+            label: string;
+        };
         /** StepNeedOut */
         StepNeedOut: {
             /** Name */
@@ -4160,6 +7337,220 @@ export interface components {
             count: number | null;
         };
         /**
+         * StreamEventsDoc
+         * @description OpenAPI 문서용: text/event-stream으로 오는 이벤트 이름 → data 몸통.
+         *     처음 `event: ready`, 15초마다 `: ping`, `retry: 5000`, `id:` = 줄기 id(Last-Event-ID로 이어 받음).
+         */
+        StreamEventsDoc: {
+            /**
+             * Ready
+             * @description 연결됨 (몸통 {})
+             */
+            ready: {
+                [key: string]: unknown;
+            };
+            msg: components["schemas"]["StreamMsgOut"];
+            read: components["schemas"]["StreamReadOut"];
+            notif: components["schemas"]["StreamNotifOut"];
+            state: components["schemas"]["StreamStateOut"];
+            resync: components["schemas"]["StreamResyncOut"];
+        };
+        /**
+         * StreamMsgOut
+         * @description event: msg — 새 글. 화면이 GET /threads/{tid}/messages?after_seq=로 채운다
+         */
+        StreamMsgOut: {
+            /**
+             * Thread Id
+             * Format: uuid
+             */
+            thread_id: string;
+            /** Seq */
+            seq: number;
+        };
+        /**
+         * StreamNotifOut
+         * @description event: notif — 안 읽은 알림 수
+         */
+        StreamNotifOut: {
+            /** Unread */
+            unread: number;
+        };
+        /**
+         * StreamReadOut
+         * @description event: read — 내 다른 기기에서 읽음
+         */
+        StreamReadOut: {
+            /**
+             * Thread Id
+             * Format: uuid
+             */
+            thread_id: string;
+            /** Seq */
+            seq: number;
+        };
+        /**
+         * StreamResyncOut
+         * @description event: resync — 놓친 것이 잘렸어요. 화면은 모두 다시 읽는다
+         */
+        StreamResyncOut: Record<string, never>;
+        /**
+         * StreamStateOut
+         * @description event: state — 그 화면이 다시 읽을 신호 (router.refresh())
+         */
+        StreamStateOut: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "visit" | "deal" | "quote" | "extra" | "review" | "vendor_app" | "thread";
+            /** Project Id */
+            project_id: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+        };
+        /** SuspendIn */
+        SuspendIn: {
+            /**
+             * Scope
+             * @description 새 요청만 막기 · 진행 중인 것도 닫기
+             * @enum {string}
+             */
+            scope: "new" | "all";
+            /** Note */
+            note: string;
+        };
+        /** ThreadCanOut */
+        ThreadCanOut: {
+            /** Write */
+            write: boolean;
+            /**
+             * Change Request
+             * @description 고객: 실측 일정 바꾸기 요청
+             */
+            change_request: boolean;
+            /**
+             * Cancel
+             * @description 고객: 실측 취소
+             */
+            cancel: boolean;
+            /** Report */
+            report: boolean;
+        };
+        /** ThreadLastOut */
+        ThreadLastOut: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "text" | "photo" | "system";
+            /**
+             * Preview
+             * @description 글 앞부분 · '사진' · 시스템 카드 말 (화면이 줄인다)
+             */
+            preview: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /** ThreadLinksOut */
+        ThreadLinksOut: {
+            /**
+             * Quote
+             * @description 견적서 보기 경로
+             */
+            quote: string | null;
+            /**
+             * Project
+             * @description 공사 보기 경로 (고객 /projects/{id} · 업체 /vendor/jobs/{did})
+             */
+            project: string | null;
+        };
+        /**
+         * ThreadOut
+         * @description 대화 머리 (C25 · V09): 상대 이름표 · 공사 요약 · 단추
+         */
+        ThreadOut: {
+            /**
+             * Thread Id
+             * Format: uuid
+             */
+            thread_id: string;
+            /** Title */
+            title: string;
+            /**
+             * Area Label
+             * @description 노원구 상계동 69.4㎡
+             */
+            area_label: string;
+            /** Visit Id */
+            visit_id: string | null;
+            /** Deal Id */
+            deal_id: string | null;
+            /**
+             * Project Id
+             * @description 고객에게만 (업체에는 비움)
+             */
+            project_id: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "read_only";
+            /** Ro Reason */
+            ro_reason: ("other_chosen" | "cancelled" | "declined" | "withdrawn" | "blocked" | "admin") | null;
+            /**
+             * Blocked
+             * @description 고객이 차단함
+             */
+            blocked: boolean;
+            /** Last Seq */
+            last_seq: number;
+            /**
+             * Read Seq
+             * @description 내가 읽은 마지막 글
+             */
+            read_seq: number;
+            can: components["schemas"]["ThreadCanOut"];
+            links: components["schemas"]["ThreadLinksOut"];
+        };
+        /**
+         * ThreadRowOut
+         * @description 채팅 목록 한 줄 (C24 · V19). 최근 순
+         */
+        ThreadRowOut: {
+            /**
+             * Thread Id
+             * Format: uuid
+             */
+            thread_id: string;
+            /**
+             * Title
+             * @description 고객 화면: 업체 상호 · 업체 화면: '상계동 고객'
+             */
+            title: string;
+            /**
+             * Visit Label
+             * @description 실측 12.15(화) 오전 (화면 말)
+             */
+            visit_label: string | null;
+            last: components["schemas"]["ThreadLastOut"] | null;
+            /** Unread */
+            unread: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "read_only";
+            /** Ro Reason */
+            ro_reason: ("other_chosen" | "cancelled" | "declined" | "withdrawn" | "blocked" | "admin") | null;
+        };
+        /**
          * TodoOut
          * @description 지금 할 일 한 줄과 버튼 (판 문구)
          */
@@ -4180,6 +7571,12 @@ export interface components {
              * @description 버튼이 가는 화면
              */
             link: string;
+            /**
+             * Days
+             * @description 할 일 아래에 보일 날 (C43): 공사 날짜 확인 · 바꾸기는 업체가 낸 날, 공사 전 · 공사 중은 수락한 공사 날, 다른 날짜 요청은 고른 날
+             * @default []
+             */
+            days: string[];
         };
         /**
          * TradeDatesOut
@@ -4212,7 +7609,7 @@ export interface components {
         };
         /**
          * TradeExtrasOut
-         * @description 한 공정의 추가 금액. 합계는 계산 엔진이 더한다 (확정 금액에 넣지 않는다).
+         * @description 한 공정의 추가 금액. 합계는 계산 엔진이 더한다.
          */
         TradeExtrasOut: {
             /** Trade */
@@ -4235,6 +7632,16 @@ export interface components {
             pending: components["schemas"]["MoneyOut"];
             /** @description 업체와 이야기 중인 것 */
             talk: components["schemas"]["MoneyOut"];
+            /**
+             * Deal Total
+             * @description 확정 금액 (확정한 견적서, 부가세 포함)
+             */
+            deal_total?: number | null;
+            /**
+             * Grand Total
+             * @description 공사 금액: 확정 금액 + 승인한 추가 금액 (부가세 포함)
+             */
+            grand_total?: number | null;
         };
         /** TradeMoneyOut */
         TradeMoneyOut: {
@@ -4272,7 +7679,7 @@ export interface components {
             phase: "estimate" | "progress" | "work" | "done";
             /**
              * Current
-             * @description 지금 단계 번호 (6단계 중)
+             * @description 지금 단계 번호, 1부터 (1~6, 다 마치면 6)
              */
             current: number;
             /** Steps */
@@ -4305,6 +7712,11 @@ export interface components {
         TradesOut: {
             dobae?: components["schemas"]["DobaeOut"] | null;
             mokgong?: components["schemas"]["MokgongOut"] | null;
+        };
+        /** UnsuspendIn */
+        UnsuspendIn: {
+            /** Note */
+            note?: string | null;
         };
         /** V2AcceptedIn */
         V2AcceptedIn: {
@@ -6315,6 +9727,22 @@ export interface components {
              * @description 처리 기록 (최근 순)
              */
             reviews: components["schemas"]["ReviewOut"][];
+            /**
+             * Review Links
+             * @description 외부 리뷰 링크
+             * @default []
+             */
+            review_links: components["schemas"]["ReviewLinkAdminOut"][];
+            /**
+             * Same Name
+             * @description 같은 상호 · 번호 · 대표자
+             * @default []
+             */
+            same_name: components["schemas"]["SameNameOut"][];
+            /** Suspended At */
+            suspended_at?: string | null;
+            /** Suspend Scope */
+            suspend_scope?: string | null;
         };
         /**
          * VendorAdminOut
@@ -6394,6 +9822,63 @@ export interface components {
             license_file_id: string;
             license: components["schemas"]["LicenseOut"] | null;
         };
+        /**
+         * VendorCardOut
+         * @description v3 업체 보기 카드 한 줄 (C10 · D06). 고객 이름 · 연락처는 없다.
+         */
+        VendorCardOut: {
+            /**
+             * Vendor Id
+             * Format: uuid
+             */
+            vendor_id: string;
+            /** Name */
+            name: string;
+            /**
+             * Sgg
+             * @description 업체가 있는 구 (가까운 구 업체 표시)
+             */
+            sgg: string;
+            /**
+             * Estimate Total
+             * @description 가견적 합계 (부가세 포함, 준비 중이면 비움)
+             */
+            estimate_total: number | null;
+            /**
+             * Vs Standard Pct
+             * @description 표준견적서 대비 % (믿집 계산)
+             */
+            vs_standard_pct: string | null;
+            /**
+             * Rating
+             * @description 별점 평균 (소수 한 자리)
+             */
+            rating: string | null;
+            /** Review Count */
+            review_count: number;
+            /**
+             * Done Count
+             * @description 믿집에서 끝낸 공사 수
+             */
+            done_count: number;
+            /**
+             * Visit Fee
+             * @description 실측 출장비 (0 = 무료)
+             */
+            visit_fee: number | null;
+            /**
+             * Instant Badge
+             * @description '바로 확정' 배지 (I5)
+             */
+            instant_badge: boolean;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "ok" | "no_estimate" | "paper_unsupported" | "blocked_retry";
+            /** Shortlisted */
+            shortlisted: boolean;
+        };
         /** VendorContactOut */
         VendorContactOut: {
             /** Trade */
@@ -6452,6 +9937,46 @@ export interface components {
              * @description 가견적에 빠진 줄 이름 (실측 후 줄 · 업체 단가 칸이 없는 줄)
              */
             not_included: string[];
+            /** @description 가견적 1201~1208 (?grade=로 다른 벽지 미리 보기) */
+            estimate_v3?: components["schemas"]["EstimateV3Out"] | null;
+            /**
+             * Grade
+             * @description 보여 준 벽지: ?grade= 값, 없으면 공사 벽지 (가견적이 없어도 채움, 목공은 비움)
+             */
+            grade?: ("economy" | "basic") | null;
+            /**
+             * Grade Diff
+             * @description 다른 벽지 − 보여 준 벽지 (원, 믿집 계산). C11 '합지 −31만 1,850원'은 실크를 볼 때 합지 칸 아래 값. 두 벽지 가견적이 다 있을 때만
+             */
+            grade_diff?: number | null;
+            /**
+             * Reply Hours
+             * @description 업체가 지난 요청에 기간을 답하기까지 걸린 시간의 가운데 값(시간, 올림, 최근 20건). 답한 적이 없으면 비움 (C11 '보통 1일 안에 답')
+             */
+            reply_hours?: number | null;
+            /**
+             * State
+             * @description 담을 수 있는지
+             */
+            state?: ("ok" | "no_estimate" | "paper_unsupported" | "blocked_retry") | null;
+            /**
+             * Instant Badge
+             * @description '바로 확정' 배지 (I5)
+             */
+            instant_badge?: boolean | null;
+            /** @description 별점 요약 */
+            rating?: components["schemas"]["RatingOut"] | null;
+            /**
+             * Review Links
+             * @description 외부 리뷰 링크 (보여요만)
+             * @default []
+             */
+            review_links: components["schemas"]["ReviewLinkOut"][];
+            /**
+             * Shortlisted
+             * @description 이미 담았는지
+             */
+            shortlisted?: boolean | null;
         };
         /**
          * VendorListOut
@@ -6492,6 +10017,38 @@ export interface components {
             consent_ver: string;
             /** Vendors */
             vendors: components["schemas"]["VendorRowOut"][];
+            /**
+             * Local
+             * @description 이 집 구 업체
+             * @default []
+             */
+            local: components["schemas"]["VendorCardOut"][];
+            /**
+             * Nearby
+             * @description 가까운 구 업체 (local이 0곳일 때)
+             * @default []
+             */
+            nearby: components["schemas"]["VendorCardOut"][];
+            /**
+             * Nearby Sgg
+             * @description 가까운 구 이름
+             * @default []
+             */
+            nearby_sgg: string[];
+            /** @description 담은 수 · 남은 칸 */
+            shortlist?: components["schemas"]["ShortlistCountOut"] | null;
+        };
+        /** VendorNextOut */
+        VendorNextOut: {
+            /**
+             * Label
+             * @description 기간 답하기 · 수락하기 · 견적서 보내기 …
+             */
+            label: string;
+            /** Due At */
+            due_at: string | null;
+            /** Overdue */
+            overdue: boolean;
         };
         /**
          * VendorQuoteOut
@@ -6543,6 +10100,77 @@ export interface components {
             updated_at: string;
             /** Files */
             files: components["schemas"]["QuoteFileOut"][];
+            /** Incl Removal */
+            incl_removal?: boolean | null;
+            /** Incl Waste */
+            incl_waste?: boolean | null;
+            /** Paper Spec */
+            paper_spec?: string | null;
+            /** Warranty Months */
+            warranty_months?: number | null;
+        };
+        /** VendorReviewRowOut */
+        VendorReviewRowOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Rating */
+            rating: number;
+            /** Tags */
+            tags: ("seam" | "on_time" | "kind" | "tidy")[];
+            /** Body */
+            body: string | null;
+            /**
+             * Author Label
+             * @description 김○○ · 탈퇴한 고객
+             */
+            author_label: string;
+            /**
+             * Context Label
+             * @description 노원구 아파트 · 실크 (만든 때 사본)
+             */
+            context_label: string;
+            /** Photos */
+            photos: string[];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Edited
+             * @description '수정됨'
+             */
+            edited: boolean;
+            reply: components["schemas"]["ReplyOut"] | null;
+            /** Deal Id */
+            deal_id: string | null;
+            /**
+             * Waiting Reply
+             * @description 답글을 기다려요
+             */
+            waiting_reply: boolean;
+            /**
+             * Hidden
+             * @description 관리자가 숨김 (업체에게는 보인다)
+             */
+            hidden: boolean;
+        };
+        /**
+         * VendorReviewsOut
+         * @description 업체 리뷰 · 답글 (V24)
+         */
+        VendorReviewsOut: {
+            rating: components["schemas"]["RatingOut"];
+            /**
+             * Waiting
+             * @description 답글 기다리는 리뷰 수
+             */
+            waiting: number;
+            /** Items */
+            items: components["schemas"]["VendorReviewRowOut"][];
         };
         /**
          * VendorRowOut
@@ -6597,6 +10225,109 @@ export interface components {
             visit: components["schemas"]["VisitBrief"] | null;
         };
         /**
+         * VendorScheduleOut
+         * @description 업체 일정 탭 (V08): 반나절별 확정 · 잡아 둠
+         */
+        VendorScheduleOut: {
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /** Capacity */
+            capacity: number;
+            /**
+             * Items
+             * @description 날 · 반나절 · 동네 순
+             */
+            items: components["schemas"]["VendorSlotOut"][];
+        };
+        /**
+         * VendorSlotOut
+         * @description 업체 일정 반나절 한 칸 (V08 · D14 달력)
+         */
+        VendorSlotOut: {
+            /**
+             * Visit Id
+             * Format: uuid
+             */
+            visit_id: string;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * Half
+             * @enum {string}
+             */
+            half: "am" | "pm";
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "hold" | "booked";
+            /** Seat */
+            seat: number;
+            /**
+             * Area Label
+             * @description 노원구 상계동 · 공급 69.4㎡ (고객 이름 없음)
+             */
+            area_label: string;
+            /** Hold Until */
+            hold_until: string | null;
+        };
+        /**
+         * VendorStepOut
+         * @description v3 업체별 요약 한 줄 (C42 · C43): 날짜 고를 차례 · 답 기다림 + 기한
+         */
+        VendorStepOut: {
+            /**
+             * Visit Id
+             * Format: uuid
+             */
+            visit_id: string;
+            /** Vendor Id */
+            vendor_id: string | null;
+            /** Vendor Name */
+            vendor_name: string;
+            /** Trade */
+            trade: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "requested" | "offered" | "picked" | "proposed" | "booked" | "visited" | "quoted" | "chosen" | "declined" | "expired" | "cancelled" | "no_show" | "closed";
+            next: components["schemas"]["VisitNextOut"];
+            /**
+             * Total
+             * @description 받은 실측 견적서 금액 (확정이면 확정 금액, 부가세 포함, C43)
+             */
+            total?: number | null;
+        };
+        /** VendorSuspendOut */
+        VendorSuspendOut: {
+            /**
+             * Vendor Id
+             * Format: uuid
+             */
+            vendor_id: string;
+            /** Suspended At */
+            suspended_at: string | null;
+            /** Suspend Scope */
+            suspend_scope: ("new" | "all") | null;
+            /**
+             * Closed Visits
+             * @description 진행 중이라 닫은 요청 수 (all일 때)
+             */
+            closed_visits: number;
+        };
+        /**
          * VendorVisitDetailOut
          * @description 업체가 보는 요청 자세히
          */
@@ -6620,7 +10351,7 @@ export interface components {
             trade: string;
             /**
              * Grade
-             * @description 도배 유형 (economy · basic)
+             * @description 도배 유형 (economy · basic). v3는 요청 때 고른 벽지
              */
             grade: string | null;
             /** Region */
@@ -6652,7 +10383,38 @@ export interface components {
              * @description 견적서를 보낸 뒤 기다린 날 (서울 날짜)
              */
             waiting_days: number | null;
-            customer: components["schemas"]["CustomerContactOut"] | null;
+            /**
+             * Area Label
+             * @description 노원구 상계동 · 공급 69.4㎡
+             */
+            area_label?: string | null;
+            /**
+             * Home
+             * @description 아파트 · 도배 전체 · 빈 집
+             */
+            home?: string | null;
+            /** Wish Start */
+            wish_start?: string | null;
+            /** Wish End */
+            wish_end?: string | null;
+            /**
+             * Work Wish On
+             * @description 공사 시작 희망일 (L04)
+             */
+            work_wish_on?: string | null;
+            /** Estimate Total */
+            estimate_total?: number | null;
+            /**
+             * Budget Won
+             * @description 고객 예산 (D03 B)
+             */
+            budget_won?: number | null;
+            /** @description 상태 아이콘 + 글자 (N4 C) */
+            state?: components["schemas"]["StateTagOut"] | null;
+            /** @description 다음 할 일 · 기한 */
+            next?: components["schemas"]["VendorNextOut"] | null;
+            /** Attempt */
+            attempt?: number | null;
             /** Area M2 */
             area_m2: string | null;
             /** Area Basis */
@@ -6671,6 +10433,72 @@ export interface components {
             when_text: string;
             /** Message */
             message: string | null;
+            /**
+             * Photos
+             * @description 요청 사진 (보낸 순). 보기: GET /vendor/visits/{visit_id}/photos/{file_id}
+             * @default []
+             */
+            photos: string[];
+            /**
+             * Photo Labels
+             * @description 사진 이름표 (photos와 같은 순서, 없으면 비움)
+             * @default []
+             */
+            photo_labels: (string | null)[];
+            /**
+             * Capacity
+             * @description 반나절 한 칸에 받는 실측 수 (L03)
+             */
+            capacity?: number | null;
+            /** Instant Default */
+            instant_default?: boolean | null;
+            window?: components["schemas"]["WindowOut"] | null;
+            booked?: components["schemas"]["BookedOut"] | null;
+            proposal?: components["schemas"]["VisitProposalOut"] | null;
+            change?: components["schemas"]["ChangeOut"] | null;
+            /**
+             * Taken
+             * @description 내 달력: 잡힌 · 잡아 둔 반나절
+             * @default []
+             */
+            taken: components["schemas"]["VendorSlotOut"][];
+            /**
+             * Other Windows
+             * @description 다른 요청에 답한 기간
+             * @default []
+             */
+            other_windows: components["schemas"]["OtherWindowOut"][];
+            /**
+             * Open Count
+             * @description 고객이 고를 수 있는 칸 수. ?start=&end=&excluded=를 주면 그 기간으로 미리 센 값(보내기 전), 안 주면 답한 기간(없으면 희망 기간)
+             */
+            open_count?: number | null;
+            /**
+             * Propose Options
+             * @description 다른 날 제안 고를 거리 (수락 기다릴 때): 고객 희망 기간 안 · 내가 받을 수 있는 반나절, 고객이 고른 반나절은 빼고 (계산 엔진)
+             * @default []
+             */
+            propose_options: components["schemas"]["SlotOut"][];
+            /** Reply Due At */
+            reply_due_at?: string | null;
+            /** Thread Id */
+            thread_id?: string | null;
+        };
+        /** VendorVisitStateOut */
+        VendorVisitStateOut: {
+            /**
+             * Visit Id
+             * Format: uuid
+             */
+            visit_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "requested" | "offered" | "picked" | "proposed" | "booked" | "visited" | "quoted" | "chosen" | "declined" | "expired" | "cancelled" | "no_show" | "closed";
+            booked: components["schemas"]["BookedOut"] | null;
+            /** Thread Id */
+            thread_id: string | null;
         };
         /**
          * VisitBrief
@@ -6688,9 +10516,36 @@ export interface components {
             decline_code: string | null;
             /**
              * Close Reason
-             * @description 닫힌 까닭: other_chosen(다른 업체 확정) · reselected(다시 고르기)
+             * @description 닫힌 까닭: other_chosen(다른 업체 확정) · reselected(다시 고르기) · vendor_stopped(업체 기능 멈춤)
              */
             close_reason: string | null;
+        };
+        /**
+         * VisitCanOut
+         * @description 지금 누를 수 있는 단추
+         */
+        VisitCanOut: {
+            /** Pick */
+            pick: boolean;
+            /** Cancel */
+            cancel: boolean;
+            /**
+             * Again
+             * @description 한 번 더 요청 (시도 2까지)
+             */
+            again: boolean;
+            /**
+             * Visited
+             * @description '실측 받았어요' (반나절이 끝난 뒤, L09)
+             */
+            visited: boolean;
+            /** Change */
+            change: boolean;
+            /**
+             * Requote
+             * @description 유효기간 지난 견적서 '다시 받기' (D20)
+             */
+            requote: boolean;
         };
         /**
          * VisitCreateIn
@@ -6728,6 +10583,31 @@ export interface components {
              * @description 동의한 문구 버전 (연락처를 보내면 필수)
              */
             consent_ver?: string | null;
+            /**
+             * Wish Start
+             * @description v3 희망 기간 시작
+             */
+            wish_start?: string | null;
+            /**
+             * Wish End
+             * @description v3 희망 기간 끝 (62일 안)
+             */
+            wish_end?: string | null;
+            /**
+             * Photo File Ids
+             * @description v3 요청 사진 (POST /files kind=photo). 이름표를 붙이려면 photos를 써요
+             */
+            photo_file_ids?: string[];
+            /**
+             * Photos
+             * @description v3 요청 사진 + 이름표 (10장까지)
+             */
+            photos?: components["schemas"]["VisitPhotoIn"][];
+            /**
+             * Grade
+             * @description v3 고른 벽지 (C11, 도배만). 비면 담을 때 고른 벽지, 그것도 없으면 공사 벽지
+             */
+            grade?: ("economy" | "basic") | null;
         };
         /** VisitCreateOut */
         VisitCreateOut: {
@@ -6735,6 +10615,64 @@ export interface components {
             created: components["schemas"]["VisitOut"][];
             /** Failed */
             failed: components["schemas"]["FailedOut"][];
+        };
+        /**
+         * VisitDraftOut
+         * @description 요청서 · AI 초안 카드가 같이 쓰는 값 (계산 엔진: 공사 시작 희망일 − 28일 ~ − 14일)
+         */
+        VisitDraftOut: {
+            /** Trade */
+            trade: string;
+            /**
+             * Wish Start
+             * @description 희망일이 없으면 비움 (UC-VIS-01 A2)
+             */
+            wish_start: string | null;
+            /** Wish End */
+            wish_end: string | null;
+            /**
+             * Basis Start
+             * @description 공사 시작 희망일 (초안의 근거)
+             */
+            basis_start: string | null;
+            /**
+             * Vendors
+             * @description 담은 업체
+             */
+            vendors: components["schemas"]["DraftVendorOut"][];
+        };
+        /**
+         * VisitHeadOut
+         * @description 요청 머리 (C15 요청 내용 보기)
+         */
+        VisitHeadOut: {
+            /** Trade */
+            trade: string;
+            /**
+             * Sent At
+             * Format: date-time
+             */
+            sent_at: string;
+            /** Wish Start */
+            wish_start: string | null;
+            /** Wish End */
+            wish_end: string | null;
+            /**
+             * Work Wish On
+             * @description 공사 시작 희망일 (L04)
+             */
+            work_wish_on: string | null;
+            /**
+             * Photos
+             * @description 요청 사진 (위치 정보 지움, 보낸 순)
+             */
+            photos: string[];
+            /**
+             * Photo Labels
+             * @description 사진 이름표 (photos와 같은 순서, 없으면 비움)
+             * @default []
+             */
+            photo_labels: (string | null)[];
         };
         /** VisitListOut */
         VisitListOut: {
@@ -6759,6 +10697,39 @@ export interface components {
              * @description 최근 순, 닫힌 것 포함
              */
             visits: components["schemas"]["VisitOut"][];
+            /** @description 요청 머리 */
+            head?: components["schemas"]["VisitHeadOut"] | null;
+            /**
+             * Board
+             * @description 업체마다 한 줄 (요청 순)
+             * @default []
+             */
+            board: components["schemas"]["BoardRowOut"][];
+        };
+        /**
+         * VisitNextOut
+         * @description 다음 할 일과 기한 (지남 · 곧 지남은 서버가 계산 엔진으로 센다)
+         */
+        VisitNextOut: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "reply" | "pick" | "accept" | "proposal" | "change" | "visit" | "quote" | "confirm" | "none";
+            /**
+             * Who
+             * @enum {string}
+             */
+            who: "customer" | "vendor" | "none";
+            /** Due At */
+            due_at: string | null;
+            /** Overdue */
+            overdue: boolean;
+            /**
+             * Soon
+             * @description 12시간 안으로 남음
+             */
+            soon: boolean;
         };
         /**
          * VisitOut
@@ -6796,7 +10767,7 @@ export interface components {
             decline_code: string | null;
             /**
              * Close Reason
-             * @description 닫힌 까닭: other_chosen(다른 업체 확정) · reselected(다시 고르기)
+             * @description 닫힌 까닭: other_chosen(다른 업체 확정) · reselected(다시 고르기) · vendor_stopped(업체 기능 멈춤)
              */
             close_reason: string | null;
             /**
@@ -6815,6 +10786,156 @@ export interface components {
             /** @description 업체가 보낸 최신 실측 견적서 요약 */
             quote: components["schemas"]["QuoteBriefOut"] | null;
         };
+        /**
+         * VisitPhotoIn
+         * @description 요청 사진 한 장 (이름표는 '거실 벽' · '안방 천장'처럼 20자 안)
+         */
+        VisitPhotoIn: {
+            /**
+             * File Id
+             * Format: uuid
+             */
+            file_id: string;
+            /** Label */
+            label?: string | null;
+        };
+        /**
+         * VisitPickOut
+         * @description 날짜 고르기 · 확정 · 제안 · 겹침 없음 화면 (C16 · C19 · C21 · C22 · D15~D17)
+         */
+        VisitPickOut: {
+            /**
+             * Visit Id
+             * Format: uuid
+             */
+            visit_id: string;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Trade */
+            trade: string;
+            /** Vendor Id */
+            vendor_id: string | null;
+            /** Vendor Name */
+            vendor_name: string;
+            /**
+             * Attempt
+             * @description 몇 번째 요청 (한 번 더 요청이면 2)
+             * @default 1
+             */
+            attempt: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "requested" | "offered" | "picked" | "proposed" | "booked" | "visited" | "quoted" | "chosen" | "declined" | "expired" | "cancelled" | "no_show" | "closed";
+            next: components["schemas"]["VisitNextOut"];
+            /** Wish Start */
+            wish_start: string | null;
+            /** Wish End */
+            wish_end: string | null;
+            /** Work Wish On */
+            work_wish_on: string | null;
+            window: components["schemas"]["WindowOut"] | null;
+            /**
+             * Days
+             * @description 업체 기간의 날마다 열린 반나절
+             */
+            days: components["schemas"]["DayHalvesOut"][];
+            /**
+             * Full
+             * @description 마감 (다른 고객이 잡음)
+             */
+            full: components["schemas"]["SlotOut"][];
+            /**
+             * Mine
+             * @description 내 다른 실측
+             */
+            mine: components["schemas"]["MyVisitOut"][];
+            /** Instant */
+            instant: boolean;
+            recommend: components["schemas"]["RecommendOut"] | null;
+            /**
+             * Overlap
+             * @description 내 희망 기간과 업체 기간이 겹치는지
+             */
+            overlap: boolean;
+            /**
+             * Ways
+             * @description 겹치는 날이 없거나 고를 칸이 없을 때 길 3개 (C22)
+             */
+            ways: ("ask_other" | "other_vendor" | "change_wish")[];
+            /**
+             * No Overlap Reason
+             * @description C22 까닭: after_work_start(업체 기간이 공사 시작보다 늦음) · after_wish(희망 기간보다 늦음) · before_wish(희망 기간보다 이름) · full(겹치지만 고를 칸이 없음). 고를 수 있으면 비움
+             */
+            no_overlap_reason?: ("after_work_start" | "after_wish" | "before_wish" | "full") | null;
+            booked: components["schemas"]["BookedOut"] | null;
+            proposal: components["schemas"]["VisitProposalOut"] | null;
+            change: components["schemas"]["ChangeOut"] | null;
+            /** Thread Id */
+            thread_id: string | null;
+        };
+        /**
+         * VisitProposalOut
+         * @description 업체가 낸 다른 날 (V07 · V20)
+         */
+        VisitProposalOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Reason Code */
+            reason_code: ("other_site" | "no_crew" | "other") | null;
+            /** Note */
+            note: string | null;
+            /** Slots */
+            slots: components["schemas"]["SlotOut"][];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "picked" | "repicked" | "expired";
+            /**
+             * Due At
+             * Format: date-time
+             */
+            due_at: string;
+            /**
+             * Change Id
+             * @description 바꾸기 요청에 낸 것이면 그 요청
+             */
+            change_id: string | null;
+        };
+        /**
+         * VisitStateOut
+         * @description 상태를 바꾼 뒤 그 요청 (화면은 다시 읽는다)
+         */
+        VisitStateOut: {
+            /**
+             * Visit Id
+             * Format: uuid
+             */
+            visit_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "requested" | "offered" | "picked" | "proposed" | "booked" | "visited" | "quoted" | "chosen" | "declined" | "expired" | "cancelled" | "no_show" | "closed";
+            next: components["schemas"]["VisitNextOut"];
+        };
+        /** VisitedIn */
+        VisitedIn: {
+            /**
+             * Result
+             * @description 실측 받았어요 · 업체가 안 왔어요
+             * @enum {string}
+             */
+            result: "visited" | "no_show";
+        };
         /** WhenIn */
         WhenIn: {
             /**
@@ -6826,6 +10947,85 @@ export interface components {
             start?: string | null;
             /** End */
             end?: string | null;
+        };
+        /** WindowAnswerOut */
+        WindowAnswerOut: {
+            /**
+             * Visit Id
+             * Format: uuid
+             */
+            visit_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "requested" | "offered" | "picked" | "proposed" | "booked" | "visited" | "quoted" | "chosen" | "declined" | "expired" | "cancelled" | "no_show" | "closed";
+            /**
+             * Open Halves
+             * @description 고객이 고를 수 있는 칸 수
+             */
+            open_halves: number;
+            /**
+             * Pick Due At
+             * Format: date-time
+             */
+            pick_due_at: string;
+        };
+        /**
+         * WindowIn
+         * @description 기간 답하기 (V04): 기간 + 빼는 날 + 바로 확정
+         */
+        WindowIn: {
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /** Excluded */
+            excluded?: string[];
+            /**
+             * Instant
+             * @default false
+             */
+            instant: boolean;
+        };
+        /**
+         * WindowOut
+         * @description 업체가 되는 기간 (V04 답)
+         */
+        WindowOut: {
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /** Excluded */
+            excluded: string[];
+            /**
+             * Instant
+             * @description 바로 확정: 고르면 확인 창 뒤 바로 정해져요
+             */
+            instant: boolean;
+            /**
+             * Answered At
+             * Format: date-time
+             */
+            answered_at: string;
+            /**
+             * Pick Due At
+             * Format: date-time
+             */
+            pick_due_at: string;
         };
         /** WithdrawIn */
         WithdrawIn: {
@@ -6868,6 +11068,121 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    turn_ai_turns_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiTurnIn"];
+            };
+        };
+        responses: {
+            /** @description done 몸통 = AiTurnOut */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    threads_ai_threads_get: {
+        parameters: {
+            query?: {
+                project_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiThreadOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    thread_ai_threads__chat_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chat_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiThreadDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    faq_ai_faq_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiFaqOut"][];
                 };
             };
         };
@@ -7073,6 +11388,39 @@ export interface operations {
             };
         };
     };
+    guest_standard_guest_standard_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeInfoIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuestStandardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_notifications_notifications_get: {
         parameters: {
             query?: {
@@ -7195,6 +11543,38 @@ export interface operations {
             };
         };
     };
+    region_emds_regions__sido___sgg__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sido: string;
+                sgg: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmdOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     my_projects_projects_get: {
         parameters: {
             query?: never;
@@ -7218,16 +11598,26 @@ export interface operations {
     create_project_projects_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description 손님 답 옮기기 멱등 키 (기기 답의 key) */
+                "Idempotency-Key"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ProjectCreate"];
+                "application/json": components["schemas"]["ProjectCreate"] | components["schemas"]["HomeInfoIn"];
             };
         };
         responses: {
+            /** @description 같은 Idempotency-Key로 이미 만든 공사 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Successful Response */
             201: {
                 headers: {
@@ -7290,7 +11680,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ProjectCreate"];
+                "application/json": components["schemas"]["ProjectCreate"] | components["schemas"]["HomeInfoIn"];
             };
         };
         responses: {
@@ -7368,6 +11758,686 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StandardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stream_stream_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Last-Event-ID"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description event 이름 → data 몸통은 StreamEventsDoc 칸과 같다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["StreamEventsDoc"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    report_reports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_reports_admin_reports_get: {
+        parameters: {
+            query?: {
+                status?: "open" | "done";
+                kind?: ("chat" | "vendor" | "link") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportPageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_report_admin_reports__report_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_admin_reports__report_id__resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    members_admin_members_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                status?: ("active" | "suspended") | null;
+                before?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberPageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suspend_member_admin_members__user_id__suspend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberNoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberStateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unsuspend_member_admin_members__user_id__unsuspend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberNoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberStateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_suspend_vendor_admin_vendors__vendor_id__suspend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                vendor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SuspendIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VendorSuspendOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_unsuspend_vendor_admin_vendors__vendor_id__unsuspend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                vendor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnsuspendIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VendorSuspendOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_check_link_admin_vendors__vendor_id__links__sort__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                vendor_id: string;
+                sort: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkCheckIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewLinkAdminOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    hide_review_admin_reviews__review_id__hide_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewHideIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewStateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    show_review_admin_reviews__review_id__show_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewStateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    vendor_reviews_for_customer_projects__project_id__vendors__vendor_id__reviews_get: {
+        parameters: {
+            query?: {
+                sort?: "latest" | "low";
+                before?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                vendor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewPageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    write_review_projects__project_id__deals__deal_id__review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewWriteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_review_reviews__review_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_review_reviews__review_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewEditIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_photo_reviews__review_id__photos__file_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: string;
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_reviews_vendor_reviews_get: {
+        parameters: {
+            query?: {
+                filter?: "waiting" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VendorReviewsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reply_vendor_reviews__review_id__reply_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplyOut"];
+                };
+            };
+            /** @description 처음 단 답글 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplyOut"];
                 };
             };
             /** @description Validation Error */
@@ -7586,7 +12656,9 @@ export interface operations {
     vendor_inbox_vendor_visits_get: {
         parameters: {
             query?: {
-                tab?: "todo" | "waiting" | "jobs" | "done";
+                tab?: "todo" | "waiting" | "sched" | "jobs" | "done";
+                /** @description v3: 기한 가까운 순 · 새 요청 순 */
+                sort?: ("due" | "new") | null;
                 before?: string | null;
                 limit?: number;
             };
@@ -7856,6 +12928,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description 같은 client_key로 이미 올린 줄 (그대로) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
             /** @description Successful Response */
             201: {
                 headers: {
@@ -7863,6 +12944,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_extra_vendor_jobs__deal_id__extras_preview_get: {
+        parameters: {
+            query: {
+                /** @description 적은 금액 (원) */
+                entered_amount: number;
+                vat_mode?: "included" | "excluded" | "exempt";
+            };
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtraPreviewOut"];
                 };
             };
             /** @description Validation Error */
@@ -7946,6 +13062,43 @@ export interface operations {
             };
         };
     };
+    answer_extra_projects__project_id__deals__deal_id__extras__extra_id__answer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                deal_id: string;
+                extra_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnswerIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TradeExtrasOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     customer_extra_photo_projects__project_id__deals__deal_id__extras__extra_id__files__file_id__get: {
         parameters: {
             query?: never;
@@ -7989,7 +13142,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DoneIn"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -7998,6 +13155,71 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    customer_done_photo_projects__project_id__deals__deal_id__photos__file_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                deal_id: string;
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/*": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    vendor_done_photo_vendor_jobs__deal_id__photos__file_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/*": string;
                 };
             };
             /** @description Validation Error */
@@ -8096,6 +13318,356 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DocsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    project_log_projects__project_id__log_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogItemOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    plan_ics_projects__project_id__plan_ics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/calendar": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    job_log_vendor_jobs__deal_id__log_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogItemOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    threads_threads_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadRowOut"][];
+                };
+            };
+        };
+    };
+    thread_threads__thread_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                thread_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    messages_threads__thread_id__messages_get: {
+        parameters: {
+            query?: {
+                after_seq?: number | null;
+                before_seq?: number | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                thread_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_message_threads__thread_id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                thread_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MessageIn"];
+            };
+        };
+        responses: {
+            /** @description 같은 client_key로 이미 보낸 글 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_threads__thread_id__read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                thread_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReadIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    thread_file_threads__thread_id__files__file_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                thread_id: string;
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    block_threads__thread_id__block_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                thread_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unblock_threads__thread_id__block_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                thread_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadOut"];
                 };
             };
             /** @description Validation Error */
@@ -9201,7 +14773,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ConfirmPricesIn"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -9285,6 +14861,59 @@ export interface operations {
             };
         };
     };
+    review_links_vendor_review_links_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewLinkOut"][];
+                };
+            };
+        };
+    };
+    save_review_links_vendor_review_links_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewLinksIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewLinkOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     vendors_projects__project_id__vendors_get: {
         parameters: {
             query: {
@@ -9323,6 +14952,8 @@ export interface operations {
         parameters: {
             query: {
                 trade: "dobae" | "mokgong";
+                /** @description v3: 그 벽지로 미리 보기 (C11) */
+                grade?: ("economy" | "basic") | null;
             };
             header?: never;
             path: {
@@ -9464,7 +15095,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CancelIn"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -9523,7 +15158,14 @@ export interface operations {
     };
     vendor_visit_vendor_visits__visit_id__get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description 미리 셀 기간 시작 (end와 같이) */
+                start?: string | null;
+                /** @description 미리 셀 기간 끝 (62일 안) */
+                end?: string | null;
+                /** @description 빼는 날 (기간 안, 31개까지) */
+                excluded?: string[];
+            };
             header?: never;
             path: {
                 visit_id: string;
@@ -9539,6 +15181,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VendorVisitDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    vendor_visit_photo_vendor_visits__visit_id__photos__file_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                visit_id: string;
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -9765,6 +15439,714 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    shortlist_projects__project_id__shortlist_get: {
+        parameters: {
+            query: {
+                trade: "dobae" | "mokgong";
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShortlistOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_shortlist_projects__project_id__shortlist_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShortlistIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShortlistOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_shortlist_projects__project_id__shortlist__vendor_id__delete: {
+        parameters: {
+            query: {
+                trade: "dobae" | "mokgong";
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                vendor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    visit_draft_projects__project_id__visits_draft_get: {
+        parameters: {
+            query: {
+                trade: "dobae" | "mokgong";
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisitDraftOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    visit_pick_view_projects__project_id__visits__visit_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                visit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisitPickOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pick_visit_projects__project_id__visits__visit_id__pick_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                visit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SlotIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PickOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pick_proposal_projects__project_id__visits__visit_id__proposal_pick_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                visit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SlotIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PickOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    repick_visit_projects__project_id__visits__visit_id__repick_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                visit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisitStateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_again_projects__project_id__visits__visit_id__again_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                visit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoardRowOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    visited_projects__project_id__visits__visit_id__visited_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                visit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VisitedIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisitStateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_change_projects__project_id__visits__visit_id__changes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                visit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SlotIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    withdraw_change_projects__project_id__visits__visit_id__changes__change_id__withdraw_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                visit_id: string;
+                change_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pick_change_projects__project_id__visits__visit_id__changes__change_id__pick_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                visit_id: string;
+                change_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SlotIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    requote_projects__project_id__visits__visit_id__requote_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                visit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisitStateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    visit_ics_projects__project_id__visits__visit_id__ics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                visit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/calendar": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    answer_window_vendor_visits__visit_id__window_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                visit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WindowIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WindowAnswerOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accept_visit_vendor_visits__visit_id__accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                visit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VendorVisitStateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    propose_visit_vendor_visits__visit_id__propose_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                visit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProposeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VendorVisitStateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accept_change_vendor_visits__visit_id__changes__change_id__accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                visit_id: string;
+                change_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VendorVisitStateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    counter_change_vendor_visits__visit_id__changes__change_id__propose_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                visit_id: string;
+                change_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SlotsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VendorVisitStateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    vendor_schedule_vendor_schedule_get: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VendorScheduleOut"];
                 };
             };
             /** @description Validation Error */

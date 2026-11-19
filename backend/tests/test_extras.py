@@ -95,9 +95,9 @@ def test_add_then_ok_and_talk(api):
         again.status_code == 409
         and again.json()["error"]["message"] == "이미 답한 추가 금액이에요."
     )
-    assert [n["body"] for n in notes("extra_acked")] == [
-        "고객이 추가 금액을 확인했어요",
-        "고객이 추가 금액을 이야기하고 싶어 해요",
+    assert [n["body"] for n in notes("extra_acked")] == [  # v3: 업체 알림에 공사 이름
+        "고객이 추가 금액을 확인했어요 · 노원구 도배",
+        "고객이 추가 금액을 이야기하고 싶어 해요 · 노원구 도배",
     ]
     assert api.post(f"{base}/{a['id']}/ack", json={"ack": "maybe"}).status_code == 422
     login(api, "maru@mitjip.test")

@@ -1,0 +1,5 @@
+/* 가입 · 로그인 카드(C59 · D13) · 가입 고르기(C04) */
+.sub { color: var(--mj-text-sub); font-size: var(--mj-type-label); line-height: var(--mj-lh-body); }
+.btns { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.note { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 4px; margin-top: 8px; color: var(--mj-text-sub); font-size: var(--mj-type-label); }
+.later { display: flex; margin: 0 auto; }

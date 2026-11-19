@@ -1,9 +1,27 @@
 {$DEPLOY_HOSTNAME} {
-	encode gzip
-	header X-Content-Type-Options "nosniff"
-	header Referrer-Policy "strict-origin-when-cross-origin"
+	# 실시간 줄기(SSE)는 압축하지 않는다. gzip이 이벤트를 모아 두면 화면에 늦게 간다 (dev-02)
+	@compress not path /api/stream*
+	encode @compress gzip
+
+	# 모든 응답: HTTPS만 1년(하위 주소 포함) · 형식 추측 금지 · 리퍼러 줄임 · 서버 이름 숨김.
+	# 화면 CSP · 틀 막기는 Next proxy.ts, API 머리는 request_guards.SecurityHeaders가 붙이고 여기서는 빈 곳만 채운다
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		?X-Content-Type-Options "nosniff"
+		?Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+		defer
+	}
+	header /api/* {
+		?Cache-Control "no-store"
+		?Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
+		?X-Frame-Options "SAMEORIGIN"
+	}
 	handle_path /api/* {
-		reverse_proxy api:8000
+		# 줄기는 버퍼에 쌓지 않고 받는 대로 넘긴다 (text/event-stream은 원래도 바로 넘기지만 분명히)
+		reverse_proxy api:8000 {
+			flush_interval -1
+		}
 	}
 	handle {
 		reverse_proxy web:3000

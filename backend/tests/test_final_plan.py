@@ -272,7 +272,7 @@ def test_change_request_new_dates_then_accept(api):
     (n,) = query(
         "select body from notifications where kind = 'dates_accepted' order by created_at desc limit 1"
     )
-    assert n["body"] == "고객이 새 공사 날짜를 수락했어요"
+    assert n["body"] == "고객이 새 공사 날짜를 수락했어요 · 노원구 도배"  # v3: 공사 이름
     assert api.get(f"/projects/{pid}/plan").json()["changes"] == []
 
 

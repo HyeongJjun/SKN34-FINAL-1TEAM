@@ -1,23 +1,25 @@
-// 404 · 찾는 화면이 없어요. 없는 주소, 지운 것, 남의 공사 · 견적서도 '없다'고만 답한다(있는지조차 알리지 않는다).
-import Link from "next/link";
-import { SiteHeader } from "@/components/site/SiteHeader";
-import { StatusPage, homeAction } from "@/components/site/StatusPage";
-import { getSession } from "@/lib/session";
+// 404 · 찾는 화면이 없어요(C56). 없는 주소, 지운 것, 남의 공사도 같은 화면이에요(있는지조차 알리지 않아요).
+import { AppHeader } from "@/components/site/AppHeader";
+import { Main } from "@/components/site/Frame";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export const metadata = { title: "찾는 화면이 없어요" };
 
-export default async function NotFound() {
-  const home = homeAction(await getSession());
+export default function NotFound() {
   return (
     <>
-      <SiteHeader />
-      <StatusPage
-        code="404"
-        title="찾는 화면이 없어요"
-        actions={<><Link className="mj-btn mj-btn-pri" href={home.href}>{home.label}</Link><Link className="mj-btn mj-btn-sec" href="/">첫 화면으로</Link></>}
-      >
-        <p className="mj-sub">주소가 틀렸거나, 지워졌거나, 지금 계정으로는 볼 수 없는 화면이에요. 주소창의 주소를 한 번 더 확인해 주세요.</p>
-      </StatusPage>
+      <AppHeader phone={{ title: "", back: "/" }} />
+      <Main narrow>
+        <EmptyState
+          icon="doc"
+          as="h1"
+          title="찾는 화면이 없어요"
+          action={<><Button size="sm" href="/">홈으로</Button><Button variant="text" arrow href="/my">내 공사</Button></>}
+        >
+          주소가 바뀌었거나, 볼 수 없는 공사예요.
+        </EmptyState>
+      </Main>
     </>
   );
 }

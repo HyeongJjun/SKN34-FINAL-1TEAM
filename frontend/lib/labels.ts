@@ -12,7 +12,7 @@ export const BUDGETS: { key: Budget; label: string }[] = [
   { key: "500-700", label: "500만~700만 원" },
   { key: "700-1000", label: "700만~1,000만 원" },
   { key: "o1000", label: "1,000만 원 넘게" },
-  { key: "undecided", label: "아직 정하지 않았어요" },
+  { key: "undecided", label: "아직 몰라요" },
 ];
 
 export const MOK_ITEMS: { key: MokItem; label: string; desc: string }[] = [
@@ -22,21 +22,24 @@ export const MOK_ITEMS: { key: MokItem; label: string; desc: string }[] = [
   { key: "flatten", label: "천장 평탄화", desc: "석고보드" },
 ];
 
-// 도배 유형. 계산 엔진은 저가형을 합지, 기본형을 실크로 계산한다(backend/app/calc/dobae.py).
+// 벽지: 합지 · 실크(사용자 결정 U9 · D07 · copy-fixes CF-81). 코드 값(economy · basic)은 그대로 두고 화면 말만 바꿔요.
+// 계산 엔진은 economy를 합지, basic을 실크로 계산해요(backend/app/calc/dobae.py).
 export const DOBAE_GRADES: { key: DobaeGrade; label: string; desc: string }[] = [
-  { key: "economy", label: "저가형", desc: "종이 벽지(합지)예요. 얇아서 벽 굴곡이 비칠 수 있어요." },
-  { key: "basic", label: "기본형", desc: "실크 벽지예요. 도톰하고 물걸레로 닦을 수 있어요." },
+  { key: "economy", label: "합지", desc: "종이 벽지예요. 얇아서 벽 굴곡이 비칠 수 있어요." },
+  { key: "basic", label: "실크", desc: "도톰하고 물걸레로 닦을 수 있어요." },
 ];
 
 export const WHEN_LABEL = { date: "날짜가 정해졌어요", movein: "이사하는 날만 정해졌어요", months: "1~2달 안에", unknown: "아직 몰라요" } as const;
 
+/** 집 크기: ㎡가 기본이고 기준을 앞에 "공급 69.4㎡"(U10 · CF-82). 옛 평형대(band)만 있는 공사만 "30평대"로 보여요 */
 export function sizeLabel(s: { band?: string | null; basis?: string | null; m2?: string | number | null }) {
+  if (s.m2 != null && s.m2 !== "") return `${s.basis === "exclusive" ? "전용" : "공급"} ${typeof s.m2 === "string" ? s.m2.replace(/\.0+$/, "") : s.m2}㎡`;
   if (s.band) return s.band === "50" ? "50평 이상" : `${s.band}평대`;
-  return `${s.basis === "exclusive" ? "전용" : "공급"} ${s.m2}㎡`;
+  return "면적 미정";
 }
 export const budgetLabel = (k: string | null | undefined) => BUDGETS.find((b) => b.key === k)?.label ?? "정하지 않음";
 export const mokLabel = (k: string) => MOK_ITEMS.find((m) => m.key === k)?.label ?? k;
-export const gradeLabel = (k: string | null | undefined) => DOBAE_GRADES.find((g) => g.key === k)?.label ?? "유형 미정";
+export const gradeLabel = (k: string | null | undefined) => DOBAE_GRADES.find((g) => g.key === k)?.label ?? "벽지 미정";
 
 export const tradeLabel = (k: string) => (k === "dobae" ? "도배" : k === "mokgong" ? "목공" : k);
 /** 공정별 기능공 이름 (공정표 '기간은 이렇게 계산해요') */
@@ -68,19 +71,19 @@ export function projectTitle(region: string, trades: string[]) {
 // ── 업체 가입 심사 (backend/app/vendor/models.py NEEDS_INFO_CODES · REJECT_CODES, service.py OPEN_FIELDS)
 
 export type Reason = { key: string; label: string };
-/** 보완 요청 사유. other(직접 쓰기)면 업체에 보낼 말이 꼭 있어야 한다 */
+/** 보완 요청 사유. other(그 밖)면 업체에 보낼 말이 꼭 있어야 해요 */
 export const NEEDS_INFO_REASONS: Reason[] = [
   { key: "blurry", label: "사진이 흐려서 글자가 안 보여요" },
   { key: "name_mismatch", label: "상호가 신청서와 달라요" },
   { key: "owner_mismatch", label: "대표자가 신청서와 달라요" },
-  { key: "other", label: "직접 쓰기" },
+  { key: "other", label: "그 밖" },
 ];
 export const REJECT_REASONS: Reason[] = [
   { key: "wrong_business", label: "업종이 인테리어 공사와 맞지 않아요" },
   { key: "closed", label: "휴업 · 폐업 상태예요" },
-  { key: "other", label: "직접 쓰기" },
+  { key: "other", label: "그 밖" },
 ];
-/** 사유 화면 말. 직접 쓰기(other)는 사유 줄 없이 보낼 말만 보여서 null */
+/** 사유 화면 말. 그 밖(other)은 사유 줄 없이 보낼 말만 보여서 null */
 export function reasonLabel(action: string, code: string | null | undefined): string | null {
   if (!code || code === "other") return null;
   const list = action === "reject" || action === "rejected" ? REJECT_REASONS : NEEDS_INFO_REASONS;
@@ -127,3 +130,45 @@ export const CONTACT_LABEL: Record<ContactMethod, string> = { phone: "전화", s
 export const CONTACT_WAY: Record<ContactMethod, string> = { phone: "전화로 연락해요", sms: "문자 주시면 연락드려요", kakao: "카카오톡 채널로 상담해요", web: "홈페이지에서 상담해요" };
 /** 업체가 실측 요청을 못 받는 이유 */
 export const DECLINE_LABEL: Record<"full" | "out_of_area" | "other", string> = { full: "일정이 꽉 찼어요", out_of_area: "지역 밖이에요", other: "그 밖" };
+
+// ── v3 실측 일정 상태 이름표(copy-guide 1.9 · data-model visits.status). 같은 일을 보는 쪽마다 다르게 불러요.
+// tone은 상태 칩(components/ui/StateTag, N4 C) 아이콘: todo ● 할 일 · wait ○ 기다림 · ok ✓ 일정 · 확정 · done – 끝남 · late ! 기한 지남
+// copy-guide에 말이 없는 상태(취소 · 안 옴)는 W13 꼴(짧은 명사)로 붙인 잠정 말이에요.
+export type StateTone = "todo" | "wait" | "ok" | "done" | "late";
+export type VisitStatus = "requested" | "offered" | "picked" | "proposed" | "booked" | "visited" | "quoted" | "chosen" | "declined" | "expired" | "cancelled" | "no_show" | "closed";
+type StateText = { label: string; tone: StateTone };
+export const VISIT_STATE_CUSTOMER: Record<VisitStatus, StateText> = {
+  requested: { label: "답 기다림", tone: "wait" },
+  offered: { label: "날짜 고를 차례", tone: "todo" },
+  picked: { label: "수락 기다림", tone: "wait" },
+  proposed: { label: "다른 날 제안 옴", tone: "todo" },
+  booked: { label: "확정", tone: "ok" },
+  visited: { label: "실측 견적서 기다림", tone: "wait" },
+  quoted: { label: "실측 견적서 받음", tone: "ok" },
+  chosen: { label: "업체 확정", tone: "ok" },
+  declined: { label: "못 받음", tone: "done" },
+  expired: { label: "답 없음", tone: "late" },
+  cancelled: { label: "취소", tone: "done" },
+  no_show: { label: "업체가 안 옴", tone: "late" },
+  closed: { label: "닫힘", tone: "done" },
+};
+export const VISIT_STATE_VENDOR: Record<VisitStatus, StateText> = {
+  requested: { label: "새 실측 요청", tone: "todo" },
+  offered: { label: "고객 차례", tone: "wait" },
+  picked: { label: "날짜 수락", tone: "todo" },
+  proposed: { label: "고객 차례", tone: "wait" },
+  booked: { label: "실측 확정", tone: "ok" },
+  visited: { label: "견적서 올리기", tone: "todo" },
+  quoted: { label: "견적서 보냄", tone: "wait" },
+  chosen: { label: "업체 확정", tone: "ok" },
+  declined: { label: "끝남", tone: "done" },
+  expired: { label: "답 기한 지남", tone: "late" },
+  cancelled: { label: "끝남", tone: "done" },
+  no_show: { label: "안 옴 알림", tone: "late" },
+  closed: { label: "끝남", tone: "done" },
+};
+/** 작업함 · 실측 일정 상태 칩 말. 모르는 값은 영어를 보이지 않고 '확인 중'으로 */
+export function visitState(status: string, side: "customer" | "vendor"): StateText {
+  const t = (side === "vendor" ? VISIT_STATE_VENDOR : VISIT_STATE_CUSTOMER)[status as VisitStatus];
+  return t ?? { label: "확인 중", tone: "wait" };
+}

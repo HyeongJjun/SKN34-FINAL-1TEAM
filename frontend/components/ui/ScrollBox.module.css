@@ -1,0 +1,4 @@
+.box { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.hint { margin: 0; align-self: flex-end; font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+.scroll { min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--mj-line-control) transparent; }
+.scroll:focus-visible { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: 2px; border-radius: var(--mj-radius-badge); }

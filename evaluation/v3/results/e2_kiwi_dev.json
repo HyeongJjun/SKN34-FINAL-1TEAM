@@ -1,0 +1,34 @@
+{
+ "corpus": "13_interior_guide_book_rag@0287c91fe04d+consult_knowledge_rag@b91e7e48a53c+v3_knowledge_rag@0a83514a1704+team657",
+ "n": 206,
+ "kiwi_index_seconds": 24.8,
+ "results": {
+  "글자 두 개 묶음 BM25": {
+   "hit@1": 0.311,
+   "hit@5": 0.597,
+   "hit5_ci95": [
+    0.529,
+    0.662
+   ],
+   "mrr": 0.585
+  },
+  "Kiwi 형태소 BM25": {
+   "hit@1": 0.32,
+   "hit@5": 0.621,
+   "hit5_ci95": [
+    0.553,
+    0.685
+   ],
+   "mrr": 0.592
+  },
+  "두 점수 RRF": {
+   "hit@1": 0.316,
+   "hit@5": 0.684,
+   "hit5_ci95": [
+    0.618,
+    0.744
+   ],
+   "mrr": 0.615
+  }
+ }
+}

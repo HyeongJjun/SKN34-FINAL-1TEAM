@@ -1,10 +1,11 @@
 "use client";
-// 머리 오른쪽 '○○ 님' 메뉴. 고객: 내 공사 · 내 정보, 업체: 업체 정보 · 내 정보, 관리자: 로그아웃만.
-// 펼침 버튼(disclosure) 방식: Esc나 바깥을 누르면 닫히고, Esc로 닫으면 초점이 버튼으로 돌아온다.
-import { useEffect, useRef, useState } from "react";
+// 웹 머리 오른쪽 '이름 ▾' 펼침. 고객: 내 정보 · 자주 묻는 질문, 업체: 내 정보, 관리자: 로그아웃만(+ 늘 로그아웃).
+// 펼침 단추(disclosure) 방식: Esc나 바깥을 누르면 닫히고, Esc로 닫으면 초점이 단추로 돌아와요.
+import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { Role } from "@/lib/types";
+import { Icon } from "@/components/ui/Icon";
 import { ACCOUNT } from "./nav";
 import { logout } from "./logout";
 import s from "./header.module.css";
@@ -15,23 +16,24 @@ export function AccountMenu({ label, role }: { label: string; role: Role }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
+  const id = useId();
 
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: MouseEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
+    const onDown = (e: PointerEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); btn.current?.focus(); } };
-    document.addEventListener("mousedown", onDown);
+    document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+    return () => { document.removeEventListener("pointerdown", onDown); document.removeEventListener("keydown", onKey); };
   }, [open]);
 
   return (
-    <div ref={box} className={s.acct}>
-      <button ref={btn} type="button" className={`mj-btn mj-btn-sec mj-btn-sm ${s.acctBtn}`} aria-expanded={open} aria-controls="acct-menu" onClick={() => setOpen((v) => !v)}>
+    <div ref={box} className={s.pop}>
+      <button ref={btn} type="button" className={s.acctBtn} aria-expanded={open} aria-controls={`${id}-menu`} onClick={() => setOpen((v) => !v)}>
         <span>{label}</span>
-        <svg className={s.chev} width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5" /></svg>
+        <Icon name="chevron-down" size={16} className={s.chev} />
       </button>
-      <div id="acct-menu" className={s.menu} hidden={!open}>
+      <div id={`${id}-menu`} className={s.menu} hidden={!open}>
         <ul>
           {ACCOUNT[role].map((it) => (
             <li key={it.id}><Link className={s.mrow} href={it.href} aria-current={path === it.href ? "page" : undefined} onClick={() => setOpen(false)}>{it.label}</Link></li>

@@ -1,0 +1,22 @@
+.steps { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.bars { display: grid; grid-template-columns: repeat(var(--n, 6), minmax(0, 1fr)); gap: 4px; }
+.bars span { height: 6px; border-radius: 3px; background: var(--mj-step-todo); }
+.bars .done { background: var(--mj-step-done); }
+.bars .now { background: var(--mj-step-now); }
+.sum { font-size: var(--mj-type-caption); color: var(--mj-text-sub); }
+.sum b { color: var(--mj-link); font-weight: var(--mj-weight-bold); }
+/* 폰: 이름 여섯은 화면 읽기에만 */
+.names { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; list-style: none; }
+
+@media (min-width: 768px) {
+  .sum { display: none; }
+  .names { position: static; width: auto; height: auto; margin: 0; overflow: visible; clip: auto; white-space: normal; display: grid; grid-template-columns: repeat(var(--n, 6), minmax(0, 1fr)); gap: 4px; font-size: var(--mj-type-caption); color: var(--mj-text-mute); text-align: center; line-height: 1.3; }
+  .doneT { color: var(--mj-text-sub); }
+  .nowT { color: var(--mj-link); font-weight: var(--mj-weight-bold); }
+}
+
+.subs { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.subs li { display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: var(--mj-radius-badge); background: var(--mj-fill); color: var(--mj-text-mute); font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); }
+.subs li.sdone { color: var(--mj-text-sub); }
+.subs li.sdone svg { color: var(--mj-link); }
+.subs li.snow { background: var(--mj-primary-weak); color: var(--mj-on-primary-weak); }

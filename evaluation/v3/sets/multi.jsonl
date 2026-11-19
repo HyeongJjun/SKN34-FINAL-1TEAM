@@ -1,0 +1,45 @@
+{"id": "mt-001", "text": "몰딩 바꾸고 도배도 새로 하려는데 순서가 어떻게 돼요?", "parts": ["mokgong", "dobae"], "single": false, "split": "heldout", "source_type": "written", "by": "b5"}
+{"id": "mt-002", "text": "욕실 타일 다시 하고 거실 바닥도 마루로 바꾸려면 뭐부터 해요?", "parts": ["tile", "floor"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-003", "text": "샷시 바꾸고 나서 도배하면 되나요, 아니면 도배 먼저 해요?", "parts": ["window", "dobae"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-004", "text": "철거하고 바로 전기 배선도 옮길 수 있어요?", "parts": ["demolition", "electric"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-005", "text": "주방 싱크대 바꾸고 바닥재도 새로 깔면 순서는요?", "parts": ["kitchen", "floor"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-006", "text": "방문은 필름으로 하고 벽은 실크벽지로 하려는데 같이 해도 돼요?", "parts": ["film", "dobae"], "single": false, "split": "heldout", "source_type": "written", "by": "b5"}
+{"id": "mt-007", "text": "보일러 배관 손보고 장판도 새로 해야 하는데 뭐부터 하죠?", "parts": ["plumbing", "floor"], "single": false, "split": "heldout", "source_type": "written", "by": "b5"}
+{"id": "mt-008", "text": "몰딩은 칠하고 걸레받이는 바꾸려는데 둘 다 목공팀이 해요?", "parts": ["paint", "mokgong"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-009", "text": "화장실 방수 다시 하고 타일까지 새로 하면 같이 맡기면 되나요?", "parts": ["bath", "tile"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-010", "text": "거실 조명 바꾸고 천장 도배도 하려면 조명 먼저 달아요?", "parts": ["electric", "dobae"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-011", "text": "베란다 탄성코트 하고 샷시 실리콘도 다시 해야 하나요?", "parts": ["paint", "window"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-012", "text": "벽지 곰팡이도 걱정되고, 창틀 결로도 있는데 둘 다 어떻게 해요?", "parts": ["dobae", "window"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-013", "text": "붙박이장 철거하고 그 자리에 도배까지 하려면요?", "parts": ["demolition", "dobae"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-014", "text": "가벽 세우고 그 벽에 페인트 칠하는 건 언제 해요?", "parts": ["mokgong", "paint"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-015", "text": "욕실 리모델링이랑 주방 상판 교체를 한 번에 하면 순서가 있나요?", "parts": ["bath", "kitchen"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-016", "text": "전기 콘센트 옮기고 싱크대도 바꾸고 싶어요. 그리고 순서도 알려 주세요", "parts": ["electric", "kitchen"], "single": false, "split": "heldout", "source_type": "written", "by": "b5"}
+{"id": "mt-017", "text": "중문 달고 현관 타일도 바꾸려는데 어떤 걸 먼저 해요?", "parts": ["window", "tile"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-018", "text": "철거 끝나고 목공 들어가기 전에 뭘 확인해야 해요?", "parts": ["demolition", "mokgong"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-019", "text": "장판 걷어 내고 마루 깔 때 걸레받이도 바꿔야 해요?", "parts": ["floor", "mokgong"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-020", "text": "욕실 줄눈 다시 하고 거실 벽지도 새로 하면 냄새가 오래 가요?", "parts": ["tile", "dobae"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-021", "text": "에어컨 배관 매립하고 도배 순서는 어떻게 돼요?", "parts": ["plumbing", "dobae"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-022", "text": "문짝 필름이랑 몰딩 교체 중 뭘 먼저 해요?", "parts": ["film", "mokgong"], "single": false, "split": "heldout", "source_type": "written", "by": "b5"}
+{"id": "mt-023", "text": "창호 교체하고 발코니 바닥 타일도 하려면 순서는요?", "parts": ["window", "tile"], "single": false, "split": "heldout", "source_type": "written", "by": "b5"}
+{"id": "mt-024", "text": "천장 평탄화 하고 매입등 다는 건 같이 하나요?", "parts": ["mokgong", "electric"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-025", "text": "화장실 철거하고 배관 교체도 해야 하면 뭘 준비해요?", "parts": ["demolition", "plumbing"], "single": false, "split": "heldout", "source_type": "written", "by": "b5"}
+{"id": "mt-026", "text": "주방 후드 바꾸고 주방 벽 타일도 새로 붙이려면요?", "parts": ["kitchen", "tile"], "single": false, "split": "heldout", "source_type": "written", "by": "b5"}
+{"id": "mt-027", "text": "벽 페인트 칠하고 바닥 마루 까는 순서가 궁금해요", "parts": ["paint", "floor"], "single": false, "split": "heldout", "source_type": "written", "by": "b5"}
+{"id": "mt-028", "text": "도배랑 장판 같이 하면 어떤 걸 먼저 해요?", "parts": ["dobae", "floor"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-029", "text": "실크벽지로 도배하고 방문도 바꾸려는데 견적서에서 뭘 봐요?", "parts": ["dobae", "mokgong"], "single": false, "split": "heldout", "source_type": "written", "by": "b5"}
+{"id": "mt-030", "text": "싱크대 문짝 필름하고 상판은 그대로 둬도 돼요?", "parts": ["film", "kitchen"], "single": false, "split": "heldout", "source_type": "written", "by": "b5"}
+{"id": "mt-031", "text": "전기 증설하고 인덕션 설치까지 한 번에 되나요?", "parts": ["electric", "kitchen"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-032", "text": "마루 깔고 나서 주방 가구 설치하는 거 맞죠?", "parts": ["floor", "kitchen"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-033", "text": "욕실 덧방할지 철거할지 고민이고, 방수도 다시 해야 하나요?", "parts": ["bath", "demolition"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-034", "text": "페인트 칠한 벽에 나중에 도배해도 되나요? 그리고 몰딩은 그대로 둬도 돼요?", "parts": ["paint", "dobae", "mokgong"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-035", "text": "몰딩 교체랑 도배랑 바닥재까지 다 하면 순서가 어떻게 돼요?", "parts": ["mokgong", "dobae", "floor"], "single": false, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-036", "text": "바닥 타일 덧방하고 벽 타일도 덧방해도 돼요?", "parts": ["tile"], "single": true, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-037", "text": "거실 도배하고 방 도배도 같이 하면 싸져요?", "parts": ["dobae"], "single": true, "split": "heldout", "source_type": "written", "by": "b5"}
+{"id": "mt-038", "text": "철거할 때 나오는 폐기물이랑 석면 처리는 어떻게 해요?", "parts": ["demolition"], "single": true, "split": "heldout", "source_type": "written", "by": "b5"}
+{"id": "mt-039", "text": "보일러 교체하고 난방 분배기도 같이 바꿔야 해요?", "parts": ["plumbing"], "single": true, "split": "heldout", "source_type": "written", "by": "b5"}
+{"id": "mt-040", "text": "샷시 교체할 때 방충망이랑 창틀 실리콘도 새로 해요?", "parts": ["window"], "single": true, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-041", "text": "욕실 타일이 들떴는데 원인이 뭐예요?", "parts": ["tile"], "single": true, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-042", "text": "싱크대 문짝에 시트지 붙이면 오래 가요?", "parts": ["film"], "single": true, "split": "heldout", "source_type": "written", "by": "b5"}
+{"id": "mt-043", "text": "방문 문틀이 틀어졌는데 문짝만 바꾸면 돼요?", "parts": ["mokgong"], "single": true, "split": "heldout", "source_type": "written", "by": "b5"}
+{"id": "mt-044", "text": "화장실 스위치가 헐거운데 교체해야 해요?", "parts": ["electric"], "single": true, "split": "dev", "source_type": "written", "by": "b5"}
+{"id": "mt-045", "text": "실크벽지 들뜸이랑 이음매 벌어짐은 왜 생겨요?", "parts": ["dobae"], "single": true, "split": "heldout", "source_type": "written", "by": "b5"}

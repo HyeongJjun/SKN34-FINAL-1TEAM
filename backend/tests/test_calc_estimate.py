@@ -104,7 +104,8 @@ def test_price_rows_match_calc_lines():
         mokgong.MokgongInput(Decimal("105.8"), "supply", items, True, 3), MOKGONG_2026H2
     )
     lines += [("mokgong", None, ln) for ln in m.lines]
-    rows = {(t, r.key): r for t, rs in PRICE_ROWS.items() for r in rs}
+    # v3 줄(dobae_v3, 1201~1208)은 표준견적서 줄이 아니라 계산 엔진 수량(QtyV3)으로 센다(test_v3_calc_estimate_*)
+    rows = {(t, r.key): r for t, rs in PRICE_ROWS.items() if t != "dobae_v3" for r in rs}
     seen = set()
     for trade, grade, ln in lines:
         row = rows.get((trade, price_key(ln.key, grade)))

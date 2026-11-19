@@ -1,26 +1,57 @@
-import { notFound, redirect } from "next/navigation";
-import { JobPage } from "@/components/pro/jobs/JobPage";
-import { SiteHeader } from "@/components/site/SiteHeader";
-import { getVendorJob } from "@/lib/api/schedule";
-import { getMyProfile } from "@/lib/api/vendor";
-import { todaySeoul } from "@/lib/format";
-import { requireRole } from "@/lib/session";
+import { notFound } from "next/navigation";
+import { DatesForm } from "@/components/pro/jobs/DatesForm";
+import { DoneForm } from "@/components/pro/jobs/DoneForm";
+import { ExtraForm } from "@/components/pro/jobs/ExtraForm";
+import { JobView } from "@/components/pro/jobs/JobView";
+import { ProHeader } from "@/components/pro/Shell";
+import { approvedVendorGate, getMyProfile, getVendorJob, getVendorJobLog, vendorNow } from "@/lib/api/vendor";
 
-export const metadata = { title: "공사 날짜 내기" };
+export const metadata = { title: "공사 한 건" };
 
-// 공사 날짜 내기 · 다시 내기 · 고객 요청에 답하기 · 수락한 날짜 바꾸기 · 추가 금액 알리기 · 공사 끝냈어요 (시안 WVCalendar). 작업함 '공사 끝냈어요'는 #j-finish로 온다. 알림 link가 이 주소다. 내 공사가 아니면 404(있는지도 알리지 않는다).
-// ?change=1: 작업함 '공사 날짜 바꾸기'로 왔다 (바꾸기 칸을 펼쳐 둔다). 면세 업체는 추가 금액을 면세로만 적는다(업체 정보 tax_kind).
-export default async function VendorJobPage({ params, searchParams }: { params: Promise<{ dealId: string }>; searchParams: Promise<{ change?: string }> }) {
+const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+const NEED_DATES = ["waiting", "requested", "change_requested"];
+
+// 공사 한 건(알림 link: /vendor/jobs/{did}). 공사 날짜를 아직 안 냈거나 고객이 다른 날짜를 요청했으면 공사 날짜 올리기(V11),
+// 그 밖에는 공사 한 건(V23). ?step=extra 추가 금액(V12) · ?step=done 공사 끝(V13). 남의 공사면 404.
+export default async function VendorJobPage({ params, searchParams }: { params: Promise<{ dealId: string }>; searchParams: Promise<{ step?: string | string[] }> }) {
   const { dealId } = await params;
-  const { change } = await searchParams;
-  const me = await requireRole("vendor", `/vendor/jobs/${dealId}`);
-  if (me.vendorStatus !== "approved") redirect("/vendor");
-  const [job, profile] = await Promise.all([getVendorJob(dealId), getMyProfile().catch(() => null)]); // 업체 정보를 못 읽으면 과세로 두고 서버가 거른다
+  const step = one((await searchParams).step);
+  const me = await approvedVendorGate(`/vendor/jobs/${encodeURIComponent(dealId)}`);
+  const job = await getVendorJob(dealId);
   if (!job) notFound();
+  const href = `/vendor/jobs/${encodeURIComponent(job.deal_id)}`;
+  const working = job.dates_state === "scheduled" && !job.done_posted_at && !job.work_done_on && job.status !== "done";
+
+  if (step === "extra" && working) {
+    const profile = await getMyProfile().catch(() => null);
+    return (
+      <>
+        <ProHeader me={me} phone={{ title: "추가 금액 올리기", back: href }} />
+        <ExtraForm job={job} taxKind={profile?.tax_kind ?? "general"} />
+      </>
+    );
+  }
+  if (step === "done" && working && job.can_finish) {
+    return (
+      <>
+        <ProHeader me={me} phone={{ title: "공사 끝냈어요", back: href }} />
+        <DoneForm job={job} />
+      </>
+    );
+  }
+  if (NEED_DATES.includes(job.dates_state)) {
+    return (
+      <>
+        <ProHeader me={me} phone={{ title: "공사 날짜 올리기", back: "/vendor?tab=jobs" }} />
+        <DatesForm job={job} now={vendorNow("dates")} />
+      </>
+    );
+  }
+  const log = await getVendorJobLog(job.deal_id);
   return (
     <>
-      <SiteHeader />
-      <JobPage job={job} today={todaySeoul()} edit={change === "1"} exempt={profile?.tax_kind === "exempt"} />
+      <ProHeader me={me} phone={{ title: "공사 한 건", back: "/vendor?tab=jobs" }} />
+      <JobView job={job} log={log} />
     </>
   );
 }

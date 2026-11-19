@@ -1,0 +1,20 @@
+.grid { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; min-width: 0; }
+@media (min-width: 768px) { .grid { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; } }
+.cell { position: relative; aspect-ratio: 1 / 1; min-width: 0; border-radius: var(--mj-radius-card); overflow: hidden; background: var(--mj-fill); }
+.link { display: block; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+.link:focus-visible { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: -3px; }
+.img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tag {
+  position: absolute; left: 6px; bottom: 6px; max-width: calc(100% - 12px); padding: 2px 6px; border-radius: var(--mj-radius-badge);
+  background: var(--mj-surface); color: var(--mj-text); font-size: var(--mj-type-caption); font-weight: var(--mj-weight-bold);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;
+}
+.x {
+  position: absolute; top: 0; right: 0; display: grid; place-items: center; width: var(--mj-hit); height: var(--mj-hit);
+  padding: 0; border: 0; background: none; color: var(--mj-text-inverse); cursor: pointer;
+}
+.x::before { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: var(--mj-surface-inverse); opacity: 0.88; }
+.x svg { position: relative; }
+.x:focus-visible { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: -3px; border-radius: 50%; }
+.add { display: grid; place-items: stretch; background: none; overflow: visible; }
+.add > * { width: 100%; height: 100%; }

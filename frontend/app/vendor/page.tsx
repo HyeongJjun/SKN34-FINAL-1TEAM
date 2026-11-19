@@ -1,86 +1,77 @@
-import { SiteHeader } from "@/components/site/SiteHeader";
-import { ApplicationHome } from "@/components/pro/home/ApplicationHome";
+import { ApplicationScreen } from "@/components/pro/home/ApplicationHome";
 import { FirstDay } from "@/components/pro/home/FirstDay";
 import { Inbox } from "@/components/pro/inbox/Inbox";
-import { TABS, workText } from "@/components/pro/inbox/text";
-import { getMyApplication, getMyPrices, getMyProfile } from "@/lib/api/vendor";
-import { getInboxSummary, getVendorVisit, listInbox } from "@/lib/api/visit";
-import { requireRole } from "@/lib/session";
+import { ProHeader, ProTabBar } from "@/components/pro/Shell";
+import { Main } from "@/components/site/Frame";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import {
+  getMyApplication, getSetupDone, getVendorSchedule, getVendorVisit, getVisitSummary, listVendorVisits, vendorGate, vendorNow,
+  type InboxSort, type InboxTab,
+} from "@/lib/api/vendor";
 
-export const metadata = { title: "업체 홈" };
+export const metadata = { title: "작업함" };
 
-const TRADES = ["dobae", "mokgong"] as const;
+const TABS: InboxTab[] = ["all", "todo", "waiting", "sched", "jobs", "done"];
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+type Search = { tab?: string | string[]; sort?: string | string[]; sel?: string | string[]; mock?: string | string[] };
 
-type Search = { tab?: string | string[]; declined?: string | string[] };
-
-// 업체 홈. 승인 전이면 가입 심사(시안 WVHome), 승인됐으면 작업함(시안 WVInbox).
-// 받은 요청이 하나도 없으면(할 일 · 기다림 · 공사 · 끝남 모두 0) 승인 첫날 모습(WVFirst)이다.
-// ?tab= 작업함 탭, ?declined= 방금 받지 않은 요청(맨 위 한 줄).
+// 업체 홈(/vendor). 승인 전: 심사 기다림 · 보완 요청(V14) · 거절(V22). 승인 뒤 받은 요청이 아직 없으면 처음 할 일(V02),
+// 있으면 작업함(V03 폰 · D04 웹, ?tab= · ?sort= · ?sel=). 예시 데이터 모드에서는 ?mock=pending|needs_info|rejected|first로 모습을 바꿔 봐요.
 export default async function VendorHome({ searchParams }: { searchParams: Promise<Search> }) {
-  await requireRole("vendor", "/vendor");
-  const app = await getMyApplication();
+  const sp = await searchParams;
+  const mock = one(sp.mock);
+  const me = await vendorGate("/vendor", mock);
+  const app = await getMyApplication(mock);
   if (!app) {
     return (
       <>
-        <SiteHeader />
-        <main id="main" className="mj-wrap mj-main">
-          <h1 className="mj-h1">업체 홈</h1>
-          <p className="mj-sub">업체 신청을 찾을 수 없어요. 다시 로그인해 주세요.</p>
-        </main>
+        <ProHeader me={me} />
+        <Main narrow>
+          <EmptyState icon="store" as="h1" title="업체 신청을 찾을 수 없어요" action={<Button href="/login">다시 로그인</Button>}>로그인한 계정을 확인해 주세요.</EmptyState>
+        </Main>
       </>
     );
   }
   if (app.status !== "approved") {
     return (
       <>
-        <SiteHeader />
-        <ApplicationHome app={app} />
+        <ProHeader me={me} />
+        <ApplicationScreen app={app} />
       </>
     );
   }
-  const sp = await searchParams;
-  const tab = TABS.find((t) => t.k === one(sp.tab))?.k ?? "todo";
-  const declined = one(sp.declined);
-  const mine = TRADES.filter((t) => app.trades.includes(t));
-  const [prices, profile, summary, page, gone] = await Promise.all([
-    Promise.all(mine.map((t) => getMyPrices(t).catch(() => null))),
-    getMyProfile().catch(() => null),
-    getInboxSummary(),
-    listInbox(tab),
-    declined ? getVendorVisit(declined) : null,
-  ]);
 
-  if (summary && summary.todo + summary.waiting + summary.jobs + summary.done > 0) {
-    const note = gone?.status === "declined" ? `${gone.code} ${workText(gone)} 요청을 받지 않았어요. 고객에게 고른 이유가 보이고, 이 요청은 끝남 탭으로 옮겼어요.` : null;
+  const summary = await getVisitSummary(mock);
+  const total = summary ? summary.todo + summary.waiting + summary.sched + summary.jobs + summary.done : 0;
+  if (summary && total === 0) {
+    const done = await getSetupDone(mock);
     return (
       <>
-        <SiteHeader />
-        <Inbox
-          tab={tab}
-          summary={summary}
-          page={page}
-          prices={mine.map((t, i) => ({ trade: t, p: prices[i] }))}
-          profile={profile}
-          fallback={{ owner: app.owner_name, phone: app.phone, biz: app.biz_name }}
-          note={note}
-        />
+        <ProHeader me={me} />
+        <Main narrow><FirstDay done={done} /></Main>
+        <ProTabBar />
       </>
     );
   }
 
-  // 처음 할 일을 마쳤는지는 지금 있는 읽기로만 본다:
-  // 견적서 = 공정 중 하나라도 확인한 단가 묶음이 있음, 실측 방식 = 연락 방식을 정함,
-  // 활동 지역 = 업체 정보를 한 번이라도 저장함(저장할 때 활동 지역도 함께 낸다).
-  const done = {
-    prices: prices.some((p) => !!p?.confirmed),
-    visit: !!profile?.contact_method,
-    area: !!profile?.updated_at,
-  };
+  const tab = TABS.find((t) => t === one(sp.tab)) ?? "todo";
+  const sort: InboxSort = one(sp.sort) === "new" ? "new" : "due";
+  const [page, schedule] = await Promise.all([
+    tab === "sched" ? Promise.resolve({ items: [], next_before: null }) : listVendorVisits(tab, sort),
+    tab === "sched" ? getVendorSchedule(vendorNow("sched")) : Promise.resolve(null),
+  ]);
+  const selKey = one(sp.sel);
+  const selRow = page.items.find((r) => (r.deal_id ?? r.id) === selKey) ?? page.items[0] ?? null;
+  const sel = selRow && !selRow.deal_id ? await getVendorVisit(selRow.id) : null;
+
   return (
     <>
-      <SiteHeader />
-      <FirstDay app={app} done={done} />
+      <ProHeader me={me} />
+      <Main>
+        <Inbox tab={tab} sort={sort} summary={summary} page={page} selRow={selRow} sel={sel} now={vendorNow(tab === "sched" ? "sched" : "inbox")} schedule={schedule} />
+      </Main>
+      <ProTabBar />
     </>
   );
 }

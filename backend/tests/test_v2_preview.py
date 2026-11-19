@@ -51,9 +51,15 @@ def test_preview_without_plan_matches_standard_dobae(api):
     assert r.status_code == 200, r.text
     pv = r.json()
     assert [t["trade"] for t in pv["trades"]] == ["mokgong", "dobae"]
-    # 도면이 없으면 도배는 팀 표준견적서와 같은 금액
+    # 도면이 없으면 도배는 팀 표준견적서와 같은 금액. v3 표준견적서는 도배지 줄만 벽지 평 × 시장 평균
+    # (리드 결정)이라 그 줄을 뺀 공급가가 같다
     st = api.get(f"/projects/{pid}/standard").json()
-    assert pv["trades"][1]["total"] == st["trades"][1]["total"]
+    pv_d, st_d = pv["trades"][1], st["trades"][1]
+
+    def paper(t: dict) -> int:
+        return next(ln["amount"] for ln in t["lines"] if ln["key"] == "paper")
+
+    assert pv_d["supply"] - paper(pv_d) == st_d["supply"] - paper(st_d)
     mok = pv["trades"][0]
     assert {ln["key"] for ln in mok["lines"]} >= {"molding", "molding_mat", "base", "base_mat"}
     assert mok["market"]["lo"] <= mok["market"]["hi"]

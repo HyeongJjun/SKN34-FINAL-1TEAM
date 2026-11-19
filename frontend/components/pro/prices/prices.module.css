@@ -1,0 +1,35 @@
+/* 도배 단가(D02 웹 표 · 폰 카드). 한 줄 DOM을 폰은 카드, 웹(≥1024)은 표 줄로 놓아요 */
+.box { border-radius: var(--mj-radius-group); background: var(--mj-surface); box-shadow: var(--mj-group-edge); padding: 4px var(--mj-pad-group); min-width: 0; }
+.head { display: none; }
+.rows { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+.row {
+  display: grid; gap: 10px 12px; padding: 16px 0; min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "name name" "mode mode" "price price" "amt amt";
+}
+.row + .row { border-top: 1px solid var(--mj-line-soft); }
+.warn { background: linear-gradient(var(--mj-warn-weak), var(--mj-warn-weak)) no-repeat; background-size: calc(100% + 2 * var(--mj-pad-group)) 100%; background-position: center; margin: 0 calc(-1 * var(--mj-pad-group)); padding-left: var(--mj-pad-group); padding-right: var(--mj-pad-group); }
+.bad { background: var(--mj-danger-weak); margin: 0 calc(-1 * var(--mj-pad-group)); padding-left: var(--mj-pad-group); padding-right: var(--mj-pad-group); }
+.cName { grid-area: name; display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.code { flex: none; font-size: var(--mj-type-label); font-weight: var(--mj-weight-bold); color: var(--mj-text-sub); }
+.nm { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nm b { font-size: var(--mj-type-body); font-weight: var(--mj-weight-bold); }
+.nm span { font-size: var(--mj-type-label); color: var(--mj-text-sub); }
+.cMode { grid-area: mode; min-width: 0; }
+.cPrice { grid-area: price; min-width: 0; }
+.cAmt { grid-area: amt; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: var(--mj-type-label); min-width: 0; }
+.cAmt b { font-size: var(--mj-type-body); font-weight: var(--mj-weight-bold); }
+.amtLabel { color: var(--mj-text-mute); font-size: var(--mj-type-caption); flex: none; }
+.mute { color: var(--mj-text-sub); text-align: right; }
+.dash { display: inline-flex; align-items: center; min-height: var(--mj-field-h); color: var(--mj-text-mute); }
+.r { text-align: right; }
+.err { display: flex; align-items: center; gap: 6px; font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); color: var(--mj-danger); }
+.askList { margin: 0 0 8px; padding-left: 18px; font-size: var(--mj-type-label); }
+
+@media (min-width: 1024px) {
+  .head, .row { display: grid; grid-template-columns: 220px minmax(300px, 360px) minmax(180px, 220px) minmax(0, 1fr); gap: 12px 16px; align-items: center; }
+  .head { padding: 12px 0; border-bottom: 1px solid var(--mj-line); font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); color: var(--mj-text-mute); }
+  .row { grid-template-areas: "name mode price amt"; }
+  .amtLabel { display: none; }
+  .cAmt { justify-content: flex-end; text-align: right; }
+}

@@ -1,0 +1,4 @@
+/* 내 정보 v3(C45 · C51 · C53). 색 · 글자는 토큰만. */
+.warn { margin: 12px 0; font-size: var(--mj-type-label); font-weight: var(--mj-weight-bold); color: var(--mj-danger); }
+.foot { display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 8px; }
+.phoneRow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }

@@ -43,7 +43,6 @@ export default async function DemoPage() {
       <main id="main">
         <div className={`mj-wrap ${s.head}`}>
           <h1 className="mj-h1">시연 순서</h1>
-          <p className="mj-sub">견적 받기부터 확정 공정표까지 고객이 보는 화면을 순서대로 열어요. 단계마다 미리 준비한 공사로 이어져요.</p>
         </div>
 
         <div className={`mj-wrap ${s.body}`}>

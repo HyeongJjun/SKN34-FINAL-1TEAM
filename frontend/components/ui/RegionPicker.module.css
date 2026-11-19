@@ -1,0 +1,59 @@
+/* 지역 두 칸 목록(지역 | 시 · 군 · 구). 칸마다 안에서만 스크롤해요. 높이는 --mj-region-h로 바꿔요 */
+.picker {
+  --h: var(--mj-region-h, min(46dvh, 380px));
+  display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  border: 1px solid var(--mj-line); border-radius: var(--mj-radius-card); overflow: hidden;
+  background: var(--mj-surface);
+}
+.col {
+  position: relative; /* 줄 offsetTop 기준 */
+  height: var(--h); min-width: 0; margin: 0; padding: 6px 0; border: 0;
+  overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: thin; scrollbar-color: var(--mj-fill-strong) transparent;
+}
+.sido { background: var(--mj-fill); }
+.sgg { border-left: 1px solid var(--mj-line); }
+.sgg:disabled { opacity: 0.5; }
+
+.group + .group { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--mj-line-soft); }
+.gh { padding: 6px 16px 4px; font-size: var(--mj-type-caption); font-weight: var(--mj-weight-bold); color: var(--mj-text-mute); }
+
+.row {
+  position: relative; display: flex; align-items: center; gap: 8px;
+  min-height: var(--mj-hit); padding: 0 14px 0 16px;
+  color: var(--mj-text-sub); font-size: var(--mj-type-body); cursor: pointer;
+  transition: background-color var(--mj-dur-fast) var(--mj-ease-out), color var(--mj-dur-fast) var(--mj-ease-out);
+}
+/* 라디오 · 체크 상자는 숨기고 줄 전체를 누르게 해요(키보드 · 화면 읽기는 그대로) */
+.row input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.row span:first-of-type { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.row > svg { flex: none; color: var(--mj-primary); }
+.row:hover { background: var(--mj-fill); color: var(--mj-text); }
+/* 초점 테두리는 줄 안쪽에(칸 가장자리에서 잘리지 않아요) */
+.row:has(input:focus-visible) { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: calc(-1 * var(--mj-focus-w) - 2px); border-radius: 8px; }
+
+/* 왼쪽: 고른 지역은 오른쪽 칸과 이어진 흰 탭 */
+.sido .row:hover { background: var(--mj-fill-strong); }
+.sido .row:has(input:checked) { background: var(--mj-surface); color: var(--mj-text); font-weight: var(--mj-weight-bold); }
+.sido .row:has(input:checked)::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0; background: var(--mj-primary); }
+.n {
+  flex: none; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px;
+  background: var(--mj-primary); color: var(--mj-on-primary); font-size: var(--mj-type-caption); font-weight: var(--mj-weight-bold);
+  display: inline-grid; place-items: center;
+}
+
+/* 오른쪽: 고른 시 · 군 · 구 */
+.sgg .row:has(input:checked) { background: var(--mj-primary-weak); color: var(--mj-on-primary-weak); font-weight: var(--mj-weight-bold); }
+.sgg:disabled .row { cursor: not-allowed; }
+.all { border-bottom: 1px solid var(--mj-line-soft); margin-bottom: 4px; }
+.sgg .all:has(input:checked) { background: none; color: var(--mj-text); }
+
+/* 여러 개 고르기 네모 */
+.box {
+  flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px;
+  box-shadow: inset 0 0 0 2px var(--mj-line-control); color: var(--mj-on-primary);
+}
+.boxOn { background: var(--mj-primary); box-shadow: none; }
+.dash { display: block; width: 10px; height: 2px; border-radius: 1px; background: var(--mj-on-primary); }
+
+@media (prefers-reduced-motion: reduce) { .row { transition: none; } }

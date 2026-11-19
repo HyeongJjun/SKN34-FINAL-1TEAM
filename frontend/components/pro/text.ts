@@ -1,0 +1,70 @@
+// 업체 화면 말(B3). 9판 글 + copy-fixes를 반영했어요. 화면 말은 여기 한곳에 두고, 영어 코드 값은 화면에 보이지 않아요.
+// 여러 화면이 같이 쓰는 말이 굳으면 lib/labels.ts(B4)로 옮겨 달라고 부탁해요(verification/b3.md).
+
+/** 업체 화면 7곳 공통 위치 안내(CF-01) */
+export const LOC_NOTE = "위치는 동네(구 · 동)까지만 보여요. 동 · 호수 · 연락처는 고객이 채팅으로 알려 줘요.";
+
+/** 다른 날 제안 이유(V07, ProposeIn.reason_code) */
+export const PROPOSE_REASONS = [
+  { key: "other_site", label: "다른 현장이 있어요" },
+  { key: "no_crew", label: "자재 · 사람이 안 돼요" },
+  { key: "other", label: "그 밖" },
+] as const;
+
+/** 가입 거절 이유(A04 · V22, backend REJECT_CODES). 관리자 창은 '그 밖 · 메모로 적어요' */
+export const REJECT_V3 = [
+  { key: "info_mismatch", label: "사업자등록증과 신청 정보가 달라요" },
+  { key: "closed", label: "휴업 · 폐업한 사업자예요" },
+  { key: "wrong_business", label: "도배 업종이 아니에요" },
+  { key: "other", label: "그 밖 · 메모로 적어요" },
+] as const;
+export function rejectLabel(code: string | null | undefined): string | null {
+  if (!code || code === "other") return null;
+  return REJECT_V3.find((r) => r.key === code)?.label ?? null;
+}
+
+/** 리뷰 칩(C39 · V24, VendorReviewRowOut.tags) */
+export const REVIEW_TAGS: Record<string, string> = { seam: "이음매가 깔끔해요", on_time: "약속한 날에 끝냈어요", kind: "설명이 친절해요", tidy: "뒷정리가 깔끔해요" };
+
+/** 업체 과세 유형(V15, L02: 간이과세를 더했어요) */
+export const TAX_KINDS = [
+  { value: "general", label: "일반과세" },
+  { value: "simplified", label: "간이과세" },
+  { value: "exempt", label: "면세" },
+];
+
+/** 실측 견적서 · 추가 금액 부가세 방식(CF-64: 칸 이름 '부가세' + 포함 · 빼고 · 면세) */
+export const VAT_MODE_LABEL: Record<string, string> = { included: "포함", excluded: "빼고", exempt: "면세" };
+
+/** 단가표 줄 단위(L01: 줄마다 무엇 1단위당인지 분명히 · CF-41 'M/D' 대신 '1명 하루') */
+export const PRICE_UNIT: Record<string, string> = {
+  putty: "공급면적 1평(3.3㎡)당",
+  paper_hapji: "벽지 1평(3.3㎡)당",
+  paper_silk: "벽지 1평(3.3㎡)당",
+  material: "공급면적 1평(3.3㎡)당",
+  labor: "1품(1명 하루)당",
+  meal: "1품당",
+  truck: "1대당",
+};
+
+/** 공사 한 건 기록 줄(V23, LogItemOut.code). 모르는 코드는 영어를 보이지 않고 '기록이 남았어요' */
+const LOG_TEXT: Record<string, string> = {
+  confirmed: "고객이 견적서를 확정했어요",
+  dates_sent: "공사 날짜를 보냈어요",
+  dates_accepted: "고객이 공사 날짜를 수락했어요",
+  date_requested: "고객이 다른 날짜를 요청했어요",
+  work_started: "공사 시작",
+  extra_sent: "추가 금액을 보냈어요",
+  extra_answered: "고객이 추가 금액에 답했어요",
+  done_posted: "공사 끝을 알렸어요",
+  checked: "고객이 공사 끝을 확인했어요",
+  auto_done: "7일이 지나 공사가 끝났어요",
+  quote_sent: "실측 견적서를 보냈어요",
+};
+export const logText = (code: string) => LOG_TEXT[code] ?? "기록이 남았어요";
+
+/** 시공 사례 공간 · 벽지(V16) */
+export const SPACES = ["거실", "안방", "작은방", "복도", "주방", "현관", "드레스룸", "그 밖"];
+export const PAPERS = [{ value: "basic", label: "실크" }, { value: "economy", label: "합지" }];
+export const paperLabel = (v: string | null | undefined) => PAPERS.find((p) => p.value === v)?.label ?? "벽지 미정";
+

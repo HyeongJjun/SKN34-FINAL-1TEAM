@@ -23,7 +23,7 @@ from starlette.concurrency import run_in_threadpool
 from app.auth.models import User
 from app.config import settings
 from app.files import images, storage
-from app.files.models import File
+from app.files.models import KINDS, File, FileView
 from app.shared import ratelimit
 from app.shared.errors import AppError
 
@@ -32,7 +32,7 @@ MB = 1024 * 1024
 IMAGES = {"image/jpeg", "image/png", "image/webp", "image/heic"}
 XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 DOCS = {"application/pdf", XLSX, "image/jpeg", "image/png", "image/heic"}
-# 종류별로 받는 형식과 최대 크기
+# 종류별로 받는 형식과 최대 크기. 사진 종류는 모두 위치 정보를 지운 새 그림으로만 저장한다
 RULES: dict[str, tuple[set[str], int]] = {
     "photo": (IMAGES, 10 * MB),
     "plan": (IMAGES | {"application/pdf"}, 20 * MB),
@@ -41,6 +41,9 @@ RULES: dict[str, tuple[set[str], int]] = {
     "price_doc": (DOCS, 20 * MB),
     "quote_doc": (DOCS, 20 * MB),
     "work_photo": (IMAGES, 10 * MB),
+    "chat_photo": (IMAGES, 10 * MB),  # 채팅 '+ 메뉴'로 보내는 사진 (v3)
+    "review_photo": (IMAGES, 10 * MB),  # 리뷰 사진 (v3)
+    "done_photo": (IMAGES, 10 * MB),  # 공사 끝 사진 (v3)
 }
 # 누가 어떤 종류를 올릴 수 있는지
 UPLOADERS: dict[str, set[str]] = {
@@ -51,7 +54,12 @@ UPLOADERS: dict[str, set[str]] = {
     "price_doc": {"vendor"},
     "quote_doc": {"vendor"},
     "work_photo": {"vendor"},
+    "chat_photo": {"customer", "vendor"},
+    "review_photo": {"customer"},
+    "done_photo": {"vendor"},
 }
+# 볼 때마다 열람 기록(file_views)을 남기는 종류 (안전성 확보조치 기준 제8조 접속기록, security.md LG-02)
+VIEW_LOGGED = frozenset({"license"})
 
 _XLSX_MAIN = b"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"
 _MACRO = ("vbaproject.bin", "xl/macrosheets/")
@@ -198,7 +206,8 @@ UPLOADS_PER_HOUR = 120
 
 
 async def upload_by(s: AsyncSession, user: User, kind: str, upload: UploadFile) -> File:
-    if kind not in RULES:
+    # DB가 받는 종류(models.KINDS)에도 있어야 한다: 새 종류는 migration이 들어온 뒤에 열린다(그 전에는 422)
+    if kind not in RULES or kind not in KINDS:
         raise AppError(422, "file_kind", "파일 종류가 맞지 않아요.")
     if user.role not in UPLOADERS[kind]:
         raise AppError(403, "forbidden", "이 종류의 파일을 올릴 권한이 없어요.")
@@ -229,14 +238,31 @@ async def readable(s: AsyncSession, user: User, file_id: uuid.UUID) -> File | No
     return None
 
 
+async def record_view(s: AsyncSession, user: User, f: File) -> None:
+    """사업자등록증을 누가 · 언제 · 어느 파일을 봤는지 file_views에 한 줄 남긴다(관리자 · 업체 본인만 볼 수 있다).
+    이름 · 파일 이름 같은 값은 쓰지 않는다. 기록을 남기지 못하면 파일도 내주지 않는다(커밋 오류가 그대로 오른다)."""
+    if f.kind not in VIEW_LOGGED:
+        return
+    s.add(
+        FileView(
+            file_id=f.id, owner_id=f.owner_id, viewer_id=user.id, viewer_role=user.role, kind=f.kind
+        )
+    )
+    await s.commit()
+
+
 async def respond(f: File) -> Response:
     """파일 내용을 내준다. 볼 권한은 부르는 쪽(파일 · 업체 자세히 router)이 먼저 확인한다."""
+    # 그림 · PDF만 브라우저 안에서 열고, 엑셀 같은 문서는 내려받게 한다 (security.md FI-03)
+    shown = f.content_type.startswith("image/") or f.content_type == "application/pdf"
     headers = {
-        "Content-Disposition": f"inline; filename*=UTF-8''{quote(f.filename)}",
+        "Content-Disposition": f"{'inline' if shown else 'attachment'}; "
+        f"filename*=UTF-8''{quote(f.filename)}",
         "X-Content-Type-Options": "nosniff",
         "Cache-Control": "private, no-store",
-        # 올린 파일 안의 스크립트가 우리 주소에서 돌지 못하게 (PDF · SVG 같은 것)
-        "Content-Security-Policy": "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox",
+        # 올린 파일 안의 스크립트가 우리 주소에서 돌지 못하게 (PDF · SVG 같은 것), 다른 사이트 틀에도 안 들어가게
+        "Content-Security-Policy": "default-src 'none'; img-src 'self'; style-src 'unsafe-inline';"
+        " frame-ancestors 'self'; sandbox",
     }
     if settings.files_s3_bucket:
         try:

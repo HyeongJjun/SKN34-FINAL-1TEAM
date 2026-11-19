@@ -1,0 +1,14 @@
+.host {
+  position: fixed; left: 0; right: var(--mj-lock-gap, 0px); z-index: var(--mj-z-toast);
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 0 var(--mj-gutter); pointer-events: none;
+}
+/* 폰에서 아래 탭 바 · 아래 단추 띠가 있으면 그 위에 떠요 */
+@media (max-width: 767px) {
+  :global(html):has([data-mj-tabbar]) .host { bottom: calc(var(--mj-tabbar-h) + 12px + env(safe-area-inset-bottom, 0px)); }
+  :global(html):has([data-mj-bottombar]) .host { bottom: calc(var(--mj-bottombar-h) + 12px + env(safe-area-inset-bottom, 0px)); }
+}
+.toast { max-width: min(480px, 100%); padding: 12px 14px; border-radius: 14px; background: var(--mj-surface-inverse); color: var(--mj-text-inverse); font-size: var(--mj-type-label); line-height: 1.45; box-shadow: var(--mj-shadow-overlay); animation: in var(--mj-dur) var(--mj-ease-out); }
+.error { background: var(--mj-danger-hover); }
+@keyframes in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

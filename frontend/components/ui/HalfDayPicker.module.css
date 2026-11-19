@@ -1,0 +1,11 @@
+.set { margin: 0; padding: 0; border: 0; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
+.legend { padding: 0; margin-bottom: 9px; font-size: var(--mj-type-title-s); font-weight: var(--mj-weight-bold); }
+.halves { display: flex; gap: 8px; }
+.half { position: relative; flex: 1 1 0; display: grid; place-items: center; min-height: 50px; border-radius: var(--mj-radius-field); background: var(--mj-fill); color: var(--mj-text-sub); font-size: var(--mj-type-body); font-weight: var(--mj-weight-bold); text-align: center; line-height: 1.2; cursor: pointer; user-select: none; }
+.half:hover { background: var(--mj-fill-strong); }
+.input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: inherit; }
+.half:has(.input:focus-visible) { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: 2px; }
+.prop { background: var(--mj-warn-weak); color: var(--mj-proposed-text); box-shadow: inset 0 0 0 1.5px var(--mj-proposed); }
+.on, .on:hover { background: var(--mj-primary); color: var(--mj-on-primary); box-shadow: none; }
+.prop.on { background: var(--mj-proposed); color: var(--mj-on-proposed); }
+.closed, .closed:hover { background: var(--mj-surface-sub); color: var(--mj-text-disabled); box-shadow: inset 0 0 0 1px var(--mj-line); cursor: not-allowed; }

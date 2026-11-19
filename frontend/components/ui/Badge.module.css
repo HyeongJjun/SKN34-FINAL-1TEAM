@@ -1,0 +1,9 @@
+.badge { display: inline-flex; align-items: center; gap: 4px; min-height: var(--mj-badge-h); padding: 0 8px; border-radius: var(--mj-radius-badge); font-size: var(--mj-type-caption); font-weight: var(--mj-weight-bold); line-height: 1.2; white-space: nowrap; flex: none; vertical-align: middle; }
+.now { background: var(--mj-badge-now-bg); color: var(--mj-badge-now-fg); }
+.wait { background: var(--mj-badge-wait-bg); color: var(--mj-badge-wait-fg); }
+.ok { background: var(--mj-badge-ok-bg); color: var(--mj-badge-ok-fg); }
+.bad { background: var(--mj-badge-bad-bg); color: var(--mj-badge-bad-fg); }
+.mute { background: var(--mj-badge-mute-bg); color: var(--mj-badge-mute-fg); }
+.due { gap: 4px; }
+
+.count { display: inline-grid; place-items: center; min-width: var(--mj-count-h); height: var(--mj-count-h); padding: 0 6px; border-radius: var(--mj-radius-pill); background: var(--mj-count); color: var(--mj-on-count); font-size: var(--mj-type-caption); font-weight: var(--mj-weight-bold); line-height: 1; }

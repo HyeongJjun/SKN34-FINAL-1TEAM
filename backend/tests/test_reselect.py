@@ -83,7 +83,7 @@ def test_reselect_after_confirm_closes_everything_and_frees_slots(api):
     assert (ve["from_status"], ve["code"]) == ("chosen", "reselected")
     assert notes("maru@mitjip.test", "deal_reselected") == [
         {
-            "body": RESELECTED,
+            "body": f"{RESELECTED} · 노원구 도배",  # v3: 업체 알림에 공사 이름
             "link": f"/vendor/requests/{va}",
             "dedup_key": f"deal:{did}:reselected",
         }
@@ -115,15 +115,11 @@ def test_reselect_after_confirm_closes_everything_and_frees_slots(api):
 
     # 업체 쪽: 고객 연락처가 가려지고 공사 탭에서 끝남 탭으로
     login(api, "maru@mitjip.test")
-    assert api.get(f"/vendor/visits/{va}").json()["customer"] is None
+    assert "customer" not in api.get(f"/vendor/visits/{va}").json()  # v3(B3): 연락처 칸 없음
     assert api.get("/vendor/visits", params={"tab": "jobs"}).json()["items"] == []
     (gone,) = api.get("/vendor/visits", params={"tab": "done"}).json()["items"]
-    assert (gone["id"], gone["status"], gone["close_reason"], gone["customer"]) == (
-        va,
-        "closed",
-        "reselected",
-        None,
-    )
+    assert (gone["id"], gone["status"], gone["close_reason"]) == (va, "closed", "reselected")
+    assert "customer" not in gone
     assert api.get("/vendor/visits/summary").json()["jobs"] == 0
     assert api.put(f"/vendor/visits/{va}/quote", json={}).status_code == 409
 
@@ -135,7 +131,7 @@ def test_reselect_after_confirm_closes_everything_and_frees_slots(api):
     assert send(api, pid, [maru, gyeol], share_contact_ids=[maru], **SHARE).status_code == 201
     new_a = open_visit(maru)
     login(api, "maru@mitjip.test")
-    assert api.get(f"/vendor/visits/{new_a}").json()["customer"]["phone"] == "01012345678"
+    assert "customer" not in api.get(f"/vendor/visits/{new_a}").json()  # v3(B3): 채팅으로
     quote(api, new_a, 3_000_000)
     use(api, customer)
     ok = confirm(api, pid, new_a)
@@ -238,7 +234,7 @@ def test_reselect_from_compare_before_confirming(api):
     assert all(v["contact"] is None for v in api.get(f"/projects/{pid}/visits").json()["visits"])
     assert api.get(f"/projects/{pid}/quotes", params={"trade": "dobae"}).json()["vendors"] == []
     login(api, "gyeol@mitjip.test")
-    assert api.get(f"/vendor/visits/{vb}").json()["customer"] is None
+    assert "customer" not in api.get(f"/vendor/visits/{vb}").json()  # v3(B3): 연락처 칸 없음
     use(api, customer)
     again = reselect_before(api, pid)
     assert again.status_code == 409 and again.json()["error"]["code"] == "invalid_state"

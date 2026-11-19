@@ -1,0 +1,15 @@
+.money { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.big { font-size: var(--mj-type-amount); font-weight: var(--mj-weight-heavy); letter-spacing: var(--mj-track-amount); line-height: var(--mj-lh-tight); }
+.mid { font-size: var(--mj-type-amount-m); font-weight: var(--mj-weight-heavy); letter-spacing: var(--mj-track-amount); line-height: 1.35; }
+.line { font-size: var(--mj-type-body); font-weight: var(--mj-weight-bold); }
+.text { font-weight: inherit; }
+.out { color: var(--mj-text-mute); font-weight: 500; }
+.none { color: var(--mj-text-mute); font-weight: var(--mj-weight-semibold); }
+.noneBig { font-size: var(--mj-type-body); }
+
+.fig { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.figRow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.label { font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); color: var(--mj-text-mute); }
+.cap { font-size: var(--mj-type-label); color: var(--mj-text-sub); }
+.sub { font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+.past .money { color: var(--mj-text-mute); }

@@ -1,0 +1,253 @@
+{
+ "bank": 2035,
+ "curve": [
+  {
+   "mode": "비슷함만",
+   "t": 0.3,
+   "answered": "172/206",
+   "answer_rate": 0.835,
+   "precision_grade1": 0.39,
+   "precision_grade1_ci95": [
+    0.32,
+    0.464
+   ],
+   "precision_grade2": 0.174,
+   "no_source_false_answer": "26/36"
+  },
+  {
+   "mode": "비슷함만",
+   "t": 0.4,
+   "answered": "100/206",
+   "answer_rate": 0.485,
+   "precision_grade1": 0.47,
+   "precision_grade1_ci95": [
+    0.375,
+    0.567
+   ],
+   "precision_grade2": 0.2,
+   "no_source_false_answer": "9/36"
+  },
+  {
+   "mode": "비슷함만",
+   "t": 0.5,
+   "answered": "51/206",
+   "answer_rate": 0.248,
+   "precision_grade1": 0.549,
+   "precision_grade1_ci95": [
+    0.414,
+    0.677
+   ],
+   "precision_grade2": 0.333,
+   "no_source_false_answer": "4/36"
+  },
+  {
+   "mode": "비슷함만",
+   "t": 0.6,
+   "answered": "24/206",
+   "answer_rate": 0.117,
+   "precision_grade1": 0.75,
+   "precision_grade1_ci95": [
+    0.551,
+    0.88
+   ],
+   "precision_grade2": 0.5,
+   "no_source_false_answer": "2/36"
+  },
+  {
+   "mode": "비슷함만",
+   "t": 0.7,
+   "answered": "12/206",
+   "answer_rate": 0.058,
+   "precision_grade1": 0.75,
+   "precision_grade1_ci95": [
+    0.468,
+    0.911
+   ],
+   "precision_grade2": 0.583,
+   "no_source_false_answer": "1/36"
+  },
+  {
+   "mode": "비슷함만",
+   "t": 0.8,
+   "answered": "4/206",
+   "answer_rate": 0.019,
+   "precision_grade1": 1.0,
+   "precision_grade1_ci95": [
+    0.51,
+    1.0
+   ],
+   "precision_grade2": 1.0,
+   "no_source_false_answer": "1/36"
+  },
+  {
+   "mode": "비슷함 + 검색 맞물림",
+   "t": 0.3,
+   "answered": "89/206",
+   "answer_rate": 0.432,
+   "precision_grade1": 0.64,
+   "precision_grade1_ci95": [
+    0.537,
+    0.732
+   ],
+   "precision_grade2": 0.281,
+   "no_source_false_answer": "12/36"
+  },
+  {
+   "mode": "비슷함 + 검색 맞물림",
+   "t": 0.4,
+   "answered": "56/206",
+   "answer_rate": 0.272,
+   "precision_grade1": 0.679,
+   "precision_grade1_ci95": [
+    0.548,
+    0.786
+   ],
+   "precision_grade2": 0.286,
+   "no_source_false_answer": "4/36"
+  },
+  {
+   "mode": "비슷함 + 검색 맞물림",
+   "t": 0.5,
+   "answered": "31/206",
+   "answer_rate": 0.15,
+   "precision_grade1": 0.774,
+   "precision_grade1_ci95": [
+    0.602,
+    0.886
+   ],
+   "precision_grade2": 0.452,
+   "no_source_false_answer": "3/36"
+  },
+  {
+   "mode": "비슷함 + 검색 맞물림",
+   "t": 0.6,
+   "answered": "22/206",
+   "answer_rate": 0.107,
+   "precision_grade1": 0.773,
+   "precision_grade1_ci95": [
+    0.566,
+    0.899
+   ],
+   "precision_grade2": 0.5,
+   "no_source_false_answer": "2/36"
+  },
+  {
+   "mode": "비슷함 + 검색 맞물림",
+   "t": 0.7,
+   "answered": "10/206",
+   "answer_rate": 0.049,
+   "precision_grade1": 0.8,
+   "precision_grade1_ci95": [
+    0.49,
+    0.943
+   ],
+   "precision_grade2": 0.6,
+   "no_source_false_answer": "1/36"
+  },
+  {
+   "mode": "비슷함 + 검색 맞물림",
+   "t": 0.8,
+   "answered": "3/206",
+   "answer_rate": 0.015,
+   "precision_grade1": 1.0,
+   "precision_grade1_ci95": [
+    0.438,
+    1.0
+   ],
+   "precision_grade2": 1.0,
+   "no_source_false_answer": "1/36"
+  }
+ ],
+ "sample": [
+  {
+   "id": "m29",
+   "expect": "answer",
+   "sim": 1.0,
+   "ref": "K180",
+   "grade": 2,
+   "q": "석고보드 이음매는 어떻게 처리해요?",
+   "hint": "석고보드 이음매는 어떻게 처리해요?",
+   "agree": false
+  },
+  {
+   "id": "d32",
+   "expect": "answer",
+   "sim": 0.928,
+   "ref": "K747",
+   "grade": 2,
+   "q": "거실 벽지는 무슨 색이 좋아요?",
+   "hint": "거실 벽지 무슨 색이 좋아요?",
+   "agree": true
+  },
+  {
+   "id": "c16",
+   "expect": "answer",
+   "sim": 0.859,
+   "ref": "K758",
+   "grade": 2,
+   "q": "인테리어 업체가 등록된 곳인지 어떻게 확인해요?",
+   "hint": "인테리어 업체가 등록된 곳인지 어떻게 알아요?",
+   "agree": true
+  },
+  {
+   "id": "c14",
+   "expect": "answer",
+   "sim": 0.806,
+   "ref": "K157",
+   "grade": 2,
+   "q": "아파트 인테리어 공사 순서가 어떻게 돼요?",
+   "hint": "인테리어 공정 순서가 어떻게 돼요?",
+   "agree": true
+  },
+  {
+   "id": "c01",
+   "expect": "answer",
+   "sim": 0.791,
+   "ref": "K833",
+   "grade": 1,
+   "q": "인테리어 공사 전에 관리사무소에 뭘 신고해야 해요?",
+   "hint": "관리사무소에 언제 신고해요?",
+   "agree": true
+  },
+  {
+   "id": "c23",
+   "expect": "no_source",
+   "sim": 0.655,
+   "ref": "K747",
+   "grade": 0,
+   "q": "욕실 타일 줄눈은 무슨 색이 좋아요?",
+   "hint": "거실 벽지 무슨 색이 좋아요?",
+   "agree": true
+  },
+  {
+   "id": "xm040",
+   "expect": "no_source",
+   "sim": 0.811,
+   "ref": "K63",
+   "grade": 0,
+   "q": "커튼박스 하나 만드는 데 보통 얼마예요?",
+   "hint": "커튼박스 만드는 데 얼마나 걸려요?",
+   "agree": true
+  },
+  {
+   "id": "xm042",
+   "expect": "no_source",
+   "sim": 0.54,
+   "ref": "K696",
+   "grade": 0,
+   "q": "몰딩 자재는 어느 브랜드가 제일 좋아요?",
+   "hint": "LED 방등 어떤 브랜드가 좋아요?",
+   "agree": false
+  },
+  {
+   "id": "xc007",
+   "expect": "no_source",
+   "sim": 0.529,
+   "ref": "K147",
+   "grade": 0,
+   "q": "베란다 탄성코트도 같이 상담해 줄 수 있어요?",
+   "hint": "베란다 탄성코트는 며칠 말려요?",
+   "agree": true
+  }
+ ]
+}

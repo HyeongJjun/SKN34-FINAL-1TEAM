@@ -1,6 +1,10 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Mitjip staging - public EC2, private RDS PostgreSQL, and private S3 storage in Seoul.
 
+Metadata:
+  AWSToolsMetrics:
+    AWSAgentToolkit: aws-cloudformation@3
+
 Parameters:
   InstanceType:
     Type: String
@@ -162,6 +166,14 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: >-
+          사진 · 사업자등록증 · 견적서 파일. 버전 관리로 실수 삭제는 7일 안에 되돌리고,
+          그 뒤 예전 판은 복구되지 않게 지운다(개인정보 보호법 제21조②, docs/v3/adr/security-03)
+        must:
+          - 앱은 버전 번호 없이 지워서 지움 표시만 생긴다 -> 수명 주기 규칙을 빼면 지운 파일이 영원히 남는다
+          - NoncurrentDays는 처리방침에 적는 백업 보관 기간과 같아야 한다(팀 확인 전 7일)
     Properties:
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
@@ -174,6 +186,16 @@ Resources:
               SSEAlgorithm: AES256
       VersioningConfiguration:
         Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          # 지운 · 바꾼 파일의 예전 판은 7일 뒤 영구 삭제, 남은 지움 표시 · 끊긴 나눠 올리기도 정리 (security.md FI-08)
+          - Id: purge-noncurrent-file-versions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 7
+            ExpiredObjectDeleteMarker: true
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
       Tags:
         - Key: Project
           Value: mitjip

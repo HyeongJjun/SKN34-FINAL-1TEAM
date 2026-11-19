@@ -37,6 +37,8 @@ LOGIN_PER_EMAIL_IP = (
 LOGIN_PER_IP = 50  # 한 IP가 이메일을 바꿔 가며 시도하는 것
 SIGNUP_PER_IP = 10  # 한 시간에
 TOO_MANY = "여러 번 시도했어요. 잠시 뒤에 다시 해 주세요."
+# 로그인 · 가입 한도는 Redis가 멈춰도 열리지 않게 프로세스 안에서 대신 센다 (security.md AU-03)
+CLOSED: ratelimit.Fallback = "local"
 
 
 def _sid(token: str) -> str:
@@ -57,7 +59,7 @@ def _verify_sync(hashed: str, password: str) -> bool:
 
 
 async def signup_limit(ip: str) -> None:
-    await ratelimit.hit(ratelimit.key("signup", ip), SIGNUP_PER_IP, 3600, TOO_MANY)
+    await ratelimit.hit(ratelimit.key("signup", ip), SIGNUP_PER_IP, 3600, TOO_MANY, fallback=CLOSED)
 
 
 async def create_user(
@@ -113,9 +115,11 @@ async def signup_customer(s: AsyncSession, data: SignupIn, ip: str) -> tuple[Use
 
 async def _check_password(email: str, hashed: str | None, password: str, ip: str) -> bool:
     """시도 횟수를 먼저 센 뒤 비밀번호를 본다 (동시에 몰려도 한도를 넘지 못함)."""
-    await ratelimit.hit(ratelimit.key("login-ip", ip), LOGIN_PER_IP, WINDOW, TOO_MANY)
+    await ratelimit.hit(
+        ratelimit.key("login-ip", ip), LOGIN_PER_IP, WINDOW, TOO_MANY, fallback=CLOSED
+    )
     k = ratelimit.key("login", email, ip)
-    await ratelimit.hit(k, LOGIN_PER_EMAIL_IP, WINDOW, TOO_MANY)
+    await ratelimit.hit(k, LOGIN_PER_EMAIL_IP, WINDOW, TOO_MANY, fallback=CLOSED)
     ok = await run_in_threadpool(_verify_sync, hashed or _DUMMY_HASH, password)
     if ok and hashed:
         await ratelimit.reset(k)
@@ -124,11 +128,9 @@ async def _check_password(email: str, hashed: str | None, password: str, ip: str
 
 async def login(s: AsyncSession, data: LoginIn, ip: str) -> tuple[User, str]:
     user = await repo.user_by_email(s, data.email)
-    if not await _check_password(
-        data.email, user.password_hash if user else None, data.password, ip
-    ):
+    ok = await _check_password(data.email, user.password_hash if user else None, data.password, ip)
+    if not ok or user is None:
         raise AppError(401, "bad_login", "이메일이나 비밀번호가 맞지 않아요.")
-    assert user is not None
     if user.status != "active":
         raise AppError(403, "suspended", "사용이 정지된 계정이에요. 고객센터에 문의해 주세요.")
     if _hasher.check_needs_rehash(user.password_hash):

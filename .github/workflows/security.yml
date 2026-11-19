@@ -59,3 +59,37 @@ jobs:
         uses: actions/dependency-review-action@v5.0.0
         with:
           fail-on-severity: high
+
+  # security.md SC-01 · SC-02 · T19: 잠금 파일 의존성과 코드 규칙을 PR마다 본다. 도구 판은 고정한다
+  audit:
+    name: Audit (pip-audit · pnpm audit · bandit · semgrep)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+      - name: 백엔드 운영 의존성 취약점 (pip-audit, 하나라도 있으면 실패)
+        working-directory: backend
+        run: |
+          uv export --frozen --no-dev --format requirements-txt > "$RUNNER_TEMP/req-prod.txt"
+          uvx pip-audit==2.10.1 --disable-pip -r "$RUNNER_TEMP/req-prod.txt"
+      - name: 백엔드 정적 점검 (bandit, 중간 이상이면 실패)
+        working-directory: backend
+        run: uvx bandit==1.9.4 -r app -ll
+      - name: 규칙 점검 (semgrep, 찾으면 실패)
+        run: >-
+          uvx semgrep==1.186.0 scan --metrics=off --error
+          --config p/python --config p/typescript --config p/react --config p/nextjs
+          --config p/security-audit --config p/secrets --config p/owasp-top-ten
+          backend/app frontend/app frontend/components frontend/lib frontend/proxy.ts
+      - uses: pnpm/action-setup@v6.1.0
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: 프런트 운영 의존성 취약점 (pnpm audit, high 이상이면 실패)
+        working-directory: frontend
+        run: pnpm audit --prod --audit-level high

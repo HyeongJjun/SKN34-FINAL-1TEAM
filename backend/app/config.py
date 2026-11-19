@@ -41,6 +41,8 @@ class Settings(BaseSettings):
     jev_model: str = "typesafe/jev-1.14"
     # false면 Jev를 부르지 않고 학습 모델 라벨을 그대로 쓴다 (Jev 효과 비교 테스트용)
     jev_enabled: bool = True
+    # v3 실시간 줄기 키 앞말. 비우면 mj:{app_env} (테스트 · 묶음끼리 섞이지 않게 바꿀 수 있다)
+    realtime_prefix: str = ""
 
     @property
     def is_https(self) -> bool:

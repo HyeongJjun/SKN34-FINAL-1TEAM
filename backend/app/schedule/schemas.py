@@ -9,7 +9,14 @@ from app.project.schemas import ProjectCheckOut, ProjectListItem
 from app.quote.schemas import BudgetOut, QuoteBriefOut, QuoteFileOut
 from app.schedule.models import CREW_MAX, EXTRA_AMOUNT_MAX, EXTRA_PHOTOS_MAX, WISH_MAX
 from app.vendor.schemas import ContactOut
-from app.visit.schemas import CompareOut, VendorVisitDetailOut, VendorVisitRow
+from app.visit.schemas import (
+    CompareOut,
+    StateTagOut,
+    VendorNextOut,
+    VendorVisitDetailOut,
+    VisitNextOut,
+    VisitStatus,
+)
 
 Reason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=300)]
 # 공사 날짜 상태: 아직 안 냄 · 냄(수락 기다림) · 다른 날짜 요청 열림 · 수락함 · 다시 고름
@@ -101,6 +108,27 @@ class DealOut(BaseModel):
         description="서로 연락처가 보이는 마지막 날 (끝냈다고 올린 날 + 1년)"
     )
     fixing_note: str | None = Field(description="남은 일 (고객이 적은 글, 남은 일 상태일 때)")
+    # ---- v3 (C35 · C38 · C39, 1단계에서 채움) ----
+    work_days: list[date] = Field(default=[], description="수락한 공사 날 (하나씩)")
+    done_note: str | None = Field(default=None, description="업체 '남길 말' (V13)")
+    done_posted_at: datetime | None = Field(default=None, description="'공사 끝냈어요'를 올린 때")
+    auto_done_at: datetime | None = Field(
+        default=None, description="고객이 확인하지 않으면 자동으로 끝나는 때 (올린 때 + 7일, D24)"
+    )
+    done_remind_at: datetime | None = Field(
+        default=None, description="자동으로 끝나기 전에 한 번 알리는 때 (올린 때 + 4일, D24 · C38)"
+    )
+    review_open: bool = Field(default=False, description="리뷰를 쓸 수 있음 (끝남 + 아직 안 씀)")
+    review_id: uuid.UUID | None = Field(default=None, description="쓴 리뷰")
+    thread_id: uuid.UUID | None = Field(default=None, description="이 업체와의 채팅")
+    done_photos: list[uuid.UUID] = Field(
+        default=[],
+        description="'공사 끝냈어요' 사진 (GET /projects/{id}/deals/{did}/photos/{file_id}, C38)",
+    )
+    grand_total: int | None = Field(
+        default=None,
+        description="공사 금액: 확정 금액 + 승인한 추가 금액 (부가세 포함, 계산 엔진, C37 · C38)",
+    )
 
 
 class ConfirmOut(BaseModel):
@@ -115,9 +143,37 @@ class CompareDealOut(CompareOut):
     deal: DealOut | None = Field(description="그 공정의 업체 확정 (없으면 비어 있다)")
 
 
-class InboxRowOut(VendorVisitRow):
-    """업체 작업함 한 줄. 공사 탭은 확정 정보가 더 들어 있다."""
+class InboxRowOut(BaseModel):
+    """업체 작업함 한 줄 (V03 · D04). 고객 이름 · 휴대폰 · 주소 · 아파트 · 동호수 칸은 없다(B3: 집은
+    구 · 동까지만). 공사 탭은 확정 정보가 더 들어 있다."""
 
+    id: uuid.UUID
+    received_at: datetime
+    code: str = Field(description="요청 번호")
+    trade: str
+    grade: str | None = Field(description="도배 유형 (economy · basic)")
+    region: str
+    area_name: str
+    pyeong: Decimal | None = Field(description="표준견적서에 저장한 평 (공급 기준)")
+    status: str
+    new: bool = Field(description="아직 열어 보지 않은 새 요청")
+    share_contact: bool = Field(description="고객이 연락처를 보냈는지 (연락처는 요청 자세히에서만)")
+    closed_at: datetime | None
+    decline_code: str | None
+    close_reason: str | None
+    waiting_days: int | None = Field(description="견적서를 보낸 뒤 기다린 날 (서울 날짜)")
+    area_label: str | None = Field(
+        default=None, description="노원구 상계동 · 공급 69.4㎡ (calc.visit_view.area_label)"
+    )
+    home: str | None = Field(default=None, description="아파트 · 도배 전체 · 빈 집")
+    wish_start: date | None = None
+    wish_end: date | None = None
+    work_wish_on: date | None = Field(default=None, description="공사 시작 희망일 (L04)")
+    estimate_total: int | None = None
+    budget_won: int | None = Field(default=None, description="고객 예산 (D03 B)")
+    state: StateTagOut | None = Field(default=None, description="상태 아이콘 + 글자 (N4 C)")
+    next: VendorNextOut | None = Field(default=None, description="다음 할 일 · 기한")
+    attempt: int | None = None
     deal_id: uuid.UUID | None = None
     deal_status: str | None = None
     confirmed_at: datetime | None = None
@@ -135,6 +191,11 @@ class InboxRowOut(VendorVisitRow):
     work_done_on: date | None = None
     contact_until: date | None = Field(default=None, description="고객 연락처가 보이는 마지막 날")
     fixing_note: str | None = Field(default=None, description="고객이 알린 남은 일")
+    # ---- v3 공사 탭 카드 (V03 덧붙인 그림 · D25 A) ----
+    work_days: list[date] = Field(default=[], description="수락한 공사 날 (하나씩)")
+    deal_total: int | None = Field(
+        default=None, description="확정 금액 (확정한 견적서, 부가세 포함)"
+    )
 
 
 class InboxPageOut(BaseModel):
@@ -162,6 +223,7 @@ class ProposalOut(BaseModel):
     changed: bool = Field(description="앞서 낸 날짜를 바꿔 다시 냈는지 ('날짜가 바뀌었어요')")
     created_at: datetime
     decided_at: datetime | None
+    days: list[date] = Field(default=[], description="v3: 업체가 하나씩 고른 공사 날 (V11)")
 
 
 class DateRequestOut(BaseModel):
@@ -238,6 +300,10 @@ class ScheduleOut(BaseModel):
         description="확정 공정표 최신 버전 (없으면 0). 수락할 때 그대로 보낸다"
     )
     trades: list[TradeDatesOut] = Field(description="목공 → 도배 순, 확정한 공정만")
+    request_due_preview: datetime | None = Field(
+        default=None,
+        description="지금 다른 날짜를 요청하면 업체가 새 날짜를 올릴 기한 (요청 + 48시간, 계산 엔진, C52)",
+    )
 
 
 class JobOut(BaseModel):
@@ -251,7 +317,9 @@ class JobOut(BaseModel):
     overdue: bool
     start_date: date | None = Field(description="수락한 공사 날짜")
     end_date: date | None
-    visit: VendorVisitDetailOut = Field(description="집 · 고객 (연락처는 공개 규칙대로)")
+    visit: VendorVisitDetailOut = Field(
+        description="집 · 요청 (고객 이름 · 연락처 · 주소는 없다, 채팅으로, B3)"
+    )
     quote: QuoteBriefOut = Field(description="확정한 견적서 버전")
     plan_version: int = Field(description="지금 예상 공정표 버전")
     plan_start: date | None = Field(description="예상 공정표의 이 공정 시작일")
@@ -275,6 +343,22 @@ class JobOut(BaseModel):
     can_finish: bool = Field(
         description="'공사 끝냈어요'를 누를 수 있는지 (마지막 공사일부터, 공사 중 · 남은 일일 때)"
     )
+    # ---- v3 (V11 · V13 · V23, 1단계에서 채움) ----
+    work_days: list[date] = Field(default=[], description="수락한 공사 날 (하나씩)")
+    done_note: str | None = None
+    done_posted_at: datetime | None = None
+    auto_done_at: datetime | None = Field(default=None, description="자동으로 끝나는 때 (D24)")
+    done_photos: list[uuid.UUID] = Field(default=[], description="공사 끝 사진")
+    thread_id: uuid.UUID | None = Field(default=None, description="이 고객과의 채팅")
+    # ---- v3 공사 화면 (B3) ----
+    grand_total: int | None = Field(
+        default=None,
+        description="공사 금액: 확정 금액 + 승인한 추가 금액 (부가세 포함, 계산 엔진)",
+    )
+    day_no: int | None = Field(
+        default=None,
+        description="오늘이 공사 몇째 날인지 (1부터, 공사 날 목록 기준). 오늘이 공사 날이 아니면 비어 있다",
+    )
 
 
 class AcceptIn(BaseModel):
@@ -284,12 +368,20 @@ class AcceptIn(BaseModel):
 
 
 class DatesIn(BaseModel):
-    """업체가 공사 날짜 내기 (수락 전에는 다시 낼 수 있다)"""
+    """업체가 공사 날짜 내기 (수락 전에는 다시 낼 수 있다). v3는 날을 하나씩(days) 낸다(V11)."""
 
-    start: date
-    end: date
+    start: date | None = Field(default=None, description="옛 길: 시작일 (days가 없으면 필수)")
+    end: date | None = Field(default=None, description="옛 길: 끝나는 날 (days가 없으면 필수)")
+    days: list[date] | None = Field(
+        default=None,
+        min_length=1,
+        max_length=120,
+        description="v3: 공사 날 목록 (날 수 = 견적서 공사 기간 · 공휴일 · 겹침은 계산 엔진, 422)",
+    )
     crew: int = Field(ge=1, le=CREW_MAX, description="하루 작업 인원")
-    method: Literal["app", "call"] = Field(description="믿집에서 내기 · 고객과 통화로 정함")
+    method: Literal["app", "call"] = Field(
+        default="app", description="믿집에서 내기 · 고객과 통화로 정함"
+    )
     kind: Literal["initial", "change"] = Field(
         default="initial",
         description="처음 내기 · 다시 내기(initial) 또는 수락한 날짜 바꾸기(change)",
@@ -301,6 +393,14 @@ class DatesIn(BaseModel):
     request_id: uuid.UUID | None = Field(
         default=None, description="화면이 본 열린 요청 (그사이 바뀌었으면 409)"
     )
+
+    @model_validator(mode="after")
+    def _when(self) -> "DatesIn":
+        if self.days is None and (self.start is None or self.end is None):
+            raise ValueError("공사 날짜를 골라 주세요.")
+        if self.days is not None and len(set(self.days)) != len(self.days):
+            raise ValueError("같은 날을 두 번 골랐어요.")
+        return self
 
 
 class PreviewOut(BaseModel):
@@ -356,6 +456,12 @@ class ExtraIn(BaseModel):
     vat_mode: Literal["included", "excluded", "exempt"] = Field(
         default="excluded", description="부가세 빼고 적은 금액이 기본 (면세 업체는 면세만)"
     )
+    client_key: uuid.UUID | None = Field(
+        default=None, description="v3: 같은 줄 두 번 막는 키 (같은 키면 200 같은 줄)"
+    )
+    replaces: uuid.UUID | None = Field(
+        default=None, description="v3: 고칠 앞 판 id (새 판이 되고 앞 판은 superseded, D23)"
+    )
     file_ids: list[uuid.UUID] = Field(
         default=[],
         max_length=EXTRA_PHOTOS_MAX,
@@ -370,7 +476,15 @@ class ExtraIn(BaseModel):
 
 
 class AckIn(BaseModel):
+    """옛 길(/ack). v3 화면은 AnswerIn(/answer)을 쓴다."""
+
     ack: Literal["ok", "talk"] = Field(description="확인했어요 · 업체와 이야기할게요")
+
+
+class AnswerIn(BaseModel):
+    """v3 추가 금액 답 (C37, D23): 승인 · 거절 · 채팅으로 묻기. 최신 판에만."""
+
+    answer: Literal["approve", "reject", "ask"]
 
 
 class MoneyOut(BaseModel):
@@ -396,15 +510,27 @@ class ExtraOut(BaseModel):
     vat: int
     total: int = Field(description="고객에게 보이는 금액 (부가세 포함, 믿집 계산)")
     ack: Literal["pending", "ok", "talk"] = Field(
-        description="확인 기다림 · 확인했어요 · 업체와 이야기 중"
+        description="옛 화면 값: 확인 기다림 · 확인했어요 · 업체와 이야기 중"
     )
     acked_at: datetime | None
     created_at: datetime
     photos: list[ExtraPhotoOut]
+    # ---- v3 (D23) ----
+    answer: Literal["pending", "approved", "rejected", "asked"] = Field(
+        default="pending", description="v3 답: 기다림 · 승인 · 거절 · 채팅으로 물음"
+    )
+    group_id: uuid.UUID | None = Field(default=None, description="판 묶음 (첫 판 id)")
+    version: int = Field(default=1, description="판 번호")
+    superseded: bool = Field(default=False, description="새 판이 나와 지난 판")
+    after_total: int | None = Field(
+        default=None,
+        description="승인하면 공사 금액 (공사 금액 + 이 금액, 계산 엔진, C37). 답을 기다리거나 "
+        "물어본 최신 판만",
+    )
 
 
 class TradeExtrasOut(BaseModel):
-    """한 공정의 추가 금액. 합계는 계산 엔진이 더한다 (확정 금액에 넣지 않는다)."""
+    """한 공정의 추가 금액. 합계는 계산 엔진이 더한다."""
 
     trade: str
     deal_id: uuid.UUID
@@ -413,11 +539,35 @@ class TradeExtrasOut(BaseModel):
     ok: MoneyOut = Field(description="고객이 확인한 것")
     pending: MoneyOut = Field(description="확인을 기다리는 것")
     talk: MoneyOut = Field(description="업체와 이야기 중인 것")
+    deal_total: int | None = Field(
+        default=None, description="확정 금액 (확정한 견적서, 부가세 포함)"
+    )
+    grand_total: int | None = Field(
+        default=None, description="공사 금액: 확정 금액 + 승인한 추가 금액 (부가세 포함)"
+    )
+
+
+class ExtraPreviewOut(MoneyOut):
+    """추가 금액 보내기 전 미리 보기 (계산 엔진, B3): 간이 업체는 부가세 0, 면세 업체는 면세만."""
+
+    tax_kind: Literal["general", "simplified", "exempt"] = Field(
+        description="업체 과세 유형 (일반 · 간이 · 면세)"
+    )
+    grand_total: int | None = Field(description="지금 공사 금액 (확정 금액 + 승인한 추가 금액)")
+    after_total: int | None = Field(description="이 금액을 고객이 승인하면 공사 금액")
 
 
 PlanOut.model_rebuild()
 TradeDatesOut.model_rebuild()
 JobOut.model_rebuild()
+
+
+class DoneIn(BaseModel):
+    """v3 '공사 끝냈어요' (V13): 끝낸 날 · 남길 말 · 사진(POST /files kind=done_photo)"""
+
+    done_on: date | None = Field(default=None, description="비우면 오늘")
+    note: Reason | None = Field(default=None, description="남길 말 (고객에게 보여요)")
+    photo_file_ids: list[uuid.UUID] = Field(default_factory=list, max_length=10)
 
 
 class CheckIn(BaseModel):
@@ -446,6 +596,11 @@ class TodoOut(BaseModel):
     text: str
     action: str = Field(description="버튼 글자")
     link: str = Field(description="버튼이 가는 화면")
+    days: list[date] = Field(
+        default=[],
+        description="할 일 아래에 보일 날 (C43): 공사 날짜 확인 · 바꾸기는 업체가 낸 날, 공사 전 · "
+        "공사 중은 수락한 공사 날, 다른 날짜 요청은 고른 날",
+    )
 
 
 class NextOut(BaseModel):
@@ -463,7 +618,7 @@ class TradeProgressOut(BaseModel):
     deal_id: uuid.UUID | None
     deal_status: str | None
     phase: Literal["estimate", "progress", "work", "done"]
-    current: int = Field(description="지금 단계 번호 (6단계 중)")
+    current: int = Field(description="지금 단계 번호, 1부터 (1~6, 다 마치면 6)")
     steps: list[StepOut]
     todo: TodoOut
     overdue: bool
@@ -519,17 +674,67 @@ class OverviewOut(BaseModel):
     period: PeriodOut
     contacts: list[VendorContactOut]
     checks: list[ProjectCheckOut]
+    # ---- v3 요약 탭 (C43, 1단계에서 채움) ----
+    after_steps: list["AfterStepOut"] = Field(default=[], description="실측 뒤 작은 단계 5칸")
+    vendors: list["VendorStepOut"] = Field(default=[], description="업체별 요약 + 기한")
+
+
+class VendorStepOut(BaseModel):
+    """v3 업체별 요약 한 줄 (C42 · C43): 날짜 고를 차례 · 답 기다림 + 기한"""
+
+    visit_id: uuid.UUID
+    vendor_id: uuid.UUID | None
+    vendor_name: str
+    trade: str
+    status: VisitStatus
+    next: VisitNextOut
+    total: int | None = Field(
+        default=None, description="받은 실측 견적서 금액 (확정이면 확정 금액, 부가세 포함, C43)"
+    )
+
+
+class AfterStepOut(BaseModel):
+    """v3 실측 뒤 작은 단계 5칸 (C43): 견적서 비교 · 업체 확정 · 공사 날짜 · 공사 · 끝 확인"""
+
+    key: Literal["quote", "confirm", "dates", "work", "check"]
+    label: str
+    state: Literal["done", "now", "todo"]
+
+
+class LogItemOut(BaseModel):
+    """기록 탭 한 줄 (C63 · I2 · V23). 글은 화면이 code · 날로 만든다."""
+
+    at: datetime
+    actor: Literal["customer", "vendor", "mijip"]
+    vendor_name: str | None
+    trade: str | None
+    code: str = Field(description="visit_events · deal_events 코드 (asked · answered · booked …)")
+    day: date | None
+    half: Literal["am", "pm"] | None
+    day_to: date | None
+    amount: int | None = Field(description="금액이 있는 기록 (견적서 · 추가 금액, 부가세 포함)")
+    half_to: Literal["am", "pm"] | None = Field(
+        default=None, description="두 번째 반나절 (제안 반나절 둘: '12.16 오후 · 12.17 오전', C63)"
+    )
+    days: list[date] = Field(
+        default=[], description="날 목록 (업체가 낸 공사 날 · 고객이 고른 날: '1.4(월) · 1.5(화)')"
+    )
 
 
 class MyProjectOut(ProjectListItem):
     """내 공사 목록 한 줄 (WMy)"""
 
     phase: Literal["estimate", "progress", "work", "done"]
-    current: int = Field(description="가장 늦은 공정의 지금 단계 (6단계 중)")
+    current: int = Field(
+        description="가장 늦은 공정의 지금 단계 번호, 1부터 (1~6, 다 마치면 6, C40)"
+    )
     todo: TodoOut | None
     next: NextOut | None
     updated_at: datetime = Field(description="바뀐 날 (목록은 최근 순)")
     grades: dict[str, str | None] = Field(description="공정마다 도배 유형")
+    # ---- v3 (C40 · C42, 1단계에서 채움) ----
+    emd: str | None = Field(default=None, description="읍면동")
+    vendors: list[VendorStepOut] = Field(default=[], description="업체별 요약 + 기한")
 
 
 class StandardDocOut(BaseModel):
@@ -586,3 +791,4 @@ class DocsOut(BaseModel):
 
 
 DocsOut.model_rebuild()
+OverviewOut.model_rebuild()

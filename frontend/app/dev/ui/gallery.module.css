@@ -1,0 +1,39 @@
+.sec { display: flex; flex-direction: column; gap: 14px; padding: 18px 20px; border-radius: var(--mj-radius-group); background: var(--mj-surface); box-shadow: var(--mj-group-edge); min-width: 0; scroll-margin-top: calc(var(--mj-sticky-top) + 12px); }
+.h { font-size: var(--mj-type-title-s); font-weight: var(--mj-weight-bold); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.p { font-size: var(--mj-type-label); color: var(--mj-text-sub); }
+.small { font-size: var(--mj-type-label); color: var(--mj-text-sub); }
+.ink { color: var(--mj-text) !important; font-size: var(--mj-type-amount-m) !important; font-weight: var(--mj-weight-heavy) !important; }
+.list { display: flex; flex-direction: column; }
+.narrowBox { max-width: 360px; }
+.frames { display: flex; flex-direction: column; gap: 12px; }
+.frames > * { border-radius: 12px; box-shadow: inset 0 0 0 1px var(--mj-line); overflow: visible; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.sw { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.sw i { flex: none; width: 28px; height: 28px; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--mj-line); }
+.sw code, .icons code { font-size: var(--mj-type-caption); color: var(--mj-text-sub); overflow-wrap: anywhere; }
+.types { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.types p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; line-height: 1.3; }
+.tnum { display: inline-flex; flex-direction: column; align-items: flex-start; font-size: var(--mj-type-amount); font-weight: 800; }
+.tnum p { display: inline-block; }
+.icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.icons li { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 12px; background: var(--mj-surface-sub); color: var(--mj-text); }
+.kv { margin: 0; display: flex; flex-direction: column; }
+.kv > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--mj-line-soft); }
+.kv dt { font-weight: 600; }
+.kv dt small { display: block; font-size: var(--mj-type-caption); font-weight: 400; color: var(--mj-text-mute); }
+.kv dd { margin: 0; }
+.ctx { align-self: flex-start; padding: 4px 10px; border-radius: 8px; background: var(--mj-fill); color: var(--mj-text-sub); font-size: var(--mj-type-caption); }
+.q { align-self: flex-end; max-width: 86%; padding: 10px 14px; border-radius: 18px 18px 6px 18px; background: var(--mj-primary); color: var(--mj-on-primary); }
+.a { display: flex; flex-direction: column; gap: 8px; max-width: 94%; padding: 12px 14px; border-radius: 18px 18px 18px 6px; background: var(--mj-fill); }
+.auto { font-size: var(--mj-type-caption); font-weight: 700; color: var(--mj-text-sub); }
+.fill { font-size: var(--mj-type-label); color: var(--mj-text-mute); }
+/* 탭 바 예시는 붙지 않게(진짜 탭 바는 화면 아래에 붙어요) */
+.tabs > nav { position: static !important; }
+/* 2차: 표 칸 · 폰 카드 예시 */
+.cellRow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.card { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.cardTop { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; align-self: stretch; }
+.cardTop > :last-child { margin-left: auto; }
+.cardTitle { font-size: var(--mj-type-title-s); font-weight: var(--mj-weight-bold); }

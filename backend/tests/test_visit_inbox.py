@@ -47,15 +47,11 @@ def test_cancel_frees_the_slot_and_hides_contacts(api):
 
     login(api, "maru@mitjip.test")
     d = api.get(f"{INBOX}/{va}").json()
-    assert d["customer"] == {
-        "name": "고객",
-        "phone": "01012345678",
-        "address": "서울 노원구 상계주공 101동 1203호",
-    }
+    assert "customer" not in d and d["share_contact"] is True  # B3: 연락처 칸 없음
     (row,) = api.get(INBOX).json()["items"]
-    assert row["customer"] == {"name": "고객", "phone": "01012345678", "address": None}
+    assert "customer" not in row  # v3: 작업함 줄에는 고객 이름 · 연락처를 넣지 않는다 (C 일꾼)
     login(api, "gyeol@mitjip.test")
-    assert api.get(f"{INBOX}/{vb}").json()["customer"] is None  # 연락처를 안 보낸 요청
+    assert "customer" not in api.get(f"{INBOX}/{vb}").json()  # 연락처를 안 보낸 요청
 
     use(api, customer)
     r = api.post(f"/projects/{pid}/visits/{va}/cancel")
@@ -72,7 +68,7 @@ def test_cancel_frees_the_slot_and_hides_contacts(api):
     assert send(api, pid, [a]).status_code == 201  # 같은 업체에 다시 요청할 수 있다
 
     login(api, "maru@mitjip.test")
-    assert api.get(f"{INBOX}/{va}").json()["customer"] is None  # 업체 쪽도 바로 가려진다
+    assert "customer" not in api.get(f"{INBOX}/{va}").json()  # 업체 쪽에는 칸이 없다 (B3)
     done = api.get(INBOX, params={"tab": "done"}).json()["items"]
     assert [x["id"] for x in done] == [va] and done[0]["closed_at"]
     bodies = [n["body"] for n in notes(a)]
@@ -100,7 +96,7 @@ def test_vendor_declines_and_customer_sees_why(api):
     assert api.post(f"{INBOX}/{va}/decline", json={"code": "busy"}).status_code == 422
     r = api.post(f"{INBOX}/{va}/decline", json={"code": "full"})
     assert r.status_code == 200, r.text
-    assert r.json()["status"] == "declined" and r.json()["customer"] is None
+    assert r.json()["status"] == "declined" and "customer" not in r.json()
     assert r.json()["decline_code"] == "full" and r.json()["closed_at"]
     assert api.post(f"{INBOX}/{va}/decline", json={"code": "other"}).status_code == 409
     login(api, "gyeol@mitjip.test")
@@ -143,9 +139,7 @@ def test_after_a_quote_neither_side_can_close_it(api):
     )
     login(api, "maru@mitjip.test")
     assert api.post(f"{INBOX}/{va}/decline", json={"code": "full"}).status_code == 409
-    assert (
-        api.get(f"{INBOX}/{va}").json()["customer"]["phone"] == "01012345678"
-    )  # 견적서 옴: 보인다
+    assert "customer" not in api.get(f"{INBOX}/{va}").json()  # 견적서 옴이어도 칸이 없다 (B3)
     assert customer
 
 
@@ -241,7 +235,7 @@ def test_inbox_tabs_order_and_seen(api):
         "노원구",
         "32.0",
     )
-    assert row["customer"] is None and row["share_contact"] is False  # 연락처 안 보냄: 요청 번호로
+    assert "customer" not in row and row["share_contact"] is False  # 연락처 안 보냄: 요청 번호로
     d = api.get(f"{INBOX}/{v1}").json()
     assert d["home_text"] == "노원구 · 32평 · 빈 집" and d["when_text"].count("~") == 1
     assert d["area_m2"] == "105.8" and d["area_basis"] == "supply" and d["occupied"] is False
@@ -277,4 +271,5 @@ def test_inbox_tabs_order_and_seen(api):
         "done": 2,
         "jobs": 0,
         "recent": {"requested": 3, "quoted": 1, "chosen": 0},
+        "sched": 0,  # v3 일정 탭 (0단계는 0, 1단계에서 셈)
     }

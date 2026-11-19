@@ -1,0 +1,8 @@
+.show { display: inline-flex; align-items: center; gap: 3px; font-weight: var(--mj-weight-semibold); color: var(--mj-text-sub); font-size: var(--mj-type-label); white-space: nowrap; }
+.sm { font-size: var(--mj-type-caption); }
+.showStar { display: inline-flex; color: var(--mj-star); }
+.input { display: flex; gap: 0; }
+.star { display: inline-grid; place-items: center; width: var(--mj-hit); height: var(--mj-hit); padding: 0; border: 0; border-radius: 50%; background: none; color: var(--mj-line-control); cursor: pointer; }
+.star:hover { background: var(--mj-fill); }
+.star:focus-visible { border-radius: 50%; }
+.on { color: var(--mj-star); }

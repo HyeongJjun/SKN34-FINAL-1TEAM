@@ -1,0 +1,471 @@
+{
+ "version": "wallpaper-market-2026.11-v3",
+ "made": "2026-11-18",
+ "unit": "원. 평은 집 공급면적 평형(1평 = 3.3058㎡). 실견적 대부분이 부가세 표기가 없어 '부가세 별도 공급가'로 봐요",
+ "scope": "아파트 집 전체 도배(벽 + 천장 대부분 포함), 빈집 · 살림집 섞임, 기존 벽지 철거 · 초배 · 부자재 포함 금액",
+ "method": {
+  "filter": "도배 · 실크/합지 · 집 전체 · 평형 10~70 · 2025/2026년 · verified · 네이버 제외",
+  "outlier": "등급 전체 로그 평당가 Tukey k=3.0, 출처 안(8건 이상) k=1.5",
+  "representative": "실견적(낸 금액 · 견적) 평당가의 가중 중앙값. 한 출처의 무게는 30건까지만 세요",
+  "range": "같은 무게(30건 상한)로 본 25 · 75 · 10 · 90% 분위수",
+  "average": "참고: 같은 무게의 가중 평균, 묶은 10% 절사평균",
+  "why": "출처 하나씩 빼기 시험(estimator_check_loso)에서 묶은 중앙값과 비슷하게 맞히면서 한 업체 쏠림을 막아요"
+ },
+ "excluded_counts": {
+  "집 전체 아님": 211,
+  "평형 없음 · 범위 밖": 311,
+  "2025~2026 아님": 344,
+  "등급 섞음 · 모름": 227,
+  "확실하지 않음(verified=false)": 51
+ },
+ "install": {
+  "silk": {
+   "representative_per_pyeong": 86129,
+   "representative_per_m2_supply": 26054,
+   "with_vat_per_pyeong": 94742,
+   "primary_sources": [
+    "S01",
+    "S02",
+    "S03",
+    "S04",
+    "S05",
+    "S06",
+    "S07",
+    "S08"
+   ],
+   "n_rows": 614,
+   "range_cap30": {
+    "p25": 73471,
+    "p75": 104545,
+    "p10": 64562,
+    "p90": 126923
+   },
+   "range_pooled": {
+    "p25": 70833,
+    "p75": 98264
+   },
+   "mean_cap30_weighted": 92698,
+   "trimmed_mean_pooled_10pct": 83874,
+   "source_medians": {
+    "S01": {
+     "n": 230,
+     "median": 78297
+    },
+    "S02": {
+     "n": 163,
+     "median": 82160
+    },
+    "S03": {
+     "n": 121,
+     "median": 80815
+    },
+    "S04": {
+     "n": 43,
+     "median": 106897
+    },
+    "S05": {
+     "n": 20,
+     "median": 71714
+    },
+    "S06": {
+     "n": 20,
+     "median": 100938
+    },
+    "S07": {
+     "n": 14,
+     "median": 100265
+    },
+    "S08": {
+     "n": 3,
+     "median": 104545
+    }
+   },
+   "estimator_check_loso": {
+    "cap30_weighted_median": {
+     "source_median_log_err_mean": 0.158,
+     "row_log_err_median": 0.166,
+     "held_out_sources": 8
+    },
+    "pooled_median": {
+     "source_median_log_err_mean": 0.145,
+     "row_log_err_median": 0.162,
+     "held_out_sources": 8
+    },
+    "median_of_source_medians_n3": {
+     "source_median_log_err_mean": 0.238,
+     "row_log_err_median": 0.236,
+     "held_out_sources": 8
+    },
+    "median_of_source_medians_n10": {
+     "source_median_log_err_mean": 0.193,
+     "row_log_err_median": 0.176,
+     "held_out_sources": 8
+    },
+    "sqrt_n_weighted_median": {
+     "source_median_log_err_mean": 0.152,
+     "row_log_err_median": 0.16,
+     "held_out_sources": 8
+    }
+   },
+   "estimators_full": {
+    "cap30_weighted_median": 86129,
+    "pooled_median": 82291,
+    "median_of_source_medians_n3": 91213,
+    "median_of_source_medians_n10": 82160,
+    "sqrt_n_weighted_median": 84375
+   },
+   "examples_supply_total": {
+    "24평": 2067096,
+    "32평": 2756128,
+    "34평": 2928386
+   },
+   "by_size": {
+    "20평 미만": {
+     "n": 39,
+     "sources": 6,
+     "median_cap30": 91294,
+     "median_pooled": 91294
+    },
+    "20~29평": {
+     "n": 244,
+     "sources": 8,
+     "median_cap30": 87917,
+     "median_pooled": 85417
+    },
+    "30~39평": {
+     "n": 275,
+     "sources": 8,
+     "median_cap30": 82353,
+     "median_pooled": 80556
+    },
+    "40평 이상": {
+     "n": 56,
+     "sources": 4,
+     "median_cap30": 75556,
+     "median_pooled": 75611
+    }
+   },
+   "sensitivity": {
+    "V1_출처_중앙값의_중앙값(3건 이상)": 91213,
+    "V2_묶어서_중앙값": 82291,
+    "V3_공시가(시작가)_더함": 84188,
+    "V4_웹_전체(AI · 정보 글 포함)": 84375,
+    "V5_한_업체_게시판_뺌": 94118,
+    "V6_2026년만": 87619,
+    "V7_천장_포함_명시만(묶어서)": 88940,
+    "V8_출처_하나씩_빼기_범위": [
+     83333,
+     88235
+    ]
+   }
+  },
+  "hapji": {
+   "representative_per_pyeong": 41372,
+   "representative_per_m2_supply": 12515,
+   "with_vat_per_pyeong": 45509,
+   "primary_sources": [
+    "S01",
+    "S02",
+    "S03",
+    "S04",
+    "S05",
+    "S06",
+    "S07",
+    "S08"
+   ],
+   "n_rows": 112,
+   "range_cap30": {
+    "p25": 36917,
+    "p75": 46875,
+    "p10": 33333,
+    "p90": 55692
+   },
+   "range_pooled": {
+    "p25": 36718,
+    "p75": 45976
+   },
+   "mean_cap30_weighted": 42761,
+   "trimmed_mean_pooled_10pct": 41279,
+   "source_medians": {
+    "S01": {
+     "n": 23,
+     "median": 42857
+    },
+    "S02": {
+     "n": 51,
+     "median": 38867
+    },
+    "S03": {
+     "n": 24,
+     "median": 38988
+    },
+    "S04": {
+     "n": 3,
+     "median": 62667
+    },
+    "S05": {
+     "n": 4,
+     "median": 41850
+    },
+    "S06": {
+     "n": 4,
+     "median": 58788
+    },
+    "S07": {
+     "n": 2,
+     "median": 55533
+    },
+    "S08": {
+     "n": 1,
+     "median": 45833
+    }
+   },
+   "estimator_check_loso": {
+    "cap30_weighted_median": {
+     "source_median_log_err_mean": 0.182,
+     "row_log_err_median": 0.13,
+     "held_out_sources": 6
+    },
+    "pooled_median": {
+     "source_median_log_err_mean": 0.186,
+     "row_log_err_median": 0.132,
+     "held_out_sources": 6
+    },
+    "median_of_source_medians_n3": {
+     "source_median_log_err_mean": 0.164,
+     "row_log_err_median": 0.134,
+     "held_out_sources": 6
+    },
+    "median_of_source_medians_n10": {
+     "source_median_log_err_mean": 0.192,
+     "row_log_err_median": 0.127,
+     "held_out_sources": 6
+    },
+    "sqrt_n_weighted_median": {
+     "source_median_log_err_mean": 0.17,
+     "row_log_err_median": 0.149,
+     "held_out_sources": 6
+    }
+   },
+   "estimators_full": {
+    "cap30_weighted_median": 41372,
+    "pooled_median": 40125,
+    "median_of_source_medians_n3": 42354,
+    "median_of_source_medians_n10": 38988,
+    "sqrt_n_weighted_median": 43167
+   },
+   "examples_supply_total": {
+    "24평": 992928,
+    "32평": 1323904,
+    "34평": 1406648
+   },
+   "by_size": {
+    "20평 미만": {
+     "n": 22,
+     "sources": 4,
+     "median_cap30": 45875,
+     "median_pooled": 46076
+    },
+    "20~29평": {
+     "n": 40,
+     "sources": 6,
+     "median_cap30": 39583,
+     "median_pooled": 39592
+    },
+    "30~39평": {
+     "n": 38,
+     "sources": 7,
+     "median_cap30": 37500,
+     "median_pooled": 37922
+    },
+    "40평 이상": {
+     "n": 12,
+     "sources": 3,
+     "median_cap30": 38775,
+     "median_pooled": 39409
+    }
+   },
+   "sensitivity": {
+    "V1_출처_중앙값의_중앙값(3건 이상)": 42354,
+    "V2_묶어서_중앙값": 40125,
+    "V3_공시가(시작가)_더함": 42000,
+    "V4_웹_전체(AI · 정보 글 포함)": 42000,
+    "V5_한_업체_게시판_뺌": 44444,
+    "V6_2026년만": 39436,
+    "V7_천장_포함_명시만(묶어서)": 43571,
+    "V8_출처_하나씩_빼기_범위": [
+     40043,
+     43750
+    ]
+   }
+  },
+  "silk_over_hapji": 2.08
+ },
+ "material": {
+  "roll_m2": 16.5,
+  "silk": {
+   "cap30": {
+    "n": 279,
+    "sources": [
+     "S03",
+     "S04",
+     "W07",
+     "W08"
+    ],
+    "roll": {
+     "mean": 53650,
+     "median": 48000,
+     "p25": 45000,
+     "p75": 66000
+    },
+    "per_m2": {
+     "mean": 3251.5,
+     "median": 2909.1,
+     "p25": 2727.3,
+     "p75": 4000.0
+    },
+    "per_paper_pyeong": {
+     "mean": 10749,
+     "median": 9617,
+     "p25": 9016,
+     "p75": 13223
+    }
+   },
+   "roll_price_by_source": {
+    "S03": {
+     "n": 267,
+     "median": 48000,
+     "mean": 53513
+    },
+    "S04": {
+     "n": 5,
+     "median": 65000,
+     "mean": 63480
+    },
+    "W07": {
+     "n": 6,
+     "median": 50500,
+     "mean": 50167
+    },
+    "W08": {
+     "n": 1,
+     "median": 29500,
+     "mean": 29500
+    }
+   },
+   "roll_price_representative": 49250,
+   "per_m2_paper": 2985,
+   "rolls_per_pyeong": {
+    "n": 292,
+    "median": 0.532,
+    "q1": 0.5,
+    "q3": 0.583
+   },
+   "material_per_pyeong": 26215
+  },
+  "hapji": {
+   "cap30": {
+    "n": 58,
+    "sources": [
+     "S03"
+    ],
+    "roll": {
+     "mean": 22845,
+     "median": 23000,
+     "p25": 23000,
+     "p75": 23000
+    },
+    "per_m2": {
+     "mean": 1384.5,
+     "median": 1393.9,
+     "p25": 1393.9,
+     "p75": 1393.9
+    },
+    "per_paper_pyeong": {
+     "mean": 4577,
+     "median": 4608,
+     "p25": 4608,
+     "p75": 4608
+    }
+   },
+   "roll_price_by_source": {
+    "S03": {
+     "n": 58,
+     "median": 23000,
+     "mean": 22845
+    }
+   },
+   "roll_price_representative": 23000,
+   "per_m2_paper": 1394,
+   "rolls_per_pyeong": {
+    "n": 75,
+    "median": 0.5,
+    "q1": 0.48,
+    "q3": 0.559
+   },
+   "material_per_pyeong": 11500
+  },
+  "labor_reference": {
+   "daily_wage": {
+    "n": 22,
+    "median": 270000,
+    "q1": 250000,
+    "q3": 290000,
+    "mean": 274091,
+    "min": 180000,
+    "max": 350000
+   },
+   "daily_output_rolls_per_person": {
+    "n": 279,
+    "median": 3.17
+   },
+   "note": "일당은 견적서 줄의 인건비 ÷ 인원. 하루 작업량은 견적상 배정값이에요(실측 아님)"
+  }
+ },
+ "repo_compare": {
+  "silk_24": {
+   "public_subtotal": 2158427,
+   "public_per_pyeong": 89934,
+   "market_supply": 1937810,
+   "market_per_pyeong": 80742,
+   "market_band": [
+    1720000,
+    2460000
+   ]
+  },
+  "hapji_24": {
+   "public_subtotal": 1676477,
+   "public_per_pyeong": 69853,
+   "market_supply": 986804,
+   "market_per_pyeong": 41117,
+   "market_band": [
+    890000,
+    1170000
+   ]
+  },
+  "silk_34": {
+   "public_subtotal": 3058446,
+   "public_per_pyeong": 89954,
+   "market_supply": 2747671,
+   "market_per_pyeong": 80814,
+   "market_band": [
+    2450000,
+    3490000
+   ]
+  },
+  "hapji_34": {
+   "public_subtotal": 2375616,
+   "public_per_pyeong": 69871,
+   "market_supply": 1398585,
+   "market_per_pyeong": 41135,
+   "market_band": [
+    1260000,
+    1660000
+   ]
+  },
+  "versions": {
+   "public": "2026H2",
+   "market": "market-2026.11-v5.1"
+  }
+ }
+}

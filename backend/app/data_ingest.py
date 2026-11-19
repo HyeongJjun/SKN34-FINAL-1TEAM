@@ -415,17 +415,22 @@ async def verify(
     return results
 
 
-async def activate_versions(factory, datasets, model, dimensions, profile):
-    """검증한 자료를 활성화하되 미사용 정형 자료는 비활성으로 유지한다."""
+async def activate_versions(factory, datasets, model, dimensions, profile, require_embeddings=True):
+    """검증한 자료를 활성화하되 미사용 정형 자료는 비활성으로 유지한다.
+
+    require_embeddings=False는 임베딩 없이 키워드(BM25) 검색에만 쓰는 지식 자료용이다(--keyword-only).
+    """
     if not datasets:
         raise ValueError("활성화할 CSV가 없어요")
+    if not require_embeddings and any(d.kind != "knowledge" for d in datasets):
+        raise ValueError("--keyword-only는 지식 CSV에만 쓸 수 있어요")
     async with factory.begin() as session:
         for dataset in sorted(datasets, key=lambda item: item.key):
             await session.execute(
                 text("SELECT pg_advisory_xact_lock(hashtextextended(:key,0))"), {"key": dataset.key}
             )
         # 잠금 획득 뒤 다시 검증한다. 한 파일이라도 실패하면 상태를 바꾸지 않는다.
-        verified = await verify(session, datasets, model, dimensions, profile, True)
+        verified = await verify(session, datasets, model, dimensions, profile, require_embeddings)
         targets = []
         for dataset in datasets:
             if digest_file(dataset.path) != dataset.sha256:
@@ -522,12 +527,22 @@ def show_report(report, command, as_json=False):
     else:
         if report.get("activated"):
             print("활성화 완료 · 미사용 정형 자료 4종은 비활성으로 유지해요.")
+            if report.get("keyword_only"):
+                print("임베딩 없이 키워드 검색에만 쓰여요(벡터 검색 결과에는 나오지 않아요).")
         print("요청한 작업과 최종 검증이 끝났어요.")
 
 
 async def run(args):
-    if args.activate and (args.command != "verify" or not args.require_embeddings):
-        raise ValueError("--activate는 verify --require-embeddings와 함께 사용해 주세요")
+    if args.activate and (
+        args.command != "verify" or not (args.require_embeddings or args.keyword_only)
+    ):
+        raise ValueError(
+            "--activate는 verify --require-embeddings(지식 자료는 --keyword-only)와 함께 사용해 주세요"
+        )
+    if args.keyword_only and (not args.activate or args.require_embeddings):
+        raise ValueError(
+            "--keyword-only는 verify --activate와만 쓰고 --require-embeddings와 함께 쓰지 않아요"
+        )
     rag.check_profile(args.model, args.dimensions)
     if settings.app_env not in {"local", "test"}:
         raise ValueError("수동 CLI는 local/test 환경에서만 실행해요")
@@ -572,9 +587,11 @@ async def run(args):
                 args.model,
                 args.dimensions,
                 args.build_profile,
+                require_embeddings=not args.keyword_only,
             )
         report["executed"] = True
         report["activated"] = True
+        report["keyword_only"] = bool(args.keyword_only)
         show_report(report, args.command, args.json)
         return
     if args.command in {"plan", "verify"} or not args.execute:
@@ -670,7 +687,8 @@ def parser():
     result.add_argument(
         "--activate",
         action="store_true",
-        help="verify --require-embeddings 통과 후 활성화 (미사용 정형 자료 4종은 비활성 유지)",
+        help="verify --require-embeddings(지식 자료는 --keyword-only) 통과 후 활성화 "
+        "(미사용 정형 자료 4종은 비활성 유지)",
     )
     result.add_argument("--json", action="store_true", help="기계 처리용 JSON으로 출력")
     result.add_argument("command", choices=("plan", "load", "embed", "verify"))
@@ -693,6 +711,11 @@ def parser():
     result.add_argument("--price-per-million", type=Decimal, help="USD/백만 입력 토큰, 예상 비용용")
     result.add_argument(
         "--require-embeddings", action="store_true", help="verify에서 미완료 임베딩을 실패 처리"
+    )
+    result.add_argument(
+        "--keyword-only",
+        action="store_true",
+        help="verify --activate 때 임베딩 없이 활성화(지식 CSV만, 키워드 검색용 · API 호출 없음)",
     )
     return result
 

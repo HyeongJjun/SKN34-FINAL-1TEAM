@@ -1,6 +1,7 @@
 """업체 금액과 표준견적서 금액의 차이."""
 
 from decimal import ROUND_HALF_UP, Decimal
+from typing import Literal
 
 
 def percent_vs(amount: int, standard: int) -> Decimal:
@@ -30,3 +31,12 @@ def budget_gap(total: int, band: str) -> tuple[str, int | None]:
     if top is None:
         return "open", None
     return ("over", total - top) if total > top else ("within", None)
+
+
+def budget_fit(total: int, budget_won: int | None) -> Literal["within", "over"] | None:
+    """v3 예산(원)과 부가세 포함 합계를 견준다: 안(같으면 안) · 밖. 예산을 안 넣었으면 None."""
+    if budget_won is None:
+        return None
+    if total < 0 or budget_won <= 0:
+        raise ValueError("금액은 0보다 커야 해요")
+    return "over" if total > budget_won else "within"

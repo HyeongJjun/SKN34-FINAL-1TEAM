@@ -132,6 +132,11 @@ class Deal(Base):
             "(status in ('checking', 'fixing', 'done')) = (work_done_on is not null)",
             name="work_done_on",
         ),
+        CheckConstraint(
+            f"work_days is null or cardinality(work_days) between 1 and {JOB_MAX_DAYS}",
+            name="work_days",
+        ),
+        CheckConstraint("done_note is null or length(btrim(done_note)) > 0", name="done_note"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid7)
@@ -155,6 +160,10 @@ class Deal(Base):
     work_done_on: Mapped[date | None] = mapped_column(Date)
     date_request_count: Mapped[int] = mapped_column(SmallInteger, default=0, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # v3 (0030): 수락한 공사 날(하나씩, V11) · '공사 끝냈어요' 남길 말(V13) · 올린 때(자동 끝 7일 기준)
+    work_days: Mapped[list[date] | None] = mapped_column(ARRAY(Date))
+    done_note: Mapped[str | None] = mapped_column(String(300))
+    done_posted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class DealEvent(Base):
@@ -178,6 +187,41 @@ class DealEvent(Base):
     by_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     note: Mapped[str | None] = mapped_column(String(300))
     at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # v3 (0030) 기록용 코드 (DEAL_EVENT_CODES, CHECK 없음)
+    code: Mapped[str | None] = mapped_column(String(20))
+
+
+# 기록 탭에 쓰는 업체 확정 이력 코드 (기록용)
+DEAL_EVENT_CODES = (
+    "confirmed",
+    "dates_sent",
+    "dates_accepted",
+    "dates_changed",
+    "date_requested",
+    "extra_sent",
+    "extra_answered",
+    "done_posted",
+    "checked",
+    "fixing",
+    "auto_done",
+    "reselected",
+)
+DEAL_FILES_MAX = 10  # 공사 끝 사진
+
+
+class DealFile(Base):
+    """'공사 끝냈어요'에 붙인 사진 (files.kind = done_photo). 사진 하나는 한 공사에만 붙는다."""
+
+    __tablename__ = "deal_files"
+    __table_args__ = (CheckConstraint(f"sort between 0 and {DEAL_FILES_MAX - 1}", name="sort"),)
+
+    deal_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("deals.id", ondelete="CASCADE"), primary_key=True
+    )
+    file_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("files.id", ondelete="CASCADE"), primary_key=True, unique=True
+    )
+    sort: Mapped[int] = mapped_column(SmallInteger)
 
 
 # 공사 날짜: 업체가 낸 날짜(제안)와 고객의 다른 날짜 요청. 공정표 확정은 고객이 수락했을 때만
@@ -247,6 +291,9 @@ class DateProposal(Base):
         ),
         CheckConstraint("plan_version is null or plan_version >= 1", name="plan_version"),
         CheckConstraint("(status = 'pending') = (decided_at is null)", name="decided"),
+        CheckConstraint(
+            f"days is null or cardinality(days) between 1 and {JOB_MAX_DAYS}", name="days"
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid7)
@@ -269,17 +316,21 @@ class DateProposal(Base):
     by_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # v3 (0030): 업체가 하나씩 고른 공사 날. start_date · end_date는 처음 · 마지막 날(service)
+    days: Mapped[list[date] | None] = mapped_column(ARRAY(Date))
 
 
-# 공사 중 추가 금액: 업체가 알리고 고객이 확인(ok) 또는 이야기하자(talk). 믿집은 기록 · 알림만 한다
-ACKS = ("pending", "ok", "talk")
+# 공사 중 추가 금액: 업체가 알리고 고객이 승인 · 거절 · 채팅으로 묻기(D23). 믿집은 기록 · 알림만 한다
+# v3(0030)에서 값을 바꿨다: ok → approved, talk → asked. 옛 API(/ack)는 service가 바꿔 읽고 쓴다
+ACKS = ("pending", "approved", "rejected", "asked")
 EXTRA_AMOUNT_MAX = 1_000_000_000  # 실측 견적서 금액 한도와 같다
 EXTRA_PHOTOS_MAX = 5
 
 
 class ExtraCharge(Base):
-    """추가 금액 한 줄. 업체가 적은 금액 · 부가세 방식으로 계산 엔진(from_entered)이 공급가 · 부가세 ·
-    합계를 만든다. 한 번 올리면 고치지 않는다(잘못 올렸으면 새로 올린다). 확정 금액 합계에 넣지 않는다."""
+    """추가 금액 한 줄(한 판). 업체가 적은 금액 · 부가세 방식으로 계산 엔진(from_entered)이 공급가 · 부가세 ·
+    합계를 만든다. 고치면 같은 group_id에 새 판(version + 1)을 쌓고 앞 판은 superseded_at을 찍는다(D23).
+    합계에는 '승인 · 최신 판'만 들어간다(계산 엔진)."""
 
     __tablename__ = "extra_charges"
     __table_args__ = (
@@ -293,8 +344,17 @@ class ExtraCharge(Base):
             " and (case when vat_mode = 'excluded' then supply else total end) = entered_amount",
             name="amounts",
         ),
-        CheckConstraint("ack in ('pending', 'ok', 'talk')", name="ack"),
+        CheckConstraint("ack in ('pending', 'approved', 'rejected', 'asked')", name="ack"),
         CheckConstraint("(ack = 'pending') = (acked_at is null)", name="acked"),
+        CheckConstraint("version >= 1", name="version"),
+        UniqueConstraint("group_id", "version", name="uq_extra_charges_group_version"),
+        Index(
+            "uq_extra_charges_latest",
+            "group_id",
+            unique=True,
+            postgresql_where=text("superseded_at is null"),
+        ),
+        UniqueConstraint("deal_id", "client_key", name="uq_extra_charges_client_key"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid7)
@@ -312,6 +372,11 @@ class ExtraCharge(Base):
     acked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     by_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # v3 (0030): 판 묶음(첫 판의 id) · 판 번호 · 새 판이 나온 때 · 같은 줄 두 번 막는 키
+    group_id: Mapped[uuid.UUID] = mapped_column()
+    version: Mapped[int] = mapped_column(SmallInteger, default=1, server_default="1")
+    superseded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    client_key: Mapped[uuid.UUID | None] = mapped_column()
 
 
 class ExtraChargeFile(Base):

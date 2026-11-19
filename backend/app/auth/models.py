@@ -25,7 +25,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(254), unique=True)
     password_hash: Mapped[str] = mapped_column(String(255))
     name: Mapped[str] = mapped_column(String(50))
-    # 휴대폰 번호(숫자만). 실측을 요청하면 고객이 고른 업체에 간다. 업체 회원은 vendors.phone을 쓴다
+    # 휴대폰 번호(숫자만, 가입 때 선택). v3는 업체에 보내지 않는다(연락은 채팅). 업체 회원은 vendors.phone을 쓴다
     phone: Mapped[str | None] = mapped_column(String(20))
     role: Mapped[str] = mapped_column(String(10))
     status: Mapped[str] = mapped_column(String(10), default="active", server_default="active")

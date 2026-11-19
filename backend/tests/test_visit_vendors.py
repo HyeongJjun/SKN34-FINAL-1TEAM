@@ -76,15 +76,15 @@ def test_list_filters_and_sorts_by_estimate(api):
     assert (got["region"], got["area_name"], got["standard_total"]) == (
         "서울 노원구",
         "노원구",
-        3_166_556,  # 시안: 도배 표준견적서 316만 6,556원
+        3_140_760,  # v3 표준견적서(도배지 벽지 평 × 시장 평균). 옛 시안 값은 316만 6,556원
     )
     rows = [
         (v["biz_name"], v["estimate_total"], v["vs_standard"], v["vs_direction"])
         for v in got["vendors"]
     ]
     assert rows == [
-        ("마루와벽", 3_132_800, "-1.1", "less"),  # 시안: 표준견적서보다 1.1% 적어요
-        ("결도배", 3_209_184, "1.3", "more"),
+        ("마루와벽", 3_132_800, "-0.3", "less"),  # v3 표준 기준 (옛 표준이면 -1.1%)
+        ("결도배", 3_209_184, "2.2", "more"),
         ("가나도배", None, None, None),  # 천장 단가 없음 → 가견적 없음
         ("한결인테리어", None, None, None),  # 확인한 단가 없음
     ]
@@ -163,7 +163,7 @@ def test_estimate_total_matches_calc_and_detail_explains_it(api):
         primer["included_in_name"] == "도배지 (실크)" and primer["source"] == "견적서_2026-09.pdf"
     )
     assert e["confirmed_on"] == today_seoul().isoformat() and e["set_id"]
-    assert (e["vs_standard"], e["vs_direction"]) == ("-1.1", "less")
+    assert (e["vs_standard"], e["vs_direction"]) == ("-0.3", "less")  # v3 표준 3,140,760원 기준
     assert d["not_included"] == ["기존 벽지 철거", "폐기물 처리"]
     assert d["years_open"] == years_since(date(2014, 3, 2), today_seoul())
     assert (d["in_area"], d["area_name"], d["dong"]) == (True, "노원구", None)
@@ -193,7 +193,7 @@ def test_exempt_vendor_has_no_vat(api):
     pid = api.post("/projects", json=project_body(**NOWON_32)).json()["id"]
     e = api.get(f"/projects/{pid}/vendors/{vid}", params={"trade": "dobae"}).json()["estimate"]
     assert (e["vat"], e["total"], e["exempt"]) == (0, 2_848_000, True)
-    assert (e["vs_standard"], e["vs_direction"]) == ("-10.1", "less")
+    assert (e["vs_standard"], e["vs_direction"]) == ("-9.3", "less")  # v3 표준 3,140,760원 기준
 
 
 def test_only_the_owner_customer(api):

@@ -1,0 +1,21 @@
+/* 실측 견적서 비교(C33 폰 카드 · D18 웹 비교표). 폰 · 태블릿(<1024)은 카드, 웹(≥1024)은 업체를 열로 둔 표예요(dev-08). */
+.phone { display: flex; flex-direction: column; gap: var(--mj-gap-group); min-width: 0; }
+.web { display: none; }
+@media (min-width: 1024px) {
+  .phone { display: none; }
+  .web { display: flex; flex-direction: column; gap: var(--mj-gap-group); min-width: 0; }
+}
+
+.cards { display: flex; flex-direction: column; gap: var(--mj-gap-group); margin: 0; padding: 0; list-style: none; }
+.cardDim { opacity: 1; }
+.cardDim .total { color: var(--mj-text-mute); }
+.total { display: block; }
+.diff b { font-weight: var(--mj-weight-bold); color: var(--mj-text); }
+.expired { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: var(--mj-type-label); color: var(--mj-danger); font-weight: var(--mj-weight-semibold); }
+.cellStack { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; min-width: 0; }
+.cellNote { font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+.foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 0 4px; font-size: var(--mj-type-label); color: var(--mj-text-sub); }
+.askRow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.askRow > span { flex: 1 1 220px; }
+.dealNote { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.dealNote > span { flex: 1 1 220px; }

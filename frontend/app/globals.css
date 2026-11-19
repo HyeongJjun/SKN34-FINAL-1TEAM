@@ -1,85 +1,110 @@
-/* 믿집 디자인 토큰 · v2 흰 바탕 서류형 (시안 WSystem 2026.11.02)
-   글자 대비: ink 16:1, ink-sub 7.7:1, ink-mute 6.0:1, 버튼(흰 글자/accent) 5.35:1, 링크 7:1, 입력 테두리 3.6:1 */
+/* 믿집 v3 공용 CSS (B4)
+   - 토큰은 app/tokens.css(layout.tsx가 이 파일보다 먼저 불러요). 여기에는 옛 이름 별칭 · 바탕 규칙 · 여러 화면이 같이 쓰는 mj- 클래스만 둬요.
+   - 기준점 두 값(dev-08): 768px(폰 → 태블릿 · 웹 머리) · 1024px(웹 · 옆 칸 · 공사 띠). 넓은 웹 1280px은 여백 · 옆 칸 너비만 바꿔요.
+     미디어 쿼리에는 변수를 못 써서 숫자로 적어요. 스크립트는 components/site/breakpoints.ts의 BP만 써요.
+   - 컴포넌트 전용 스타일은 그 옆 *.module.css에 둬요(components/ui · components/site). */
+
+/* ───── 옛 v2 이름 → v3 토큰 별칭 (design-system 5.2) ─────
+   옛 화면 module.css가 그대로 돌면서 새 색을 받아요. 새 코드는 --mj-* 이름만 써요.
+   화면을 v3 조각으로 바꿔 옛 이름 쓰임이 0번이 되면(grep으로 확인) 이 묶음을 지워요. */
 :root {
-  color-scheme: light;
-  --bg: #ffffff;
-  --surface: #f4f8fd;
-  --surface-2: #eaf2fc;
-  --accent-weak: #dceafb;
-  --accent-pastel: #b9d3f3;
-  --line: #d8e2ee;
-  --line-soft: #e3e9f1;  /* 표 줄 */
-  --line-paper: #c9d4e2; /* 서류 테두리 */
-  --line-strong: #7489a6;
-  --gantt-off: #eceff3;  /* 공정표 휴무일 칸 */
-  --gantt-grid: #eef2f6; /* 공정표 날짜 구분선 */
-  --ink: #172233;
-  --ink-sub: #46546a;
-  --ink-mute: #56647a;
-  --accent: #2d6cb5;
-  --accent-hover: #2a64a8;
-  --accent-ink: #235a9c;
-  --focus: #1d4f8c;
-  --warn: #8f5600;
-  --warn-weak: #fdf1dd;
-  --danger: #b42318;
-  --danger-weak: #fdecea;
-  --ok: #1e6b4f;
-  --ok-weak: #e3f3ec;
-  --kakao: #fee500;      /* 카카오 로그인 버튼 (카카오 디자인 가이드) */
+  --bg: var(--mj-bg);
+  --surface: var(--mj-surface-sub);       /* #f4f8fd → gray-50 (밝기 순서를 지켜 surface < surface-2) */
+  --surface-2: var(--mj-fill);            /* #eaf2fc → gray-100 */
+  --accent-weak: var(--mj-primary-weak);
+  --accent-pastel: var(--mj-range-vendor);
+  --line: var(--mj-line);
+  --line-soft: var(--mj-line-soft);
+  --line-paper: var(--mj-line);
+  --line-strong: var(--mj-line-control);
+  --gantt-off: var(--mj-fill);
+  --gantt-grid: var(--mj-line-soft);
+  --ink: var(--mj-text);
+  --ink-sub: var(--mj-text-sub);
+  --ink-mute: var(--mj-text-mute);
+  --accent: var(--mj-primary);
+  --accent-hover: var(--mj-primary-hover);
+  --accent-ink: var(--mj-link);
+  --focus: var(--mj-focus);
+  --warn: var(--mj-badge-wait-fg);
+  --warn-weak: var(--mj-warn-weak);
+  --danger: var(--mj-danger);
+  --danger-weak: var(--mj-danger-weak);
+  --ok: var(--mj-ok);
+  --ok-weak: var(--mj-badge-ok-bg);
+  --kakao: var(--mj-kakao);
   --kakao-hover: #f5dc00;
-  --kakao-ink: #191919;
-  --radius-s: 4px;  /* 칩 */
-  --radius: 6px;    /* 버튼 · 입력 · 알림 상자 */
-  --radius-l: 12px;
-  --radius-paper: 2px; /* 서류 */
-  --backdrop: rgba(23, 34, 51, 0.45);
-  --scrim: rgba(23, 34, 51, 0.42);
-  --shadow-sm: 0 1px 3px rgba(23, 34, 51, 0.28);
-  --shadow-pop: 0 18px 48px rgba(23, 34, 51, 0.22);
-  --shadow-paper: 0 1px 0 rgba(23, 34, 51, 0.04), 0 12px 32px rgba(23, 34, 51, 0.07);
-  /* 글자 크기: 13 · 14 · 16 · 18 · 20 · 28 · 38 일곱 단계만 (KRDS 최소 16px). 768px 미만은 h1 24 · 큰 제목 30 */
-  --fs-xs: 13px;      /* 범례 · 각주 · 칩. 판단에 쓰는 글은 14 이상 */
-  --fs-sm: 14px;      /* 보조 · 표 머리 · 라벨 · 상태 */
-  --fs-md: 16px;      /* 본문 · 입력 · 버튼 · 표 */
-  --fs-lg: 18px;      /* 소제목 · 서류 줄 */
-  --fs-h2: 20px;      /* 섹션 제목 */
-  --fs-h1: 24px;      /* 화면 제목 (768px 이상 28) */
-  --fs-display: 30px; /* 첫 화면 큰 제목 (768px 이상 38) */
-  --font: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --kakao-ink: var(--mj-on-kakao);
+  --radius-s: var(--mj-radius-badge);
+  --radius: var(--mj-radius-field);
+  --radius-l: var(--mj-radius-group);
+  --radius-paper: var(--mj-radius-paper);
+  --backdrop: var(--mj-scrim);
+  --scrim: var(--mj-scrim);
+  --shadow-sm: var(--mj-shadow-raise);
+  --shadow-pop: var(--mj-shadow-pop);
+  --shadow-paper: 0 1px 0 rgba(27, 34, 44, 0.04), 0 12px 32px rgba(27, 34, 44, 0.07); /* 인쇄 서류 한 장만 */
+  --fs-xs: var(--mj-type-caption);
+  --fs-sm: var(--mj-type-label);
+  --fs-md: var(--mj-type-body);
+  --fs-lg: var(--mj-type-title-s);
+  --fs-h2: var(--mj-type-title);
+  --fs-h1: var(--mj-type-title);          /* 24 · 28은 일곱 단계 밖이라 20 */
+  --fs-display: var(--mj-type-amount);    /* 30 · 38 → 28 · 38 */
+  --font: var(--mj-font-sans);
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; /* 문서 번호 · 시방서 조항 · 단계 번호 */
 }
-@media (min-width: 768px) { :root { --fs-h1: 28px; --fs-display: 38px; } }
 
+/* ───── 바탕 규칙 ───── */
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html {
+  -webkit-text-size-adjust: 100%;
+  /* 붙는 머리 · 공사 띠가 초점을 가리지 않게(WCAG 2.4.11) */
+  scroll-padding-top: calc(var(--mj-sticky-top) + 8px);
+}
+/* 폰 아래 탭 바 · 아래 단추 띠가 있는 화면은 아래도 그만큼 비워요 */
+@media (max-width: 767px) {
+  html:has([data-mj-tabbar]) { scroll-padding-bottom: calc(var(--mj-tabbar-h) + 8px); }
+  html:has([data-mj-bottombar]) { scroll-padding-bottom: calc(var(--mj-bottombar-h) + 8px); }
+}
+/* 가운데 창 · 아래 시트가 열리면 뒤 페이지는 멈춰요.
+   멈추면 스크롤 막대가 사라져 화면이 그만큼 넓어졌다 돌아오므로, 막대 폭(--mj-sbw, 창을 열 때 useModal이 잼)만큼
+   오른쪽을 비워 둬요. 화면에 붙은(fixed) 요소는 --mj-lock-gap만큼 오른쪽을 더 띄워요.
+   폰 · 맥처럼 막대가 화면 위에 떠 있는 환경은 폭이 0이라 아무것도 바뀌지 않아요 */
+html:has(dialog[open]:modal) { overflow: hidden; --mj-lock-gap: var(--mj-sbw, 0px); padding-inline-end: var(--mj-lock-gap); }
 /* 바닥글이 짧은 화면에서도 맨 아래에 붙게 세로 flex */
 body {
   margin: 0;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: var(--mj-font, var(--font));
-  font-size: var(--fs-md);
-  line-height: 1.6;
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  position: relative;
+  background: var(--mj-bg);
+  color: var(--mj-text);
+  font-family: var(--mj-font-sans);
+  font-size: var(--mj-type-body);
+  line-height: var(--mj-lh-body);
+  word-break: keep-all;        /* 한국어는 어절에서만 줄을 바꿔요 */
+  overflow-wrap: break-word;   /* 긴 주소 · 파일 이름은 넘칠 때만 끊어요 */
 }
+/* 앱 모드(PWA)에서 상태 막대 아래 칸을 머리와 같은 색으로 */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--mj-surface); z-index: var(--mj-z-header); pointer-events: none; }
 h1, h2, h3, h4 { line-height: 1.35; text-wrap: balance; margin: 0; }
 p { margin: 0; }
-a { color: var(--accent-ink); }
-a:not([class]):hover { color: var(--focus); } /* 문단 속 링크만. 버튼 모양 링크는 각자 정한다 */
+a { color: var(--mj-link); }
+a:not([class]):hover { color: var(--mj-link-hover); } /* 문단 속 링크만. 단추 모양 링크는 각자 정해요 */
 img { max-width: 100%; }
 button, input, select, textarea { font: inherit; color: inherit; }
-:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+:focus-visible { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: 2px; border-radius: 4px; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 
 .mj-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-.mj-skip { position: absolute; left: 16px; top: -60px; z-index: 50; background: var(--ink); color: #fff; padding: 10px 16px; border-radius: var(--radius); text-decoration: none; font-weight: 700; }
-.mj-skip:focus { top: 12px; color: #fff; }
+.mj-skip { position: absolute; left: 16px; top: -60px; z-index: var(--mj-z-skip); background: var(--mj-text); color: var(--mj-text-inverse); padding: 10px 16px; border-radius: var(--mj-radius-field); text-decoration: none; font-weight: 700; }
+.mj-skip:focus { top: calc(env(safe-area-inset-top, 0px) + 12px); color: var(--mj-text-inverse); }
+/* 금액 · 날짜 · 시각 · 수량은 고정폭 숫자(Pretendard tnum, verification/b4.md) */
 .mj-num { font-variant-numeric: tabular-nums; }
+/* 앱 모드에서만 숨길 안내(예: '앱처럼 쓰기') */
+@media (display-mode: standalone) { .mj-browser-only { display: none !important; } }
 .mj-code { font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--ink-sub); }
 
 /* 글 한 줄 길이: 한글 40자 안팎에서 줄이 바뀌게 (WCAG 1.4.8) */

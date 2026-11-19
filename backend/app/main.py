@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from redis.exceptions import RedisError
@@ -10,20 +10,25 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app import db, queue
 from app.account.router import router as account_router
 from app.auth.router import router as auth_router
+from app.chat.router import router as ai_router
 from app.config import settings
 from app.files.router import router as files_router
+from app.guest.router import router as guest_router
 from app.notify.router import router as notify_router
 from app.project.router import router as project_router
 from app.quote.router import router as quote_router
+from app.realtime.router import router as realtime_router
+from app.report.router import router as report_router
+from app.review.router import router as review_router
 from app.schedule.router import router as schedule_router
 from app.shared.errors import (
     AppError,
     app_error_handler,
-    error_body,
     http_error_handler,
     validation_error_handler,
 )
-from app.shared.request_guards import BodyLimit, CatchAll
+from app.shared.request_guards import BodyLimit, CatchAll, OriginGuard, SecurityHeaders
+from app.thread.router import router as thread_router
 from app.v2.router import router as v2_router
 from app.vendor.router import router as vendor_router
 from app.visit.router import router as visit_router
@@ -36,8 +41,9 @@ async def lifespan(_: FastAPI):
     await queue.redis.aclose()
 
 
-# API 문서(/docs, /openapi.json)는 운영에서는 닫는다. 웹 타입 생성은 로컬·CI에서 한다.
-_public_docs = settings.app_env != "production"
+# API 문서(/docs, /openapi.json)는 로컬 · 테스트에서만 연다(스테이징 · 운영은 닫음).
+# 웹 타입 생성은 app.openapi()를 바로 불러서(로컬 · CI) 문서 경로가 없어도 된다.
+_public_docs = settings.app_env in ("local", "test")
 
 app = FastAPI(
     title="믿집 API",
@@ -55,12 +61,18 @@ app.add_exception_handler(StarletteHTTPException, http_error_handler)
 # 기능 router는 한 줄에 하나씩, 이름 순으로 더한다 (여러 사람이 동시에 더해도 충돌이 덜 나게).
 ROUTERS = [
     account_router,
+    ai_router,
     auth_router,
     files_router,
+    guest_router,
     notify_router,
     project_router,
     quote_router,
+    realtime_router,
+    report_router,
+    review_router,
     schedule_router,
+    thread_router,
     v2_router,
     vendor_router,
     visit_router,
@@ -68,23 +80,13 @@ ROUTERS = [
 for r in ROUTERS:
     app.include_router(r)
 
-_UNSAFE = {"POST", "PUT", "PATCH", "DELETE"}
-
-
-@app.middleware("http")
-async def check_origin(request: Request, call_next):
-    """다른 사이트가 로그인한 사람의 쿠키로 상태를 바꾸지 못하게 Origin을 확인한다 (SameSite=Lax와 함께)."""
-    origin = request.headers.get("origin")
-    if request.method in _UNSAFE and origin and origin not in settings.origins:
-        return JSONResponse(
-            error_body("bad_origin", "허용하지 않은 주소에서 온 요청이에요."), status_code=403
-        )
-    return await call_next(request)
-
-
-# 바깥부터: CatchAll(처리 못 한 오류 → 같은 모양) → BodyLimit(본문 크기) → check_origin → 기능 router
+# 바깥부터: SecurityHeaders(응답 보안 머리) → CatchAll(처리 못 한 오류 → 같은 모양) → BodyLimit(본문 크기)
+#          → OriginGuard(출처: Origin · Sec-Fetch-Site · Referer, /stream · WebSocket 포함) → 기능 router
+# 모두 순수 ASGI라 나눠 오는 본문의 413 · SSE 흐름이 그대로 간다(BaseHTTPMiddleware를 쓰지 않는다).
+app.add_middleware(OriginGuard)
 app.add_middleware(BodyLimit)
 app.add_middleware(CatchAll)
+app.add_middleware(SecurityHeaders)
 
 
 @app.get("/health/live")

@@ -1,0 +1,5 @@
+.av { flex: none; display: inline-grid; place-items: center; border-radius: 50%; background: var(--mj-avatar-bg); color: var(--mj-avatar-fg); font-weight: var(--mj-weight-bold); line-height: 1; user-select: none; }
+.s { width: var(--mj-avatar-s); height: var(--mj-avatar-s); font-size: var(--mj-type-caption); }
+.m { width: var(--mj-avatar-m); height: var(--mj-avatar-m); font-size: var(--mj-type-body); }
+.l { width: var(--mj-avatar-l); height: var(--mj-avatar-l); font-size: var(--mj-type-title); }
+.warm { background: var(--mj-avatar-warm-bg); color: var(--mj-avatar-warm-fg); }

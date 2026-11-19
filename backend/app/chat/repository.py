@@ -8,8 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.chat.models import Chat, ChatMessage
 
 
-async def insert_chat(s: AsyncSession, user_id: uuid.UUID) -> Chat:
-    chat = Chat(user_id=user_id)
+async def insert_chat(
+    s: AsyncSession, user_id: uuid.UUID, project_id: uuid.UUID | None = None
+) -> Chat:
+    """project_id는 service가 세션 기준으로 본인 공사인지 확인한 값만 넘긴다."""
+    chat = Chat(user_id=user_id, project_id=project_id)
     s.add(chat)
     await s.flush()  # id · rev를 바로 쓰려고 DB에 먼저 보낸다
     return chat
@@ -70,3 +73,43 @@ def add_turn(
             ChatMessage(chat_id=chat_id, turn=turn, role="assistant", text=answer),
         ]
     )
+
+
+async def set_project(
+    s: AsyncSession, user_id: uuid.UUID, chat_id: uuid.UUID, project_id: uuid.UUID
+) -> None:
+    """공사 칸이 빈 내 대화에만 공사를 적는다(이미 다른 공사에 묶인 대화는 옮기지 않는다)."""
+    await s.execute(
+        update(Chat)
+        .where(Chat.id == chat_id, Chat.user_id == user_id, Chat.project_id.is_(None))
+        .values(project_id=project_id)
+    )
+
+
+async def list_chats(
+    s: AsyncSession, user_id: uuid.UUID, limit: int = 20, project_id: uuid.UUID | None = None
+) -> list[Chat]:
+    """내 대화방 최근 것부터. project_id를 주면 그 공사 대화만."""
+    q = select(Chat).where(Chat.user_id == user_id)
+    if project_id is not None:
+        q = q.where(Chat.project_id == project_id)
+    rows = await s.scalars(q.order_by(Chat.updated_at.desc()).limit(limit))
+    return list(rows.all())
+
+
+async def last_questions(s: AsyncSession, chat_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+    """대화방마다 마지막 고객 질문(미리 보기)."""
+    if not chat_ids:
+        return {}
+    last = (
+        select(ChatMessage.chat_id, func.max(ChatMessage.turn).label("turn"))
+        .where(ChatMessage.chat_id.in_(chat_ids), ChatMessage.role == "user")
+        .group_by(ChatMessage.chat_id)
+        .subquery()
+    )
+    rows = await s.execute(
+        select(ChatMessage.chat_id, ChatMessage.text)
+        .join(last, (ChatMessage.chat_id == last.c.chat_id) & (ChatMessage.turn == last.c.turn))
+        .where(ChatMessage.role == "user")
+    )
+    return {r.chat_id: r.text for r in rows}

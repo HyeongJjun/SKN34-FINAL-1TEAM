@@ -1,0 +1,17 @@
+/* 한 공사 화면(C43 요약 · C63 기록). 색 · 글자는 토큰만. */
+.todo { display: flex; flex-direction: column; gap: 8px; }
+.todoBtn { display: flex; }
+.steps { display: flex; flex-direction: column; gap: 12px; }
+.log { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.logRow { display: grid; grid-template-columns: 84px minmax(0, 1fr); column-gap: 12px; row-gap: 2px; padding: 10px 0; border-bottom: 1px solid var(--mj-line-soft); font-size: var(--mj-type-label); align-items: baseline; }
+.logRow:last-child { border-bottom: 0; }
+.logTime { grid-row: span 2; font-weight: var(--mj-weight-bold); color: var(--mj-text-sub); }
+.logWho { font-weight: var(--mj-weight-bold); color: var(--mj-text); overflow-wrap: anywhere; }
+.logText { color: var(--mj-text-sub); overflow-wrap: anywhere; }
+@media (min-width: 768px) {
+  .logRow { grid-template-columns: 96px 112px minmax(0, 1fr); }
+  .logTime { grid-row: auto; }
+}
+@media (min-width: 1024px) {
+  .phoneSteps { display: none; }
+}

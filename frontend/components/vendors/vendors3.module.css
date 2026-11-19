@@ -1,0 +1,77 @@
+/* v3 업체 보기 · 자세히 · 사진 보기(C10 · C11 · C12 · C47 · D06 · D07) */
+.group { display: flex; flex-direction: column; gap: 10px; padding: var(--mj-pad-group); border-radius: var(--mj-radius-group); background: var(--mj-surface); box-shadow: var(--mj-group-edge); min-width: 0; }
+.list { display: flex; flex-direction: column; padding: 4px var(--mj-pad-group); border-radius: var(--mj-radius-group); background: var(--mj-surface); box-shadow: var(--mj-group-edge); min-width: 0; }
+.list > * + * { border-top: 1px solid var(--mj-line); }
+.hs { font-size: var(--mj-type-title-s); font-weight: var(--mj-weight-bold); line-height: var(--mj-lh-title); }
+.sub { font-size: var(--mj-type-label); color: var(--mj-text-sub); line-height: var(--mj-lh-body); }
+.meta { padding: 0 4px; font-size: var(--mj-type-caption); color: var(--mj-text-mute); line-height: var(--mj-lh-body); }
+.metaB { padding: 0 4px; font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); color: var(--mj-text-sub); }
+.eb { font-size: var(--mj-type-caption); font-weight: var(--mj-weight-bold); color: var(--mj-text-mute); }
+.gh { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.gh b, .gh h2 { font-size: var(--mj-type-body); font-weight: var(--mj-weight-bold); }
+.help { font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+
+/* 담기 띠 */
+.trayText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.trayText b { font-size: var(--mj-type-body); font-weight: var(--mj-weight-bold); }
+.trayText > span { font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+.trayHead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.phoneTray {
+  position: sticky; bottom: 0; z-index: var(--mj-z-header);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: var(--mj-surface); box-shadow: var(--mj-edge-top);
+}
+.webTray { display: none; }
+.pchip { display: inline-flex; align-items: center; gap: 2px; min-height: var(--mj-hit-min); padding: 0 2px 0 12px; border-radius: var(--mj-radius-pill); background: var(--mj-fill); font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); }
+.pchipX { display: inline-grid; place-items: center; width: var(--mj-hit-min); height: var(--mj-hit-min); padding: 0; border: 0; border-radius: 50%; background: none; color: var(--mj-text-sub); cursor: pointer; }
+.pchipX:hover { background: var(--mj-fill-strong); color: var(--mj-text); }
+
+/* 업체 자세히 머리 */
+.vhead { display: flex; align-items: flex-start; gap: 14px; min-width: 0; }
+.vtext { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vname { font-size: var(--mj-type-title-s); font-weight: var(--mj-weight-bold); }
+.vmeta { font-size: var(--mj-type-label); color: var(--mj-text-sub); line-height: var(--mj-lh-body); }
+
+/* 이 화면 안 바로 가기(밑줄 탭 모양) */
+.tabs { display: flex; gap: 4px; margin: 0 calc(-1 * var(--mj-pad-group)) -10px; padding: 0 var(--mj-pad-group); border-top: 1px solid var(--mj-line); overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; display: inline-flex; align-items: center; min-height: var(--mj-hit); padding: 0 10px; border-bottom: 2px solid transparent; color: var(--mj-text-sub); font-size: var(--mj-type-body); font-weight: var(--mj-weight-semibold); text-decoration: none; white-space: nowrap; }
+.tab:hover { color: var(--mj-text); }
+.tab[aria-current="true"] { border-bottom-color: var(--mj-text); color: var(--mj-text); font-weight: var(--mj-weight-bold); }
+.webTab { display: none; }
+
+/* 가견적 */
+.none { font-size: var(--mj-type-body); font-weight: var(--mj-weight-semibold); color: var(--mj-text-mute); }
+
+/* 시공 사례: B4 PhotoGrid를 폰 3장 · 웹 4칸으로 */
+@media (max-width: 767px) { .caseGrid > li:nth-child(n + 4) { display: none; } }
+@media (min-width: 768px) { .caseGrid.caseGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* 리뷰 요약 · 외부 링크 */
+.quote { font-size: var(--mj-type-label); color: var(--mj-text-sub); }
+.links { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.links li { display: flex; align-items: center; justify-content: space-between; gap: 0 8px; min-height: 52px; border-top: 1px solid var(--mj-line); }
+.extLinks { display: flex; flex-direction: column; gap: 4px; }
+.ext { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: var(--mj-hit); min-width: 0; padding: 6px 0; color: var(--mj-text); text-decoration: none; }
+.ext b { font-size: var(--mj-type-body); font-weight: var(--mj-weight-semibold); }
+.ext span { font-size: var(--mj-type-caption); color: var(--mj-link); }
+.ext:hover b { text-decoration: underline; }
+
+/* 머리 ⋯ 업체 메뉴: 폰은 위 머리(AppHeader)에, 웹은 업체 머리 오른쪽에 */
+.headMenu { margin-left: auto; }
+@media (max-width: 767px) { .headMenu.headMenu { display: none; } }
+
+/* 폰 · 웹 글 바꿔 끼우기(탭 '사례 6' ↔ '시공 사례 6') · 웹에만 있는 묶음(D07 사업자 정보) */
+.webWord { display: none; }
+.webGroup { display: none; }
+@media (min-width: 768px) {
+  .phoneTray { display: none; }
+  .webTray { display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap; padding: 14px var(--mj-pad-group); border-radius: var(--mj-radius-group); background: var(--mj-surface); box-shadow: var(--mj-group-edge); }
+  .webTab { display: inline-flex; }
+  .webWord { display: inline; }
+  .phoneWord { display: none; }
+  .webGroup { display: flex; }
+}
+/* 더보기(업체가 5곳을 넘을 때) */
+.more { align-self: stretch; }

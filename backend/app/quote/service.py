@@ -1,27 +1,34 @@
 """표준견적서(믿집 계산)와 업체 실측 견적서.
 
-표준견적서는 처음 볼 때 계산해 저장하고, 집 정보(rev) · 산식 · 단가 버전이 그대로면 저장본을 쓴다.
-하나라도 바뀌면 새 버전을 쌓는다(예전 버전은 남는다). 숫자는 모두 계산 엔진이 만든다.
+표준견적서는 처음 볼 때 계산해 저장하고, 집 정보(rev) · 산식 · 단가 · 시장 가격 · 공간 몫 판이 그대로면
+저장본을 쓴다. 하나라도 바뀌면 새 버전을 쌓는다(예전 버전은 남는다). 숫자는 모두 계산 엔진이 만든다.
+v3(C07 · C60 · D01): 도배는 calc.dobae.standard_v3 — 도배지 줄만 벽지 평 × 시장 평균 가격(market_ver 고정),
+부분 공사는 공간 몫 표(share_ver 고정)로 벽 · 천장 면적을 줄인다. v2 공사는 전체 공사(벽 + 천장)로 본다.
 """
 
 import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import delete, func, select, text, update
+from sqlalchemy import column, delete, func, select, table, text, update
 from sqlalchemy.dialects.postgresql import distinct_on
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models import User
-from app.calc import dobae, mokgong
-from app.calc.common import FORMULA_VERSION, Step, from_entered
-from app.calc.quote_diff import budget_gap
+from app.calc import deadline, dobae, mokgong
+from app.calc.common import FORMULA_VERSION, Money, Step, from_entered, sum_days, sum_won
+from app.calc.quote_diff import budget_fit, budget_gap
+from app.calc.space_share import SPACE_SHARE_2026_11
 from app.calc.standard_quote import house_area, house_pyeong
 from app.files import service as files_service
 from app.files.models import File
+from app.jobs import service as jobs_service
+from app.notify import catalog
+from app.notify import service as notify_service
+from app.notify.models import Notification
 from app.project import service as project_service
 from app.project.schemas import ProjectOut
 from app.quote.models import (
@@ -42,12 +49,16 @@ from app.quote.schemas import (
 )
 from app.refprice.book import DOBAE_2026H2, MOKGONG_2026H2
 from app.refprice.house import HOUSE_2026H2
-from app.shared.clock import now_utc
+from app.refprice.wallpaper_market import paper_market
+from app.shared.clock import SEOUL, now_utc
 from app.shared.errors import AppError
 from app.shared.ids import uuid7
+from app.vendor import service as vendor_service
 
 PRICE_VER = DOBAE_2026H2.version
 ROOM = "방"  # 방문 개수: 목공을 고른 공간 중 이름에 '방'이 든 곳
+FULL_FACES = ("wall", "ceiling")
+VALID_SOON = "quote_valid_soon"  # 기한 일 kind (jobs.models.KINDS) · 알림 kind (notify.catalog)
 
 
 @dataclass(frozen=True)
@@ -64,10 +75,37 @@ class TradeCalc:
     crew: int
     steps: list[Step]
     notes: list[str]
+    # v3: 만든 때 범위 · 면 · 고른 공간 사본, 공간 몫 표 판(부분만) · 벽지 시장 가격 판(도배만)
+    scope: str = "full"
+    faces: tuple[str, ...] = FULL_FACES
+    spaces: tuple[str, ...] = ()
+    share_ver: str | None = None
+    market_ver: str | None = None
+    days: Decimal | None = None  # 이 공정만 했을 때 예상 일수 (계산 엔진, 반나절 단위)
 
 
 def _area(p: ProjectOut) -> tuple[Decimal, str]:
     return house_area(p.size.band, p.size.m2, p.size.basis, HOUSE_2026H2)
+
+
+def home_v3(p: ProjectOut, grade: str | None = None) -> dobae.HomeV3:
+    """저장한 공사 → v3 도배 계산 입력. v2 공사(기본 정보가 없음)는 전체 공사(벽 + 천장)로 본다.
+    grade를 주면 그 벽지로 바꿔 센다(다른 벽지 미리 보기)."""
+    area, basis = _area(p)
+    h = p.home
+    g = grade or (h.grade if h else None) or (p.trades.dobae.grade if p.trades.dobae else None)
+    g = g or "basic"
+    if h is None:
+        return dobae.HomeV3(area, basis, g, p.occupied, balcony_ext=p.balcony_ext)
+    return dobae.HomeV3(
+        area, basis, g, p.occupied, h.scope, tuple(h.spaces), tuple(h.faces), p.balcony_ext
+    )
+
+
+def standard_v3(h: dobae.HomeV3, crew: int | None = None) -> dobae.StandardV3:
+    """v3 도배 표준견적서 (계산 엔진 + refprice 판). 손님 계산 · 가견적도 같은 함수 꼴을 쓴다."""
+    dp = replace(DOBAE_2026H2, crew=crew) if crew else DOBAE_2026H2
+    return dobae.standard_v3(h, dp, paper_market(h.grade), SPACE_SHARE_2026_11, HOUSE_2026H2)
 
 
 def calc_trades(p: ProjectOut, crews: Mapping[str, int] | None = None) -> list[TradeCalc]:
@@ -103,17 +141,17 @@ def calc_trades(p: ProjectOut, crews: Mapping[str, int] | None = None) -> list[T
                 mp.crew,
                 m.steps,
                 notes,
+                days=m.days,
             )
         )
     if p.trades.dobae:
-        d = dobae.quote(
-            dobae.DobaeInput(area, basis, p.trades.dobae.grade, True, p.occupied, p.balcony_ext),
-            dp,
-        )
+        h = home_v3(p)
+        v = standard_v3(h, crews.get("dobae"))
+        d = v.quote
         out.append(
             TradeCalc(
                 "dobae",
-                p.trades.dobae.grade,
+                h.grade,
                 d.lines,
                 d.subtotal,
                 d.vat,
@@ -122,6 +160,12 @@ def calc_trades(p: ProjectOut, crews: Mapping[str, int] | None = None) -> list[T
                 dp.crew,
                 d.steps,
                 list(d.assumptions),
+                scope=h.scope,
+                faces=tuple(h.faces),
+                spaces=tuple(h.spaces),
+                share_ver=v.share_ver,
+                market_ver=v.market_ver,
+                days=d.days,
             )
         )
     return out
@@ -141,11 +185,13 @@ async def _latest(s: AsyncSession, project_id: uuid.UUID) -> dict[str, StandardQ
     return {row.trade: row for row in (await s.scalars(q)).all()}
 
 
-def _fresh(row: StandardQuote, p: ProjectOut) -> bool:
+def _fresh(row: StandardQuote, p: ProjectOut, c: TradeCalc) -> bool:
     return (
         row.project_rev == p.rev
         and row.formula_ver == FORMULA_VERSION
         and row.price_ver == PRICE_VER
+        and row.market_ver == c.market_ver
+        and row.share_ver == c.share_ver
     )
 
 
@@ -153,7 +199,7 @@ async def ensure_standard(s: AsyncSession, p: ProjectOut) -> dict[str, StandardQ
     """이 집의 최신 표준견적서(공정별). 없거나 바뀌었으면 새 버전을 저장하고 commit한다."""
     latest = await _latest(s, p.id)
     wanted = {t.trade: t for t in calc_trades(p)}
-    stale = [t for t in wanted if t not in latest or not _fresh(latest[t], p)]
+    stale = [t for t in wanted if t not in latest or not _fresh(latest[t], p, wanted[t])]
     if not stale:
         return {t: latest[t] for t in wanted}
     area, basis = _area(p)
@@ -178,6 +224,11 @@ async def ensure_standard(s: AsyncSession, p: ProjectOut) -> dict[str, StandardQ
                 man_day=c.man_day,
                 crew=c.crew,
                 notes=c.notes,
+                scope=c.scope,
+                faces=list(c.faces),
+                space_keys=list(c.spaces),
+                share_ver=c.share_ver,
+                market_ver=c.market_ver,
             )
             s.add(row)
             await s.flush()
@@ -276,6 +327,7 @@ async def standard_for(s: AsyncSession, user: User, project_id: uuid.UUID) -> St
                     amount=ln.amount,
                     state=ln.state,
                     source=ln.source,
+                    basis=ln.basis,
                 )
                 for ln in lines[rows[t].id]
             ],
@@ -288,14 +340,18 @@ async def standard_for(s: AsyncSession, user: User, project_id: uuid.UUID) -> St
         )
         for t in order
     ]
-    supply = sum(x.supply for x in trades)
-    vat = sum(x.vat for x in trades)
-    total = sum(x.total for x in trades)
+    supply = sum_won(x.supply for x in trades)
+    vat = sum_won(x.vat for x in trades)
+    total = sum_won(x.total for x in trades)
     budget = None
     if p.budget:
         status, over = budget_gap(total, p.budget)
         budget = BudgetOut(band=p.budget, status=status, over_by=over)
     first = rows[order[0]]
+    main = rows.get("dobae", first)  # v3 범위 · 면 · 판은 도배 줄에서
+    # 예상 일수는 저장 칸이 없어 같은 집 정보로 계산 엔진을 다시 돌린다(위 저장 행과 같은 판 · 같은 값)
+    calc_days = {c.trade: c.days for c in calc_trades(p)}
+    days = sum_days(calc_days[t] or Decimal(0) for t in order)
     return StandardOut(
         project_id=p.id,
         code=p.code,
@@ -311,6 +367,13 @@ async def standard_for(s: AsyncSession, user: User, project_id: uuid.UUID) -> St
         vat=vat,
         total=total,
         budget=budget,
+        scope=main.scope,
+        spaces=list(main.space_keys),
+        faces=list(main.faces),
+        share_ver=main.share_ver,
+        market_ver=main.market_ver,
+        budget_fit=budget_fit(total, p.budget_won),
+        days=days,
     )
 
 
@@ -356,6 +419,10 @@ def _quote_out(q: VendorQuote, files: list[tuple[VendorQuoteFile, File]]) -> Ven
         valid_until=q.valid_until,
         created_at=q.created_at,
         updated_at=q.updated_at,
+        incl_removal=q.incl_removal,
+        incl_waste=q.incl_waste,
+        paper_spec=q.paper_spec,
+        warranty_months=q.warranty_months,
         files=[
             QuoteFileOut(
                 file_id=f.id,
@@ -425,8 +492,9 @@ async def save_draft(
             code, version = f"Q-{today:%y%m}-{no:04d}", 1
         draft = VendorQuote(id=uuid7(), visit_id=visit_id, code=code, version=version)
         s.add(draft)
+    simplified = await _simplified(s, owner_id)
     money = (
-        from_entered(data.entered_amount, data.vat_mode)
+        _money(data.entered_amount, data.vat_mode, simplified)
         if data.entered_amount is not None and data.vat_mode is not None
         else None
     )
@@ -438,6 +506,11 @@ async def save_draft(
     )
     draft.days = data.days
     draft.valid_until = data.valid_until
+    # v3 '포함됐나요?' 칩 (D21)
+    draft.incl_removal = data.incl_removal
+    draft.incl_waste = data.incl_waste
+    draft.paper_spec = data.paper_spec
+    draft.warranty_months = data.warranty_months
     draft.updated_at = now_utc()
     await s.flush()
     await s.execute(delete(VendorQuoteFile).where(VendorQuoteFile.quote_id == draft.id))
@@ -447,9 +520,40 @@ async def save_draft(
     await s.flush()
 
 
-async def seal_draft(s: AsyncSession, visit_id: uuid.UUID, today: date) -> VendorQuote:
-    """임시 저장본을 보낸 버전으로 굳힌다. 빠진 칸은 칸별로 422. commit은 부르는 쪽이 한다."""
-    draft = next((r for r in await _versions(s, visit_id) if r.sent_at is None), None)
+async def _simplified(s: AsyncSession, vendor_id: uuid.UUID | None) -> bool:
+    return vendor_id is not None and await vendor_service.tax_kind_of(s, vendor_id) == "simplified"
+
+
+def _money(amount: int, mode: str, simplified: bool) -> Money:
+    """업체가 적은 금액 → 공급가 · 부가세 · 합계(계산 엔진). 간이과세 업체는 부가세를 따로 붙이지 않아
+    낸 금액이 곧 합계다(L02: from_entered(금액, 'included', rate=0))."""
+    if simplified:
+        return from_entered(amount, "included", rate=Decimal(0))
+    return from_entered(amount, mode)
+
+
+async def _valid_soon_jobs(s: AsyncSession, q: VendorQuote, rows: list[VendorQuote]) -> None:
+    """보낸 버전의 유효기간 3일 · 1일 전 18:00 고객 알림 일(D20)을 넣는다(이미 지난 시각은 빼고).
+    같은 요청의 앞 버전 일은 거둔다(처리 함수도 최신 버전인지 다시 본다)."""
+    now = now_utc()
+    for old in rows:
+        if old.id != q.id and old.sent_at is not None:
+            await jobs_service.cancel(s, now=now, kind=VALID_SOON, ref_id=old.id)
+    if q.valid_until is None:
+        return
+    for at in deadline.valid_soon_at(q.valid_until):
+        if at > now:
+            await jobs_service.add(s, kind=VALID_SOON, ref_id=q.id, run_at=at)
+
+
+async def seal_draft(
+    s: AsyncSession, visit_id: uuid.UUID, today: date, *, vendor_id: uuid.UUID | None = None
+) -> VendorQuote:
+    """임시 저장본을 보낸 버전으로 굳힌다. 빠진 칸은 칸별로 422. commit은 부르는 쪽이 한다.
+    금액은 보낼 때 계산 엔진으로 한 번 더 센다(간이과세면 부가세 0, L02). 유효기간 알림 일도 같은 트랜잭션에.
+    vendor_id를 안 주면 견적서 파일을 올린 업체로 본다(파일은 그 업체 것만 붙는다)."""
+    rows = await _versions(s, visit_id)
+    draft = next((r for r in rows if r.sent_at is None), None)
     files = (await _quote_files(s, [draft.id]))[draft.id] if draft else []
     missing = [k for k in MISSING if k == "files" and not files]
     if draft is not None:
@@ -466,7 +570,9 @@ async def seal_draft(s: AsyncSession, visit_id: uuid.UUID, today: date) -> Vendo
     if draft.valid_until is not None and draft.valid_until < today:
         msg = "견적 유효기간이 지났어요. 날짜를 다시 골라 주세요."
         raise AppError(422, "valid_until", msg, fields=[{"loc": ["valid_until"], "msg": msg}])
-    money = from_entered(draft.entered_amount, draft.vat_mode)  # 보낼 때 한 번 더 계산 엔진으로
+    simplified = await _simplified(s, vendor_id or files[0][1].owner_id)
+    # 보낼 때 한 번 더 계산 엔진으로
+    money = _money(draft.entered_amount, draft.vat_mode, simplified)
     res = await s.execute(
         update(VendorQuote)
         .where(VendorQuote.id == draft.id, VendorQuote.sent_at.is_(None))
@@ -475,6 +581,7 @@ async def seal_draft(s: AsyncSession, visit_id: uuid.UUID, today: date) -> Vendo
     )
     if res.rowcount != 1:
         raise AppError(409, "invalid_state", "이미 보낸 견적서예요.")
+    await _valid_soon_jobs(s, draft, rows)
     return draft
 
 
@@ -589,3 +696,58 @@ async def standard_versions(s: AsyncSession, project_id: uuid.UUID) -> list[Stan
         .order_by(StandardQuote.trade, StandardQuote.version)
     )
     return list((await s.execute(q)).scalars().all())
+
+
+# ---- 견적서 유효기간 '곧 지나요' 고객 알림 (D20). 처리 함수는 quote/jobs.py ----
+
+# 요청 상태 · 업체 이름만 읽는다(읽기 조인). visit은 위층이라 모듈을 import하지 않는다
+_VISITS = table(
+    "visits", column("id"), column("status"), column("project_id"), column("vendor_name")
+)
+
+
+async def on_valid_soon(
+    s: AsyncSession, quote_id: uuid.UUID, run_at: datetime, now: datetime
+) -> uuid.UUID | None:
+    """유효기간 3일 · 1일 전 18:00: 고객이 아직 고를 수 있는 견적서(요청이 quoted · 그 요청의 최신 보낸 버전 ·
+    유효기간 안)면 고객 알림 한 줄. 돌려주는 값: 알림을 받은 고객 id, 이미 보냈거나 상황이 바뀌었으면 None.
+    commit은 부르는 쪽(worker)이 한다."""
+    q = await s.get(VendorQuote, quote_id, populate_existing=True)
+    if q is None or q.sent_at is None or q.valid_until is None:
+        return None
+    left = (q.valid_until - now.astimezone(SEOUL).date()).days
+    if left < 0:
+        return None
+    latest = await s.scalar(
+        select(VendorQuote.id)
+        .where(VendorQuote.visit_id == q.visit_id, VendorQuote.sent_at.is_not(None))
+        .order_by(VendorQuote.version.desc())
+        .limit(1)
+    )
+    v = (
+        await s.execute(
+            select(_VISITS.c.status, _VISITS.c.project_id, _VISITS.c.vendor_name).where(
+                _VISITS.c.id == q.visit_id
+            )
+        )
+    ).first()
+    if latest != q.id or v is None or v.status != "quoted":
+        return None
+    owner = (await project_service.briefs(s, [v.project_id]))[v.project_id].owner_id
+    key = f"{VALID_SOON}:{q.id}:{run_at.astimezone(SEOUL):%Y%m%d}"
+    sent = select(Notification.id).where(
+        Notification.user_id == owner, Notification.dedup_key == key
+    )
+    if (await s.execute(sent)).first() is not None:
+        return None
+    when = f"{left}일 남았어요" if left > 0 else "오늘까지예요"
+    await notify_service.add(
+        s,
+        user_id=owner,
+        kind=VALID_SOON,
+        body=f"{v.vendor_name} 견적서 유효기간이 {when}",
+        link=catalog.link(VALID_SOON, pid=v.project_id),
+        dedup_key=key,
+        project_id=v.project_id,
+    )
+    return owner

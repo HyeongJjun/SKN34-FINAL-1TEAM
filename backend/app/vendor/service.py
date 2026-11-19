@@ -11,7 +11,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from fastapi import UploadFile
 from sqlalchemy.exc import IntegrityError
@@ -21,12 +21,18 @@ from app.auth import service as auth_service
 from app.auth.models import User
 from app.calc import dobae, estimate, mokgong
 from app.calc.schedule import days_since
+from app.calc.space_share import SPACE_SHARE_2026_11
+from app.calc.standard_quote import house_area
+from app.calc.visit_view import area_text
 from app.files import service as files_service
 from app.files.models import File
 from app.notify import service as notify_service
 from app.refprice.book import DOBAE_2026H2, MOKGONG_2026H2
+from app.refprice.house import HOUSE_2026H2
+from app.refprice.vendor_baseline import price_warning, vendor_base
+from app.refprice.wallpaper_market import paper_market
 from app.shared.clock import now_utc
-from app.shared.errors import AppError
+from app.shared.errors import AppError, app_error
 from app.shared.ids import uuid7
 from app.shared.regions import is_region, region_label
 from app.vendor import repository as repo
@@ -34,21 +40,26 @@ from app.vendor.models import (
     FAQ_KEYS,
     PORTFOLIO_MAX,
     PRICE_FILES_MAX,
+    ROWS_VER_OF,
     Vendor,
     VendorPortfolio,
     VendorPriceFile,
     VendorPriceLine,
     VendorPriceSet,
     VendorReview,
+    VendorReviewLink,
 )
 from app.vendor.schemas import (
     ApplicationOut,
     AreaIn,
     AreaOut,
+    ConfirmPricesIn,
     ContactOut,
     DecisionOut,
     EstimateLineOut,
     EstimateOut,
+    EstimateV3LineOut,
+    EstimateV3Out,
     FaqIn,
     LicenseOut,
     LinkIn,
@@ -60,9 +71,11 @@ from app.vendor.schemas import (
     PriceFileOut,
     PriceLineOut,
     PriceRowOut,
+    PriceRowV3Out,
     PriceSetIn,
     PriceSetOut,
     PricesOut,
+    PricesV3Out,
     ProfileIn,
     ProfileOut,
     PublicCardOut,
@@ -70,12 +83,18 @@ from app.vendor.schemas import (
     ReapplyIn,
     ResubmitIn,
     ReviewIn,
+    ReviewLinkAdminOut,
+    ReviewLinkOut,
+    ReviewLinksIn,
     ReviewOut,
     ReviewSummaryOut,
     VendorAdminDetailOut,
     VendorAdminOut,
     VendorSignupIn,
 )
+
+if TYPE_CHECKING:
+    from app.project.schemas import ProjectOut
 
 STALE = "다른 곳에서 먼저 바꿨어요. 다시 열어 주세요."
 DONE = ("approved", "rejected")
@@ -251,7 +270,25 @@ async def get_for_admin(s: AsyncSession, vendor_id: uuid.UUID, today: date) -> V
         )
         for r, name in await repo.reviews_of(s, vendor_id)
     ]
-    return VendorAdminDetailOut(**base.model_dump(), reviews=reviews)
+    links = [
+        ReviewLinkAdminOut(
+            sort=r.sort,
+            label=r.label,
+            url=r.url,
+            status=r.status,
+            note=r.note,
+            checked_at=r.checked_at,
+        )
+        for r in (await repo.review_links_of(s, [vendor_id]))[vendor_id]
+    ]
+    v = pair[0]
+    return VendorAdminDetailOut(
+        **base.model_dump(),
+        reviews=reviews,
+        review_links=links,
+        suspended_at=v.suspended_at,
+        suspend_scope=v.suspend_scope,
+    )
 
 
 async def review(
@@ -395,7 +432,8 @@ async def resubmit(s: AsyncSession, vendor: User, data: ResubmitIn) -> Applicati
 
 
 async def reapply(s: AsyncSession, vendor: User, data: ReapplyIn) -> ApplicationOut:
-    """거절 → 심사 중. 같은 계정 · 같은 사업자등록번호로 신청서를 다시 내고, 바뀐 칸만 이력에 남긴다."""
+    """거절 → 심사 중. 같은 계정으로 신청서를 다시 내고, 바뀐 칸만 이력에 남긴다.
+    사업자등록번호를 고치면(VS02) 가입처럼 다른 업체가 쓰는 번호인지 본다(409 biz_no_taken)."""
     v = await _locked(s, vendor, "rejected", "거절된 신청만 다시 신청할 수 있어요.")
     areas = _check_areas(data.areas)
     trades = sorted(set(data.trades))
@@ -405,14 +443,22 @@ async def reapply(s: AsyncSession, vendor: User, data: ReapplyIn) -> Application
     for k in ("biz_name", "owner_name", "phone"):
         if getattr(data, k) != getattr(v, k):
             changes[k], values[k] = getattr(v, k), getattr(data, k)
+    if data.biz_no is not None and data.biz_no != v.biz_no:
+        if await repo.biz_no_taken(s, data.biz_no):
+            raise AppError(409, "biz_no_taken", BIZ_NO_TAKEN)
+        changes["biz_no"], values["biz_no"] = v.biz_no, data.biz_no
     if trades != sorted(old_trades[v.user_id]):
         changes["trades"] = sorted(old_trades[v.user_id])
     if sorted(areas) != sorted(old_areas[v.user_id]):
         changes["areas"] = [{"sido": a, "sgg": b} for a, b in sorted(old_areas[v.user_id])]
     old_file = await _new_license(s, v, data.license_file_id, changes, values)
-    await _resubmitted(
-        s, v, action="reapply", allowed_from="rejected", values=values, changes=changes
-    )
+    try:
+        await _resubmitted(
+            s, v, action="reapply", allowed_from="rejected", values=values, changes=changes
+        )
+    except IntegrityError as exc:  # 같은 번호로 동시에 가입 · 다시 신청하면 UNIQUE가 막는다
+        await s.rollback()
+        raise AppError(409, "biz_no_taken", BIZ_NO_TAKEN) from exc
     await repo.replace_trades_areas(s, v.user_id, trades, areas)
     await _finish(s, v, old_file)
     return await application(s, vendor)
@@ -442,6 +488,10 @@ def _photo(p: VendorPortfolio) -> PortfolioOut:
         space=p.space,
         pyeong=p.pyeong,
         taken_on=p.taken_on,
+        area_m2=p.area_m2,
+        paper=p.paper,
+        area_basis=p.area_basis,
+        area_text=area_text(p.area_m2, p.area_basis) if p.area_m2 is not None else None,
     )
 
 
@@ -474,6 +524,10 @@ async def get_profile(s: AsyncSession, vendor: User) -> ProfileOut:
         address=v.address,
         site_url=v.site_url,
         contact_url=v.contact_url,
+        instant_default=v.instant_default,
+        visit_capacity=v.visit_capacity,
+        suspended_at=v.suspended_at,
+        intro=v.intro or None,
     )
 
 
@@ -504,6 +558,13 @@ async def save_profile(s: AsyncSession, vendor: User, data: ProfileIn, today: da
         "insurance": data.insurance,
         "updated_at": now_utc(),
     }
+    # v3: 비우면 그대로 둔다 (옛 화면은 이 칸을 보내지 않는다)
+    if data.instant_default is not None:
+        values["instant_default"] = data.instant_default
+    if data.visit_capacity is not None:
+        values["visit_capacity"] = data.visit_capacity
+    if data.intro is not None:  # 빈 글("")은 소개를 지운다
+        values["intro"] = data.intro
     if not await repo.save_if_unchanged(s, vendor.id, data.updated_at, values):
         raise AppError(409, "stale", STALE)
     await repo.replace_parts(
@@ -521,6 +582,12 @@ async def save_profile(s: AsyncSession, vendor: User, data: ProfileIn, today: da
         for i, e in enumerate(data.portfolio):
             row = rows[e.id]
             row.title, row.space, row.pyeong, row.taken_on = e.title, e.space, e.pyeong, e.taken_on
+            row.area_m2, row.paper = e.area_m2, e.paper
+            # v3 (0034): 면적 기준은 보낸 때만 바꾼다(옛 화면은 안 보냄). 면적을 지우면 기준도 지운다
+            if "area_basis" in e.model_fields_set:
+                row.area_basis = e.area_basis
+            if row.area_m2 is None:
+                row.area_basis = None
             row.sort = i
     await s.commit()
     return await get_profile(s, vendor)
@@ -544,6 +611,9 @@ async def add_portfolio(
         space=data.space,
         pyeong=data.pyeong,
         taken_on=data.taken_on,
+        area_m2=data.area_m2,
+        paper=data.paper,
+        area_basis=data.area_basis,
         sort=sort,
     )
     s.add(row)
@@ -589,7 +659,8 @@ async def portfolio_file(s: AsyncSession, vendor_id: uuid.UUID, file_id: uuid.UU
 
 
 async def tax_kind_of(s: AsyncSession, vendor_id: uuid.UUID) -> str:
-    """과세(general) · 면세(exempt). 실측 견적서의 부가세 방식을 거를 때 쓴다."""
+    """일반(general) · 간이(simplified) · 면세(exempt). 실측 견적서의 부가세 방식 · 계산에 쓴다.
+    간이 · 면세는 부가세를 따로 붙이지 않는다(L02, NO_VAT)."""
     v = await s.get(Vendor, vendor_id)
     return v.tax_kind if v else "general"
 
@@ -629,6 +700,12 @@ async def list_public(
 EXAMPLE_M2 = Decimal("105.8")  # 고객에게 보이는 모습 예: 32평 아파트(공급면적)
 TRADE_NOT_MINE = "맡는 공정의 견적서만 올릴 수 있어요. 공정을 먼저 골라 주세요."
 ROW_NAME = {r.key: r.name for rows in estimate.PRICE_ROWS.values() for r in rows}
+NO_VAT = ("exempt", "simplified")  # 부가세를 따로 붙이지 않는 업체 (면세 · 간이, L02)
+V3 = "dobae_v3"
+V3_PAPER_UNIT = "벽지 평"  # v3 표준견적서 도배지 줄 단위 (v2 단가는 ㎡당이라 가견적 때 바꿔 센다)
+# v3 단가표 '공급 69.4㎡ 집이면' 예시 집 (9판 C07 · D02): 실크 · 천장 포함 · 빈 집 · 전체
+EXAMPLE_V3 = dobae.HomeV3(Decimal("69.4"), "supply", "basic", False)
+EXAMPLE_V3_HOME = f"{area_text(EXAMPLE_V3.area_m2, EXAMPLE_V3.area_basis)} 집"  # 공급 69.4㎡ 집
 
 
 @dataclass(frozen=True)
@@ -654,6 +731,29 @@ class _StdLine(Protocol):
     state: str
 
 
+@dataclass(frozen=True)
+class _Std:
+    key: str
+    name: str
+    qty: Decimal | None
+    unit: str
+    state: str
+
+
+def _v2_lines(trade: str, std_lines: Sequence[_StdLine], grade: str | None) -> list:
+    """옛 v2 단가(도배지 ㎡당)로 셀 때: v3 표준견적서의 도배지 줄(벽지 평)을 ㎡ 소요량 줄로 바꿔 넣는다."""
+    if trade != "dobae":
+        return list(std_lines)
+    out: list = []
+    for ln in std_lines:
+        if ln.key == "paper" and ln.unit == V3_PAPER_UNIT:
+            name = ROW_NAME.get(estimate.price_key("paper", grade), ln.name)
+            qty = dobae.paper_m2_from_lines(std_lines, DOBAE_2026H2)
+            ln = _Std(ln.key, name, qty, "㎡", ln.state)
+        out.append(ln)
+    return out
+
+
 def estimate_out(
     trade: str,
     std_lines: Sequence[_StdLine],
@@ -663,14 +763,16 @@ def estimate_out(
     tax_kind: str,
     sources: dict[str, str],
 ) -> EstimateOut:
-    """가견적 = 업체 단가 × 표준견적서 수량(계산 엔진). std_lines는 표준견적서 줄(저장본 또는 계산 결과)."""
+    """가견적 = 업체 단가 × 표준견적서 수량(계산 엔진). std_lines는 표준견적서 줄(저장본 또는 계산 결과).
+    옛 v2 단가표 길이다(v3 단가는 estimate_v3_for). 간이 · 면세 업체는 부가세 0(L02)."""
+    std_lines = _v2_lines(trade, std_lines, grade)
     by_key = {ln.key: ln for ln in std_lines}
     e = estimate.estimate(
         [estimate.StdLine(ln.key, ln.qty, ln.state) for ln in std_lines],
         prices,
         trade=trade,
         grade=grade,
-        exempt=tax_kind == "exempt",
+        exempt=tax_kind in NO_VAT,
     )
     return EstimateOut(
         lines=[
@@ -706,7 +808,112 @@ def _example_lines(trade: str) -> list:
 
 
 def _prices_of(lines: list) -> dict[str, estimate.VendorPrice]:
-    return {ln.key: estimate.VendorPrice(ln.unit_price, ln.included_in) for ln in lines}
+    """v2 가견적 단가 (빼기 줄은 v3에만 있어 넣지 않는다)"""
+    return {
+        ln.key: estimate.VendorPrice(ln.unit_price, ln.included_in)
+        for ln in lines
+        if ln.unit_price is not None or ln.included_in is not None
+    }
+
+
+def _prices_v3(lines: list) -> dict[str, estimate.PriceV3]:
+    return {ln.key: estimate.PriceV3(ln.mode, ln.unit_price, ln.included_in) for ln in lines}
+
+
+def _warn(code: str, unit_price: int | None) -> str | None:
+    """시장 기준과 10배 넘게 다르면 경고(L01, B6 기준값). 0원은 '10분의 1보다 작음'으로 본다."""
+    if unit_price is None:
+        return None
+    if unit_price <= 0:
+        return "too_low"
+    w = price_warning(code, unit_price)
+    return w.kind if w else None
+
+
+def _estimate_v3_out(
+    e: estimate.EstimateV3, ps: VendorPriceSet | None, tax_kind: str
+) -> EstimateV3Out:
+    return EstimateV3Out(
+        rows_ver=V3,
+        set_id=ps.id if ps else None,
+        version=ps.version if ps else None,
+        grade=e.grade,
+        tax_kind=tax_kind,
+        lines=[
+            EstimateV3LineOut(
+                code=x.row.code,
+                key=x.row.key,
+                name=x.row.name,
+                qty=x.qty,
+                unit=x.row.unit,
+                unit_price=x.unit_price,
+                amount=x.amount,
+                mode=x.mode,
+                included_in=x.included_in,
+                in_standard=x.row.in_standard,
+            )
+            for x in e.lines
+        ],
+        supply=e.supply,
+        vat=e.vat,
+        total=e.total,
+        vs_standard_pct=e.vs_standard_pct,
+        paper_ok=e.paper_ok,
+    )
+
+
+def _std_v3(h: dobae.HomeV3) -> dobae.StandardV3:
+    """v3 표준견적서 계산 (quote.service가 저장하는 값과 같은 계산 엔진 · 판)"""
+    return dobae.standard_v3(
+        h, DOBAE_2026H2, paper_market(h.grade), SPACE_SHARE_2026_11, HOUSE_2026H2
+    )
+
+
+def _v3_out(v: Vendor, ps: VendorPriceSet | None, lines: list) -> PricesV3Out:
+    """업체 단가표 v3 (D02): 줄 1201~1208 + '공급 69.4㎡ 집이면' 예시 + 10배 경고"""
+    ex = _std_v3(EXAMPLE_V3)
+    stored = {ln.key: ln for ln in lines}
+    prices = _prices_v3(lines)
+    rows = []
+    for r in estimate.V3_ROWS:
+        ln = stored.get(r.key)
+        qty, amount = estimate.row_amount(r, prices.get(r.key), ex.qty)
+        base = vendor_base(r.code)
+        rows.append(
+            PriceRowV3Out(
+                code=r.code,
+                key=r.key,
+                name=r.name,
+                unit=r.unit,
+                mode=ln.mode if ln else None,
+                unit_price=ln.unit_price if ln else None,
+                included_in=ln.included_in if ln else None,
+                example_qty=qty,
+                example_amount=amount,
+                warn=_warn(r.code, ln.unit_price) if ln else None,
+                warn_high=base.warn_above,
+                warn_low=base.warn_below,
+            )
+        )
+    example = None
+    if ps is not None:
+        e = estimate.estimate_v3(
+            prices,
+            ex.qty,
+            grade=EXAMPLE_V3.grade,
+            exempt=v.tax_kind in NO_VAT,
+            standard_total=ex.quote.total,
+        )
+        example = _estimate_v3_out(e, ps, v.tax_kind)
+    return PricesV3Out(
+        rows_ver=V3,
+        version=ps.version if ps else 0,
+        confirmed_at=ps.confirmed_at if ps else None,
+        needs_setup=ps is None,
+        lines=rows,
+        example=example,
+        example_home=EXAMPLE_V3_HOME,
+    )
 
 
 def _sources_of(lines: list, names: dict[uuid.UUID, str]) -> dict[str, str]:
@@ -725,9 +932,12 @@ def _file_out(pf: VendorPriceFile, f) -> PriceFileOut:
 
 
 async def prices_for(s: AsyncSession, vendor: User, trade: str) -> PricesOut:
-    """GET /vendor/prices: 단가를 넣는 표준 행 · 근거 파일 · 고치는 중(draft) · 확인한(confirmed) 묶음"""
-    sets = await repo.price_sets(s, [vendor.id], trade, ("draft", "confirmed"))
-    lines = await repo.price_lines(s, [x.id for x in sets])
+    """GET /vendor/prices: 단가를 넣는 표준 행 · 근거 파일 · 고치는 중(draft) · 확인한(confirmed) 묶음.
+    v3 단가표(dobae_v3)는 v3 칸에만, 옛 칸(draft · confirmed)에는 옛 묶음만 보인다."""
+    every = await repo.price_sets(s, [vendor.id], trade, ("draft", "confirmed"))
+    lines = await repo.price_lines(s, [x.id for x in every])
+    sets = [x for x in every if x.rows_ver != V3]
+    v3_set = next((x for x in every if x.rows_ver == V3 and x.status == "confirmed"), None)
     files = await repo.price_files(s, [vendor.id], trade)
     names = {f.id: f.filename for _, f in files}
     v = await s.get(Vendor, vendor.id, populate_existing=True)
@@ -770,6 +980,7 @@ async def prices_for(s: AsyncSession, vendor: User, trade: str) -> PricesOut:
         files=[_file_out(pf, f) for pf, f in files],
         draft=out(by.get("draft")),
         confirmed=out(by.get("confirmed")),
+        v3=_v3_out(v, v3_set, lines[v3_set.id] if v3_set else []) if trade == "dobae" else None,
     )
 
 
@@ -810,7 +1021,13 @@ async def save_prices(s: AsyncSession, vendor: User, trade: str, data: PriceSetI
             draft = drafts[0]
         else:
             version = await repo.next_price_version(s, vendor.id, trade)
-            draft = VendorPriceSet(id=uuid7(), vendor_id=vendor.id, trade=trade, version=version)
+            draft = VendorPriceSet(
+                id=uuid7(),
+                vendor_id=vendor.id,
+                trade=trade,
+                version=version,
+                rows_ver=ROWS_VER_OF[trade],
+            )
             s.add(draft)
             await s.flush()
         await repo.replace_price_lines(
@@ -822,6 +1039,7 @@ async def save_prices(s: AsyncSession, vendor: User, trade: str, data: PriceSetI
                     key=ln.key,
                     unit_price=ln.unit_price,
                     included_in=ln.included_in,
+                    mode="included" if ln.included_in is not None else "price",
                     source_file_id=ln.source_file_id,
                 )
                 for ln in data.lines
@@ -853,6 +1071,82 @@ async def confirm_prices(s: AsyncSession, vendor: User, trade: str) -> PricesOut
     )
     if changed != 1:
         raise AppError(409, "invalid_state", "이미 확인한 단가예요.")
+    await _commit(s)
+    return await prices_for(s, vendor, trade)
+
+
+def _v3_line_errors(data: ConfirmPricesIn) -> list[dict]:
+    """빈 칸(줄 빠짐) · 모르는 줄 · 포함 대상이 단가 줄이 아님. 칸 이름은 ["lines", 줄 키]."""
+    given = {ln.key: ln for ln in data.lines}
+    fields = [
+        {"loc": ["lines", k], "msg": "모르는 줄이에요."}
+        for k in given
+        if k not in estimate.V3_BY_KEY
+    ]
+    fields += [
+        {"loc": ["lines", r.key], "msg": "받는 법과 단가를 넣어 주세요."}
+        for r in estimate.V3_ROWS
+        if r.key not in given
+    ]
+    fields += [
+        {"loc": ["lines", k], "msg": "포함할 줄은 단가를 넣은 줄로 골라 주세요."}
+        for k, ln in given.items()
+        if ln.included_in is not None
+        and (ln.included_in not in given or given[ln.included_in].mode != "price")
+    ]
+    if not fields and not any(ln.mode == "price" for ln in data.lines):
+        fields.append({"loc": ["lines"], "msg": "단가를 하나 이상 넣어 주세요."})
+    return fields
+
+
+async def confirm_prices_v3(
+    s: AsyncSession, vendor: User, trade: str, data: ConfirmPricesIn
+) -> PricesOut:
+    """v3 '확인하고 저장' 한 번(D02): 줄 1201~1208을 모두 받아 새 확인 묶음(dobae_v3)을 만들고, 지금 확인 묶음
+    (옛 v2 포함)은 retired로 둔다. 본 판(base_version)이 지금 v3 확인 묶음 판(없으면 0)이 아니면 409 stale
+    (동시 두 번이면 늦은 쪽). 빈 칸 · 모르는 줄 422(fields). 10배 경고는 저장되고 응답 warn에 보인다."""
+    if trade != "dobae":
+        msg = "1201~1208 단가표는 도배만 있어요."
+        raise app_error("invalid", msg, fields=[{"loc": ["trade"], "msg": msg}])
+    fields = _v3_line_errors(data)
+    if fields:
+        raise app_error("invalid", fields[0]["msg"], fields=fields)
+    await _lock_and_check_trade(s, vendor, trade)  # 같은 업체의 확인이 여기서 줄 선다
+    confirmed = await repo.price_sets(s, [vendor.id], trade, ("confirmed",))
+    now = next((x.version for x in confirmed if x.rows_ver == V3), 0)
+    if data.base_version != now:
+        raise app_error("stale", STALE)
+    try:
+        version = await repo.next_price_version(s, vendor.id, trade)
+        await repo.set_price_status(s, vendor.id, trade, to="retired", allowed_from="confirmed")
+        ps = VendorPriceSet(
+            id=uuid7(),
+            vendor_id=vendor.id,
+            trade=trade,
+            version=version,
+            status="confirmed",
+            confirmed_at=now_utc(),
+            rows_ver=V3,
+        )
+        s.add(ps)
+        await s.flush()
+        s.add_all(
+            [
+                VendorPriceLine(
+                    set_id=ps.id,
+                    key=ln.key,
+                    unit_price=ln.unit_price if ln.mode == "price" else None,
+                    included_in=ln.included_in if ln.mode == "included" else None,
+                    mode=ln.mode,
+                )
+                for ln in data.lines
+            ]
+        )
+        await s.flush()
+    except IntegrityError as exc:
+        # (업체, 공정, 판) UNIQUE · 확인 묶음 하나 부분 UQ가 막은 동시 요청
+        await s.rollback()
+        raise app_error("stale", STALE) from exc
     await _commit(s)
     return await prices_for(s, vendor, trade)
 
@@ -893,10 +1187,12 @@ async def remove_price_file(s: AsyncSession, vendor: User, file_id: uuid.UUID) -
 async def confirmed_prices(
     s: AsyncSession, vendor_ids: list[uuid.UUID], trade: str
 ) -> dict[uuid.UUID, ConfirmedPrices]:
-    """고객 가견적용: 승인된 업체의 확인한 단가 묶음. 없는 업체는 빠진다('가견적 없음')."""
+    """고객 가견적용(옛 v2 단가표 길): 승인된 업체의 확인한 단가 묶음. 없는 업체는 빠진다('가견적 없음').
+    v3 단가표(dobae_v3)로 확인한 업체는 여기 없고 estimate_v3_for가 센다."""
     if not vendor_ids:
         return {}
     sets = await repo.price_sets(s, vendor_ids, trade, ("confirmed",))
+    sets = [x for x in sets if x.rows_ver != V3]
     vendors = await repo.vendors_by_id(s, [x.vendor_id for x in sets])
     sets = [x for x in sets if vendors[x.vendor_id].status == "approved"]
     lines = await repo.price_lines(s, [x.id for x in sets])
@@ -911,3 +1207,175 @@ async def confirmed_prices(
         )
         for x in sets
     }
+
+
+def _home_v3(p: "ProjectOut", grade: str | None) -> dobae.HomeV3:
+    """공사 → v3 도배 계산 입력 (quote.service.home_v3와 같은 규칙: v2 공사는 전체 공사)"""
+    area, basis = house_area(p.size.band, p.size.m2, p.size.basis, HOUSE_2026H2)
+    h = p.home
+    g = grade or (h.grade if h else None) or (p.trades.dobae.grade if p.trades.dobae else None)
+    g = g or "basic"
+    if h is None:
+        return dobae.HomeV3(area, basis, g, p.occupied, balcony_ext=p.balcony_ext)
+    return dobae.HomeV3(
+        area, basis, g, p.occupied, h.scope, tuple(h.spaces), tuple(h.faces), p.balcony_ext
+    )
+
+
+async def estimates_v3_for(
+    s: AsyncSession,
+    *,
+    vendor_ids: list[uuid.UUID],
+    project: "ProjectOut",
+    trade: str,
+    grade: str | None = None,
+) -> dict[uuid.UUID, EstimateV3Out]:
+    """고객 가견적 v3 여러 업체 (C10 · D06 목록): 승인된 업체가 확인한 v3 단가 × 이 집 계산 엔진 수량.
+    확인한 v3 묶음이 없는 업체는 빠진다('가견적 준비 중', D06 A). 고른 벽지 줄이 '빼기'면 paper_ok False.
+    grade를 주면 그 벽지로 센다(비교 %의 표준견적서도 그 벽지)."""
+    if trade != "dobae" or not vendor_ids:
+        return {}
+    sets = [
+        x for x in await repo.price_sets(s, vendor_ids, trade, ("confirmed",)) if x.rows_ver == V3
+    ]
+    vendors = await repo.vendors_by_id(s, [x.vendor_id for x in sets])
+    sets = [x for x in sets if vendors[x.vendor_id].status == "approved"]
+    if not sets:
+        return {}
+    lines = await repo.price_lines(s, [x.id for x in sets])
+    h = _home_v3(project, grade)
+    std = _std_v3(h)
+    out: dict[uuid.UUID, EstimateV3Out] = {}
+    for x in sets:
+        tax = vendors[x.vendor_id].tax_kind
+        e = estimate.estimate_v3(
+            _prices_v3(lines[x.id]),
+            std.qty,
+            grade=h.grade,
+            exempt=tax in NO_VAT,
+            standard_total=std.quote.total,
+        )
+        out[x.vendor_id] = _estimate_v3_out(e, x, tax)
+    return out
+
+
+async def estimate_v3_for(
+    s: AsyncSession,
+    *,
+    vendor_id: uuid.UUID,
+    project: "ProjectOut",
+    trade: str,
+    grade: str | None = None,
+) -> EstimateV3Out | None:
+    """고객 가견적 v3 (C11 · D07): 업체가 확인한 v3 단가 × 계산 엔진 수량.
+
+    확인한 v3 단가 묶음이 없으면 None('가견적 없음'). grade를 주면 그 벽지로 미리 본다
+    (C11 '합지 −31만 1,850원' = grade 미리 보기 total − 고른 벽지 total).
+    """
+    got = await estimates_v3_for(
+        s, vendor_ids=[vendor_id], project=project, trade=trade, grade=grade
+    )
+    return got.get(vendor_id)
+
+
+# ---- 외부 리뷰 링크 (V18 · A01): 3개까지. 바뀐 링크는 '확인 중'이고 관리자가 확인해야 고객에게 보인다 ----
+
+
+def _link_out(row: VendorReviewLink) -> ReviewLinkOut:
+    return ReviewLinkOut(sort=row.sort, label=row.label, url=row.url, status=row.status)
+
+
+async def review_links(s: AsyncSession, vendor: User) -> list[ReviewLinkOut]:
+    """GET /vendor/review-links: 내 링크 (번호 순, 상태 포함)"""
+    return [_link_out(r) for r in (await repo.review_links_of(s, [vendor.id]))[vendor.id]]
+
+
+async def save_review_links(
+    s: AsyncSession, vendor: User, data: ReviewLinksIn
+) -> list[ReviewLinkOut]:
+    """PUT /vendor/review-links: 통째로 저장. 같은 자리에 주소 · 이름이 그대로면 상태도 그대로 두고,
+    새로 넣었거나 바뀐 링크는 '확인 중'(관리자 확인 전에는 고객에게 안 보여요). 빠진 자리는 지운다."""
+    urls = [ln.url for ln in data.links]
+    dup = [i for i, u in enumerate(urls) if u in urls[:i]]
+    if dup:
+        msg = "같은 주소를 두 번 넣었어요."
+        fields = [{"loc": ["links", str(i), "url"], "msg": msg} for i in dup]  # 422 입구와 같은 꼴
+        raise app_error("invalid", msg, fields=fields)
+    await repo.lock_vendor(s, vendor.id)  # 같은 업체의 저장이 줄 선다
+    old = {r.sort: r for r in (await repo.review_links_of(s, [vendor.id]))[vendor.id]}
+    for i, ln in enumerate(data.links):
+        row = old.pop(i, None)
+        if row is None:
+            s.add(VendorReviewLink(vendor_id=vendor.id, sort=i, label=ln.label, url=ln.url))
+        elif (row.url, row.label) != (ln.url, ln.label):
+            row.label, row.url = ln.label, ln.url
+            row.status, row.note, row.checked_by, row.checked_at = "checking", None, None, None
+    for row in old.values():
+        await s.delete(row)
+    await _commit(s)
+    return await review_links(s, vendor)
+
+
+async def shown_review_links(
+    s: AsyncSession, vendor_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[ReviewLinkOut]]:
+    """고객 화면(업체 자세히 · 리뷰)용: 관리자가 '보여요'로 확인한 링크만"""
+    rows = await repo.review_links_of(s, vendor_ids, ("shown",))
+    return {vid: [_link_out(r) for r in links] for vid, links in rows.items()}
+
+
+# ---- 관리자 업체 멈춤 · 외부 리뷰 링크 확인 (D26 · A01 · A02) ----
+# report.service가 자기 트랜잭션 안에서 부른다: 조건부 UPDATE만 하고 commit하지 않는다.
+# 처리 기록(admin_actions) · 알림 · 대화 닫기 · 404 · 409 문구는 부르는 쪽 몫이다(지금 report 동작 그대로).
+
+SUSPEND_SCOPES = ("new", "all")  # 새 요청만 막기 · 진행 중인 것도 닫기
+LINK_CHECKED = ("shown", "hidden")  # 관리자가 확인한 링크 상태
+
+
+async def suspend(
+    s: AsyncSession, vendor_id: uuid.UUID, scope: str, at: datetime
+) -> tuple[datetime, str] | None:
+    """업체 기능 멈춤 칸 바꾸기. 멈추지 않은 업체 → scope, 새 요청만(new) → 진행 중도(all)로 넓히기만 된다.
+    바뀌면 (멈춘 때, 범위) — 넓힐 때 멈춘 때는 처음 그대로. 업체가 없거나 이미 같거나 더 넓으면 None."""
+    if scope not in SUSPEND_SCOPES:
+        raise ValueError(f"알 수 없는 멈춤 범위: {scope}")
+    return await repo.suspend(s, vendor_id, scope, at)
+
+
+async def unsuspend(s: AsyncSession, vendor_id: uuid.UUID) -> bool:
+    """업체 기능 멈춤 풀기. 멈춘 업체만 True (없거나 멈추지 않았으면 False)."""
+    return await repo.unsuspend(s, vendor_id)
+
+
+async def set_review_link_status(
+    s: AsyncSession,
+    vendor_id: uuid.UUID,
+    sort: int,
+    status: str,
+    *,
+    by: uuid.UUID,
+    at: datetime,
+    note: str | None = None,
+    url: str | None = None,
+) -> ReviewLinkAdminOut | None:
+    """외부 리뷰 링크를 보여요(shown) · 숨김(hidden)으로 바꾸고 확인한 관리자 · 때를 남긴다.
+    note를 주면 관리자 메모도 바꾼다(None이면 그대로). url을 주면 그 주소일 때만 바꾼다 — 관리자가 본 뒤
+    업체가 고친 주소를 보이게 하지 않으려고. 업체의 링크 저장과 줄 서게 업체 행을 잠근다.
+    바뀌면 바뀐 링크, 링크가 없거나 · 이미 그 상태이거나 · 주소가 다르면 None."""
+    if status not in LINK_CHECKED:
+        raise ValueError(f"알 수 없는 링크 상태: {status}")
+    note = (note or "").strip() or None  # 빈 메모는 '안 줌' (DB CHECK note)
+    await repo.lock_vendor(s, vendor_id)
+    row = await repo.set_review_link_status(
+        s, vendor_id, sort, status, by=by, at=at, note=note, url=url
+    )
+    if row is None:
+        return None
+    return ReviewLinkAdminOut(
+        sort=row.sort,
+        label=row.label,
+        url=row.url,
+        status=row.status,
+        note=row.note,
+        checked_at=row.checked_at,
+    )

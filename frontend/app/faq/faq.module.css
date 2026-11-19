@@ -1,12 +1,15 @@
-/* 자주 묻는 질문 (시안 WGuide) */
-.top { padding-top: 40px; }
-.head { display: flex; flex-direction: column; gap: 20px; max-width: 880px; padding-bottom: 32px; border-bottom: 1px solid var(--line); }
-.title { display: flex; flex-direction: column; gap: 6px; }
-.search { display: flex; flex-direction: column; gap: 10px; }
-.label { font-size: var(--fs-h2); font-weight: 700; }
-.searchRow { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; }
-.searchRow .input { flex: 999 1 360px; min-width: 0; width: auto; min-height: 56px; font-size: var(--fs-lg); }
-.searchRow .go { min-height: 56px; }
-.body { display: flex; flex-wrap: wrap; gap: 48px 64px; padding-block: 40px 72px; }
-.col { flex: 999 1 560px; min-width: 0; max-width: 760px; display: flex; flex-direction: column; gap: 48px; }
-.found { margin-bottom: -24px; }
+/* 자주 묻는 질문(C54) */
+.cats { display: flex; gap: 8px; margin: 0; padding: 0 0 2px; list-style: none; overflow-x: auto; scrollbar-width: none; }
+.cats::-webkit-scrollbar { display: none; }
+.cat { display: inline-flex; flex: none; align-items: center; min-height: var(--mj-hit-min); padding: 0 14px; border: 1px solid var(--mj-line-control); border-radius: var(--mj-radius-pill); background: var(--mj-surface); color: var(--mj-text); font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); text-decoration: none; white-space: nowrap; }
+.cat:hover { background: var(--mj-fill); }
+.cat[aria-current="page"] { border-color: var(--mj-surface-inverse); background: var(--mj-surface-inverse); color: var(--mj-text-inverse); }
+.group { display: flex; flex-direction: column; padding: 4px var(--mj-pad-group); border-radius: var(--mj-radius-group); background: var(--mj-surface); box-shadow: var(--mj-group-edge); }
+.acc { border-bottom: 1px solid var(--mj-line); }
+.acc:last-child { border-bottom: 0; }
+.acc summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 8px 0; font-size: var(--mj-type-body); font-weight: var(--mj-weight-bold); list-style: none; cursor: pointer; }
+.acc summary::-webkit-details-marker { display: none; }
+.acc summary svg { flex: none; color: var(--mj-text-sub); transition: transform var(--mj-dur-fast, 120ms) var(--mj-ease-out, ease-out); }
+.acc[open] summary svg { transform: rotate(180deg); }
+.acc p { margin: 0 0 16px; padding: 14px 16px; border-radius: var(--mj-radius-card); background: var(--mj-surface-sub); color: var(--mj-text-sub); font-size: var(--mj-type-body); line-height: var(--mj-lh-body); max-width: var(--mj-read-max); }
+@media (prefers-reduced-motion: reduce) { .acc summary svg { transition: none; } }

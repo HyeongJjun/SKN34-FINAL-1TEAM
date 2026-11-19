@@ -1,17 +1,38 @@
 import uuid
-from typing import Literal
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends, Header, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deps import current_user, require_role
 from app.auth.models import User
 from app.db import get_session
 from app.project import service
-from app.project.schemas import ProjectCheckIn, ProjectCheckOut, ProjectCreate, ProjectOut
+from app.project.schemas import (
+    EmdOut,
+    ProjectBody,
+    ProjectCheckIn,
+    ProjectCheckOut,
+    ProjectOut,
+)
 from app.shared import ratelimit
 from app.shared.clock import today_seoul
 from app.shared.regions import SIDO
+
+# v3: 손님 답 옮기기 멱등 키 (기기 답의 key, UUID 문자열). 같은 키 두 번이면 만든 공사를 200으로 돌려주고,
+# 같은 키가 아직 처리 중이면 409 in_progress (dev-03, api.md 0장)
+IdempotencyKey = Annotated[
+    uuid.UUID | None,
+    Header(alias="Idempotency-Key", description="손님 답 옮기기 멱등 키 (기기 답의 key)"),
+]
+# 지금 화면 몸통(ProjectCreate) 또는 v3 기본 정보(HomeInfoIn). v3에만 있는 칸이 하나라도 있으면 v3로 본다
+Bodies = Annotated[
+    ProjectBody,
+    Body(
+        description="지금 화면 몸통(ProjectCreate) 또는 v3 기본 정보(HomeInfoIn, 손님 계산과 같은 칸)."
+        " emd · area_m2 같은 v3 칸이 있으면 v3로 검사해요(422 fields.loc는 칸 이름만)"
+    ),
+]
 
 router = APIRouter(tags=["프로젝트"])
 
@@ -29,24 +50,40 @@ async def regions() -> list[dict]:
     ]
 
 
+@router.get(
+    "/regions/{sido}/{sgg}",
+    response_model=list[EmdOut],
+    summary="v3 읍면동 목록 (B6 자료, 자료가 없는 시 · 군 · 구는 404)",
+)
+async def region_emds(sido: str, sgg: str) -> list[EmdOut]:
+    return service.emds(sido, sgg)
+
+
 @router.post(
     "/projects",
     status_code=201,
     response_model=ProjectOut,
-    summary="프로젝트 만들기",
+    summary="프로젝트 만들기 (같은 Idempotency-Key면 200 같은 공사)",
+    responses={200: {"description": "같은 Idempotency-Key로 이미 만든 공사"}},
 )
 async def create_project(
-    data: ProjectCreate,
+    response: Response,
+    data: Bodies,
+    idempotency_key: IdempotencyKey = None,
     user: User = Depends(require_role("customer")),
     s: AsyncSession = Depends(get_session),
 ) -> ProjectOut:
+    """손님 답 옮기기(v3 몸통 + Idempotency-Key)는 source guest, 키 없는 v3 몸통은 member, 지금 화면 몸통은 v2."""
     await ratelimit.hit(
         ratelimit.key("project", str(user.id)),
         30,
         3600,
         "프로젝트를 너무 많이 만들었어요. 잠시 뒤에 다시 해 주세요.",
     )
-    return await service.create(s, user, data, today_seoul())
+    out, created = await service.create_once(s, user, data, today_seoul(), idempotency_key)
+    if not created:
+        response.status_code = 200
+    return out
 
 
 @router.get(
@@ -69,10 +106,11 @@ async def get_project(
 )
 async def update_project(
     project_id: uuid.UUID,
-    data: ProjectCreate,
+    data: Bodies,
     user: User = Depends(require_role("customer")),
     s: AsyncSession = Depends(get_session),
 ) -> ProjectOut:
+    """첫 실측 요청 뒤에는 409 locked (C50). 몸통 모양은 만들기와 같다."""
     return await service.update(s, user, project_id, data, today_seoul())
 
 

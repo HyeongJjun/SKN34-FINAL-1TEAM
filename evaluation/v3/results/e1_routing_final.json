@@ -1,0 +1,475 @@
+{
+ "model": "intent_lr_v1",
+ "threshold": 0.7,
+ "splits": {
+  "dev": {
+   "n": 133,
+   "methods": {
+    "규칙만(못 정하면 orchestrator)": {
+     "accuracy": 0.684,
+     "acc_ci95": [
+      0.601,
+      0.757
+     ],
+     "macro_f1": 0.678
+    },
+    "분류기만": {
+     "accuracy": 0.917,
+     "acc_ci95": [
+      0.858,
+      0.953
+     ],
+     "macro_f1": 0.918
+    },
+    "규칙 먼저 → 분류기": {
+     "accuracy": 0.737,
+     "acc_ci95": [
+      0.656,
+      0.804
+     ],
+     "macro_f1": 0.73
+    },
+    "분류기(≥0.7) → 규칙 → 분류기": {
+     "accuracy": 0.94,
+     "acc_ci95": [
+      0.886,
+      0.969
+     ],
+     "macro_f1": 0.94
+    }
+   },
+   "threshold_curve": [
+    {
+     "t": 0.4,
+     "auto_rate": 0.992,
+     "auto_acc": 0.924,
+     "ask_back": 1
+    },
+    {
+     "t": 0.5,
+     "auto_rate": 0.955,
+     "auto_acc": 0.937,
+     "ask_back": 6
+    },
+    {
+     "t": 0.6,
+     "auto_rate": 0.902,
+     "auto_acc": 0.95,
+     "ask_back": 13
+    },
+    {
+     "t": 0.7,
+     "auto_rate": 0.842,
+     "auto_acc": 0.973,
+     "ask_back": 21
+    },
+    {
+     "t": 0.8,
+     "auto_rate": 0.82,
+     "auto_acc": 0.972,
+     "ask_back": 24
+    },
+    {
+     "t": 0.9,
+     "auto_rate": 0.579,
+     "auto_acc": 0.987,
+     "ask_back": 56
+    }
+   ],
+   "v3": {
+    "other_trade": {
+     "n": 13,
+     "clf_to_out_of_scope": 13,
+     "lexicon_first_trade_correct": 13,
+     "lexicon_none": 0,
+     "rows": [
+      {
+       "text": "부엌 씽크대 통째로 바꿀라고요",
+       "clf": "out_of_scope",
+       "conf": 0.892,
+       "v3_trades": [
+        "kitchen"
+       ],
+       "ok": true
+      },
+      {
+       "text": "마루 긁힌 데 보수 되나여",
+       "clf": "out_of_scope",
+       "conf": 0.847,
+       "v3_trades": [
+        "floor"
+       ],
+       "ok": true
+      },
+      {
+       "text": "보일러 교체 견적도 받을 수 있나요",
+       "clf": "out_of_scope",
+       "conf": 0.987,
+       "v3_trades": [
+        "plumbing"
+       ],
+       "ok": true
+      },
+      {
+       "text": "안방 콘센트 위치 옮길 수 있나요",
+       "clf": "out_of_scope",
+       "conf": 0.988,
+       "v3_trades": [
+        "electric"
+       ],
+       "ok": true
+      },
+      {
+       "text": "현관 바닥 타일에 금이 갔어요",
+       "clf": "out_of_scope",
+       "conf": 0.967,
+       "v3_trades": [
+        "tile"
+       ],
+       "ok": true
+      },
+      {
+       "text": "스위치랑 콘센트 커버만 교체해 주시나요",
+       "clf": "out_of_scope",
+       "conf": 0.997,
+       "v3_trades": [
+        "electric"
+       ],
+       "ok": true
+      },
+      {
+       "text": "거실 바닥을 강마루로 바꾸려고요",
+       "clf": "out_of_scope",
+       "conf": 0.972,
+       "v3_trades": [
+        "floor"
+       ],
+       "ok": true
+      },
+      {
+       "text": "장판 들떠서 새로 깔고 싶어",
+       "clf": "out_of_scope",
+       "conf": 0.874,
+       "v3_trades": [
+        "floor"
+       ],
+       "ok": true
+      },
+      {
+       "text": "샷시 교체도 해줘요?",
+       "clf": "out_of_scope",
+       "conf": 0.974,
+       "v3_trades": [
+        "window"
+       ],
+       "ok": true
+      },
+      {
+       "text": "에어컨 매립 배관 공사도 같이 하나요",
+       "clf": "out_of_scope",
+       "conf": 0.968,
+       "v3_trades": [
+        "plumbing"
+       ],
+       "ok": true
+      },
+      {
+       "text": "욕조 철거하고 샤워부스로 바꾸고 싶어요",
+       "clf": "out_of_scope",
+       "conf": 0.962,
+       "v3_trades": [
+        "bath",
+        "demolition"
+       ],
+       "ok": true
+      },
+      {
+       "text": "화장실 타일 싹 다 깨고 새로 하고싶음",
+       "clf": "out_of_scope",
+       "conf": 0.987,
+       "v3_trades": [
+        "bath",
+        "tile",
+        "demolition"
+       ],
+       "ok": true
+      },
+      {
+       "text": "주방 벽 타일 위에 덧방하려고 하는데요",
+       "clf": "out_of_scope",
+       "conf": 0.818,
+       "v3_trades": [
+        "kitchen",
+        "tile"
+       ],
+       "ok": true
+      }
+     ]
+    },
+    "분류기 그대로": {
+     "accuracy": 0.82,
+     "acc_ci95": [
+      0.746,
+      0.876
+     ]
+    },
+    "분류기 + v3 낱말 덮어쓰기": {
+     "accuracy": 0.91,
+     "acc_ci95": [
+      0.849,
+      0.948
+     ]
+    }
+   },
+   "rule_fired": {
+    "coverage": 0.917,
+    "precision": 0.721
+   }
+  },
+  "heldout": {
+   "n": 67,
+   "methods": {
+    "규칙만(못 정하면 orchestrator)": {
+     "accuracy": 0.791,
+     "acc_ci95": [
+      0.679,
+      0.871
+     ],
+     "macro_f1": 0.797
+    },
+    "분류기만": {
+     "accuracy": 0.94,
+     "acc_ci95": [
+      0.856,
+      0.977
+     ],
+     "macro_f1": 0.944
+    },
+    "규칙 먼저 → 분류기": {
+     "accuracy": 0.881,
+     "acc_ci95": [
+      0.782,
+      0.938
+     ],
+     "macro_f1": 0.888
+    },
+    "분류기(≥0.7) → 규칙 → 분류기": {
+     "accuracy": 0.97,
+     "acc_ci95": [
+      0.898,
+      0.992
+     ],
+     "macro_f1": 0.974
+    }
+   },
+   "threshold_curve": [
+    {
+     "t": 0.4,
+     "auto_rate": 1.0,
+     "auto_acc": 0.94,
+     "ask_back": 0
+    },
+    {
+     "t": 0.5,
+     "auto_rate": 0.955,
+     "auto_acc": 0.969,
+     "ask_back": 3
+    },
+    {
+     "t": 0.6,
+     "auto_rate": 0.896,
+     "auto_acc": 0.983,
+     "ask_back": 7
+    },
+    {
+     "t": 0.7,
+     "auto_rate": 0.806,
+     "auto_acc": 1.0,
+     "ask_back": 13
+    },
+    {
+     "t": 0.8,
+     "auto_rate": 0.746,
+     "auto_acc": 1.0,
+     "ask_back": 17
+    },
+    {
+     "t": 0.9,
+     "auto_rate": 0.567,
+     "auto_acc": 1.0,
+     "ask_back": 29
+    }
+   ],
+   "v3": {
+    "other_trade": {
+     "n": 7,
+     "clf_to_out_of_scope": 7,
+     "lexicon_first_trade_correct": 7,
+     "lexicon_none": 0,
+     "rows": [
+      {
+       "text": "방충망 새로 달고 싶어요",
+       "clf": "out_of_scope",
+       "conf": 0.677,
+       "v3_trades": [
+        "window"
+       ],
+       "ok": true
+      },
+      {
+       "text": "변기 밑에서 물이 계속 새요",
+       "clf": "out_of_scope",
+       "conf": 0.947,
+       "v3_trades": [
+        "bath"
+       ],
+       "ok": true
+      },
+      {
+       "text": "베란다 탄성코트도 해주시나요",
+       "clf": "out_of_scope",
+       "conf": 0.999,
+       "v3_trades": [
+        "paint"
+       ],
+       "ok": true
+      },
+      {
+       "text": "창틀 실리콘이 다 삭아서 시커매졌어요",
+       "clf": "out_of_scope",
+       "conf": 0.886,
+       "v3_trades": [
+        "window"
+       ],
+       "ok": true
+      },
+      {
+       "text": "세면대 수전 바꿔줄 수 있어여",
+       "clf": "out_of_scope",
+       "conf": 0.844,
+       "v3_trades": [
+        "bath"
+       ],
+       "ok": true
+      },
+      {
+       "text": "거실 조명을 전부 LED로 바꾸고 싶은데",
+       "clf": "out_of_scope",
+       "conf": 0.925,
+       "v3_trades": [
+        "electric"
+       ],
+       "ok": true
+      },
+      {
+       "text": "누전차단기가 자꾸 툭툭 내려가요",
+       "clf": "out_of_scope",
+       "conf": 0.844,
+       "v3_trades": [
+        "electric"
+       ],
+       "ok": true
+      }
+     ]
+    },
+    "분류기 그대로": {
+     "accuracy": 0.836,
+     "acc_ci95": [
+      0.729,
+      0.906
+     ]
+    },
+    "분류기 + v3 낱말 덮어쓰기": {
+     "accuracy": 0.94,
+     "acc_ci95": [
+      0.856,
+      0.977
+     ]
+    }
+   },
+   "rule_fired": {
+    "coverage": 0.836,
+    "precision": 0.875
+   }
+  }
+ },
+ "trade_routing": {
+  "지금 낱말(2공종)": {
+   "도배: 첫 공종 맞음": 124,
+   "도배: 정답 공종 포함": 124,
+   "도배: 공종 못 찾음": 24,
+   "도배: 다른 공종 먼저": 0,
+   "목공: 첫 공종 맞음": 99,
+   "목공: 정답 공종 포함": 106,
+   "목공: 공종 못 찾음": 12,
+   "목공: 다른 공종 먼저": 7,
+   "공통: 공종 안 걸림": 114,
+   "공통: 다른 공종 걸림": 10,
+   "n": 390
+  },
+  "v3 낱말(12공종)": {
+   "도배: 첫 공종 맞음": 112,
+   "도배: 정답 공종 포함": 124,
+   "도배: 공종 못 찾음": 24,
+   "도배: 다른 공종 먼저": 12,
+   "목공: 첫 공종 맞음": 104,
+   "목공: 정답 공종 포함": 106,
+   "목공: 공종 못 찾음": 6,
+   "목공: 다른 공종 먼저": 8,
+   "공통: 공종 안 걸림": 102,
+   "공통: 다른 공종 걸림": 22,
+   "n": 390
+  },
+  "질문 은행 1,109": {
+   "q_dobae.jsonl": {
+    "n": 321,
+    "지금 낱말 정답 공종 포함": 287,
+    "v3 낱말 정답 공종 포함": 287,
+    "v3 낱말 첫 공종 맞음": 252,
+    "v3 못 찾음": 27,
+    "v3 첫 공종 분포": {
+     "dobae": 252,
+     "(없음)": 27,
+     "mokgong": 12,
+     "plumbing": 11,
+     "floor": 6,
+     "paint": 3,
+     "kitchen": 2,
+     "film": 2
+    }
+   },
+   "q_mokgong.jsonl": {
+    "n": 350,
+    "지금 낱말 정답 공종 포함": 238,
+    "v3 낱말 정답 공종 포함": 245,
+    "v3 낱말 첫 공종 맞음": 219,
+    "v3 못 찾음": 71,
+    "v3 첫 공종 분포": {
+     "mokgong": 219,
+     "(없음)": 71,
+     "film": 16,
+     "electric": 13,
+     "dobae": 8,
+     "window": 7,
+     "floor": 5,
+     "demolition": 4
+    }
+   },
+   "q_general.jsonl": {
+    "n": 438,
+    "v3 첫 공종 분포": {
+     "(없음)": 367,
+     "demolition": 15,
+     "dobae": 10,
+     "electric": 9,
+     "plumbing": 8,
+     "kitchen": 8,
+     "mokgong": 7,
+     "film": 4,
+     "bath": 4,
+     "window": 3
+    }
+   }
+  }
+ }
+}
