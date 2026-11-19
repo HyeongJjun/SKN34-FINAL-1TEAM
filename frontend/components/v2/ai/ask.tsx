@@ -9,7 +9,7 @@ import { recommend, STEP_NAMES, stepFn } from "../flow";
 import { DATA, S } from "../store";
 import { quoteBody } from "../doc/api";
 import { materialsFor, profileOf } from "./context";
-import { type AskOut, localClaude, runAsk, toImageBlock } from "./llm";
+import { type AskCard, type AskOut, localClaude, runAsk, toImageBlock } from "./llm";
 import { cleanMarks } from "./route";
 import { ragSources } from "./Sources";
 import { type After, claudeTools, type Pending } from "./tools";
@@ -168,10 +168,27 @@ export async function askClaude(q: string, { label, images, withPhotos }: { labe
   if (out?.trade) el.append(<p className="route-chip muted">{`질문 답변: ${out.trade}`}</p>);
   const it = out?.intent;
   if (!images && it && it.confidence >= 0.7 && INTENT_KO[it.label]) el.append(<p className="route-chip muted">{`질문 종류: ${INTENT_KO[it.label]}`}</p>);
-  // 이어 물을 질문: 서버가 답할 수 있는지 검색해 본 것만 보낸다 (없으면 버튼을 띄우지 않는다)
+  // 도구 카드(서버 코드가 질문 낱말로 고름)를 맨 앞에, 이어 물을 질문(서버가 답할 수 있는지 검색해 본 것만)을 뒤에 둔다
+  const card = images ? null : out?.card;
   const sug = images ? [] : out?.suggest || [];
-  if (sug.length) quick(sug.map((x) => [x.text, () => askClaude(x.text)] as [string, () => void]));
+  const btns: [string, () => void][] = sug.map((x) => [x.text, () => askClaude(x.text)]);
+  if (card && canOpen(card)) btns.unshift([card.label, () => openCard(card)]);
+  if (btns.length) quick(btns);
   if (after.step && hasStep(after.step)) stepFn(after.step)();
+}
+
+/** 단계를 여는 카드(step)는 화면에 그 단계가 있을 때만 버튼을 보인다 */
+const canOpen = (c: AskCard) => c.tool !== "step" || (!!c.arg && hasStep(c.arg));
+
+/** 도구 카드 열기 (tools/index.ts의 calcStep · checkStep · compareStep, step은 flow.ts의 단계) */
+function openCard(c: AskCard) {
+  if (c.tool === "calc") F.calcStep?.(c.arg ?? undefined);
+  else if (c.tool === "check") F.checkStep?.(c.arg ?? undefined);
+  else if (c.tool === "step") {
+    // 자재는 견본만 본다: 추천 자재를 골라 두지 않고 진행 단계도 올리지 않는다
+    if (c.arg === "materials") F.matStep?.(true);
+    else stepFn(c.arg ?? "")();
+  } else F.compareStep?.();
 }
 
 export function askAboutStyle(st: Style) {

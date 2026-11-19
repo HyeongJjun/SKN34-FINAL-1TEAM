@@ -4313,6 +4313,21 @@ export interface components {
             /** End */
             end: string;
         };
+        /**
+         * V2AskCard
+         * @description 답 아래 버튼으로 보일 화면 도구 카드. 질문 낱말로 코드가 고른다 (v2.tool_card)
+         */
+        V2AskCard: {
+            /**
+             * Tool
+             * @enum {string}
+             */
+            tool: "calc" | "check" | "compare" | "step";
+            /** Arg */
+            arg?: string | null;
+            /** Label */
+            label: string;
+        };
         /** V2AskHealthOut */
         V2AskHealthOut: {
             /** Ok */
@@ -4451,6 +4466,7 @@ export interface components {
             suggest: components["schemas"]["V2AskSuggest"][];
             /** Trade */
             trade?: string | null;
+            card?: components["schemas"]["V2AskCard"] | null;
         };
         /**
          * V2AskProfile

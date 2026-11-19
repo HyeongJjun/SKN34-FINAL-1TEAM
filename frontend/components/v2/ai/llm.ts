@@ -25,7 +25,9 @@ export type AskOut = {
   cites_dropped: number;
   suggest: { text: string; ref: string | null }[];
   trade?: string | null; // 답한 공정 담당 (도배 · 목공)
+  card?: AskCard | null; // 화면 도구 카드. 질문 낱말로 서버 코드가 고른다
 };
+export type AskCard = { tool: "calc" | "check" | "compare" | "step"; arg: string | null; label: string };
 export type AskSource = { ref: string; source_type: string; title: string; publisher: string; date: string; section: string; url: string; official: boolean };
 export type AskBody = {
   chat_id?: string;
