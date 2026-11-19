@@ -1,0 +1,15 @@
+.list { display: flex; flex-direction: column; min-width: 0; }
+.item { border-bottom: 1px solid var(--mj-line-soft); }
+.item:last-child { border-bottom: 0; }
+.q {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 12px 0;
+  font-size: var(--mj-type-body); font-weight: var(--mj-weight-semibold); color: var(--mj-text); cursor: pointer; list-style: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.q::-webkit-details-marker { display: none; }
+.q:focus-visible { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: 2px; border-radius: var(--mj-radius-badge); }
+.chev { flex: none; color: var(--mj-text-mute); transition: transform var(--mj-dur-fast) var(--mj-ease-out); }
+.item[open] .chev { transform: rotate(180deg); }
+.a { margin: 0 0 14px; padding: 10px 12px; border-radius: var(--mj-radius-field); background: var(--mj-surface-sub); font-size: var(--mj-type-label); line-height: var(--mj-lh-body); color: var(--mj-text-sub); }
+.a > p { margin: 0; }
+.a > p + p { margin-top: 6px; }

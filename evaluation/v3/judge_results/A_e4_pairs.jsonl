@@ -1,0 +1,48 @@
+{"pid": "p755971e3", "better": "1", "parts_covered_1": 3, "parts_covered_2": 0, "why": "1은 목공→도배→바닥 순서와 장판·마루 차이까지, 2는 빈 답"}
+{"pid": "p53f9715c", "better": "2", "parts_covered_1": 0, "parts_covered_2": 1, "why": "2만 전기 차단기 기준을 다룸, 둘 다 인덕션은 사용 팁뿐"}
+{"pid": "p29d3f2ef", "better": "2", "parts_covered_1": 1, "parts_covered_2": 2, "why": "2는 배선 자리 먼저·목공 마감 순서를 더함, 1은 평탄화 설명만"}
+{"pid": "p91e7bbe7", "better": "1", "parts_covered_1": 2, "parts_covered_2": 1, "why": "1은 배관 미리 정하기와 도배 단계 둘 다, 2는 배관 인용만"}
+{"pid": "p359db0b7", "better": "2", "parts_covered_1": 0, "parts_covered_2": 3, "why": "2는 목공→도배→바닥 순서와 장판·마루 차이까지, 1은 빈 답"}
+{"pid": "p3ef63377", "better": "1", "parts_covered_1": 2, "parts_covered_2": 2, "why": "둘 다 바닥 뒤 가구 근거, 1은 순서를 직접 답하고 상판 순서 더함"}
+{"pid": "pf81d65c5", "better": "2", "parts_covered_1": 0, "parts_covered_2": 2, "why": "2는 욕실 뒤 도배와 새 도배 냄새·환기 근거, 1은 빈 답"}
+{"pid": "p5cd6031b", "better": "tie", "parts_covered_1": 2, "parts_covered_2": 2, "why": "둘 다 장판은 도배 뒤로 근거 있게 답함, 2의 필름 얘기는 질문 밖"}
+{"pid": "p6289fd7d", "better": "tie", "parts_covered_1": 2, "parts_covered_2": 2, "why": "둘 다 마루→걸레받이 인용, 1은 까닭·철거 더했으나 선후 엇갈림"}
+{"pid": "p599dee7b", "better": "tie", "parts_covered_1": 0, "parts_covered_2": 0, "why": "둘 다 조명·도배 순서 답 없음(1 빈 답, 2 직부등 뜻만)"}
+{"pid": "p7df21ee2", "better": "tie", "parts_covered_1": 0, "parts_covered_2": 0, "why": "1은 붙박이장 설치 치수만, 2는 빈 답, 둘 다 철거·도배 못 다룸"}
+{"pid": "p72062ef7", "better": "tie", "parts_covered_1": 0, "parts_covered_2": 0, "why": "1은 빈 답, 2는 붙박이장 설치 치수만, 둘 다 철거·도배 못 다룸"}
+{"pid": "p28cef729", "better": "tie", "parts_covered_1": 0, "parts_covered_2": 0, "why": "둘 다 답 없음(1 빈 답, 2 '확인하지 못했어요'만)"}
+{"pid": "pec8d0c87", "better": "2", "parts_covered_1": 2, "parts_covered_2": 2, "why": "2는 연질 바닥재는 싱크대 뒤도 된다는 근거, 1은 근거 없는 단정"}
+{"pid": "p8ee17541", "better": "tie", "parts_covered_1": 2, "parts_covered_2": 2, "why": "둘 다 장판은 도배 뒤로 근거 있게 답함, 1의 필름 얘기는 질문 밖"}
+{"pid": "p1bc7b642", "better": "tie", "parts_covered_1": 0, "parts_covered_2": 0, "why": "둘 다 철거 뒤 배선 이전 답 없음, 전기 안전·임대차 엉뚱한 인용"}
+{"pid": "p321fb415", "better": "1", "parts_covered_1": 2, "parts_covered_2": 0, "why": "1은 철거 상태·설비·배선 확인 근거, 2는 창호 일정만"}
+{"pid": "pc3c5a998", "better": "2", "parts_covered_1": 0, "parts_covered_2": 2, "why": "2는 창 교체→둘레 마감→도배 순서로 답함, 1은 빈 답"}
+{"pid": "pd15113f8", "better": "1", "parts_covered_1": 2, "parts_covered_2": 0, "why": "1은 욕실 뒤 도배와 새 도배 냄새·환기 근거, 2는 빈 답"}
+{"pid": "pa520fb68", "better": "1", "parts_covered_1": 2, "parts_covered_2": 0, "why": "1은 목공 뒤 칠 순서를 더함, 2는 몰딩·걸레받이 뜻만"}
+{"pid": "p56cc9e95", "better": "2", "parts_covered_1": 0, "parts_covered_2": 2, "why": "2는 결로·창호 성능과 창 교체 뒤 도배 순서, 1은 빈 답"}
+{"pid": "p20e6c007", "better": "2", "parts_covered_1": 1, "parts_covered_2": 2, "why": "2는 배관 미리 정하기와 도배 단계 둘 다, 1은 배관 인용만"}
+{"pid": "p7252abe6", "better": "1", "parts_covered_1": 2, "parts_covered_2": 1, "why": "1은 가벽 짜기와 목공 뒤 칠 순서(가벽 하중 인용은 오해 소지), 2는 몰딩 칠만"}
+{"pid": "p872d910b", "better": "1", "parts_covered_1": 3, "parts_covered_2": 1, "why": "1은 페인트 벽 바인더 뒤 도배·목공→칠→도배까지, 2는 몰딩 칠 방법만"}
+{"pid": "pea09bd83", "better": "tie", "parts_covered_1": 0, "parts_covered_2": 0, "why": "둘 다 조명·도배 순서 답 없음(1 직부등 뜻만, 2 빈 답)"}
+{"pid": "p82890607", "better": "tie", "parts_covered_1": 1, "parts_covered_2": 1, "why": "둘 다 욕실 공정 순서·피해 통계만, 주방 상판과의 순서 없음"}
+{"pid": "p00e3692b", "better": "1", "parts_covered_1": 2, "parts_covered_2": 2, "why": "1은 연질 바닥재는 싱크대 뒤도 된다는 근거, 2는 근거 없는 단정"}
+{"pid": "p00672dcc", "better": "tie", "parts_covered_1": 0, "parts_covered_2": 0, "why": "둘 다 철거 뒤 배선 이전 답 없음, 전기 안전·임대차 엉뚱한 인용"}
+{"pid": "pd8045fec", "better": "2", "parts_covered_1": 0, "parts_covered_2": 1, "why": "2는 방수 뒤 타일 순서만(덧방·철거 판단 없음), 1은 빈 답"}
+{"pid": "p62cee912", "better": "2", "parts_covered_1": 0, "parts_covered_2": 2, "why": "2는 철거→방수→타일 순서 근거, 1은 빈 답"}
+{"pid": "p394d6b07", "better": "tie", "parts_covered_1": 0, "parts_covered_2": 0, "why": "둘 다 답 없음(1 '확인하지 못했어요'만, 2 빈 답)"}
+{"pid": "p9fcad8cf", "better": "1", "parts_covered_1": 2, "parts_covered_2": 0, "why": "1은 철거→방수→타일 순서 근거, 2는 빈 답"}
+{"pid": "p9cc1c930", "better": "1", "parts_covered_1": 2, "parts_covered_2": 1, "why": "1은 탄성코트에 창틀 실리콘 들뜸 점검까지, 2는 탄성코트만"}
+{"pid": "p30c5d48f", "better": "1", "parts_covered_1": 1, "parts_covered_2": 0, "why": "1만 전기 차단기 기준을 다룸, 둘 다 인덕션은 사용 팁뿐"}
+{"pid": "pc56255f1", "better": "tie", "parts_covered_1": 2, "parts_covered_2": 2, "why": "둘 다 마루→걸레받이 인용, 2는 까닭·철거 더했으나 선후 엇갈림"}
+{"pid": "pc196e301", "better": "2", "parts_covered_1": 1, "parts_covered_2": 3, "why": "2는 페인트 벽 바인더 뒤 도배·목공→칠→도배까지, 1은 몰딩 칠 방법만"}
+{"pid": "p80bc286d", "better": "2", "parts_covered_1": 0, "parts_covered_2": 2, "why": "2는 철거 상태·설비·배선 확인 근거, 1은 창호 일정만"}
+{"pid": "pf324708a", "better": "2", "parts_covered_1": 0, "parts_covered_2": 2, "why": "2는 목공 뒤 칠 순서를 더함, 1은 몰딩·걸레받이 뜻만"}
+{"pid": "p7e9236be", "better": "1", "parts_covered_1": 1, "parts_covered_2": 0, "why": "1은 방수 뒤 타일 순서만(덧방·철거 판단 없음), 2는 빈 답"}
+{"pid": "p290d83dd", "better": "tie", "parts_covered_1": 1, "parts_covered_2": 1, "why": "둘 다 욕실 공정 순서·피해 통계만, 주방 상판과의 순서 없음"}
+{"pid": "p53b61461", "better": "1", "parts_covered_1": 2, "parts_covered_2": 0, "why": "1은 결로·창호 성능과 창 교체 뒤 도배 순서, 2는 빈 답"}
+{"pid": "pa4f5de0f", "better": "1", "parts_covered_1": 2, "parts_covered_2": 0, "why": "1은 창 교체→둘레 마감→도배 순서로 답함, 2는 빈 답"}
+{"pid": "pf478bb36", "better": "2", "parts_covered_1": 2, "parts_covered_2": 2, "why": "둘 다 바닥 뒤 가구 근거, 2는 순서를 직접 답하고 상판 순서 더함"}
+{"pid": "p7c4ef54e", "better": "2", "parts_covered_1": 1, "parts_covered_2": 2, "why": "2는 탄성코트에 창틀 실리콘 들뜸 점검까지, 1은 탄성코트만"}
+{"pid": "p62239130", "better": "tie", "parts_covered_1": 0, "parts_covered_2": 0, "why": "둘 다 답 없음(1 '확인하지 못했어요'만, 2 빈 답)"}
+{"pid": "pbc60b683", "better": "tie", "parts_covered_1": 0, "parts_covered_2": 0, "why": "둘 다 답 없음(1 빈 답, 2 '확인하지 못했어요'만)"}
+{"pid": "p36af2346", "better": "1", "parts_covered_1": 2, "parts_covered_2": 1, "why": "1은 배선 자리 먼저·목공 마감 순서를 더함, 2는 평탄화 설명만"}
+{"pid": "p030349bd", "better": "2", "parts_covered_1": 1, "parts_covered_2": 2, "why": "2는 가벽 짜기와 목공 뒤 칠 순서(가벽 하중 인용은 오해 소지), 1은 몰딩 칠만"}

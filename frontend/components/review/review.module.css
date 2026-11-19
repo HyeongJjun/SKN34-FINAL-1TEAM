@@ -1,0 +1,45 @@
+/* 리뷰 조각(C11 · C39 · C48 · C49): 별 · 칩 · 글 · 답글 · 별점 요약 · 리뷰 기준 */
+.stars { display: inline-flex; align-items: center; }
+.starIcons { display: inline-flex; gap: 1px; }
+.on { color: var(--mj-star); }
+.off { color: var(--mj-star-off); }
+
+.feed { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.feed > li + li { border-top: 1px solid var(--mj-line); }
+.item { display: flex; flex-direction: column; gap: 8px; padding: 16px 0; min-width: 0; }
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.author { font-size: var(--mj-type-label); font-weight: var(--mj-weight-bold); color: var(--mj-text); }
+.date { margin-left: auto; font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.tags li { padding: 3px 10px; border-radius: var(--mj-radius-pill); background: var(--mj-fill); color: var(--mj-text-sub); font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); }
+.body { font-size: var(--mj-type-body); line-height: var(--mj-lh-body); white-space: pre-line; overflow-wrap: anywhere; }
+.ctx { font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+/* 리뷰 사진: 작은 칸(B4 PhotoGrid 위에) */
+.photos.photos { grid-template-columns: repeat(auto-fill, minmax(72px, 88px)); gap: 6px; }
+.reply { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; padding: 12px 14px; border-radius: var(--mj-radius-field); background: var(--mj-surface-sub); }
+.reply b { font-size: var(--mj-type-label); font-weight: var(--mj-weight-bold); }
+.reply p { font-size: var(--mj-type-label); line-height: var(--mj-lh-body); white-space: pre-line; overflow-wrap: anywhere; }
+.reply span { font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+.none { padding: 16px 0; font-size: var(--mj-type-body); color: var(--mj-text-mute); }
+.more { display: flex; justify-content: center; padding: 8px 0 4px; }
+
+/* 별점 요약 */
+.sum { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.sumBig { display: inline-flex; align-items: center; gap: 4px; font-size: var(--mj-type-title); font-weight: var(--mj-weight-heavy); line-height: var(--mj-lh-tight); }
+.sumBig svg { align-self: center; }
+.sumSub { font-size: var(--mj-type-label); color: var(--mj-text-sub); }
+.sumNone { display: flex; flex-direction: column; gap: 2px; font-size: var(--mj-type-body); font-weight: var(--mj-weight-semibold); }
+.sumNone span { font-size: var(--mj-type-label); font-weight: var(--mj-weight-regular); color: var(--mj-text-sub); }
+
+/* 리뷰 기준 줄 · 시트 */
+.rules { font-size: var(--mj-type-caption); color: var(--mj-text-mute); line-height: var(--mj-lh-body); }
+.ruleList { display: flex; flex-direction: column; margin: 0; }
+.ruleList > div { display: flex; flex-direction: column; gap: 2px; padding: 12px 0; }
+.ruleList > div + div { border-top: 1px solid var(--mj-line); }
+.ruleList dt { font-size: var(--mj-type-body); font-weight: var(--mj-weight-bold); }
+.ruleList dd { margin: 0; font-size: var(--mj-type-label); color: var(--mj-text-sub); line-height: var(--mj-lh-body); }
+
+/* 리뷰 쓰기 조각 */
+.fields { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.starField { display: flex; flex-direction: column; gap: 4px; }
+.err { font-size: var(--mj-type-label); color: var(--mj-danger); }

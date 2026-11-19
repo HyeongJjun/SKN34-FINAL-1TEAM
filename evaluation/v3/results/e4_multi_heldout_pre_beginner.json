@@ -1,0 +1,52 @@
+{
+ "split": "heldout",
+ "n": 17,
+ "variants": {
+  "단일": {
+   "multi_questions": 11,
+   "part_coverage": 0.0,
+   "part_coverage_ci95": [
+    0.0,
+    0.149
+   ],
+   "all_parts_answered": "0/11",
+   "failed_parts": 0,
+   "order_violations": 0,
+   "single_questions_split": "0/6",
+   "mean_sections": 0.18,
+   "order_sentence_rate": 0.0
+  },
+  "다중": {
+   "multi_questions": 11,
+   "part_coverage": 0.136,
+   "part_coverage_ci95": [
+    0.047,
+    0.333
+   ],
+   "all_parts_answered": "0/11",
+   "failed_parts": 28,
+   "order_violations": 0,
+   "single_questions_split": "0/6",
+   "mean_sections": 2.47,
+   "order_sentence_rate": 0.545
+  },
+  "관문": {
+   "multi_questions": 11,
+   "part_coverage": 0.136,
+   "part_coverage_ci95": [
+    0.047,
+    0.333
+   ],
+   "all_parts_answered": "0/11",
+   "failed_parts": 18,
+   "order_violations": 0,
+   "single_questions_split": "0/6",
+   "mean_sections": 1.71,
+   "order_sentence_rate": 0.364
+  }
+ },
+ "gate_routes": {
+  "multi": 9,
+  "trade": 8
+ }
+}

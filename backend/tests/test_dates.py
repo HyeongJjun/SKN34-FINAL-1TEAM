@@ -8,7 +8,8 @@ import asyncpg
 import pytest
 
 from app.auth.models import User
-from app.calc.schedule import due_at, workdays
+from app.calc.deadline import date_request_due
+from app.calc.schedule import workdays
 from app.db import SessionLocal
 from app.refprice.holidays import HOLIDAYS, days_off
 from app.schedule import service
@@ -89,7 +90,8 @@ def test_propose_again_then_accept(api):
     customer, pid, did, va = ready(api)
     job = api.get(f"/vendor/jobs/{did}").json()
     assert (job["dates_state"], job["proposal"], job["overdue"]) == ("waiting", None, False)
-    assert job["visit"]["customer"]["phone"] == "01012345678" and job["quote"]["version"] == 1
+    # v3(B3): 업체 공사 화면에는 고객 이름 · 연락처 · 주소 칸이 없다 (채팅으로)
+    assert "customer" not in job["visit"] and job["quote"]["version"] == 1
     assert job["need"]["days"] >= 1 and job["plan_version"] >= 1 and job["requests_left"] == 2
     a, b = days(14)
     pre = api.get(f"/vendor/jobs/{did}/dates/preview", params={"start": a, "end": b, "crew": 4})
@@ -182,7 +184,7 @@ def test_propose_again_then_accept(api):
     ]
     assert notes("maru@mitjip.test", "dates_accepted") == [
         {
-            "body": "고객이 공사 날짜를 수락했어요",
+            "body": "고객이 공사 날짜를 수락했어요 · 노원구 도배",  # v3: 업체 알림에 공사 이름
             "link": f"/vendor/jobs/{did}",
             "dedup_key": f"date_proposal:{second['id']}:accepted",
         }
@@ -199,7 +201,7 @@ def test_propose_again_then_accept(api):
     )
     (row,) = api.get("/vendor/visits", params={"tab": "jobs"}).json()["items"]
     assert (row["dates_state"], row["start_date"], row["end_date"]) == ("scheduled", c, d)
-    assert api.get(f"/vendor/visits/{va}").json()["customer"] is not None
+    assert "customer" not in api.get(f"/vendor/visits/{va}").json()  # v3(B3): 연락처 칸 없음
 
 
 def test_request_answer_and_two_requests_only(api):
@@ -221,10 +223,11 @@ def test_request_answer_and_two_requests_only(api):
     )
     assert t["proposal"]["id"] == p1["id"]  # 낸 날짜는 그대로 남는다
     created = datetime.fromisoformat(req["created_at"])
-    assert datetime.fromisoformat(req["due_at"]) == due_at(created, 1)  # 요청 다음 날 18:00
+    # v3: 요청 + 48시간 (api.md 11장, 지금 '다음 날 18:00'에서 바꿈)
+    assert datetime.fromisoformat(req["due_at"]) == date_request_due(created)
     assert notes("maru@mitjip.test", "dates_requested") == [
         {
-            "body": "고객이 다른 공사 날짜를 요청했어요",
+            "body": "고객이 다른 공사 날짜를 요청했어요 · 노원구 도배",  # v3: 업체 알림에 공사 이름
             "link": f"/vendor/jobs/{did}",
             "dedup_key": f"date_request:{req['id']}",
         }

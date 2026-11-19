@@ -1,0 +1,75 @@
+{
+  "effort": "medium",
+  "models": {
+    "claude-opus-5-5": {
+      "calls": 18,
+      "models_served": {
+        "claude-opus-5-5": 18
+      },
+      "input_tokens": 31204,
+      "output_tokens": 9337,
+      "cost_usd": 0.3116,
+      "cost_per_call_usd": 0.01731,
+      "cost_unknown_calls": 0,
+      "fallback_calls": 0,
+      "seconds_avg": 5.95,
+      "check_status": {
+        "kept": 14,
+        "partly_dropped": 4
+      },
+      "price_per_mtok": {
+        "in": 4.0,
+        "out": 20.0,
+        "cache_read": 0.2
+      },
+      "note": null
+    },
+    "claude-sonnet-5-5": {
+      "calls": 18,
+      "models_served": {
+        "claude-sonnet-5-5": 18
+      },
+      "input_tokens": 31204,
+      "output_tokens": 6006,
+      "cost_usd": 0.1225,
+      "cost_per_call_usd": 0.0068,
+      "cost_unknown_calls": 0,
+      "fallback_calls": 0,
+      "seconds_avg": 3.77,
+      "check_status": {
+        "kept": 16,
+        "partly_dropped": 2
+      },
+      "price_per_mtok": {
+        "in": 2.0,
+        "out": 10.0,
+        "cache_read": 0.1
+      },
+      "note": null
+    },
+    "claude-haiku-5-5": {
+      "calls": 18,
+      "models_served": {
+        "claude-haiku-5-5": 18
+      },
+      "input_tokens": 31204,
+      "output_tokens": 8731,
+      "cost_usd": 0.0075,
+      "cost_per_call_usd": 0.00042,
+      "cost_unknown_calls": 0,
+      "fallback_calls": 0,
+      "seconds_avg": 3.13,
+      "check_status": {
+        "kept": 17,
+        "partly_dropped": 1
+      },
+      "price_per_mtok": {
+        "in": 0.1,
+        "out": 0.5,
+        "cache_read": 0.0
+      },
+      "note": null
+    }
+  },
+  "cost_usd_total": 0.4416
+}

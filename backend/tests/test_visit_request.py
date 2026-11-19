@@ -29,9 +29,9 @@ BAD_EVENT = (
     "insert into visit_events (id, visit_id, to_status)"
     " select gen_random_uuid(), id, 'lost' from visits"
 )
-VISIT_ROW = (
-    "insert into visits (id, project_id, trade, vendor_id, vendor_name, slot)"
-    " select gen_random_uuid(), project_id, trade, {vendor}, 'x', {slot} from visits"
+VISIT_ROW = (  # v3(0026): 같은 업체 다시 요청은 새 시도 번호 (UNIQUE 공사 · 공종 · 업체 · 시도)
+    "insert into visits (id, project_id, trade, vendor_id, vendor_name, slot, attempt)"
+    " select gen_random_uuid(), project_id, trade, {vendor}, 'x', {slot}, attempt + 1 from visits"
 )
 
 

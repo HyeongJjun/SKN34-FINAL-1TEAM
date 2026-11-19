@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.dialects.postgresql import distinct_on
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,8 +18,25 @@ from app.vendor.models import (
     VendorPriceLine,
     VendorPriceSet,
     VendorReview,
+    VendorReviewLink,
     VendorTrade,
 )
+
+
+async def review_links_of(
+    s: AsyncSession, vendor_ids: list[uuid.UUID], statuses: tuple[str, ...] | None = None
+) -> dict[uuid.UUID, list[VendorReviewLink]]:
+    """업체마다 외부 리뷰 링크 (번호 순). statuses를 주면 그 상태만 (고객 화면은 shown만)."""
+    out: dict[uuid.UUID, list[VendorReviewLink]] = {i: [] for i in vendor_ids}
+    if not vendor_ids:
+        return out
+    q = select(VendorReviewLink).where(VendorReviewLink.vendor_id.in_(vendor_ids))
+    if statuses is not None:
+        q = q.where(VendorReviewLink.status.in_(statuses))
+    q = q.order_by(VendorReviewLink.vendor_id, VendorReviewLink.sort)
+    for row in (await s.execute(q.execution_options(populate_existing=True))).scalars():
+        out[row.vendor_id].append(row)
+    return out
 
 
 async def review_of(
@@ -322,3 +339,62 @@ async def price_files(
     if trade:
         q = q.where(VendorPriceFile.trade == trade)
     return [(pf, f) for pf, f in (await s.execute(q)).all()]
+
+
+# ---- 관리자 업체 멈춤 · 외부 리뷰 링크 확인 (D26 · A01). 조건부 UPDATE만, commit은 부르는 쪽 ----
+
+
+async def suspend(
+    s: AsyncSession, vendor_id: uuid.UUID, scope: str, at: datetime
+) -> tuple[datetime, str] | None:
+    """멈추지 않은 업체 → scope, 새 요청만(new) → 진행 중도(all)로 넓히기. 그 밖(이미 같거나 더 넓음)은 None"""
+    allowed = Vendor.suspend_scope.is_(None)
+    if scope == "all":
+        allowed = or_(allowed, Vendor.suspend_scope == "new")
+    q = (
+        update(Vendor)
+        .where(Vendor.user_id == vendor_id, allowed)
+        .values(suspended_at=func.coalesce(Vendor.suspended_at, at), suspend_scope=scope)
+        .returning(Vendor.suspended_at, Vendor.suspend_scope)
+        .execution_options(synchronize_session=False)
+    )
+    row = (await s.execute(q)).first()
+    return (row[0], row[1]) if row else None
+
+
+async def unsuspend(s: AsyncSession, vendor_id: uuid.UUID) -> bool:
+    q = (
+        update(Vendor)
+        .where(Vendor.user_id == vendor_id, Vendor.suspended_at.is_not(None))
+        .values(suspended_at=None, suspend_scope=None)
+        .returning(Vendor.user_id)
+        .execution_options(synchronize_session=False)
+    )
+    return (await s.execute(q)).scalar_one_or_none() is not None
+
+
+async def set_review_link_status(
+    s: AsyncSession,
+    vendor_id: uuid.UUID,
+    sort: int,
+    status: str,
+    *,
+    by: uuid.UUID,
+    at: datetime,
+    note: str | None,
+    url: str | None,
+) -> VendorReviewLink | None:
+    """그 상태가 아닌 링크만 바꾼다(url을 주면 그 주소일 때만). 바뀐 행, 아니면 None"""
+    q = update(VendorReviewLink).where(
+        VendorReviewLink.vendor_id == vendor_id,
+        VendorReviewLink.sort == sort,
+        VendorReviewLink.status != status,
+    )
+    if url is not None:
+        q = q.where(VendorReviewLink.url == url)
+    values: dict = {"status": status, "checked_by": by, "checked_at": at}
+    if note is not None:
+        values["note"] = note
+    q = q.values(**values).returning(VendorReviewLink)
+    row = await s.scalar(q.execution_options(populate_existing=True))
+    return row

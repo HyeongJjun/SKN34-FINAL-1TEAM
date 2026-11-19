@@ -4,17 +4,20 @@ from decimal import Decimal
 
 from sqlalchemy import (
     ARRAY,
+    BigInteger,
     Boolean,
     CheckConstraint,
     Date,
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
+    Index,
     Numeric,
     SmallInteger,
     String,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -24,7 +27,28 @@ from app.shared.ids import uuid7
 SIZE_BANDS = ("10", "20", "30", "40", "50")  # 10평대 … 50평 이상 (공급 기준)
 BUDGETS = ("u300", "300-500", "500-700", "700-1000", "o1000", "undecided")
 MOK_ITEMS = ("molding", "base", "door", "flatten")  # 천장 몰딩 · 걸레받이 · 방문 교체 · 천장 평탄화
-DOBAE_GRADES = ("economy", "basic")  # 저가형 · 기본형
+DOBAE_GRADES = ("economy", "basic")  # 저가형 · 기본형 (v3 화면 말: 합지 · 실크)
+# v3: 공사 범위(전체 · 부분) · 면(벽 · 천장) · 공간 종류 · 손님 답을 옮겼는지
+SCOPES = ("full", "partial")
+FACES = ("wall", "ceiling")
+# 거실 · 주방 · 안방 · 작은방 1 · 작은방 2 · 복도 · 현관 · 드레스룸 (공간 몫은 calc.space_share 표에서 kind로)
+SPACE_KINDS = ("living", "kitchen", "master", "room1", "room2", "hall", "entry", "dress")
+# v3 부분 공사 공간을 project_spaces에 넣을 때 쓰는 이름 (화면 말)
+SPACE_NAMES = {
+    "living": "거실",
+    "kitchen": "주방",
+    "master": "안방",
+    "room1": "작은방 1",
+    "room2": "작은방 2",
+    "hall": "복도",
+    "entry": "현관",
+    "dress": "드레스룸",
+}
+SOURCES = ("v2", "guest", "member")
+BUDGET_WON_MIN = 100_000
+BUDGET_WON_MAX = 10_000_000_000
+_FACES_SQL = "array['wall', 'ceiling']::varchar[]"
+_SPACE_KINDS_SQL = "('living', 'kitchen', 'master', 'room1', 'room2', 'hall', 'entry', 'dress')"
 
 
 class Project(Base):
@@ -60,6 +84,14 @@ class Project(Base):
             "budget is null or budget in ('u300', '300-500', '500-700', '700-1000', 'o1000', 'undecided')",
             name="budget",
         ),
+        CheckConstraint(
+            "budget_won is null or (budget_won between 100000 and 10000000000"
+            " and budget_won % 10000 = 0)",
+            name="budget_won",
+        ),
+        CheckConstraint("source in ('v2', 'guest', 'member')", name="source"),
+        # 손님 답 옮기기 멱등 키: 같은 키로 두 번 오면 만든 공사를 돌려준다 (NULL끼리는 겹치지 않는다)
+        UniqueConstraint("owner_id", "client_key", name="uq_projects_client_key"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid7)
@@ -90,13 +122,28 @@ class Project(Base):
     dong: Mapped[str | None] = mapped_column(String(10))
     ho: Mapped[str | None] = mapped_column(String(10))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # v3 (0024): 읍면동 · 예산(원) · 만든 길 · 손님 답 옮기기 멱등 키
+    emd: Mapped[str | None] = mapped_column(String(20))  # 상계동. 업체에는 구 · 동까지만 간다
+    budget_won: Mapped[int | None] = mapped_column(BigInteger)  # 비면 '아직 몰라요'
+    source: Mapped[str] = mapped_column(String(8), default="v2", server_default="v2")
+    client_key: Mapped[uuid.UUID | None] = mapped_column()
 
 
 class ProjectSpace(Base):
-    """고객이 넣은 공간 (거실, 방 2, 주방 2 …)"""
+    """고객이 넣은 공간 (거실, 방 2, 주방 2 …). v3는 공간 종류(kind)로 고른다."""
 
     __tablename__ = "project_spaces"
-    __table_args__ = (UniqueConstraint("project_id", "name", name="uq_project_spaces_name"),)
+    __table_args__ = (
+        UniqueConstraint("project_id", "name", name="uq_project_spaces_name"),
+        CheckConstraint(f"kind is null or kind in {_SPACE_KINDS_SQL}", name="kind"),
+        Index(
+            "uq_project_spaces_kind",
+            "project_id",
+            "kind",
+            unique=True,
+            postgresql_where=text("kind is not null"),
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid7)
     project_id: Mapped[uuid.UUID] = mapped_column(
@@ -104,6 +151,7 @@ class ProjectSpace(Base):
     )
     name: Mapped[str] = mapped_column(String(20))
     sort: Mapped[int] = mapped_column(SmallInteger)
+    kind: Mapped[str | None] = mapped_column(String(12))  # v3 공간 종류 (SPACE_KINDS)
 
 
 class ProjectTrade(Base):
@@ -118,6 +166,12 @@ class ProjectTrade(Base):
         ),
         CheckConstraint("grade is null or grade in ('economy', 'basic')", name="grade"),
         CheckConstraint("trade = 'dobae' or grade is null", name="grade_trade"),
+        CheckConstraint("scope in ('full', 'partial')", name="scope"),
+        CheckConstraint(
+            f"faces <@ {_FACES_SQL} and cardinality(faces) between 1 and 2", name="faces"
+        ),
+        # 전체 공사는 벽 + 천장
+        CheckConstraint(f"scope <> 'full' or faces @> {_FACES_SQL}", name="full_faces"),
     )
 
     project_id: Mapped[uuid.UUID] = mapped_column(
@@ -127,6 +181,13 @@ class ProjectTrade(Base):
     items: Mapped[list[str]] = mapped_column(ARRAY(String(20)), default=list, server_default="{}")
     # 도배 유형. 0002로 만든 행에는 없어서 DB에서는 비워 둘 수 있고, 새 요청은 API가 꼭 받는다.
     grade: Mapped[str | None] = mapped_column(String(10))
+    # v3 (0024): 전체 · 부분 공사와 면. 부분 공사 공간은 project_trade_spaces를 그대로 쓴다
+    scope: Mapped[str] = mapped_column(String(8), default="full", server_default="full")
+    faces: Mapped[list[str]] = mapped_column(
+        ARRAY(String(8)),
+        default=lambda: ["wall", "ceiling"],
+        server_default=text("'{wall,ceiling}'"),
+    )
 
 
 class ProjectTradeSpace(Base):

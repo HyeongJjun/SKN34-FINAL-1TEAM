@@ -1,0 +1,320 @@
+/* 믿집 v3 디자인 토큰 (B · 큰 숫자) — 2026-11-18 B4
+   - 근거: docs/v3/design-system.md 2장 · docs/v3/design/tokens.draft.css · ADR design-02
+   - 층 3개: 1층 기본 값(--mj-gray-500) → 2층 의미(--mj-text-sub) → 3층 컴포넌트(--mj-btn-h-lg)
+     화면 · 컴포넌트 CSS는 2 · 3층 이름만 써요. 예외 하나: 간격(--mj-space-*)은 바로 써요.
+   - 옛 v2 이름(--ink · --accent …)의 별칭은 globals.css 맨 위에 있어요.
+   - 기준점(미디어 쿼리 값, 변수로 못 써요): 폰 < 768 · 태블릿 768~1023 · 웹 ≥ 1024 · 넓은 웹 ≥ 1280
+     스크립트에서는 components/site/breakpoints.ts의 BP만 써요.
+   - 바탕: 흰 바탕이 기본(L16). 9판처럼 회색 바탕 + 흰 묶음은 <html data-canvas="gray">로 바꿔요(사용자 확인 필요). */
+
+:root {
+  color-scheme: only light; /* 1차는 밝은 화면만. 안드로이드 크롬 자동 어둡게 하기를 막아요 */
+
+  /* ───── 1층 기본 값 ───── */
+
+  /* 회색(색상각 214°). 주석 숫자 = 흰 바탕 대비 */
+  --mj-white: #ffffff;
+  --mj-gray-50: #f8f9fb;  /* 1.05 */
+  --mj-gray-100: #f1f3f6; /* 1.11 */
+  --mj-gray-200: #e3e6eb; /* 1.25 */
+  --mj-gray-300: #ced3da; /* 1.50 */
+  --mj-gray-400: #acb3be; /* 2.11 · 꺼진 것만 */
+  --mj-gray-500: #7f8a99; /* 3.50 · 테두리 · 아이콘 하한 */
+  --mj-gray-600: #616c7b; /* 5.33 · 가장 옅은 글자 */
+  --mj-gray-700: #495563; /* 7.60 */
+  --mj-gray-800: #313c49; /* 11.21 */
+  --mj-gray-900: #1b222c; /* 16.01 */
+  --mj-gray-950: #101319; /* 사진 크게 보기 바탕 */
+
+  /* 파랑 하나(색상각 216°). 글자 · 단추 바탕은 600부터 */
+  --mj-blue-50: #ebf2fe;  /* 1.13 */
+  --mj-blue-100: #cfe1fe; /* 1.32 */
+  --mj-blue-200: #9ec3fb; /* 1.80 */
+  --mj-blue-300: #75a8f6; /* 2.42 */
+  --mj-blue-400: #4f8ff1; /* 3.22 */
+  --mj-blue-500: #307aeb; /* 4.11 · 막대 같은 글자 아닌 곳 */
+  --mj-blue-600: #1b66d8; /* 5.33 · 주 단추 · 링크 (L17) */
+  --mj-blue-700: #1856b4; /* 6.93 */
+  --mj-blue-800: #17478e; /* 9.02 */
+  --mj-blue-900: #143568; /* 12.08 */
+
+  /* 상태 색: 작은 아이콘 · 배지에만 */
+  --mj-red-50: #fff0f1;
+  --mj-red-600: #db212d;   /* 4.92 */
+  --mj-red-700: #b9212b;   /* 6.33 */
+  --mj-green-50: #ecf9f3;
+  --mj-green-600: #038046; /* 5.02 */
+  --mj-green-700: #036b3b; /* 6.62 */
+  --mj-orange-50: #fff4ea;
+  --mj-orange-600: #b35900; /* 4.83 */
+  --mj-orange-700: #984c00; /* 6.23 */
+  --mj-orange-800: #7b3f03; /* 8.22 */
+  --mj-amber-600: #c48200;  /* 3.21 · 별 */
+
+  /* 글자 크기 7단계(사용자 결정: 13 · 14 · 16 · 18 · 20 · 28 · 38). rem이라 기기 글자 크기 설정을 따라가요 */
+  --mj-size-13: 0.8125rem;
+  --mj-size-14: 0.875rem;
+  --mj-size-16: 1rem;
+  --mj-size-18: 1.125rem;
+  --mj-size-20: 1.25rem;
+  --mj-size-28: 1.75rem;
+  --mj-size-38: 2.375rem;
+
+  /* 간격: 4px 단위(2 · 6은 줄 안 틈에만) */
+  --mj-space-2: 2px;
+  --mj-space-4: 4px;
+  --mj-space-6: 6px;
+  --mj-space-8: 8px;
+  --mj-space-12: 12px;
+  --mj-space-16: 16px;
+  --mj-space-20: 20px;
+  --mj-space-24: 24px;
+  --mj-space-32: 32px;
+  --mj-space-40: 40px;
+  --mj-space-48: 48px;
+  --mj-space-64: 64px;
+
+  /* ───── 2층 의미 ───── */
+
+  /* 바탕 · 면 */
+  --mj-bg: var(--mj-white);              /* 페이지 바탕(흰 바탕 기본) */
+  --mj-surface: var(--mj-white);         /* 묶음 · 머리 · 옆 칸 · 창 */
+  --mj-surface-sub: var(--mj-gray-50);   /* 묶음 안 옅은 칸: 인용 · 답글 · 펼친 답 · 끌어다 놓기 */
+  --mj-fill: var(--mj-gray-100);         /* 칩 · 나눔 칸 바닥 · 말풍선 · 파일 줄 */
+  --mj-fill-strong: var(--mj-gray-200);  /* 꺼진 단추 · 잡힌 반나절 */
+  --mj-field-bg: var(--mj-gray-50);      /* 입력 칸 */
+  --mj-surface-inverse: var(--mj-gray-800); /* 진행 중 공사 띠 · 토스트 */
+  --mj-media-bg: var(--mj-gray-950);     /* 사진 크게 보기 */
+  --mj-scrim: rgba(27, 34, 44, 0.48);    /* 창 뒤 어둡게 */
+
+  /* 글자 */
+  --mj-text: var(--mj-gray-900);         /* 본문 · 제목 · 금액 */
+  --mj-text-sub: var(--mj-gray-700);     /* 줄 아래 설명 · 라벨 */
+  --mj-text-mute: var(--mj-gray-600);    /* 시각 · 범례 · 각주(가장 옅은 글자) */
+  --mj-text-placeholder: var(--mj-gray-600);
+  --mj-text-disabled: var(--mj-gray-400); /* 꺼진 것만(대비 예외) */
+  --mj-text-inverse: var(--mj-white);
+  --mj-text-inverse-sub: var(--mj-gray-300);
+
+  /* 줄 */
+  --mj-line: var(--mj-gray-200);         /* 칸 나눔 · 흰 바탕 묶음 테두리 */
+  --mj-line-soft: var(--mj-gray-100);    /* 목록 안 줄 */
+  --mj-line-control: var(--mj-gray-500); /* 입력 · 체크 · 끌어다 놓기 테두리(3:1 이상) */
+  --mj-line-ink: var(--mj-gray-900);     /* 서류 합계 위 2px 줄 */
+
+  /* 누르는 것: 파랑 하나 */
+  --mj-primary: var(--mj-blue-600);
+  --mj-primary-hover: var(--mj-blue-700);
+  --mj-primary-press: var(--mj-blue-800);
+  --mj-on-primary: var(--mj-white);
+  --mj-primary-weak: var(--mj-blue-50);      /* 약한 단추 · 고른 칩 · 고른 줄 */
+  --mj-primary-weak-hover: var(--mj-blue-100);
+  --mj-on-primary-weak: var(--mj-blue-700);
+  --mj-link: var(--mj-blue-600);             /* 글자 단추 · 자세히 › */
+  --mj-link-hover: var(--mj-blue-700);
+  --mj-focus: var(--mj-blue-600);
+  --mj-accent-fill: var(--mj-blue-500);      /* 공정표 막대 등 글자 아닌 곳 */
+  --mj-range-wish: var(--mj-blue-50);        /* 달력: 내 희망 기간 띠 */
+  --mj-range-vendor: var(--mj-blue-100);     /* 달력: 업체 가능 띠 */
+  --mj-step-done: var(--mj-blue-400);
+  --mj-step-now: var(--mj-blue-600);
+  --mj-step-todo: var(--mj-gray-200);
+
+  /* 상태(N4 C: 아이콘 + 글자, 색은 작은 아이콘에만) */
+  --mj-st-todo: var(--mj-blue-600);   /* ● 할 일 */
+  --mj-st-wait: var(--mj-orange-600); /* ○ 기다림 */
+  --mj-st-ok: var(--mj-green-600);    /* ✓ 일정 · 확정 */
+  --mj-st-done: var(--mj-gray-600);   /* – 끝남 */
+  --mj-st-late: var(--mj-red-600);    /* ! 기한 지남 */
+
+  /* 배지(글자가 늘 함께) */
+  --mj-badge-now-bg: var(--mj-blue-50);
+  --mj-badge-now-fg: var(--mj-blue-700);
+  --mj-badge-wait-bg: var(--mj-orange-50);
+  --mj-badge-wait-fg: var(--mj-orange-700);
+  --mj-badge-ok-bg: var(--mj-green-50);
+  --mj-badge-ok-fg: var(--mj-green-700);
+  --mj-badge-bad-bg: var(--mj-red-50);
+  --mj-badge-bad-fg: var(--mj-red-700);
+  --mj-badge-mute-bg: var(--mj-gray-100);
+  --mj-badge-mute-fg: var(--mj-gray-700);
+
+  /* 알림 · 오류 · 경고 */
+  --mj-danger: var(--mj-red-600);          /* 오류 글자 · 오류 칸 테두리 · 위험 단추 */
+  --mj-danger-hover: var(--mj-red-700);
+  --mj-on-danger: var(--mj-white);
+  --mj-danger-weak: var(--mj-red-50);
+  --mj-on-danger-weak: var(--mj-red-700);
+  --mj-warn-weak: var(--mj-orange-50);     /* 주의 줄(믿집 밖 거래) · 경고 줄 */
+  --mj-on-warn-weak: var(--mj-orange-800);
+  --mj-ok: var(--mj-green-600);
+  --mj-count: var(--mj-red-600);           /* 안 읽은 수 */
+  --mj-on-count: var(--mj-white);
+
+  /* 달력 · 별 · 파일 */
+  --mj-proposed: var(--mj-orange-600);       /* 제안한 날 테두리 · 고른 제안 바탕 */
+  --mj-on-proposed: var(--mj-white);
+  --mj-proposed-text: var(--mj-orange-700);
+  --mj-holiday: var(--mj-red-700);           /* 일요일 · 공휴일 날짜 글자 */
+  --mj-star: var(--mj-amber-600);
+  --mj-star-off: var(--mj-gray-300);         /* 보여 주기 별(숫자가 함께라 꾸밈) */
+  --mj-ext-pdf: var(--mj-red-700);
+  --mj-ext-xls: var(--mj-green-700);
+  --mj-ext-img: var(--mj-blue-700);
+  --mj-avatar-bg: var(--mj-gray-100);
+  --mj-avatar-fg: var(--mj-gray-700);
+  --mj-avatar-warm-bg: #f6f1ec;              /* 업체 상세 큰 얼굴(9판 그대로 따뜻한 색) */
+  --mj-avatar-warm-fg: #705430;
+  --mj-kakao: #fee500;                       /* 카카오 단추(준비 중이라 꺼진 모양만) */
+  --mj-on-kakao: #191919;
+
+  /* 글꼴 · 글자. "Pretendard Variable"은 app/layout.tsx가 불러오는 다이나믹 서브셋 CSS(@font-face 92조각, unicode-range)예요.
+     쪽에 든 글자의 조각만 받고, 받기 전 · 못 받으면 시스템 글꼴(Apple SD Gothic Neo · Noto Sans KR · 맑은 고딕)로 그려요.
+     --mj-font-face는 글꼴을 바꿔 볼 때만 쓰는 자리예요(지금은 비어 있어요). */
+  --mj-font-sans: var(--mj-font-face, "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif);
+  --mj-type-caption: var(--mj-size-13); /* 시각 · 범례 · 각주 · 배지 · 탭 바 글자 */
+  --mj-type-label: var(--mj-size-14);   /* 라벨 · 줄 아래 설명 · 표 머리 · 칩 · 작은 단추 */
+  --mj-type-body: var(--mj-size-16);    /* 본문 · 입력 · 단추 · 줄 제목 · 줄 금액 · 말풍선 */
+  --mj-type-title-s: var(--mj-size-18); /* 폰 머리 제목 · 묶음 제목 · 창 제목 */
+  --mj-type-title: var(--mj-size-20);   /* 웹 화면 제목 · 폰 큰 줄 제목 · 중간 금액 (L18) */
+  --mj-type-amount: var(--mj-size-28);  /* 금액 큰 숫자(폰). 웹은 38 */
+  --mj-type-amount-m: var(--mj-size-20);
+  --mj-type-hero: var(--mj-size-20);    /* 첫 화면 제목(폰). 웹은 38 */
+  --mj-lh-tight: 1.25;  /* 큰 숫자 · 첫 화면 제목 */
+  --mj-lh-title: 1.4;
+  --mj-lh-ui: 1.5;      /* 한 줄짜리 UI 글 */
+  --mj-lh-body: 1.6;    /* 문단 */
+  --mj-weight-regular: 400;
+  --mj-weight-semibold: 600;
+  --mj-weight-bold: 700;
+  --mj-weight-heavy: 800; /* 큰 숫자만 */
+  --mj-track-amount: -0.03em;
+  --mj-track-title: -0.02em;
+  --mj-read-max: 40em;  /* 문단 한 줄 한글 40자 안팎 */
+
+  /* 배치 */
+  --mj-gutter: 16px;          /* 화면 옆 여백(폰) */
+  --mj-gap-group: 12px;       /* 묶음 사이 */
+  --mj-pad-group: 20px;       /* 묶음 안쪽 */
+  --mj-content-max: 1200px;
+  --mj-header-h: 52px;        /* 웹 64 */
+  --mj-band-h: 0px;           /* 공사 띠. 띠가 있는 화면에서만 값이 생겨요(아래 :has) */
+  --mj-sticky-top: calc(var(--mj-header-h) + var(--mj-band-h));
+  --mj-tabbar-h: 64px;        /* 폰 아래 탭 바(+ 아래 안전 영역) */
+  --mj-bottombar-h: 76px;     /* 폰 아래 단추 띠(단추 52 + 위아래 틈, + 아래 안전 영역) */
+  --mj-aside-w: 320px;        /* 넓은 웹 344 */
+  --mj-aside-min-h: 460px;    /* N2 A(붙은 뒤) */
+  --mj-aside-start-min-h: 320px; /* 붙기 전(첫 화면) 최소: 머리 + 목록 조금 + 바닥(칩 · 입력) */
+  --mj-dialog-w: 460px;
+  --mj-menu-w: 240px;
+  --mj-drop-w: 370px;         /* 머리 알림 펼침 */
+  --mj-field-max: 520px;      /* 웹 입력 칸 최대 */
+  --mj-num-field-max: 240px;  /* 웹 숫자 칸 최대 */
+  --mj-seg-max: 360px;        /* 웹 나눔 칸 최대 */
+  --mj-btn-min-w-web: 160px;  /* 웹 단추 최소(늘어나지 않게) */
+  --mj-safe-bottom: max(6px, env(safe-area-inset-bottom, 0px)); /* 탭 바 · 아래 단추 띠 아래 틈 */
+
+  /* 모서리 */
+  --mj-radius-paper: 2px;   /* 인쇄 · 이미지로 저장하는 서류 한 장 */
+  --mj-radius-badge: 6px;
+  --mj-radius-chip: 10px;
+  --mj-radius-field: 12px;
+  --mj-radius-btn: 14px;
+  --mj-radius-btn-lg: 16px;
+  --mj-radius-card: 16px;   /* 묶음 안 카드 · 파일 줄 · 사진 */
+  --mj-radius-group: 20px;  /* 묶음 · 옆 칸 */
+  --mj-radius-sheet: 24px;  /* 아래 시트 · 가운데 창 */
+  --mj-radius-pill: 999px;
+
+  /* 그림자: 떠 있는 것에만. 나머지는 줄 · 여백으로 나눠요 */
+  --mj-group-edge: inset 0 0 0 1px var(--mj-line); /* 흰 바탕일 때 묶음 테두리 */
+  --mj-edge-top: 0 -1px 0 var(--mj-line);          /* 아래 단추 띠 · 탭 바 */
+  --mj-edge-bottom: 0 1px 0 var(--mj-line);        /* 머리 · 공사 띠 */
+  --mj-shadow-raise: 0 1px 3px rgba(27, 34, 44, 0.12);
+  --mj-shadow-pop: 0 12px 32px -10px rgba(27, 34, 44, 0.32), 0 0 0 1px var(--mj-line);
+  --mj-shadow-overlay: 0 24px 48px -16px rgba(27, 34, 44, 0.36);
+
+  /* 움직임 */
+  --mj-dur-fast: 120ms; /* 누름 · 올림 */
+  --mj-dur: 200ms;      /* 작은 메뉴 · 가운데 창 */
+  --mj-dur-slow: 280ms; /* 아래 시트 · 옆 칸 접기 */
+  --mj-ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --mj-ease-in: cubic-bezier(0.3, 0, 1, 1);
+
+  /* 층 */
+  --mj-z-sticky: 10;
+  --mj-z-header: 20;
+  --mj-z-pop: 30;
+  --mj-z-overlay: 40;
+  --mj-z-toast: 50;
+  --mj-z-skip: 60;
+
+  /* ───── 3층 컴포넌트 ───── */
+  --mj-hit: 44px;          /* 누를 곳 기본 */
+  --mj-hit-min: 40px;      /* 촘촘한 곳 최소(표 안 · 칩 · 달력 칸) */
+  --mj-btn-h-lg: 52px;     /* 아래 단추 */
+  --mj-btn-h-md: 44px;
+  --mj-btn-h-sm: 40px;
+  --mj-field-h: 48px;
+  --mj-chip-h: 40px;
+  --mj-seg-item-h: 40px;
+  --mj-switch-w: 52px;
+  --mj-switch-h: 32px;
+  --mj-check: 24px;
+  --mj-badge-h: 24px;
+  --mj-count-h: 20px;
+  --mj-avatar-s: 32px;
+  --mj-avatar-m: 44px;
+  --mj-avatar-l: 56px;
+  --mj-cal-cell-h: 40px;   /* 웹 넓은 달력 64 */
+  --mj-cal-dot: 32px;      /* 웹 넓은 달력 42 */
+  --mj-icon: 24px;
+  --mj-icon-sm: 16px;
+  --mj-focus-w: 3px;
+  /* 옆 AI 칸(N2 A): 9판의 100cqh(위 띠 아래 스크롤 칸 높이)를 실제 화면에서는 100dvh − 위 띠로 계산해요 */
+  --mj-aside-top: min(calc(var(--mj-sticky-top) + 16px), calc(100dvh - var(--mj-aside-min-h) - 16px));
+  --mj-aside-h: max(var(--mj-aside-min-h), calc(100dvh - var(--mj-sticky-top) - 32px));
+}
+
+@media (min-width: 768px) {
+  :root {
+    --mj-gutter: 24px;
+    --mj-gap-group: 16px;
+    --mj-header-h: 64px;
+  }
+  /* 태블릿 공사 띠는 한 줄(공사 이름 · 지금 단계 · 지금 할 일), 웹은 76 */
+  :root:has([data-mj-band]) { --mj-band-h: 56px; }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --mj-type-amount: var(--mj-size-38);
+    --mj-type-hero: var(--mj-size-38);
+    --mj-cal-cell-h: 64px;
+    --mj-cal-dot: 42px;
+  }
+  :root:has([data-mj-band]) { --mj-band-h: 76px; }
+  /* 실측 뒤 작은 단계 줄이 더해지면(누를 곳 40을 지키려고) 92 */
+  :root:has([data-mj-band][data-sub]) { --mj-band-h: 92px; }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --mj-gutter: 28px;
+    --mj-aside-w: 344px;
+  }
+}
+
+/* 9판 시안 모양: 회색 바탕 + 흰 묶음(테두리 없음). 사용자 확인 뒤 기본으로 바꿀 수 있어요 */
+:root[data-canvas="gray"] {
+  --mj-bg: var(--mj-gray-100);
+  --mj-group-edge: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --mj-dur-fast: 0.01ms;
+    --mj-dur: 0.01ms;
+    --mj-dur-slow: 0.01ms;
+  }
+}

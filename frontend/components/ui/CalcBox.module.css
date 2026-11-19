@@ -1,0 +1,7 @@
+.box { display: flex; flex-direction: column; gap: 2px; padding: 9px 12px; border-radius: 12px; background: var(--mj-surface); box-shadow: inset 0 0 0 1px var(--mj-line); min-width: 0; }
+.form { background: var(--mj-surface-sub); box-shadow: none; }
+.title { font-size: var(--mj-type-caption); font-weight: var(--mj-weight-bold); color: var(--mj-link); }
+.line { font-size: var(--mj-type-label); color: var(--mj-text); overflow-wrap: anywhere; }
+.line b { font-weight: var(--mj-weight-bold); }
+.op { color: var(--mj-text-sub); white-space: pre; }
+.note { color: var(--mj-text-mute); }

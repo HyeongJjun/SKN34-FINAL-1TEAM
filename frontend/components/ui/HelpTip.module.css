@@ -1,0 +1,23 @@
+/* 도움말 아이콘 + 펼침 칸. 보이는 아이콘은 18px, 누를 곳은 40px(바깥 여백을 줄여 줄 높이는 그대로) */
+.box { position: relative; display: inline-flex; align-self: center; vertical-align: middle; }
+.btn {
+  display: inline-grid; place-items: center; flex: none;
+  width: var(--mj-hit-min); height: var(--mj-hit-min); margin: calc((18px - var(--mj-hit-min)) / 2);
+  padding: 0; border: 0; border-radius: 50%; background: none; color: var(--mj-text-mute); cursor: pointer;
+}
+.btn:hover { background: var(--mj-fill); color: var(--mj-text); }
+.btn[aria-expanded="true"] { color: var(--mj-primary); }
+.btn:focus-visible { border-radius: 50%; }
+.pop {
+  position: absolute; top: calc(100% + 8px); left: -8px; z-index: var(--mj-z-pop);
+  width: max-content; max-width: min(300px, calc(100vw - 24px));
+  padding: 12px 14px; border-radius: var(--mj-radius-card); background: var(--mj-surface); color: var(--mj-text);
+  box-shadow: 0 0 0 1px var(--mj-line), var(--mj-shadow-overlay);
+  font-size: var(--mj-type-label); font-weight: var(--mj-weight-regular); line-height: var(--mj-lh-body); letter-spacing: 0;
+  white-space: normal; text-align: left;
+}
+.web { display: none; }
+@media (min-width: 768px) {
+  .web { display: inline-flex; }
+  .phone { display: none; }
+}

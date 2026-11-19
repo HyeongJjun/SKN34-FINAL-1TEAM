@@ -1,0 +1,7 @@
+.log { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; min-width: 0; }
+.item { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 10px 0 10px 18px; border-bottom: 1px solid var(--mj-line-soft); }
+.item:last-child { border-bottom: 0; }
+.item::before { content: ""; position: absolute; left: 3px; top: 17px; width: 7px; height: 7px; border-radius: 50%; background: var(--mj-line-control); }
+.meta { display: flex; flex-wrap: wrap; gap: 0 8px; font-size: var(--mj-type-caption); font-weight: var(--mj-weight-bold); color: var(--mj-text-sub); }
+.meta time { font-variant-numeric: tabular-nums; }
+.what { font-size: var(--mj-type-label); color: var(--mj-text); overflow-wrap: anywhere; }

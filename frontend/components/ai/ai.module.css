@@ -1,0 +1,25 @@
+/* AI 칸 조각 (B5). 색 · 글자 크기는 globals.css 토큰만 */
+.msgs { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 8px; }
+.user { align-self: flex-end; max-width: 85%; background: var(--accent-weak); color: var(--ink); border-radius: var(--radius); padding: 8px 12px; font-size: var(--fs-md); overflow-wrap: anywhere; }
+.answer { display: flex; flex-direction: column; gap: 8px; font-size: var(--fs-md); color: var(--ink); overflow-wrap: anywhere; }
+.notice { font-size: var(--fs-xs); color: var(--ink-mute); }
+.section { display: flex; flex-direction: column; gap: 4px; }
+.secTitle { font-weight: 700; color: var(--ink-sub); font-size: var(--fs-sm); }
+.caution { color: var(--warn); font-size: var(--fs-sm); }
+.tip { color: var(--ink-sub); font-size: var(--fs-sm); }
+.sources { color: var(--ink-mute); font-size: var(--fs-xs); }
+.unknown { color: var(--ink-sub); font-size: var(--fs-sm); }
+.calcNote { color: var(--ink-sub); font-size: var(--fs-sm); background: var(--surface-2); border-radius: var(--radius-s); padding: 6px 10px; }
+.ask { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line-soft); padding-top: 8px; }
+.choices { display: flex; flex-wrap: wrap; gap: 6px; }
+.draft { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; background: var(--surface); }
+.draftTitle { font-weight: 700; }
+.mute { color: var(--ink-mute); margin-right: 6px; }
+.notice1 { background: var(--surface-2); border-radius: var(--radius); padding: 10px 12px; font-size: var(--fs-sm); color: var(--ink-sub); display: flex; flex-direction: column; gap: 6px; }
+.composer { display: flex; gap: 6px; align-items: flex-end; }
+.input { flex: 1; min-width: 0; min-height: var(--mj-hit, 44px); max-height: 120px; resize: none; border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 10px 12px; font: inherit; font-size: var(--fs-md); color: var(--ink); background: var(--surface); }
+.input:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.error { color: var(--danger); font-size: var(--fs-sm); }
+.guestHead { display: flex; flex-direction: column; gap: 4px; }
+.guestTitle { font-weight: 700; font-size: var(--fs-lg); }
+.embed { display: flex; flex-direction: column; gap: 8px; }

@@ -1,0 +1,55 @@
+/* 기간 답하기 달력(V04 · D14). 모양은 B4 Calendar와 같게: 칸 40(아래 글 있으면 52) · 동그라미 32 · 웹 넓은 달력 64 · 42 */
+.cal { --cell: 52px; --dotz: 32px; --pad: 2px; min-width: 0; }
+@media (min-width: 1024px) { .wide { --cell: var(--mj-cal-cell-h); --dotz: var(--mj-cal-dot); --pad: 6px; } }
+.root { position: relative; min-width: 0; }
+.months { display: flex; flex-direction: column; }
+.month { min-width: 0; }
+.caption { display: flex; align-items: center; min-height: var(--mj-hit); padding-right: 96px; }
+.captionLabel { font-size: var(--mj-type-body); font-weight: var(--mj-weight-bold); }
+.nav { position: absolute; top: 0; right: 0; display: flex; gap: 4px; }
+.navBtn { display: inline-grid; place-items: center; width: var(--mj-hit); height: var(--mj-hit); padding: 0; border: 0; border-radius: 50%; background: none; color: var(--mj-text-sub); cursor: pointer; }
+.navBtn:hover:not(:disabled) { background: var(--mj-fill); color: var(--mj-text); }
+.navBtn:disabled { color: var(--mj-text-disabled); cursor: not-allowed; }
+.grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.weekday { padding: 2px 0 6px; font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); color: var(--mj-text-mute); text-align: center; }
+.weekday:first-child { color: var(--mj-holiday); }
+.day { position: relative; height: var(--cell); padding: 0; text-align: center; vertical-align: top; }
+.hidden, .outside { visibility: hidden; }
+.dayBtn { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; width: 100%; height: 100%; padding: var(--pad) 0 0; border: 0; background: none; color: var(--mj-text); font-size: var(--mj-type-label); font-weight: 500; cursor: pointer; }
+.dot { display: grid; place-items: center; width: var(--dotz); height: var(--dotz); border-radius: 50%; font-variant-numeric: tabular-nums; }
+.note { margin-top: 1px; font-size: var(--mj-type-caption); font-style: normal; font-weight: var(--mj-weight-bold); line-height: 1.2; color: var(--mj-text-mute); white-space: nowrap; max-width: 100%; overflow: hidden; }
+.long { display: none; }
+@media (min-width: 1024px) { .wide .short { display: none; } .wide .long { display: inline; } }
+.dayBtn:focus-visible { outline: none; }
+.dayBtn:focus-visible .dot { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: 1px; }
+.dayBtn:hover:not(:disabled) .dot { background: var(--mj-fill); }
+.sun .dayBtn { color: var(--mj-holiday); }
+.today .dot { text-decoration: underline; text-underline-offset: 3px; font-weight: var(--mj-weight-bold); }
+.disabled .dayBtn { color: var(--mj-text-disabled); cursor: not-allowed; }
+
+/* 띠: 고객 희망(옅은 파랑) 위에 고른 기간(파랑 100) */
+.wish::before, .range::after { content: ""; position: absolute; left: 0; right: 0; top: var(--pad); height: var(--dotz); }
+.wish::before { background: var(--mj-range-wish); z-index: 0; }
+.range::after { background: var(--mj-range-vendor); z-index: 1; }
+.wishS::before { left: 4px; border-radius: 999px 0 0 999px; }
+.wishE::before { right: 4px; border-radius: 0 999px 999px 0; }
+.wishS.wishE::before { border-radius: 999px; }
+.rangeS::after { left: 50%; }
+.rangeE::after { right: 50%; }
+.rangeS.rangeE::after { display: none; }
+.rangeS .dot, .rangeE .dot { background: var(--mj-primary); }
+.rangeS .dayBtn, .rangeE .dayBtn { color: var(--mj-on-primary); font-weight: var(--mj-weight-heavy); }
+.rangeS .note, .rangeE .note { color: var(--mj-link); }
+.range .dayBtn { font-weight: var(--mj-weight-bold); }
+.excluded .dot { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--mj-text-mute); background: var(--mj-surface); box-shadow: inset 0 0 0 1.5px var(--mj-line-control); }
+.taken .dot { background: var(--mj-fill-strong); }
+.taken:not(.rangeS):not(.rangeE) .dayBtn { color: var(--mj-text-sub); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0; padding: 0; list-style: none; font-size: var(--mj-type-caption); color: var(--mj-text-sub); }
+.legend li { display: inline-flex; align-items: center; gap: 4px; }
+.legend i { display: inline-block; flex: none; width: 12px; height: 12px; border-radius: 3px; }
+.lgWish { background: var(--mj-range-wish); box-shadow: inset 0 0 0 1px var(--mj-range-vendor); }
+.lgRange { background: var(--mj-range-vendor); }
+.lgTaken { background: var(--mj-fill-strong); border-radius: 50% !important; }
+.lgEx { background: var(--mj-surface); border-radius: 50% !important; box-shadow: inset 0 0 0 1.5px var(--mj-line-control); position: relative; }
+.lgEx::after { content: ""; position: absolute; left: 1px; right: 1px; top: 5px; height: 2px; background: var(--mj-text-mute); }

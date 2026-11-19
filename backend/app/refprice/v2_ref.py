@@ -37,14 +37,9 @@ SPACE_KO = {
     "window": "창호",
 }
 
-# 팀 목록(refprice/holidays.py)에 없는 공휴일: 2026-04-28 '관공서의 공휴일에 관한 규정' 개정(노동절 · 제헌절).
-# 2027 대체공휴일은 우주항공청 2027 월력요항 보도 기준 (v10 HOLIDAYS_EXTRA)
-HOLIDAYS_EXTRA: dict[date, str] = {
-    date(2026, 5, 1): "노동절",
-    date(2026, 7, 17): "제헌절",
-    date(2027, 5, 3): "노동절 대체공휴일",
-    date(2027, 7, 19): "제헌절 대체공휴일",
-}
+# 예전에 여기 따로 두던 노동절 · 제헌절 4일은 refprice/holidays.py로 옮겼어요(2026-11-18, 공정표도 같은 목록을 써요).
+# v2 화면이 이 이름을 합쳐 쓰므로 빈 표로 남겨요
+HOLIDAYS_EXTRA: dict[date, str] = {}
 
 # 목공 자재 한 개 단위 (v10 MOK10.prod per)
 PRODUCT_PER = {"door_set": "짝", "door_leaf": "짝", "slide": "세트", "hidden": "세트"}

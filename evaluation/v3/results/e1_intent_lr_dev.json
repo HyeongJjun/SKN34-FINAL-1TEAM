@@ -1,0 +1,1080 @@
+{
+  "classifier": "intent_lr",
+  "count": 133,
+  "accuracy": 0.9172932330827067,
+  "macro_f1": 0.9179744835686714,
+  "per_label": {
+    "orchestrator": {
+      "precision": 0.9032258064516129,
+      "recall": 0.8,
+      "f1": 0.8484848484848486,
+      "support": 35
+    },
+    "trade": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 30
+    },
+    "quote_explanation": {
+      "precision": 0.9583333333333334,
+      "recall": 1.0,
+      "f1": 0.9787234042553191,
+      "support": 23
+    },
+    "schedule": {
+      "precision": 0.8571428571428571,
+      "recall": 0.9,
+      "f1": 0.8780487804878048,
+      "support": 20
+    },
+    "out_of_scope": {
+      "precision": 0.8518518518518519,
+      "recall": 0.92,
+      "f1": 0.8846153846153846,
+      "support": 25
+    }
+  },
+  "confusion": {
+    "orchestrator": {
+      "orchestrator": 28,
+      "trade": 0,
+      "quote_explanation": 1,
+      "schedule": 3,
+      "out_of_scope": 3
+    },
+    "trade": {
+      "orchestrator": 0,
+      "trade": 30,
+      "quote_explanation": 0,
+      "schedule": 0,
+      "out_of_scope": 0
+    },
+    "quote_explanation": {
+      "orchestrator": 0,
+      "trade": 0,
+      "quote_explanation": 23,
+      "schedule": 0,
+      "out_of_scope": 0
+    },
+    "schedule": {
+      "orchestrator": 1,
+      "trade": 0,
+      "quote_explanation": 0,
+      "schedule": 18,
+      "out_of_scope": 1
+    },
+    "out_of_scope": {
+      "orchestrator": 2,
+      "trade": 0,
+      "quote_explanation": 0,
+      "schedule": 0,
+      "out_of_scope": 23
+    }
+  },
+  "novice_count": 58,
+  "novice_accuracy": 0.9482758620689655,
+  "latency_ms_p50": 0.07569999434053898,
+  "latency_ms_p95": 0.1273000380024314,
+  "wrong": [
+    {
+      "text": "하이",
+      "gold": "orchestrator",
+      "pred": "out_of_scope",
+      "kind": "greeting"
+    },
+    {
+      "text": "반갑습니다 ^^",
+      "gold": "orchestrator",
+      "pred": "out_of_scope",
+      "kind": "greeting"
+    },
+    {
+      "text": "표준견적서에서 줄 하나가 이해가 안 가고, 목공 끝나는 날도 궁금해요",
+      "gold": "orchestrator",
+      "pred": "quote_explanation",
+      "kind": "multi"
+    },
+    {
+      "text": "저기요 누구 있어요?",
+      "gold": "orchestrator",
+      "pred": "out_of_scope",
+      "kind": "greeting"
+    },
+    {
+      "text": "가견적 보니까 도배가 좀 비싼데 공사 날짜를 바꾸면 더 싸지나요?",
+      "gold": "orchestrator",
+      "pred": "schedule",
+      "kind": "multi"
+    },
+    {
+      "text": "목공 업체 연기 승인했는데 그 다음 도배 날짜랑 비용 변동 있나요",
+      "gold": "orchestrator",
+      "pred": "schedule",
+      "kind": "multi"
+    },
+    {
+      "text": "일정 미뤄진 거 승인하기 전에 견적서도 다시 한번 짚어 주실 수 있나요?",
+      "gold": "orchestrator",
+      "pred": "schedule",
+      "kind": "multi"
+    },
+    {
+      "text": "아이 시험 기간이랑 겹쳐서 공사를 다음달로 옮기고 싶은데 가능할까요",
+      "gold": "schedule",
+      "pred": "out_of_scope",
+      "kind": "change"
+    },
+    {
+      "text": "공사 순서 어떻게 잡혔어?",
+      "gold": "schedule",
+      "pred": "orchestrator",
+      "kind": "view"
+    },
+    {
+      "text": "잔금은 공사 끝나고 어디로 입금하면 되나요",
+      "gold": "out_of_scope",
+      "pred": "orchestrator",
+      "kind": "service"
+    },
+    {
+      "text": "강아지 산책은 하루에 몇 번 시켜야 돼요?",
+      "gold": "out_of_scope",
+      "pred": "orchestrator",
+      "kind": "chitchat"
+    }
+  ],
+  "predictions": [
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.872278574021622,
+      "novice": true,
+      "kind": "greeting"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.8355261257342343,
+      "novice": false,
+      "kind": "price"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.9969510892777219,
+      "novice": false,
+      "kind": "price"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.9376216790758933,
+      "novice": false,
+      "kind": "term"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.9137099181292361,
+      "novice": true,
+      "kind": "guide"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.8410103761248638,
+      "novice": false,
+      "kind": "multi"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "out_of_scope",
+      "confidence": 0.33624162177875905,
+      "novice": true,
+      "kind": "greeting"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.48091835584011033,
+      "novice": false,
+      "kind": "guide"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "out_of_scope",
+      "confidence": 0.6813123712256042,
+      "novice": false,
+      "kind": "greeting"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.8647144326965321,
+      "novice": false,
+      "kind": "term"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.8169851282944202,
+      "novice": false,
+      "kind": "multi"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.9582344758795082,
+      "novice": true,
+      "kind": "price"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.9657518731297526,
+      "novice": false,
+      "kind": "term"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.7694028437224371,
+      "novice": true,
+      "kind": "guide"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.6647332676614737,
+      "novice": false,
+      "kind": "multi"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.5967581750065558,
+      "novice": true,
+      "kind": "multi"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.9057276186421302,
+      "novice": true,
+      "kind": "term"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.41788221485085264,
+      "novice": false,
+      "kind": "price"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.931786300580061,
+      "novice": true,
+      "kind": "multi"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.9888046934980473,
+      "novice": true,
+      "kind": "guide"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.9611662067649146,
+      "novice": true,
+      "kind": "multi"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.983699787635346,
+      "novice": true,
+      "kind": "price"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "quote_explanation",
+      "confidence": 0.5127737851364772,
+      "novice": false,
+      "kind": "multi"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.8752944128188229,
+      "novice": false,
+      "kind": "multi"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.9707633968760719,
+      "novice": false,
+      "kind": "multi"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.9832313671100399,
+      "novice": true,
+      "kind": "multi"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "out_of_scope",
+      "confidence": 0.4255184725138623,
+      "novice": true,
+      "kind": "greeting"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.9815776470352802,
+      "novice": true,
+      "kind": "price"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.8490873372538736,
+      "novice": true,
+      "kind": "price"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "schedule",
+      "confidence": 0.5112166500950638,
+      "novice": false,
+      "kind": "multi"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "schedule",
+      "confidence": 0.9987708711493996,
+      "novice": false,
+      "kind": "multi"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "schedule",
+      "confidence": 0.8493394521640135,
+      "novice": false,
+      "kind": "multi"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.7429462014663782,
+      "novice": false,
+      "kind": "multi"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.8504228556648802,
+      "novice": false,
+      "kind": "multi"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.9602594155230294,
+      "novice": false,
+      "kind": "trade_name"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.9268960149224067,
+      "novice": true,
+      "kind": "trade_name"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.7508795111075504,
+      "novice": true,
+      "kind": "symptom"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.9620431915313586,
+      "novice": false,
+      "kind": "trade_name"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.9598033363904606,
+      "novice": true,
+      "kind": "trade_name"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.9787212842980312,
+      "novice": true,
+      "kind": "trade_name"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.8081751677110743,
+      "novice": true,
+      "kind": "trade_name"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.988890140765209,
+      "novice": false,
+      "kind": "symptom"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.8488822828233855,
+      "novice": false,
+      "kind": "symptom"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.9169494318116552,
+      "novice": false,
+      "kind": "symptom"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.9795201990824457,
+      "novice": true,
+      "kind": "symptom"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.8466769861506663,
+      "novice": false,
+      "kind": "trade_name"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.811756612236118,
+      "novice": false,
+      "kind": "symptom"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.9133259902198918,
+      "novice": true,
+      "kind": "trade_name"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.973628858304952,
+      "novice": false,
+      "kind": "trade_name"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.9875853668405633,
+      "novice": false,
+      "kind": "trade_name"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.9089565372828784,
+      "novice": true,
+      "kind": "symptom"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.8937504207144364,
+      "novice": true,
+      "kind": "symptom"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.8425097576937524,
+      "novice": false,
+      "kind": "trade_name"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.9557104989745151,
+      "novice": true,
+      "kind": "symptom"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.44746176250059805,
+      "novice": true,
+      "kind": "trade_name"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.9202084609664807,
+      "novice": false,
+      "kind": "symptom"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.9568247609192722,
+      "novice": false,
+      "kind": "trade_name"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.9686105606489188,
+      "novice": false,
+      "kind": "trade_name"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.8472201342742839,
+      "novice": true,
+      "kind": "symptom"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.8214995405719916,
+      "novice": false,
+      "kind": "trade_name"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.8122549593108027,
+      "novice": false,
+      "kind": "symptom"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.9312787121377261,
+      "novice": false,
+      "kind": "trade_name"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.9676699091026943,
+      "novice": true,
+      "kind": "symptom"
+    },
+    {
+      "gold": "trade",
+      "pred": "trade",
+      "confidence": 0.962680699753113,
+      "novice": true,
+      "kind": "symptom"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9971051595149973,
+      "novice": false,
+      "kind": "standard_quote"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9391142639975409,
+      "novice": true,
+      "kind": "estimate"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.8550913795217823,
+      "novice": false,
+      "kind": "vendor_quote"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9649299549411963,
+      "novice": false,
+      "kind": "vendor_quote"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9982882546484119,
+      "novice": false,
+      "kind": "standard_quote"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9961726429831578,
+      "novice": false,
+      "kind": "vendor_quote"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9976570920140415,
+      "novice": false,
+      "kind": "compare"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9995291023060273,
+      "novice": false,
+      "kind": "standard_quote"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9896740561768518,
+      "novice": true,
+      "kind": "standard_quote"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9969349233320947,
+      "novice": false,
+      "kind": "standard_quote"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.856160101311794,
+      "novice": false,
+      "kind": "vendor_quote"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9995782730687484,
+      "novice": false,
+      "kind": "compare"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.92291227722628,
+      "novice": true,
+      "kind": "compare"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9954432965178885,
+      "novice": false,
+      "kind": "standard_quote"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.8439878147637921,
+      "novice": true,
+      "kind": "estimate"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9950868285651713,
+      "novice": false,
+      "kind": "vendor_quote"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9936167535524953,
+      "novice": false,
+      "kind": "standard_quote"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.6969049720863262,
+      "novice": true,
+      "kind": "estimate"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9245907226272211,
+      "novice": false,
+      "kind": "standard_quote"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9894246271196492,
+      "novice": true,
+      "kind": "compare"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9245948244409121,
+      "novice": false,
+      "kind": "estimate"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9985430047002442,
+      "novice": true,
+      "kind": "vendor_quote"
+    },
+    {
+      "gold": "quote_explanation",
+      "pred": "quote_explanation",
+      "confidence": 0.9892624771412958,
+      "novice": false,
+      "kind": "estimate"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.9808069361008219,
+      "novice": false,
+      "kind": "view"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.8761708824404922,
+      "novice": false,
+      "kind": "delay"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.8936695533052879,
+      "novice": true,
+      "kind": "change"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.9952794516752785,
+      "novice": false,
+      "kind": "date"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.9977413954201735,
+      "novice": false,
+      "kind": "view"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.9515315719604261,
+      "novice": true,
+      "kind": "change"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.9577664116142077,
+      "novice": false,
+      "kind": "delay"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.9331074196868255,
+      "novice": true,
+      "kind": "delay"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.932125617620364,
+      "novice": false,
+      "kind": "view"
+    },
+    {
+      "gold": "schedule",
+      "pred": "out_of_scope",
+      "confidence": 0.4051302599355397,
+      "novice": false,
+      "kind": "change"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.9885547918534003,
+      "novice": true,
+      "kind": "change"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.9214994487223995,
+      "novice": false,
+      "kind": "view"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.9812608154511622,
+      "novice": false,
+      "kind": "change"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.9149192771972844,
+      "novice": false,
+      "kind": "date"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.6325459386669333,
+      "novice": true,
+      "kind": "delay"
+    },
+    {
+      "gold": "schedule",
+      "pred": "orchestrator",
+      "confidence": 0.6244707989564886,
+      "novice": true,
+      "kind": "view"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.9314732256903782,
+      "novice": true,
+      "kind": "view"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.9743897629067584,
+      "novice": true,
+      "kind": "delay"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.9985005206506365,
+      "novice": true,
+      "kind": "date"
+    },
+    {
+      "gold": "schedule",
+      "pred": "schedule",
+      "confidence": 0.5897115855695595,
+      "novice": true,
+      "kind": "delay"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.9680700542027354,
+      "novice": false,
+      "kind": "service"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.9860976022619945,
+      "novice": false,
+      "kind": "service"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.8922947462862536,
+      "novice": true,
+      "kind": "other_trade"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.8543526938456182,
+      "novice": true,
+      "kind": "chitchat"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.8467192896698184,
+      "novice": true,
+      "kind": "other_trade"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.8953668874830651,
+      "novice": true,
+      "kind": "service"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.9873037538704587,
+      "novice": false,
+      "kind": "other_trade"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.9878832688996629,
+      "novice": false,
+      "kind": "other_trade"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.9668549710922879,
+      "novice": false,
+      "kind": "other_trade"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.9968175191293305,
+      "novice": false,
+      "kind": "other_trade"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.6813575688493894,
+      "novice": true,
+      "kind": "service"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.8986091554717607,
+      "novice": true,
+      "kind": "chitchat"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.8855342007675134,
+      "novice": true,
+      "kind": "service"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "orchestrator",
+      "confidence": 0.8343403748606228,
+      "novice": false,
+      "kind": "service"
+    },
+    {
+      "gold": "orchestrator",
+      "pred": "orchestrator",
+      "confidence": 0.655767628462957,
+      "novice": false,
+      "kind": "service"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.9716160163812184,
+      "novice": false,
+      "kind": "other_trade"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.8741101010092924,
+      "novice": true,
+      "kind": "other_trade"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.5237253084422475,
+      "novice": true,
+      "kind": "chitchat"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.5407718174816913,
+      "novice": true,
+      "kind": "chitchat"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.9735604352469109,
+      "novice": true,
+      "kind": "other_trade"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.5631655326876527,
+      "novice": false,
+      "kind": "service"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.9676809851360303,
+      "novice": false,
+      "kind": "other_trade"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.9617816663294367,
+      "novice": false,
+      "kind": "other_trade"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "orchestrator",
+      "confidence": 0.6899729178051333,
+      "novice": false,
+      "kind": "chitchat"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.9871392749424946,
+      "novice": true,
+      "kind": "other_trade"
+    },
+    {
+      "gold": "out_of_scope",
+      "pred": "out_of_scope",
+      "confidence": 0.8177281627336049,
+      "novice": false,
+      "kind": "other_trade"
+    }
+  ]
+}

@@ -1,0 +1,210 @@
+{
+ "corpus": "13_interior_guide_book_rag@0287c91fe04d+consult_knowledge_rag@b91e7e48a53c+v3_knowledge_rag@0a83514a1704+team657",
+ "cards": "cards@6740880a5ef2",
+ "splits": {
+  "dev": {
+   "rag": {
+    "서버 키워드(지금 무료 모드)": {
+     "n": 206,
+     "hit@1": 0.286,
+     "hit@5": 0.626,
+     "hit5_ci95": [
+      0.558,
+      0.689
+     ],
+     "mrr": 0.588
+    },
+    "v3 12공종 무게(search3)": {
+     "n": 206,
+     "hit@1": 0.282,
+     "hit@5": 0.607,
+     "hit5_ci95": [
+      0.539,
+      0.671
+     ],
+     "mrr": 0.574
+    },
+    "v3 + 카드 열쇠 색인": {
+     "n": 206,
+     "hit@1": 0.286,
+     "hit@5": 0.65,
+     "hit5_ci95": [
+      0.583,
+      0.712
+     ],
+     "mrr": 0.592
+    }
+   },
+   "bank_10trades_proxy": {
+    "서버 키워드(지금 무료 모드)": {
+     "n": 267,
+     "trade_match@5": 0.839,
+     "ci95": [
+      0.79,
+      0.878
+     ],
+     "by_trade": {
+      "bath": 18,
+      "demolition": 17,
+      "dobae": 20,
+      "electric": 20,
+      "film": 11,
+      "floor": 16,
+      "kitchen": 22,
+      "mokgong": 18,
+      "paint": 25,
+      "plumbing": 22,
+      "tile": 21,
+      "window": 14
+     }
+    },
+    "v3 12공종 무게(search3)": {
+     "n": 267,
+     "trade_match@5": 0.884,
+     "ci95": [
+      0.84,
+      0.917
+     ],
+     "by_trade": {
+      "bath": 21,
+      "demolition": 18,
+      "dobae": 20,
+      "electric": 20,
+      "film": 12,
+      "floor": 18,
+      "kitchen": 25,
+      "mokgong": 16,
+      "paint": 25,
+      "plumbing": 23,
+      "tile": 24,
+      "window": 14
+     }
+    },
+    "v3 + 카드 열쇠 색인": {
+     "n": 267,
+     "trade_match@5": 0.925,
+     "ci95": [
+      0.887,
+      0.951
+     ],
+     "by_trade": {
+      "bath": 21,
+      "demolition": 20,
+      "dobae": 21,
+      "electric": 20,
+      "film": 16,
+      "floor": 19,
+      "kitchen": 25,
+      "mokgong": 19,
+      "paint": 24,
+      "plumbing": 22,
+      "tile": 27,
+      "window": 13
+     }
+    }
+   }
+  },
+  "heldout": {
+   "rag": {
+    "서버 키워드(지금 무료 모드)": {
+     "n": 99,
+     "hit@1": 0.394,
+     "hit@5": 0.697,
+     "hit5_ci95": [
+      0.6,
+      0.779
+     ],
+     "mrr": 0.608
+    },
+    "v3 12공종 무게(search3)": {
+     "n": 99,
+     "hit@1": 0.384,
+     "hit@5": 0.677,
+     "hit5_ci95": [
+      0.58,
+      0.761
+     ],
+     "mrr": 0.594
+    },
+    "v3 + 카드 열쇠 색인": {
+     "n": 99,
+     "hit@1": 0.263,
+     "hit@5": 0.667,
+     "hit5_ci95": [
+      0.569,
+      0.752
+     ],
+     "mrr": 0.554
+    }
+   },
+   "bank_10trades_proxy": {
+    "서버 키워드(지금 무료 모드)": {
+     "n": 124,
+     "trade_match@5": 0.79,
+     "ci95": [
+      0.71,
+      0.853
+     ],
+     "by_trade": {
+      "bath": 10,
+      "demolition": 4,
+      "dobae": 10,
+      "electric": 9,
+      "film": 7,
+      "floor": 11,
+      "kitchen": 6,
+      "mokgong": 12,
+      "paint": 4,
+      "plumbing": 7,
+      "tile": 3,
+      "window": 15
+     }
+    },
+    "v3 12공종 무게(search3)": {
+     "n": 124,
+     "trade_match@5": 0.855,
+     "ci95": [
+      0.782,
+      0.906
+     ],
+     "by_trade": {
+      "bath": 11,
+      "demolition": 5,
+      "dobae": 9,
+      "electric": 11,
+      "film": 7,
+      "floor": 12,
+      "kitchen": 6,
+      "mokgong": 11,
+      "paint": 5,
+      "plumbing": 9,
+      "tile": 4,
+      "window": 16
+     }
+    },
+    "v3 + 카드 열쇠 색인": {
+     "n": 124,
+     "trade_match@5": 0.919,
+     "ci95": [
+      0.858,
+      0.956
+     ],
+     "by_trade": {
+      "bath": 10,
+      "demolition": 6,
+      "dobae": 9,
+      "electric": 11,
+      "film": 12,
+      "floor": 14,
+      "kitchen": 6,
+      "mokgong": 11,
+      "paint": 6,
+      "plumbing": 9,
+      "tile": 4,
+      "window": 16
+     }
+    }
+   }
+  }
+ }
+}

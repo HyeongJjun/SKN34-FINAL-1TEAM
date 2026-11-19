@@ -17,6 +17,7 @@ from app.vendor import service
 from app.vendor.deps import approved_vendor
 from app.vendor.schemas import (
     ApplicationOut,
+    ConfirmPricesIn,
     PortfolioIn,
     PortfolioOut,
     PriceFileIn,
@@ -28,6 +29,8 @@ from app.vendor.schemas import (
     ReapplyIn,
     ResubmitIn,
     ReviewIn,
+    ReviewLinkOut,
+    ReviewLinksIn,
     ReviewSummaryOut,
     VendorAdminDetailOut,
     VendorAdminOut,
@@ -153,7 +156,7 @@ async def resubmit(
 @router.post(
     "/vendor/application/reapply",
     response_model=ApplicationOut,
-    summary="거절 뒤 다시 신청 (같은 계정 · 같은 사업자등록번호)",
+    summary="거절 뒤 다시 신청 (같은 계정, 사업자등록번호도 고칠 수 있음 · 다른 업체 번호면 409)",
 )
 async def reapply(
     data: ReapplyIn,
@@ -240,13 +243,18 @@ async def save_prices(
 @router.post(
     "/vendor/prices/{trade}/confirm",
     response_model=PricesOut,
-    summary="가견적 단가 확인했어요 (고치는 중 → 고객 가견적에 씀, 예전 묶음은 보관)",
+    summary="가견적 단가 확인했어요 (몸통 없으면 고치는 중 → 확인, 몸통 있으면 v3 '확인하고 저장')",
 )
 async def confirm_prices(
     trade: TradeParam,
+    data: ConfirmPricesIn | None = None,
     vendor: User = Depends(approved_vendor),
     s: AsyncSession = Depends(get_session),
 ) -> PricesOut:
+    """v3: 몸통(본 판 + 줄 1201~1208)이면 '확인하고 저장' 한 번(D02, 본 판이 아니면 409 stale).
+    몸통이 없으면 지금 길(고치는 중인 묶음을 확인)."""
+    if data is not None:
+        return await service.confirm_prices_v3(s, vendor, trade, data)
     return await service.confirm_prices(s, vendor, trade)
 
 
@@ -272,3 +280,31 @@ async def remove_price_file(
 ) -> Response:
     await service.remove_price_file(s, vendor, file_id)
     return Response(status_code=204)
+
+
+# ---- v3: 외부 리뷰 링크 (V18 · A01). 관리자 링크 확인은 아직 0단계 뼈대 ----
+# 업체 멈춤 · 풀기(POST /admin/vendors/{vendor_id}/suspend · /unsuspend)는 report/router.py가 맡는다(D26)
+
+
+@router.get(
+    "/vendor/review-links",
+    response_model=list[ReviewLinkOut],
+    summary="내 외부 리뷰 링크 (3개까지, 상태 포함)",
+)
+async def review_links(
+    vendor: User = Depends(approved_vendor), s: AsyncSession = Depends(get_session)
+) -> list[ReviewLinkOut]:
+    return await service.review_links(s, vendor)
+
+
+@router.put(
+    "/vendor/review-links",
+    response_model=list[ReviewLinkOut],
+    summary="외부 리뷰 링크 통째로 저장 (https만 · 3개까지, 바뀐 링크는 확인 중)",
+)
+async def save_review_links(
+    data: ReviewLinksIn,
+    vendor: User = Depends(approved_vendor),
+    s: AsyncSession = Depends(get_session),
+) -> list[ReviewLinkOut]:
+    return await service.save_review_links(s, vendor, data)

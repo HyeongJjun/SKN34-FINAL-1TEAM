@@ -1,0 +1,27 @@
+/* 폰: 화면 아래에 붙는 띠. position: sticky라 자기 자리를 차지해서 본문을 가리지 않아요(빈칸 계산 없음).
+   그래서 Main 바깥, Main 바로 뒤(<body> 바로 아래)에 둬요. */
+.bar {
+  position: sticky; bottom: 0; z-index: var(--mj-z-header);
+  background: var(--mj-surface); box-shadow: var(--mj-edge-top);
+  padding: 10px max(12px, env(safe-area-inset-right, 0px)) max(14px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+}
+.in { display: flex; flex-direction: column; gap: 8px; }
+.btns { display: flex; gap: 8px; }
+.btns > * { flex: 1 1 0; min-width: 0; }
+/* 1:1 두 단추에서 긴 이름은 자르지 않고 두 줄로(누를 단추의 이름이 가려지면 안 돼요) */
+.btns > :is(a, button) { white-space: normal; text-wrap: balance; line-height: 1.25; padding-top: 6px; padding-bottom: 6px; }
+.btns > :is(a, button) > span { overflow: visible; text-overflow: clip; }
+.note { font-size: var(--mj-type-caption); color: var(--mj-text-sub); text-align: center; }
+.sum { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 0 4px; }
+.sum span { font-size: var(--mj-type-caption); color: var(--mj-text-sub); }
+.sum b { font-size: var(--mj-type-title-s); font-weight: var(--mj-weight-bold); }
+
+/* 웹: 본문 끝 오른쪽 정렬 */
+@media (min-width: 768px) {
+  .bar { position: static; width: 100%; max-width: calc(var(--mj-content-max) + 2 * var(--mj-gutter)); margin: 0 auto; padding: 4px var(--mj-gutter) 32px; background: none; box-shadow: none; z-index: auto; }
+  .in { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px 12px; }
+  .note, .sum { flex: 1 1 220px; text-align: left; padding: 0; }
+  .sum { justify-content: flex-start; gap: 12px; }
+  .btns { flex: 0 0 auto; gap: 10px; }
+  .btns > * { flex: 0 0 auto; min-width: var(--mj-btn-min-w-web); }
+}

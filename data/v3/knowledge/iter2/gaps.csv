@@ -1,0 +1,27 @@
+﻿id,trade,kind,name,gap_qids,dev_same_type
+G01,common,계약 · 분쟁,업체 등록 · 자격 확인,xd046;c16,3
+G02,common,계약 · 분쟁,계약서에 적을 것(착공 · 준공 · 지체),xc055,12
+G03,common,계약 · 분쟁,견적만 받고 계약 안 하기 · 계약 취소,xc041,2
+G04,common,계약 · 분쟁,피해 구제 · 분쟁 조정 창구,c20,4
+G05,common,하자 · 원인,공사 뒤 하자 보수 기간,qv3-common-009,9
+G06,common,계약 · 분쟁,하자보수 보증 · 보증보험,xd067,2
+G07,common,가격,부가세 · 영수증,xc010,7
+G08,dobae,하자 · 원인,고객이 산 자재의 하자 책임,xd102,1
+G09,common,하자 · 원인,신축 입주 전 하자 · 사전방문,xd095,4
+G10,dobae,하자 · 원인,도배 하자 보수 뒤 재발 막기,qv3-dobae-020,14
+G11,dobae,해도 되나 · 판단,페인트 · 타일 · 시트 위 도배(바탕),xd009,4
+G12,dobae,가격,도배 인건비 · 품 계산,xd107,3
+G13,mokgong,해도 되나 · 판단,커튼박스 · 천장 매립 목공,xm021,13
+G14,mokgong,해도 되나 · 판단,붙박이장 · 가벽 · 문 위치,qv3-mokgong-010,3
+G15,common,순서,반셀프 공정 잇기 · 공정 순서,xc099,19
+G16,demolition,해도 되나 · 판단,석면 자재 철거,qv3-demolition-017,4
+G17,demolition,해도 되나 · 판단,오래된 아파트 욕실 전체 철거,qv3-demolition-021,11
+G18,plumbing,하자 · 원인,보일러 · 난방 배관 누수와 수리 책임,qv3-plumbing-004,29
+G19,plumbing,하자 · 원인,보일러 고장 증상 · 점검,qv3-plumbing-003,11
+G20,floor,관리사무소 · 이웃,층간소음 줄이기(매트 · 바닥),qv3-floor-010,4
+G21,film,기간,필름 수명 · 교체 주기,qv3-film-008,2
+G22,film,하자 · 원인,필름 들뜸 · 주름 · 이음부 보수,qv3-film-010,2
+G23,film,순서,필름과 주변 마감(벽지) 순서,qv3-film-003,2
+G24,paint,자재,페인트 고르기(수성 · 유성 · 문틀),qv3-paint-020,3
+G25,kitchen,해도 되나 · 판단,주방 기기 더하기(식기세척기 · 전기 · 급배수),qv3-kitchen-004,6
+G26,kitchen,기간,싱크대 교체 날 주방 쓰기 · 실리콘 굳는 시간,qv3-kitchen-036,3

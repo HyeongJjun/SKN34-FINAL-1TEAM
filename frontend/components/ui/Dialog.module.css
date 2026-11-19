@@ -1,0 +1,34 @@
+/* 가운데 창(W2 A) · 아래 시트의 웹 모양도 이 틀을 따라요 */
+.dlg {
+  width: min(var(--mj-dialog-w), calc(100% - 2 * var(--mj-gutter)));
+  max-width: none; max-height: calc(100dvh - 48px);
+  margin: auto; padding: 0; border: 0;
+  border-radius: var(--mj-radius-sheet);
+  background: var(--mj-surface); color: var(--mj-text);
+  box-shadow: var(--mj-shadow-overlay);
+  overflow: auto; overscroll-behavior: contain;
+}
+.dlg.wide { width: min(560px, calc(100% - 2 * var(--mj-gutter))); }
+.dlg::backdrop { background: var(--mj-scrim); }
+.dlg[open] { animation: pop var(--mj-dur) var(--mj-ease-out); }
+.dlg[open]::backdrop { animation: fade var(--mj-dur) var(--mj-ease-out); }
+@keyframes pop { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+.card { display: flex; flex-direction: column; gap: 12px; padding: 24px 20px 16px; }
+.head { display: flex; align-items: flex-start; gap: 8px; }
+.title { flex: 1 1 auto; min-width: 0; font-size: var(--mj-type-title-s); font-weight: var(--mj-weight-bold); line-height: var(--mj-lh-title); letter-spacing: var(--mj-track-title); }
+.body { display: flex; flex-direction: column; gap: 10px; font-size: var(--mj-type-body); color: var(--mj-text); }
+.actions { display: flex; gap: 8px; padding-top: 4px; }
+.actions > * { flex: 1 1 0; min-width: 0; }
+/* 폰은 ×를 숨기고 아래 [닫기] 단추로 닫아요(9판 C34 · C61) */
+.x { display: none; flex: none; width: var(--mj-hit); height: var(--mj-hit); margin: -10px -8px 0 0; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--mj-text-sub); cursor: pointer; place-items: center; }
+.x:hover { background: var(--mj-fill); color: var(--mj-text); }
+.x:focus-visible { border-radius: 50%; }
+
+@media (min-width: 768px) {
+  .card { padding: 22px 24px 20px; }
+  .x { display: inline-grid; }
+  .actions { justify-content: flex-end; }
+  .actions > * { flex: 0 0 auto; min-width: 120px; }
+}

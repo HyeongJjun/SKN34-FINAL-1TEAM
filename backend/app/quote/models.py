@@ -5,6 +5,7 @@ from decimal import Decimal
 from sqlalchemy import (
     ARRAY,
     BigInteger,
+    Boolean,
     CheckConstraint,
     Date,
     DateTime,
@@ -34,6 +35,14 @@ class StandardQuote(Base):
         CheckConstraint("trade in ('dobae', 'mokgong')", name="trade"),
         CheckConstraint("version >= 1", name="version"),
         CheckConstraint("supply >= 0 and vat >= 0 and total = supply + vat", name="money"),
+        CheckConstraint("scope in ('full', 'partial')", name="scope"),
+        CheckConstraint(
+            "faces <@ array['wall', 'ceiling']::varchar[] and cardinality(faces) between 1 and 2",
+            name="faces",
+        ),
+        # 부분 공사만 공간 몫 표 판이 있다
+        CheckConstraint("(scope = 'partial') = (share_ver is not null)", name="share_ver"),
+        CheckConstraint("market_ver is null or length(btrim(market_ver)) > 0", name="market_ver"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid7)
@@ -56,6 +65,19 @@ class StandardQuote(Base):
     crew: Mapped[int] = mapped_column(SmallInteger)
     notes: Mapped[list[str]] = mapped_column(ARRAY(String(200)), default=list, server_default="{}")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # v3 (0024): 만든 때의 공사 범위 · 면 · 고른 공간 kind 사본 · 공간 몫 표 판(부분일 때만)
+    scope: Mapped[str] = mapped_column(String(8), default="full", server_default="full")
+    faces: Mapped[list[str]] = mapped_column(
+        ARRAY(String(8)),
+        default=lambda: ["wall", "ceiling"],
+        server_default=text("'{wall,ceiling}'"),
+    )
+    space_keys: Mapped[list[str]] = mapped_column(
+        ARRAY(String(12)), default=list, server_default="{}"
+    )
+    share_ver: Mapped[str | None] = mapped_column(String(20))
+    # v3 (0033): 벽지 시장 평균 가격 판(paper-market-2026.11). price_ver(공공 단가 판)와 따로 고정한다
+    market_ver: Mapped[str | None] = mapped_column(String(40))
 
 
 class StandardQuoteLine(Base):
@@ -67,7 +89,7 @@ class StandardQuoteLine(Base):
             "state in ('included', 'bundled', 'separate', 'optional', 'after_visit', 'excluded')",
             name="state",
         ),
-        CheckConstraint("basis in ('public', 'assumed', 'none')", name="basis"),
+        CheckConstraint("basis in ('public', 'market', 'assumed', 'none')", name="basis"),
     )
 
     quote_id: Mapped[uuid.UUID] = mapped_column(
@@ -125,6 +147,8 @@ class VendorQuote(Base):
         CheckConstraint("days between 1 and 120", name="days"),
         CheckConstraint("valid_until >= measured_on", name="valid_until"),
         CheckConstraint(f"sent_at is null or ({_SENT_FIELDS})", name="sent_fields"),
+        CheckConstraint("paper_spec is null or length(btrim(paper_spec)) > 0", name="paper_spec"),
+        CheckConstraint("warranty_months between 0 and 120", name="warranty_months"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid7)
@@ -145,6 +169,11 @@ class VendorQuote(Base):
     valid_until: Mapped[date | None] = mapped_column(Date)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # v3 (0025, D21) '포함됐나요?' 칩 4칸: 기존 벽지 철거 · 폐기물 처리 · 벽지 제조사 · 규격 · 하자 보수 기간
+    incl_removal: Mapped[bool | None] = mapped_column(Boolean)
+    incl_waste: Mapped[bool | None] = mapped_column(Boolean)
+    paper_spec: Mapped[str | None] = mapped_column(String(60))  # LX 베스띠 · 폭 106cm
+    warranty_months: Mapped[int | None] = mapped_column(SmallInteger)
 
 
 class VendorQuoteFile(Base):

@@ -1,0 +1,28 @@
+.wrap { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.zone {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  min-height: 88px; padding: 14px 16px; border: 1.5px dashed var(--mj-line-control); border-radius: 14px;
+  background: var(--mj-surface-sub); color: var(--mj-text-sub); text-align: center; cursor: pointer;
+  transition: background-color var(--mj-dur-fast) var(--mj-ease-out), border-color var(--mj-dur-fast) var(--mj-ease-out);
+}
+.zone:hover { border-color: var(--mj-primary); }
+.zone:has(.input:focus-visible) { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: 2px; }
+.zone b { font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); line-height: 1.4; text-wrap: balance; color: var(--mj-text-sub); }
+.ic { color: var(--mj-primary); }
+.input { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
+.over { border-color: var(--mj-primary); border-style: solid; background: var(--mj-primary-weak); }
+.over b { color: var(--mj-on-primary-weak); }
+.bad { border-color: var(--mj-danger); }
+.off { cursor: not-allowed; color: var(--mj-text-disabled); }
+.types { font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+.pickBtn { display: inline-flex; align-items: center; min-height: var(--mj-btn-h-sm); margin-top: 2px; padding: 0 14px; border-radius: var(--mj-radius-btn); background: var(--mj-fill); color: var(--mj-text-sub); font-size: var(--mj-type-label); font-weight: var(--mj-weight-bold); }
+.zone:hover .pickBtn { background: var(--mj-fill-strong); color: var(--mj-text); }
+.error { display: flex; align-items: flex-start; gap: 4px; font-size: var(--mj-type-label); font-weight: 500; color: var(--mj-danger); }
+.error svg { flex: none; margin-top: 2px; }
+
+/* 손가락 기기는 눌러서 고르기만, 마우스는 끌어다 놓기 + 파일 고르기 */
+.coarse { display: none; }
+@media (pointer: coarse) {
+  .coarse { display: inline; }
+  .fine { display: none; }
+}

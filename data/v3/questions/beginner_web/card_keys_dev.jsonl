@@ -1,0 +1,152 @@
+{"qid": "qv3b-bath-001", "card_id": null, "why": "실리콘 굳는 시간 · 그동안 변기 · 세면대 쓰기를 다룬 카드가 없음"}
+{"qid": "qv3b-bath-002", "card_id": "bath.prep.decide-first", "why": "욕조를 뺄 때 정할 바닥 높이 · 단차 등 확인할 점을 답함"}
+{"qid": "qv3b-common-001", "card_id": "common.vendor.how-to-choose", "why": "업체 고르는 기준(자재 · 기간 · 후기 · 사업자 정보)에 직접 답함"}
+{"qid": "qv3b-common-002", "card_id": null, "why": "동네 업체여야 하는지(거리 · A/S)를 다룬 카드가 없음"}
+{"qid": "qv3b-common-004", "card_id": "common.contract.detailed-estimate", "why": "자재명 · 단가 · 수량을 나눈 상세 내역서를 받으라고 답함"}
+{"qid": "qv3b-common-005", "card_id": null, "why": "작은 공사를 업체가 맡아 주는지 다룬 카드가 없음"}
+{"qid": "qv3b-common-007", "card_id": null, "why": "중개 앱 수수료와 가격 차이를 다룬 카드가 없음"}
+{"qid": "qv3b-common-008", "card_id": null, "why": "여러 공정을 합친 예산 적정성은 카드로 답할 수 없음"}
+{"qid": "qv3b-common-010", "card_id": "common.contract.vendor-no-start", "why": "업체 사정 해제 때 선급금 반환 · 10% 배상 기준을 답함"}
+{"qid": "qv3b-common-011", "card_id": null, "why": "계약 전 바뀐 내용으로 다시 견적 받기를 다룬 카드가 없음"}
+{"qid": "qv3b-common-013", "card_id": "dobae.office.consent", "why": "벽지 · 바닥재 교체도 관리사무소 동의가 필요하다고 답함"}
+{"qid": "qv3b-common-014", "card_id": "common.vendor.license-check", "why": "정한 금액 넘는 공사는 등록 업체만, 확인 방법을 답함"}
+{"qid": "qv3b-common-016", "card_id": null, "why": "여러 공정을 합친 공사 기간을 답하는 카드가 없음"}
+{"qid": "qv3b-common-017", "card_id": null, "why": "가구 배치 · 소품 고르기는 믿집 범위 밖"}
+{"qid": "qv3b-common-019", "card_id": null, "why": "소파 고르기는 범위 밖(반려동물 벽지 카드와 다름)"}
+{"qid": "qv3b-common-020", "card_id": null, "why": "업체 이윤을 얼마 붙이는지 다룬 카드가 없음"}
+{"qid": "qv3b-common-022", "card_id": null, "why": "전체 공사냐 도배 장판만이냐는 카드로 답할 수 없음"}
+{"qid": "qv3b-common-023", "card_id": null, "why": "구축 아파트 최소 수리 목록을 다룬 카드가 없음"}
+{"qid": "qv3b-common-025", "card_id": "common.contract.payment-split", "why": "계약금 · 중도금 · 잔금 나눠 내는 법에 직접 답함"}
+{"qid": "qv3b-common-026", "card_id": "common.contract.payment-split", "why": "대금은 완성 때 주는 게 기본이라 선금 과다 판단에 답함"}
+{"qid": "qv3b-common-028", "card_id": "common.contract.estimate-only", "why": "견적만 받고 계약하지 않아도 된다고 직접 답함"}
+{"qid": "qv3b-common-029", "card_id": null, "why": "부모님 집 수리 때 주의점을 다룬 카드가 없음"}
+{"qid": "qv3b-common-031", "card_id": "common.order.first-steps", "why": "처음 고칠 때 시작 순서(일정 · 견적 · 계약 · 신고)를 답함"}
+{"qid": "qv3b-common-032", "card_id": null, "why": "분양 옵션 고르기는 믿집 범위 밖"}
+{"qid": "qv3b-common-034", "card_id": null, "why": "살면서 여러 공정이 가능한지 직접 답하는 카드가 없음"}
+{"qid": "qv3b-common-035", "card_id": "floor.period.jangpan-replace", "why": "살면서 하면 면적 · 짐에 따라 기간이 달라진다고 답함(장판만)"}
+{"qid": "qv3b-common-037", "card_id": null, "why": "전세 놓기 전 손볼 곳을 다룬 카드가 없음"}
+{"qid": "qv3b-common-038", "card_id": "common.price.compare-estimates", "why": "견적 비교 때 자재 · 수량 · 조건을 맞춰 보라고 답함"}
+{"qid": "qv3b-common-040", "card_id": null, "why": "동의서를 누가 받는지 다룬 카드가 없음(세대 수만 있음)"}
+{"qid": "qv3b-common-041", "card_id": null, "why": "엘리베이터 사용료를 다룬 카드가 없음"}
+{"qid": "qv3b-common-043", "card_id": null, "why": "이웃이 복도에서 작업해도 되는지 답하는 카드가 없음"}
+{"qid": "qv3b-common-044", "card_id": null, "why": "에어컨 청소 업체 고르기는 믿집 범위 밖"}
+{"qid": "qv3b-common-046", "card_id": null, "why": "매매 잔금 전 빈집 실측 허락은 범위 밖"}
+{"qid": "qv3b-common-047", "card_id": "plumbing.contract.liability-insurance", "why": "누수 피해 일상배상책임보험 처리에 직접 답함(라벨은 범위 밖)"}
+{"qid": "qv3b-common-049", "card_id": "demolition.contract.restore", "why": "세입자가 고친 부분의 원상회복과 범위 합의를 답함"}
+{"qid": "qv3b-common-050", "card_id": "mokgong.price.quote-units", "why": "견적 단위 중 1식이 한 덩어리 값이라는 뜻을 답함"}
+{"qid": "qv3b-common-052", "card_id": "common.vendor.how-to-choose", "why": "상담 때 볼 자재 · 기간 · 사업자 정보 · 하자보수를 답함"}
+{"qid": "qv3b-common-053", "card_id": "common.price.read-estimate", "why": "견적서에 꼭 들어갈 항목에 직접 답함"}
+{"qid": "qv3b-common-055", "card_id": "common.order.first-steps", "why": "시작 전에 먼저 할 일(일정 · 견적 · 계약 · 신고)을 답함"}
+{"qid": "qv3b-common-056", "card_id": "dobae.prep.old-apartment", "why": "오래된 아파트의 수평 · 벽 · 설비 주의점을 답함"}
+{"qid": "qv3b-common-058", "card_id": "common.contract.cancel-penalty", "why": "취소 때 위약금 · 환불 기준에 직접 답함"}
+{"qid": "qv3b-common-059", "card_id": "common.defect.dispute-committee-scope", "why": "새 아파트 하자 분쟁은 하자심사분쟁조정위원회라고 답함"}
+{"qid": "qv3b-common-061", "card_id": null, "why": "TV · 프로젝터 고르기는 믿집 범위 밖"}
+{"qid": "qv3b-dobae-001", "card_id": null, "why": "천장 벽지를 고객이 고를 수 있는지 다룬 카드가 없음"}
+{"qid": "qv3b-dobae-003", "card_id": "dobae.order.floor", "why": "장판은 도배 뒤, 마루는 도배 전이라고 직접 답함"}
+{"qid": "qv3b-dobae-004", "card_id": "dobae.period.how-long", "why": "도배 기간은 면적 · 바탕에 따라 정해진다고 답함"}
+{"qid": "qv3b-dobae-006", "card_id": "dobae.prep.after-dry", "why": "도배 직후엔 바람 · 환기를 피해 말리라고 답함(청소 시점 판단)"}
+{"qid": "qv3b-dobae-007", "card_id": "dobae.defect.bubble-wavy", "why": "벽지 울퉁불퉁함이 정상인지 · 언제 보수 요청할지 답함"}
+{"qid": "qv3b-dobae-009", "card_id": "dobae.price.whole-house", "why": "도배비는 바를 면 · 벽지 종류로 정해진다고 답함"}
+{"qid": "qv3b-dobae-010", "card_id": "film.method.wall-film", "why": "벽 필름의 바탕 작업 · 어려움을 알려 고르는 기준이 됨"}
+{"qid": "qv3b-dobae-012", "card_id": "dobae.material.color-pattern", "why": "흰색 · 회색 계열이 무난, 밝은 단색이 넓어 보인다고 답함"}
+{"qid": "qv3b-dobae-013", "card_id": "dobae.order.furniture", "why": "붙박이장은 도배 뒤 충분히 말린 다음 넣는다고 답함"}
+{"qid": "qv3b-dobae-015", "card_id": "dobae.period.how-long", "why": "도배 기간을 좌우하는 면적 · 바탕 · 건조를 답함"}
+{"qid": "qv3b-dobae-016", "card_id": "dobae.defect.mold-vendor-scope", "why": "곰팡이 처리 비용 포함 여부 · 원인 먼저를 답함"}
+{"qid": "qv3b-dobae-018", "card_id": null, "why": "담배 냄새 빼기를 다룬 카드가 없음"}
+{"qid": "qv3b-dobae-019", "card_id": null, "why": "벽지 교체 시기 · 수명을 다룬 카드가 없음"}
+{"qid": "qv3b-dobae-021", "card_id": "plumbing.defect.leak-record", "why": "누수는 관리사무소 · 관련 세대에 알리라고 직접 답함"}
+{"qid": "qv3b-dobae-022", "card_id": null, "why": "전세 도배에서 천장이 빠지는 관행을 다룬 카드가 없음"}
+{"qid": "qv3b-dobae-024", "card_id": null, "why": "집 팔 때 도배해 주는 관행은 범위 밖"}
+{"qid": "qv3b-dobae-025", "card_id": "common.service.visit-fee", "why": "실측 비용은 업체마다 다르고 목록에 보인다고 답함"}
+{"qid": "qv3b-dobae-027", "card_id": null, "why": "입주 전 집주인에게 도배를 요구하는 일을 다룬 카드가 없음"}
+{"qid": "qv3b-dobae-028", "card_id": null, "why": "단종 벽지를 구하는 방법을 직접 답하는 카드가 없음"}
+{"qid": "qv3b-dobae-030", "card_id": "dobae.defect.bubble-wavy", "why": "마른 뒤에도 울퉁불퉁하면 보수를 요청하라고 답함"}
+{"qid": "qv3b-dobae-031", "card_id": "dobae.material.cleaning", "why": "스위치 둘레 손때 닦는 법에 직접 답함"}
+{"qid": "qv3b-dobae-033", "card_id": "dobae.defect.partial-repair", "why": "남은 벽지는 부분 보수용으로 보관하라고 답함"}
+{"qid": "qv3b-dobae-034", "card_id": null, "why": "비염과 실크 · 합지 비교를 다룬 카드가 없음"}
+{"qid": "qv3b-dobae-036", "card_id": "dobae.defect.seam-gap", "why": "들뜬 곳에 물기를 주고 풀칠해 다시 붙이는 법을 답함"}
+{"qid": "qv3b-dobae-037", "card_id": "dobae.method.overlay-or-strip", "why": "합지 위 덧방은 되고 코팅 벽지는 뜯어야 한다고 답함"}
+{"qid": "qv3b-dobae-039", "card_id": "dobae.material.silk-vs-hapji", "why": "실크와 합지의 차이 · 값 · 내구성에 직접 답함"}
+{"qid": "qv3b-dobae-040", "card_id": "dobae.defect.material-vs-install", "why": "벽지 변색이 제품 탓인지 시공 탓인지 가르는 법을 답함"}
+{"qid": "qv3b-dobae-042", "card_id": null, "why": "실크 벽지에 그림 거는 법을 다룬 카드가 없음"}
+{"qid": "qv3b-dobae-043", "card_id": "dobae.method.overlay-or-strip", "why": "실크 같은 코팅 벽지 위엔 덧바르지 말라고 답함"}
+{"qid": "qv3b-dobae-045", "card_id": null, "why": "전체 철거 때 어디까지 뜯는지 직접 답하는 카드가 없음"}
+{"qid": "qv3b-dobae-046", "card_id": "dobae.period.how-long", "why": "도배 시간은 면적 · 바탕에 따라 달라진다고 답함"}
+{"qid": "qv3b-dobae-048", "card_id": null, "why": "울퉁불퉁한 벽에 합지를 권하는 이유를 답하는 카드가 없음"}
+{"qid": "qv3b-dobae-049", "card_id": null, "why": "방염 벽지 값을 다룬 카드가 없음"}
+{"qid": "qv3b-dobae-051", "card_id": null, "why": "스티커 단열 벽지의 단점을 다룬 카드가 없음"}
+{"qid": "qv3b-dobae-052", "card_id": "dobae.diy.paste", "why": "풀칠 뒤 붙이는 시간(실크 10분 · 합지 10~20분)을 답함"}
+{"qid": "qv3b-dobae-054", "card_id": "dobae.diy.start", "why": "셀프 도배 자재 고르기 · 초배 · 벽 손질 준비를 답함"}
+{"qid": "qv3b-dobae-055", "card_id": null, "why": "도배 다음 날 이음매 얼룩의 원인을 다룬 카드가 없음"}
+{"qid": "qv3b-dobae-057", "card_id": null, "why": "작은 도배를 맡을 사람 찾는 곳을 다룬 카드가 없음"}
+{"qid": "qv3b-dobae-058", "card_id": "plumbing.defect.leak-check", "why": "벽지 변색 · 들뜸으로 누수를 확인하는 법을 답함"}
+{"qid": "qv3b-dobae-060", "card_id": "common.contract.no-written", "why": "작은 공사도 계약서를 꼭 쓰라고 직접 답함"}
+{"qid": "qv3b-dobae-061", "card_id": "common.price.read-estimate", "why": "견적서에서 볼 항목(세부 작업 · 수량 · 자재)을 답함"}
+{"qid": "qv3b-dobae-063", "card_id": "dobae.term.chobae", "why": "초배(밑도배)가 왜 필요한지 직접 답함"}
+{"qid": "qv3b-dobae-064", "card_id": "dobae.method.overlay-or-strip", "why": "뜯어야 할 벽지를 남기고 바르면 들뜬다고 답함"}
+{"qid": "qv3b-dobae-066", "card_id": "mokgong.prep.decide-before-mokgong", "why": "에어컨 자리 · 배관은 마감 전에 정하라고 답함"}
+{"qid": "qv3b-dobae-067", "card_id": "plumbing.contract.upstairs-leak-claim", "why": "부분 도배 색 차이 배상 사례로 보수 범위를 답함"}
+{"qid": "qv3b-dobae-069", "card_id": "plumbing.defect.leak-record", "why": "누수면 전기 차단 · 기록 · 원인 진단이 먼저라고 답함"}
+{"qid": "qv3b-dobae-070", "card_id": "dobae.material.silk-vs-hapji", "why": "실크는 종이에 PVC 코팅을 입힌 벽지라고 직접 답함"}
+{"qid": "qv3b-dobae-072", "card_id": "dobae.price.whole-house", "why": "도배비는 평수가 아니라 벽 면적 · 벽지로 정한다고 답함"}
+{"qid": "qv3b-dobae-073", "card_id": "dobae.price.whole-house", "why": "평수만으론 안 되고 벽 길이 · 벽지 종류가 필요하다고 답함"}
+{"qid": "qv3b-dobae-075", "card_id": null, "why": "실크 벽지 겉면 곰팡이 닦는 법을 다룬 카드가 없음"}
+{"qid": "qv3b-dobae-076", "card_id": "dobae.material.width-and-rolls", "why": "벽 가로 길이를 벽지 폭으로 나눠 세는 법을 답함"}
+{"qid": "qv3b-dobae-078", "card_id": "dobae.defect.tear-repair", "why": "찢어진 곳만 풀칠해 붙이는 보수법을 답함"}
+{"qid": "qv3b-dobae-079", "card_id": null, "why": "셀프 도배 비용을 다룬 카드가 없음"}
+{"qid": "qv3b-dobae-081", "card_id": "dobae.vendor.ask-before", "why": "상담 때 벽지 제품 · 스펙 기록과 벽 상태 확인을 답함"}
+{"qid": "qv3b-dobae-082", "card_id": "common.defect.warranty-period", "why": "실내건축 하자 책임 기간 1년 등 기간에 직접 답함"}
+{"qid": "qv3b-dobae-084", "card_id": "common.contract.cancel-penalty", "why": "공사 전 취소 때 위약금 한도 · 환불 기준을 답함"}
+{"qid": "qv3b-dobae-085", "card_id": "dobae.defect.mold-redo", "why": "곰팡이 벽은 바로 덮지 말고 원인부터 잡으라고 답함"}
+{"qid": "qv3b-dobae-087", "card_id": null, "why": "들뜬 벽지를 실리콘으로 고치는 일을 다룬 카드가 없음"}
+{"qid": "qv3b-dobae-088", "card_id": "common.defect.remedies", "why": "하자 보수 대신 손해배상을 청구할 수 있다고 답함"}
+{"qid": "qv3b-dobae-090", "card_id": null, "why": "집주인이 정한 업체만 쓰라는 요구를 다룬 카드가 없음"}
+{"qid": "qv3b-dobae-091", "card_id": "common.contract.move-out-cleaning", "why": "살면서 생긴 자연스러운 낡음은 세입자 책임이 아니라고 답함"}
+{"qid": "qv3b-dobae-093", "card_id": "dobae.defect.new-apt-wallpaper", "why": "새 아파트 도배 하자는 사업주체에 청구한다고 답함"}
+{"qid": "qv3b-dobae-094", "card_id": null, "why": "도배 기술 배우는 곳은 믿집 범위 밖"}
+{"qid": "qv3b-electric-001", "card_id": null, "why": "콘센트 스파크 뒤 콘센트만 교체를 직접 답하는 카드가 없음"}
+{"qid": "qv3b-electric-002", "card_id": null, "why": "멀티탭 소리가 위험 신호인지 직접 답하는 카드가 없음"}
+{"qid": "qv3b-electric-004", "card_id": "electric.safety.breaker-trip", "why": "차단기를 떨어뜨리는 회로 · 기기를 가려내는 법을 답함"}
+{"qid": "qv3b-electric-005", "card_id": "electric.safety.breaker-trip", "why": "두꺼비집을 다시 올리는 순서와 조건에 직접 답함"}
+{"qid": "qv3b-floor-001", "card_id": "floor.prep.before-check", "why": "바닥 습도 측정 · 통수 시험부터 하라고 답함"}
+{"qid": "qv3b-floor-002", "card_id": null, "why": "두꺼운 장판 밑에서 나는 냄새를 다룬 카드가 없음"}
+{"qid": "qv3b-floor-004", "card_id": null, "why": "장판에 튄 염색약 지우기를 다룬 카드가 없음"}
+{"qid": "qv3b-floor-005", "card_id": "floor.material.care-cleaning", "why": "장판은 중성세제로 부드럽게 닦으라고 답함"}
+{"qid": "qv3b-kitchen-002", "card_id": "plumbing.contract.rental-repair", "why": "전월세 집 수리 부담(작은 고장 · 기본 설비) 원칙을 답함"}
+{"qid": "qv3b-mokgong-001", "card_id": "kitchen.defect.cabinet-criteria", "why": "수납가구 들뜸 · 수평 · 이음매 불량은 시공하자라고 답함"}
+{"qid": "qv3b-mokgong-003", "card_id": null, "why": "문 걸쇠를 혼자 맞추는 법을 다룬 카드가 없음"}
+{"qid": "qv3b-mokgong-004", "card_id": "mokgong.method.gypsum-patch", "why": "작은 구멍은 퍼티로 메우고 사포질하라고 답함"}
+{"qid": "qv3b-mokgong-006", "card_id": "dobae.order.window-foam", "why": "문틀 둘레 틈은 폼 · 핸디코트로 채우고 문선으로 가린다고 답함"}
+{"qid": "qv3b-mokgong-007", "card_id": null, "why": "석고보드 들뜸을 누구에게 고쳐 달랄지 다룬 카드가 없음"}
+{"qid": "qv3b-mokgong-009", "card_id": "film.material.door-color", "why": "문 색을 창호 · 몰딩과 맞추면 통일감이 난다고 답함"}
+{"qid": "qv3b-mokgong-010", "card_id": "film.prep.living-during", "why": "문 필름 공사는 살면서 해도 부담이 적다고 답함"}
+{"qid": "qv3b-mokgong-012", "card_id": "paint.prep.masking", "why": "몰딩 칠할 땐 주변에 마스킹 테이프부터 붙인다고 답함"}
+{"qid": "qv3b-mokgong-013", "card_id": "mokgong.method.no-molding", "why": "무몰딩 가능 조건(벽 평탄 · 구축은 목공)에 답함"}
+{"qid": "qv3b-mokgong-015", "card_id": "dobae.prep.before-check", "why": "누수 흔적이 있으면 도배보다 원인 먼저라고 답함"}
+{"qid": "qv3b-mokgong-016", "card_id": null, "why": "장판과 걸레받이 사이 실리콘 벌어짐을 다룬 카드가 없음"}
+{"qid": "qv3b-mokgong-018", "card_id": "common.contract.move-out-cleaning", "why": "자연스러운 낡음은 세입자가 물지 않는다고 답함"}
+{"qid": "qv3b-mokgong-019", "card_id": null, "why": "틀어진 문틀을 어느 업체가 고치는지 다룬 카드가 없음"}
+{"qid": "qv3b-mokgong-021", "card_id": "mokgong.diy.molding-color", "why": "페인트와 필름의 값 · 작업 차이를 비교해 답함"}
+{"qid": "qv3b-mokgong-022", "card_id": "mokgong.defect.bath-door", "why": "욕실 나무 문 아래가 상하는 원인과 보수 · 교체를 답함"}
+{"qid": "qv3b-mokgong-024", "card_id": null, "why": "문틀 없애는 공사의 유행 전망은 카드로 답할 수 없음"}
+{"qid": "qv3b-mokgong-025", "card_id": "mokgong.method.door-replace-or-reform", "why": "문틀 교체 때 둘레 벽 손상과 메우는 법을 답함"}
+{"qid": "qv3b-mokgong-027", "card_id": null, "why": "두꺼운 장판에 걸레받이가 따로 필요한지 답하는 카드가 없음"}
+{"qid": "qv3b-mokgong-028", "card_id": null, "why": "흰색 문 · 걸레받이가 쉽게 더러워지는지 다룬 카드가 없음"}
+{"qid": "qv3b-mokgong-030", "card_id": "film.method.door-surface", "why": "무늬 · 홈 있는 문은 교체나 판을 덧댄 뒤 필름이라고 답함"}
+{"qid": "qv3b-mokgong-031", "card_id": "mokgong.method.no-molding", "why": "무몰딩은 벽이 평평해야 하고 구축은 어렵다고 답함"}
+{"qid": "qv3b-plumbing-001", "card_id": null, "why": "외벽 누수가 흔한지 다룬 카드가 없음"}
+{"qid": "qv3b-tile-001", "card_id": null, "why": "집 안 줄눈 시공 범위를 다룬 카드가 없음"}
+{"qid": "qv3b-tile-003", "card_id": null, "why": "줄눈 자리에 실리콘을 쏜 게 맞는지 다룬 카드가 없음"}
+{"qid": "qv3b-tile-004", "card_id": null, "why": "욕실 줄눈을 새로 하는 비용을 다룬 카드가 없음"}
+{"qid": "qv3b-tile-006", "card_id": null, "why": "베란다 물고임 하자 기준 카드가 없음(욕실 물매 카드뿐)"}
+{"qid": "qv3b-tile-007", "card_id": "common.contract.change-extra-cost", "why": "자재가 없으면 같은 품질 · 같은 값으로 협의한다고 답함"}
+{"qid": "qv3b-window-002", "card_id": null, "why": "새 샷시 레일의 물고임을 다룬 카드가 없음"}
+{"qid": "qv3b-window-003", "card_id": "window.material.frame-choice", "why": "확장한 공간은 이중창이 알맞다고 직접 답함"}
+{"qid": "qv3b-window-005", "card_id": null, "why": "샷시 공사 보양비를 다룬 카드가 없음"}
+{"qid": "qv3b-window-006", "card_id": null, "why": "창 바깥쪽 결로는 다루지 않음(카드는 안쪽 결로)"}
+{"qid": "qv3b-window-008", "card_id": "window.defect.after-install-check", "why": "끝난 뒤 폼 찌꺼기가 정리됐는지 확인하라고 답함"}
+{"qid": "qv3b-window-009", "card_id": "common.contract.no-written", "why": "계약서를 안 써 주는 업체라도 꼭 쓰라고 답함"}
+{"qid": "qv3b-window-011", "card_id": "window.prep.replace-signs", "why": "창이 덜컹거리면 위험 신호 · 부속 닳음이라고 답함"}
+{"qid": "qv3b-window-012", "card_id": null, "why": "중문과 신발장 공사 순서를 다룬 카드가 없음"}
+{"qid": "qv3b-window-014", "card_id": null, "why": "가전 들일 때 문 떼기는 믿집 범위 밖"}
+{"qid": "qv3b-window-015", "card_id": "mokgong.order.mokgong-timing", "why": "창호 다음 단열은 목공과 함께 한다고 답함"}

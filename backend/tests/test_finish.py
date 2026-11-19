@@ -93,7 +93,7 @@ def test_finish_fixing_finish_again_then_done(api):
         "fixing",
         "작은방 천장 모서리 벽지가 들떠 있어요.",
     )
-    assert bodies("work_checked") == ["고객이 남은 일이 있대요 · 도배"]
+    assert bodies("work_checked") == ["고객이 남은 일이 있대요 · 노원구 도배"]  # v3: 공사 이름
     login(api, "maru@mitjip.test")
     (row,) = api.get("/vendor/visits", params={"tab": "jobs"}).json()["items"]
     assert (row["deal_status"], row["fixing_note"]) == (
@@ -115,7 +115,7 @@ def test_finish_fixing_finish_again_then_done(api):
     r = api.post(url, json={"result": "done"})
     assert r.status_code == 200 and r.json()["status"] == "done"
     assert r.json()["contact_until"] == contact_until(later).isoformat()
-    assert bodies("work_checked")[-1] == "고객이 공사 끝남을 확인했어요"
+    assert bodies("work_checked")[-1] == "고객이 공사 끝남을 확인했어요 · 노원구 도배"
     assert api.post(url, json={"result": "done"}).status_code == 409
     events = query("select from_status, to_status, note from deal_events order by at")
     assert [(e["from_status"], e["to_status"]) for e in events][-4:] == [
@@ -132,11 +132,12 @@ def test_finish_fixing_finish_again_then_done(api):
     assert api.get("/vendor/visits", params={"tab": "jobs"}).json()["items"] == []
     done = api.get("/vendor/visits", params={"tab": "done"}).json()["items"]
     mine = next(x for x in done if x["deal_id"] == did)
-    assert (mine["deal_status"], mine["contact_until"], mine["customer"]["phone"]) == (
+    # v3(B3): 작업함 줄에는 고객 이름 · 연락처 칸이 없다 (채팅으로, architecture 10장)
+    assert (mine["deal_status"], mine["contact_until"]) == (
         "done",
         contact_until(later).isoformat(),
-        "01012345678",
     )
+    assert "customer" not in mine
     assert done[0]["deal_id"] == did  # 가장 최근에 끝남
     summary = api.get("/vendor/visits/summary").json()
     assert (summary["jobs"], summary["done"]) == (0, 1)
@@ -160,11 +161,12 @@ def test_contact_is_shown_until_one_year_after_the_last_finish(api):
             user = await s.get(User, home)
             seen = await visit_service.vendor_visit(s, vendor, vid, today)
             (deal,) = await service.deals_for(s, user, uuid.UUID(pid), None, today)
-            return seen.customer, deal.owner_name
+            return seen, deal.owner_name
 
-    shown_vendor, shown_customer = asyncio.run(look(until))
-    assert shown_vendor.phone == "01012345678" and shown_customer == "예시 대표"
-    assert asyncio.run(look(until + timedelta(days=1))) == (None, None)  # 하루 지나면 양쪽 가림
+    seen, shown_customer = asyncio.run(look(until))
+    # v3(B3): 업체 화면에는 고객 연락처 칸이 없다(채팅으로). 고객 쪽 업체 연락처만 1년 규칙대로
+    assert "customer" not in type(seen).model_fields and shown_customer == "예시 대표"
+    assert asyncio.run(look(until + timedelta(days=1)))[1] is None  # 하루 지나면 가림
 
 
 def test_feb_29_counts_to_feb_28(api):

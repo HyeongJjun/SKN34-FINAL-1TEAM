@@ -1,0 +1,162 @@
+{
+ "corpus": "13_interior_guide_book_rag@0287c91fe04d+consult_knowledge_rag@b91e7e48a53c+team657",
+ "chunks": 2148,
+ "rows": [
+  {
+   "trade": "dobae",
+   "ko": "도배",
+   "chunks": 329,
+   "hints": 174,
+   "top_sources": {
+    "kcs": 167,
+    "maker_guide": 41,
+    "maker": 36,
+    "official": 25
+   }
+  },
+  {
+   "trade": "mokgong",
+   "ko": "목공",
+   "chunks": 813,
+   "hints": 222,
+   "top_sources": {
+    "kcs": 507,
+    "official": 69,
+    "maker_guide": 54,
+    "maker": 31
+   }
+  },
+  {
+   "trade": "floor",
+   "ko": "바닥",
+   "chunks": 116,
+   "hints": 199,
+   "top_sources": {
+    "maker": 45,
+    "maker_guide": 40,
+    "pumsem": 10,
+    "law": 7
+   }
+  },
+  {
+   "trade": "tile",
+   "ko": "타일",
+   "chunks": 110,
+   "hints": 201,
+   "top_sources": {
+    "maker_guide": 52,
+    "maker": 25,
+    "pumsem": 11,
+    "gov_notice": 9
+   }
+  },
+  {
+   "trade": "bath",
+   "ko": "욕실",
+   "chunks": 160,
+   "hints": 294,
+   "top_sources": {
+    "maker_guide": 56,
+    "maker": 35,
+    "pumsem": 21,
+    "gov_notice": 16
+   }
+  },
+  {
+   "trade": "kitchen",
+   "ko": "주방",
+   "chunks": 89,
+   "hints": 155,
+   "top_sources": {
+    "maker_guide": 31,
+    "maker": 28,
+    "law": 10,
+    "gov_guide": 7
+   }
+  },
+  {
+   "trade": "paint",
+   "ko": "도장",
+   "chunks": 99,
+   "hints": 155,
+   "top_sources": {
+    "maker_guide": 36,
+    "pumsem": 16,
+    "guide": 10,
+    "law": 10
+   }
+  },
+  {
+   "trade": "film",
+   "ko": "필름",
+   "chunks": 47,
+   "hints": 66,
+   "top_sources": {
+    "maker_guide": 20,
+    "maker": 12,
+    "guide": 8,
+    "consumer_agency": 4
+   }
+  },
+  {
+   "trade": "electric",
+   "ko": "전기/조명",
+   "chunks": 91,
+   "hints": 155,
+   "top_sources": {
+    "maker_guide": 26,
+    "maker": 17,
+    "gov_notice": 14,
+    "gov_guide": 11
+   }
+  },
+  {
+   "trade": "window",
+   "ko": "창호",
+   "chunks": 180,
+   "hints": 305,
+   "top_sources": {
+    "maker_guide": 51,
+    "law": 26,
+    "gov_notice": 23,
+    "maker": 22
+   }
+  },
+  {
+   "trade": "demolition",
+   "ko": "철거",
+   "chunks": 68,
+   "hints": 129,
+   "top_sources": {
+    "maker_guide": 20,
+    "pumsem": 12,
+    "guide": 11,
+    "gov_guide": 11
+   }
+  },
+  {
+   "trade": "plumbing",
+   "ko": "설비",
+   "chunks": 118,
+   "hints": 232,
+   "top_sources": {
+    "maker_guide": 30,
+    "gov_notice": 24,
+    "pumsem": 19,
+    "gov_guide": 19
+   }
+  },
+  {
+   "trade": "common",
+   "ko": "공통",
+   "chunks": 652,
+   "hints": 780,
+   "top_sources": {
+    "law": 195,
+    "official": 93,
+    "experience": 66,
+    "gov_guide": 49
+   }
+  }
+ ]
+}

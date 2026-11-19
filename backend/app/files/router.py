@@ -38,4 +38,5 @@ async def download(
     f = await service.readable(s, user, file_id)
     if f is None:  # 남의 파일은 있는지조차 알려 주지 않는다
         raise AppError(404, "not_found", "파일을 찾을 수 없어요.")
+    await service.record_view(s, user, f)  # 사업자등록증은 열람 기록을 남긴다
     return await service.respond(f)

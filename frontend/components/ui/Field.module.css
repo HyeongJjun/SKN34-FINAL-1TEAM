@@ -1,0 +1,30 @@
+.field { display: flex; flex-direction: column; gap: 7px; min-width: 0; width: 100%; }
+.label { font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); color: var(--mj-text-sub); }
+.opt { font-weight: 400; color: var(--mj-text-mute); }
+.box {
+  position: relative; display: flex; align-items: center; gap: 8px; min-height: var(--mj-field-h);
+  padding: 0 14px; border: 1px solid var(--mj-line-control); border-radius: var(--mj-radius-field);
+  background: var(--mj-field-bg); color: var(--mj-text);
+  transition: background-color var(--mj-dur-fast) var(--mj-ease-out);
+}
+.box:focus-within { background: var(--mj-surface); border-color: var(--mj-focus); box-shadow: 0 0 0 1px var(--mj-focus); }
+.bad, .bad:focus-within { background: var(--mj-surface); border-color: var(--mj-danger); box-shadow: 0 0 0 1px var(--mj-danger); }
+.locked { background: var(--mj-fill); border-color: var(--mj-line); }
+.input { flex: 1 1 auto; min-width: 0; min-height: calc(var(--mj-field-h) - 2px); padding: 0; border: 0; background: none; color: inherit; font-size: var(--mj-type-body); outline: none; }
+.input::placeholder { color: var(--mj-text-placeholder); }
+.input:focus-visible { outline: none; }
+.unit { flex: none; color: var(--mj-text-mute); font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); }
+.lock { flex: none; color: var(--mj-text-mute); }
+.areaBox { align-items: stretch; padding: 12px 14px; }
+.area { min-height: 84px; resize: vertical; line-height: var(--mj-lh-body); }
+.select { appearance: none; padding-right: 24px; cursor: pointer; }
+.chev { position: absolute; right: 14px; pointer-events: none; color: var(--mj-text-sub); }
+.error { display: flex; align-items: flex-start; gap: 4px; font-size: var(--mj-type-label); font-weight: 500; color: var(--mj-danger); }
+.error svg { flex: none; margin-top: 2px; }
+.hint { font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+
+@media (min-width: 768px) {
+  .field { max-width: var(--mj-field-max); }
+  .num { max-width: var(--mj-num-field-max); }
+  .full { max-width: none; }
+}

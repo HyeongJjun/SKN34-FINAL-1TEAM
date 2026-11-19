@@ -6,6 +6,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -32,11 +33,17 @@ class Chat(Base):
             "waiting is null or waiting in ('orchestrator', 'trade', 'quote_explanation', 'schedule')",
             name="waiting",
         ),
+        # 공사별 대화 목록(0034, B5 부탁): 같은 사람 · 같은 공사를 최근 순으로 거꾸로 읽는다
+        Index("ix_chats_user_project", "user_id", "project_id", "updated_at"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid7)
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    # v3 (0034): AI 대화를 공사에 묶는다(없으면 공사 밖 가이드 대화). 공사가 지워지면 대화도 지운다
+    project_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE")
     )
     rev: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
     waiting: Mapped[str | None] = mapped_column(String(30))  # 고객 답을 기다리는 담당

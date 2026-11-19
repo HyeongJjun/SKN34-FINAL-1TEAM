@@ -1,0 +1,3704 @@
+{
+ "files": {
+  "A_e3_c_part1.jsonl": {
+   "status": "ok",
+   "rows": 72,
+   "bad_lines": 0,
+   "unknown_pid": 0,
+   "dup": 0,
+   "used": 72
+  },
+  "A_e3_c_part2.jsonl": {
+   "status": "ok",
+   "rows": 72,
+   "bad_lines": 0,
+   "unknown_pid": 0,
+   "dup": 0,
+   "used": 72
+  },
+  "A_e3_c_part3.jsonl": {
+   "status": "ok",
+   "rows": 71,
+   "bad_lines": 0,
+   "unknown_pid": 0,
+   "dup": 0,
+   "used": 71
+  },
+  "B_e3_c_sub.jsonl": {
+   "status": "ok",
+   "rows": 72,
+   "bad_lines": 0,
+   "unknown_pid": 0,
+   "dup": 0,
+   "used": 72
+  },
+  "A_e3_abc.jsonl": {
+   "status": "ok",
+   "rows": 90,
+   "bad_lines": 0,
+   "unknown_pid": 0,
+   "dup": 0,
+   "used": 90
+  },
+  "B_e3_abc.jsonl": {
+   "status": "ok",
+   "rows": 90,
+   "bad_lines": 0,
+   "unknown_pid": 0,
+   "dup": 0,
+   "used": 90
+  },
+  "A_e4_pairs.jsonl": {
+   "status": "ok",
+   "rows": 48,
+   "bad_lines": 0,
+   "unknown_pid": 0,
+   "dup": 0,
+   "used": 48
+  },
+  "A_e3_c2.jsonl": {
+   "status": "ok",
+   "rows": 90,
+   "bad_lines": 0,
+   "unknown_pid": 0,
+   "dup": 0,
+   "used": 90
+  },
+  "B_e3_c2.jsonl": {
+   "status": "ok",
+   "rows": 90,
+   "bad_lines": 0,
+   "unknown_pid": 0,
+   "dup": 0,
+   "used": 90
+  },
+  "A_e3d.jsonl": {
+   "status": "ok",
+   "rows": 30,
+   "bad_lines": 0,
+   "unknown_pid": 0,
+   "dup": 0,
+   "used": 30
+  },
+  "A_e3_c3.jsonl": {
+   "status": "ok",
+   "rows": 90,
+   "bad_lines": 0,
+   "unknown_pid": 0,
+   "dup": 0,
+   "used": 90
+  },
+  "B_e3_c3.jsonl": {
+   "status": "ok",
+   "rows": 90,
+   "bad_lines": 0,
+   "unknown_pid": 0,
+   "dup": 0,
+   "used": 90
+  },
+  "B_e3d.jsonl": {
+   "status": "ok",
+   "rows": 30,
+   "bad_lines": 0,
+   "unknown_pid": 0,
+   "dup": 0,
+   "used": 30
+  }
+ },
+ "e3": {
+  "e3_c": {
+   "A": {
+    "variants": {
+     "C": {
+      "n": 215,
+      "expect": {
+       "answer": 199,
+       "ask_back": 6,
+       "engine": 3,
+       "no_source": 6,
+       "out_of_scope": 1
+      },
+      "sentences": {
+       "all": 714,
+       "policy": 202,
+       "supported": {
+        "k": 498,
+        "n": 512,
+        "rate": 0.973,
+        "ci95": [
+         0.955,
+         0.984
+        ]
+       },
+       "partial": {
+        "k": 7,
+        "n": 512,
+        "rate": 0.014,
+        "ci95": [
+         0.007,
+         0.028
+        ]
+       },
+       "unsupported": {
+        "k": 7,
+        "n": 512,
+        "rate": 0.014,
+        "ci95": [
+         0.007,
+         0.028
+        ]
+       }
+      },
+      "items_all_supported": {
+       "k": 203,
+       "n": 214,
+       "rate": 0.949,
+       "ci95": [
+        0.91,
+        0.971
+       ]
+      },
+      "fail": {
+       "unsupported": {
+        "k": 6,
+        "n": 215,
+        "rate": 0.028,
+        "ci95": [
+         0.013,
+         0.06
+        ]
+       },
+       "made_up_number": {
+        "k": 0,
+        "n": 215,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.018
+        ]
+       },
+       "out_of_scope_fail": {
+        "k": 1,
+        "n": 1,
+        "rate": 1.0,
+        "ci95": [
+         0.207,
+         1.0
+        ],
+        "of": "out_of_scope"
+       },
+       "ask_back_fail": {
+        "k": 0,
+        "n": 6,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.39
+        ],
+        "of": "ask_back"
+       },
+       "no_source_fail": {
+        "k": 5,
+        "n": 6,
+        "rate": 0.833,
+        "ci95": [
+         0.436,
+         0.97
+        ],
+        "of": "no_source"
+       },
+       "recommend": {
+        "k": 0,
+        "n": 215,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.018
+        ]
+       },
+       "defect_verdict": {
+        "k": 0,
+        "n": 215,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.018
+        ]
+       },
+       "missed_point": {
+        "k": 85,
+        "n": 215,
+        "rate": 0.395,
+        "ci95": [
+         0.332,
+         0.462
+        ]
+       },
+       "hard_to_read": {
+        "k": 37,
+        "n": 215,
+        "rate": 0.172,
+        "ci95": [
+         0.128,
+         0.228
+        ]
+       }
+      },
+      "answered": {
+       "counts": {
+        "yes": 57,
+        "partial": 73,
+        "no": 85
+       },
+       "yes": {
+        "k": 57,
+        "n": 215,
+        "rate": 0.265,
+        "ci95": [
+         0.211,
+         0.328
+        ]
+       },
+       "yes_or_partial": {
+        "k": 130,
+        "n": 215,
+        "rate": 0.605,
+        "ci95": [
+         0.538,
+         0.668
+        ]
+       }
+      },
+      "made_up_number": 0,
+      "made_up_number_zero": true
+     }
+    },
+    "bad_fields": 0
+   },
+   "B": {
+    "variants": {
+     "C": {
+      "n": 72,
+      "expect": {
+       "answer": 71,
+       "ask_back": 1
+      },
+      "sentences": {
+       "all": 246,
+       "policy": 64,
+       "supported": {
+        "k": 177,
+        "n": 182,
+        "rate": 0.973,
+        "ci95": [
+         0.937,
+         0.988
+        ]
+       },
+       "partial": {
+        "k": 3,
+        "n": 182,
+        "rate": 0.016,
+        "ci95": [
+         0.006,
+         0.047
+        ]
+       },
+       "unsupported": {
+        "k": 2,
+        "n": 182,
+        "rate": 0.011,
+        "ci95": [
+         0.003,
+         0.039
+        ]
+       }
+      },
+      "items_all_supported": {
+       "k": 67,
+       "n": 72,
+       "rate": 0.931,
+       "ci95": [
+        0.848,
+        0.97
+       ]
+      },
+      "fail": {
+       "unsupported": {
+        "k": 2,
+        "n": 72,
+        "rate": 0.028,
+        "ci95": [
+         0.008,
+         0.096
+        ]
+       },
+       "made_up_number": {
+        "k": 0,
+        "n": 72,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.051
+        ]
+       },
+       "out_of_scope_fail": {
+        "k": 0,
+        "n": 0,
+        "rate": null,
+        "ci95": [
+         0.0,
+         0.0
+        ],
+        "of": "out_of_scope"
+       },
+       "ask_back_fail": {
+        "k": 0,
+        "n": 1,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.793
+        ],
+        "of": "ask_back"
+       },
+       "no_source_fail": {
+        "k": 0,
+        "n": 0,
+        "rate": null,
+        "ci95": [
+         0.0,
+         0.0
+        ],
+        "of": "no_source"
+       },
+       "recommend": {
+        "k": 0,
+        "n": 72,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.051
+        ]
+       },
+       "defect_verdict": {
+        "k": 0,
+        "n": 72,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.051
+        ]
+       },
+       "missed_point": {
+        "k": 24,
+        "n": 72,
+        "rate": 0.333,
+        "ci95": [
+         0.235,
+         0.448
+        ]
+       },
+       "hard_to_read": {
+        "k": 6,
+        "n": 72,
+        "rate": 0.083,
+        "ci95": [
+         0.039,
+         0.17
+        ]
+       }
+      },
+      "answered": {
+       "counts": {
+        "yes": 20,
+        "partial": 27,
+        "no": 25
+       },
+       "yes": {
+        "k": 20,
+        "n": 72,
+        "rate": 0.278,
+        "ci95": [
+         0.188,
+         0.39
+        ]
+       },
+       "yes_or_partial": {
+        "k": 47,
+        "n": 72,
+        "rate": 0.653,
+        "ci95": [
+         0.538,
+         0.752
+        ]
+       }
+      },
+      "made_up_number": 0,
+      "made_up_number_zero": true
+     }
+    },
+    "bad_fields": 0
+   }
+  },
+  "e3_abc": {
+   "A": {
+    "variants": {
+     "A": {
+      "n": 30,
+      "expect": {
+       "answer": 24,
+       "ask_back": 4,
+       "out_of_scope": 1,
+       "no_source": 1
+      },
+      "sentences": {
+       "all": 95,
+       "policy": 39,
+       "supported": {
+        "k": 54,
+        "n": 56,
+        "rate": 0.964,
+        "ci95": [
+         0.879,
+         0.99
+        ]
+       },
+       "partial": {
+        "k": 0,
+        "n": 56,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.064
+        ]
+       },
+       "unsupported": {
+        "k": 2,
+        "n": 56,
+        "rate": 0.036,
+        "ci95": [
+         0.01,
+         0.121
+        ]
+       }
+      },
+      "items_all_supported": {
+       "k": 16,
+       "n": 18,
+       "rate": 0.889,
+       "ci95": [
+        0.672,
+        0.969
+       ]
+      },
+      "fail": {
+       "unsupported": {
+        "k": 2,
+        "n": 30,
+        "rate": 0.067,
+        "ci95": [
+         0.018,
+         0.213
+        ]
+       },
+       "made_up_number": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "out_of_scope_fail": {
+        "k": 1,
+        "n": 1,
+        "rate": 1.0,
+        "ci95": [
+         0.207,
+         1.0
+        ],
+        "of": "out_of_scope"
+       },
+       "ask_back_fail": {
+        "k": 0,
+        "n": 4,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.49
+        ],
+        "of": "ask_back"
+       },
+       "no_source_fail": {
+        "k": 0,
+        "n": 1,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.793
+        ],
+        "of": "no_source"
+       },
+       "recommend": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "defect_verdict": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "missed_point": {
+        "k": 3,
+        "n": 30,
+        "rate": 0.1,
+        "ci95": [
+         0.035,
+         0.256
+        ]
+       },
+       "hard_to_read": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       }
+      },
+      "answered": {
+       "counts": {
+        "yes": 7,
+        "partial": 13,
+        "no": 10
+       },
+       "yes": {
+        "k": 7,
+        "n": 30,
+        "rate": 0.233,
+        "ci95": [
+         0.118,
+         0.409
+        ]
+       },
+       "yes_or_partial": {
+        "k": 20,
+        "n": 30,
+        "rate": 0.667,
+        "ci95": [
+         0.488,
+         0.808
+        ]
+       }
+      },
+      "made_up_number": 0,
+      "made_up_number_zero": true
+     },
+     "B": {
+      "n": 30,
+      "expect": {
+       "ask_back": 4,
+       "no_source": 1,
+       "answer": 24,
+       "out_of_scope": 1
+      },
+      "sentences": {
+       "all": 97,
+       "policy": 55,
+       "supported": {
+        "k": 38,
+        "n": 42,
+        "rate": 0.905,
+        "ci95": [
+         0.779,
+         0.962
+        ]
+       },
+       "partial": {
+        "k": 2,
+        "n": 42,
+        "rate": 0.048,
+        "ci95": [
+         0.013,
+         0.158
+        ]
+       },
+       "unsupported": {
+        "k": 2,
+        "n": 42,
+        "rate": 0.048,
+        "ci95": [
+         0.013,
+         0.158
+        ]
+       }
+      },
+      "items_all_supported": {
+       "k": 19,
+       "n": 23,
+       "rate": 0.826,
+       "ci95": [
+        0.629,
+        0.93
+       ]
+      },
+      "fail": {
+       "unsupported": {
+        "k": 4,
+        "n": 30,
+        "rate": 0.133,
+        "ci95": [
+         0.053,
+         0.297
+        ]
+       },
+       "made_up_number": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "out_of_scope_fail": {
+        "k": 1,
+        "n": 1,
+        "rate": 1.0,
+        "ci95": [
+         0.207,
+         1.0
+        ],
+        "of": "out_of_scope"
+       },
+       "ask_back_fail": {
+        "k": 0,
+        "n": 4,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.49
+        ],
+        "of": "ask_back"
+       },
+       "no_source_fail": {
+        "k": 0,
+        "n": 1,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.793
+        ],
+        "of": "no_source"
+       },
+       "recommend": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "defect_verdict": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "missed_point": {
+        "k": 9,
+        "n": 30,
+        "rate": 0.3,
+        "ci95": [
+         0.167,
+         0.479
+        ]
+       },
+       "hard_to_read": {
+        "k": 8,
+        "n": 30,
+        "rate": 0.267,
+        "ci95": [
+         0.142,
+         0.444
+        ]
+       }
+      },
+      "answered": {
+       "counts": {
+        "yes": 5,
+        "partial": 12,
+        "no": 13
+       },
+       "yes": {
+        "k": 5,
+        "n": 30,
+        "rate": 0.167,
+        "ci95": [
+         0.073,
+         0.336
+        ]
+       },
+       "yes_or_partial": {
+        "k": 17,
+        "n": 30,
+        "rate": 0.567,
+        "ci95": [
+         0.392,
+         0.726
+        ]
+       }
+      },
+      "made_up_number": 0,
+      "made_up_number_zero": true
+     },
+     "C": {
+      "n": 30,
+      "expect": {
+       "answer": 24,
+       "ask_back": 4,
+       "no_source": 1,
+       "out_of_scope": 1
+      },
+      "sentences": {
+       "all": 113,
+       "policy": 33,
+       "supported": {
+        "k": 77,
+        "n": 80,
+        "rate": 0.963,
+        "ci95": [
+         0.895,
+         0.987
+        ]
+       },
+       "partial": {
+        "k": 1,
+        "n": 80,
+        "rate": 0.013,
+        "ci95": [
+         0.002,
+         0.067
+        ]
+       },
+       "unsupported": {
+        "k": 2,
+        "n": 80,
+        "rate": 0.025,
+        "ci95": [
+         0.007,
+         0.087
+        ]
+       }
+      },
+      "items_all_supported": {
+       "k": 27,
+       "n": 30,
+       "rate": 0.9,
+       "ci95": [
+        0.744,
+        0.965
+       ]
+      },
+      "fail": {
+       "unsupported": {
+        "k": 3,
+        "n": 30,
+        "rate": 0.1,
+        "ci95": [
+         0.035,
+         0.256
+        ]
+       },
+       "made_up_number": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "out_of_scope_fail": {
+        "k": 1,
+        "n": 1,
+        "rate": 1.0,
+        "ci95": [
+         0.207,
+         1.0
+        ],
+        "of": "out_of_scope"
+       },
+       "ask_back_fail": {
+        "k": 0,
+        "n": 4,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.49
+        ],
+        "of": "ask_back"
+       },
+       "no_source_fail": {
+        "k": 0,
+        "n": 1,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.793
+        ],
+        "of": "no_source"
+       },
+       "recommend": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "defect_verdict": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "missed_point": {
+        "k": 7,
+        "n": 30,
+        "rate": 0.233,
+        "ci95": [
+         0.118,
+         0.409
+        ]
+       },
+       "hard_to_read": {
+        "k": 5,
+        "n": 30,
+        "rate": 0.167,
+        "ci95": [
+         0.073,
+         0.336
+        ]
+       }
+      },
+      "answered": {
+       "counts": {
+        "yes": 8,
+        "partial": 15,
+        "no": 7
+       },
+       "yes": {
+        "k": 8,
+        "n": 30,
+        "rate": 0.267,
+        "ci95": [
+         0.142,
+         0.444
+        ]
+       },
+       "yes_or_partial": {
+        "k": 23,
+        "n": 30,
+        "rate": 0.767,
+        "ci95": [
+         0.591,
+         0.882
+        ]
+       }
+      },
+      "made_up_number": 0,
+      "made_up_number_zero": true
+     }
+    },
+    "bad_fields": 0
+   },
+   "B": {
+    "variants": {
+     "A": {
+      "n": 30,
+      "expect": {
+       "answer": 24,
+       "ask_back": 4,
+       "out_of_scope": 1,
+       "no_source": 1
+      },
+      "sentences": {
+       "all": 97,
+       "policy": 39,
+       "supported": {
+        "k": 55,
+        "n": 58,
+        "rate": 0.948,
+        "ci95": [
+         0.859,
+         0.982
+        ]
+       },
+       "partial": {
+        "k": 0,
+        "n": 58,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.062
+        ]
+       },
+       "unsupported": {
+        "k": 3,
+        "n": 58,
+        "rate": 0.052,
+        "ci95": [
+         0.018,
+         0.141
+        ]
+       }
+      },
+      "items_all_supported": {
+       "k": 16,
+       "n": 19,
+       "rate": 0.842,
+       "ci95": [
+        0.624,
+        0.945
+       ]
+      },
+      "fail": {
+       "unsupported": {
+        "k": 3,
+        "n": 30,
+        "rate": 0.1,
+        "ci95": [
+         0.035,
+         0.256
+        ]
+       },
+       "made_up_number": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "out_of_scope_fail": {
+        "k": 0,
+        "n": 1,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.793
+        ],
+        "of": "out_of_scope"
+       },
+       "ask_back_fail": {
+        "k": 0,
+        "n": 4,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.49
+        ],
+        "of": "ask_back"
+       },
+       "no_source_fail": {
+        "k": 0,
+        "n": 1,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.793
+        ],
+        "of": "no_source"
+       },
+       "recommend": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "defect_verdict": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "missed_point": {
+        "k": 5,
+        "n": 30,
+        "rate": 0.167,
+        "ci95": [
+         0.073,
+         0.336
+        ]
+       },
+       "hard_to_read": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       }
+      },
+      "answered": {
+       "counts": {
+        "yes": 7,
+        "partial": 11,
+        "no": 12
+       },
+       "yes": {
+        "k": 7,
+        "n": 30,
+        "rate": 0.233,
+        "ci95": [
+         0.118,
+         0.409
+        ]
+       },
+       "yes_or_partial": {
+        "k": 18,
+        "n": 30,
+        "rate": 0.6,
+        "ci95": [
+         0.423,
+         0.754
+        ]
+       }
+      },
+      "made_up_number": 0,
+      "made_up_number_zero": true
+     },
+     "B": {
+      "n": 30,
+      "expect": {
+       "ask_back": 4,
+       "no_source": 1,
+       "answer": 24,
+       "out_of_scope": 1
+      },
+      "sentences": {
+       "all": 97,
+       "policy": 54,
+       "supported": {
+        "k": 40,
+        "n": 43,
+        "rate": 0.93,
+        "ci95": [
+         0.814,
+         0.976
+        ]
+       },
+       "partial": {
+        "k": 0,
+        "n": 43,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.082
+        ]
+       },
+       "unsupported": {
+        "k": 3,
+        "n": 43,
+        "rate": 0.07,
+        "ci95": [
+         0.024,
+         0.186
+        ]
+       }
+      },
+      "items_all_supported": {
+       "k": 20,
+       "n": 23,
+       "rate": 0.87,
+       "ci95": [
+        0.679,
+        0.955
+       ]
+      },
+      "fail": {
+       "unsupported": {
+        "k": 3,
+        "n": 30,
+        "rate": 0.1,
+        "ci95": [
+         0.035,
+         0.256
+        ]
+       },
+       "made_up_number": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "out_of_scope_fail": {
+        "k": 1,
+        "n": 1,
+        "rate": 1.0,
+        "ci95": [
+         0.207,
+         1.0
+        ],
+        "of": "out_of_scope"
+       },
+       "ask_back_fail": {
+        "k": 0,
+        "n": 4,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.49
+        ],
+        "of": "ask_back"
+       },
+       "no_source_fail": {
+        "k": 0,
+        "n": 1,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.793
+        ],
+        "of": "no_source"
+       },
+       "recommend": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "defect_verdict": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "missed_point": {
+        "k": 7,
+        "n": 30,
+        "rate": 0.233,
+        "ci95": [
+         0.118,
+         0.409
+        ]
+       },
+       "hard_to_read": {
+        "k": 13,
+        "n": 30,
+        "rate": 0.433,
+        "ci95": [
+         0.274,
+         0.608
+        ]
+       }
+      },
+      "answered": {
+       "counts": {
+        "yes": 7,
+        "partial": 10,
+        "no": 13
+       },
+       "yes": {
+        "k": 7,
+        "n": 30,
+        "rate": 0.233,
+        "ci95": [
+         0.118,
+         0.409
+        ]
+       },
+       "yes_or_partial": {
+        "k": 17,
+        "n": 30,
+        "rate": 0.567,
+        "ci95": [
+         0.392,
+         0.726
+        ]
+       }
+      },
+      "made_up_number": 0,
+      "made_up_number_zero": true
+     },
+     "C": {
+      "n": 30,
+      "expect": {
+       "answer": 24,
+       "ask_back": 4,
+       "no_source": 1,
+       "out_of_scope": 1
+      },
+      "sentences": {
+       "all": 113,
+       "policy": 30,
+       "supported": {
+        "k": 80,
+        "n": 83,
+        "rate": 0.964,
+        "ci95": [
+         0.899,
+         0.988
+        ]
+       },
+       "partial": {
+        "k": 0,
+        "n": 83,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.044
+        ]
+       },
+       "unsupported": {
+        "k": 3,
+        "n": 83,
+        "rate": 0.036,
+        "ci95": [
+         0.012,
+         0.101
+        ]
+       }
+      },
+      "items_all_supported": {
+       "k": 27,
+       "n": 30,
+       "rate": 0.9,
+       "ci95": [
+        0.744,
+        0.965
+       ]
+      },
+      "fail": {
+       "unsupported": {
+        "k": 3,
+        "n": 30,
+        "rate": 0.1,
+        "ci95": [
+         0.035,
+         0.256
+        ]
+       },
+       "made_up_number": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "out_of_scope_fail": {
+        "k": 1,
+        "n": 1,
+        "rate": 1.0,
+        "ci95": [
+         0.207,
+         1.0
+        ],
+        "of": "out_of_scope"
+       },
+       "ask_back_fail": {
+        "k": 0,
+        "n": 4,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.49
+        ],
+        "of": "ask_back"
+       },
+       "no_source_fail": {
+        "k": 0,
+        "n": 1,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.793
+        ],
+        "of": "no_source"
+       },
+       "recommend": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "defect_verdict": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "missed_point": {
+        "k": 9,
+        "n": 30,
+        "rate": 0.3,
+        "ci95": [
+         0.167,
+         0.479
+        ]
+       },
+       "hard_to_read": {
+        "k": 9,
+        "n": 30,
+        "rate": 0.3,
+        "ci95": [
+         0.167,
+         0.479
+        ]
+       }
+      },
+      "answered": {
+       "counts": {
+        "yes": 9,
+        "partial": 13,
+        "no": 8
+       },
+       "yes": {
+        "k": 9,
+        "n": 30,
+        "rate": 0.3,
+        "ci95": [
+         0.167,
+         0.479
+        ]
+       },
+       "yes_or_partial": {
+        "k": 22,
+        "n": 30,
+        "rate": 0.733,
+        "ci95": [
+         0.556,
+         0.858
+        ]
+       }
+      },
+      "made_up_number": 0,
+      "made_up_number_zero": true
+     }
+    },
+    "bad_fields": 0
+   }
+  },
+  "e3_c2": {
+   "A": {
+    "variants": {
+     "C2": {
+      "n": 90,
+      "expect": {
+       "answer": 85,
+       "ask_back": 2,
+       "no_source": 2,
+       "engine": 1
+      },
+      "sentences": {
+       "all": 292,
+       "policy": 105,
+       "supported": {
+        "k": 186,
+        "n": 187,
+        "rate": 0.995,
+        "ci95": [
+         0.97,
+         0.999
+        ]
+       },
+       "partial": {
+        "k": 1,
+        "n": 187,
+        "rate": 0.005,
+        "ci95": [
+         0.001,
+         0.03
+        ]
+       },
+       "unsupported": {
+        "k": 0,
+        "n": 187,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.02
+        ]
+       }
+      },
+      "items_all_supported": {
+       "k": 57,
+       "n": 58,
+       "rate": 0.983,
+       "ci95": [
+        0.909,
+        0.997
+       ]
+      },
+      "fail": {
+       "unsupported": {
+        "k": 0,
+        "n": 90,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.041
+        ]
+       },
+       "made_up_number": {
+        "k": 0,
+        "n": 90,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.041
+        ]
+       },
+       "out_of_scope_fail": {
+        "k": 0,
+        "n": 0,
+        "rate": null,
+        "ci95": [
+         0.0,
+         0.0
+        ],
+        "of": "out_of_scope"
+       },
+       "ask_back_fail": {
+        "k": 0,
+        "n": 2,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.658
+        ],
+        "of": "ask_back"
+       },
+       "no_source_fail": {
+        "k": 0,
+        "n": 2,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.658
+        ],
+        "of": "no_source"
+       },
+       "recommend": {
+        "k": 0,
+        "n": 90,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.041
+        ]
+       },
+       "defect_verdict": {
+        "k": 0,
+        "n": 90,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.041
+        ]
+       },
+       "missed_point": {
+        "k": 15,
+        "n": 90,
+        "rate": 0.167,
+        "ci95": [
+         0.104,
+         0.257
+        ]
+       },
+       "hard_to_read": {
+        "k": 4,
+        "n": 90,
+        "rate": 0.044,
+        "ci95": [
+         0.017,
+         0.109
+        ]
+       }
+      },
+      "answered": {
+       "counts": {
+        "yes": 27,
+        "partial": 22,
+        "no": 41
+       },
+       "yes": {
+        "k": 27,
+        "n": 90,
+        "rate": 0.3,
+        "ci95": [
+         0.215,
+         0.401
+        ]
+       },
+       "yes_or_partial": {
+        "k": 49,
+        "n": 90,
+        "rate": 0.544,
+        "ci95": [
+         0.442,
+         0.643
+        ]
+       }
+      },
+      "made_up_number": 0,
+      "made_up_number_zero": true
+     }
+    },
+    "bad_fields": 0
+   },
+   "B": {
+    "variants": {
+     "C2": {
+      "n": 90,
+      "expect": {
+       "answer": 85,
+       "ask_back": 2,
+       "no_source": 2,
+       "engine": 1
+      },
+      "sentences": {
+       "all": 292,
+       "policy": 106,
+       "supported": {
+        "k": 186,
+        "n": 186,
+        "rate": 1.0,
+        "ci95": [
+         0.98,
+         1.0
+        ]
+       },
+       "partial": {
+        "k": 0,
+        "n": 186,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.02
+        ]
+       },
+       "unsupported": {
+        "k": 0,
+        "n": 186,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.02
+        ]
+       }
+      },
+      "items_all_supported": {
+       "k": 58,
+       "n": 58,
+       "rate": 1.0,
+       "ci95": [
+        0.938,
+        1.0
+       ]
+      },
+      "fail": {
+       "unsupported": {
+        "k": 0,
+        "n": 90,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.041
+        ]
+       },
+       "made_up_number": {
+        "k": 0,
+        "n": 90,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.041
+        ]
+       },
+       "out_of_scope_fail": {
+        "k": 0,
+        "n": 0,
+        "rate": null,
+        "ci95": [
+         0.0,
+         0.0
+        ],
+        "of": "out_of_scope"
+       },
+       "ask_back_fail": {
+        "k": 0,
+        "n": 2,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.658
+        ],
+        "of": "ask_back"
+       },
+       "no_source_fail": {
+        "k": 0,
+        "n": 2,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.658
+        ],
+        "of": "no_source"
+       },
+       "recommend": {
+        "k": 0,
+        "n": 90,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.041
+        ]
+       },
+       "defect_verdict": {
+        "k": 0,
+        "n": 90,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.041
+        ]
+       },
+       "missed_point": {
+        "k": 13,
+        "n": 90,
+        "rate": 0.144,
+        "ci95": [
+         0.086,
+         0.232
+        ]
+       },
+       "hard_to_read": {
+        "k": 0,
+        "n": 90,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.041
+        ]
+       }
+      },
+      "answered": {
+       "counts": {
+        "yes": 30,
+        "partial": 19,
+        "no": 41
+       },
+       "yes": {
+        "k": 30,
+        "n": 90,
+        "rate": 0.333,
+        "ci95": [
+         0.245,
+         0.436
+        ]
+       },
+       "yes_or_partial": {
+        "k": 49,
+        "n": 90,
+        "rate": 0.544,
+        "ci95": [
+         0.442,
+         0.643
+        ]
+       }
+      },
+      "made_up_number": 0,
+      "made_up_number_zero": true
+     }
+    },
+    "bad_fields": 0
+   }
+  },
+  "e3d": {
+   "A": {
+    "variants": {
+     "D": {
+      "n": 30,
+      "expect": {
+       "answer": 24,
+       "no_source": 1,
+       "ask_back": 4,
+       "out_of_scope": 1
+      },
+      "sentences": {
+       "all": 98,
+       "policy": 50,
+       "supported": {
+        "k": 41,
+        "n": 48,
+        "rate": 0.854,
+        "ci95": [
+         0.728,
+         0.928
+        ]
+       },
+       "partial": {
+        "k": 4,
+        "n": 48,
+        "rate": 0.083,
+        "ci95": [
+         0.033,
+         0.196
+        ]
+       },
+       "unsupported": {
+        "k": 3,
+        "n": 48,
+        "rate": 0.062,
+        "ci95": [
+         0.021,
+         0.168
+        ]
+       }
+      },
+      "items_all_supported": {
+       "k": 11,
+       "n": 18,
+       "rate": 0.611,
+       "ci95": [
+        0.386,
+        0.797
+       ]
+      },
+      "fail": {
+       "unsupported": {
+        "k": 3,
+        "n": 30,
+        "rate": 0.1,
+        "ci95": [
+         0.035,
+         0.256
+        ]
+       },
+       "made_up_number": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "out_of_scope_fail": {
+        "k": 1,
+        "n": 1,
+        "rate": 1.0,
+        "ci95": [
+         0.207,
+         1.0
+        ],
+        "of": "out_of_scope"
+       },
+       "ask_back_fail": {
+        "k": 0,
+        "n": 4,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.49
+        ],
+        "of": "ask_back"
+       },
+       "no_source_fail": {
+        "k": 0,
+        "n": 1,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.793
+        ],
+        "of": "no_source"
+       },
+       "recommend": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "defect_verdict": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "missed_point": {
+        "k": 1,
+        "n": 30,
+        "rate": 0.033,
+        "ci95": [
+         0.006,
+         0.167
+        ]
+       },
+       "hard_to_read": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       }
+      },
+      "answered": {
+       "counts": {
+        "yes": 9,
+        "partial": 12,
+        "no": 9
+       },
+       "yes": {
+        "k": 9,
+        "n": 30,
+        "rate": 0.3,
+        "ci95": [
+         0.167,
+         0.479
+        ]
+       },
+       "yes_or_partial": {
+        "k": 21,
+        "n": 30,
+        "rate": 0.7,
+        "ci95": [
+         0.521,
+         0.833
+        ]
+       }
+      },
+      "made_up_number": 0,
+      "made_up_number_zero": true
+     }
+    },
+    "bad_fields": 0
+   },
+   "B": {
+    "variants": {
+     "D": {
+      "n": 30,
+      "expect": {
+       "answer": 24,
+       "no_source": 1,
+       "ask_back": 4,
+       "out_of_scope": 1
+      },
+      "sentences": {
+       "all": 94,
+       "policy": 43,
+       "supported": {
+        "k": 46,
+        "n": 51,
+        "rate": 0.902,
+        "ci95": [
+         0.79,
+         0.957
+        ]
+       },
+       "partial": {
+        "k": 3,
+        "n": 51,
+        "rate": 0.059,
+        "ci95": [
+         0.02,
+         0.159
+        ]
+       },
+       "unsupported": {
+        "k": 2,
+        "n": 51,
+        "rate": 0.039,
+        "ci95": [
+         0.011,
+         0.132
+        ]
+       }
+      },
+      "items_all_supported": {
+       "k": 13,
+       "n": 18,
+       "rate": 0.722,
+       "ci95": [
+        0.491,
+        0.875
+       ]
+      },
+      "fail": {
+       "unsupported": {
+        "k": 2,
+        "n": 30,
+        "rate": 0.067,
+        "ci95": [
+         0.018,
+         0.213
+        ]
+       },
+       "made_up_number": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "out_of_scope_fail": {
+        "k": 0,
+        "n": 1,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.793
+        ],
+        "of": "out_of_scope"
+       },
+       "ask_back_fail": {
+        "k": 0,
+        "n": 4,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.49
+        ],
+        "of": "ask_back"
+       },
+       "no_source_fail": {
+        "k": 0,
+        "n": 1,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.793
+        ],
+        "of": "no_source"
+       },
+       "recommend": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "defect_verdict": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       },
+       "missed_point": {
+        "k": 1,
+        "n": 30,
+        "rate": 0.033,
+        "ci95": [
+         0.006,
+         0.167
+        ]
+       },
+       "hard_to_read": {
+        "k": 0,
+        "n": 30,
+        "rate": 0.0,
+        "ci95": [
+         -0.0,
+         0.114
+        ]
+       }
+      },
+      "answered": {
+       "counts": {
+        "yes": 5,
+        "partial": 16,
+        "no": 9
+       },
+       "yes": {
+        "k": 5,
+        "n": 30,
+        "rate": 0.167,
+        "ci95": [
+         0.073,
+         0.336
+        ]
+       },
+       "yes_or_partial": {
+        "k": 21,
+        "n": 30,
+        "rate": 0.7,
+        "ci95": [
+         0.521,
+         0.833
+        ]
+       }
+      },
+      "made_up_number": 0,
+      "made_up_number_zero": true
+     }
+    },
+    "bad_fields": 0
+   }
+  },
+  "e3_c3": {
+   "A": {
+    "variants": {
+     "C3": {
+      "n": 90,
+      "expect": {
+       "answer": 85,
+       "engine": 1,
+       "no_source": 2,
+       "ask_back": 2
+      },
+      "sentences": {
+       "all": 347,
+       "policy": 60,
+       "supported": {
+        "k": 281,
+        "n": 287,
+        "rate": 0.979,
+        "ci95": [
+         0.955,
+         0.99
+        ]
+       },
+       "partial": {
+        "k": 5,
+        "n": 287,
+        "rate": 0.017,
+        "ci95": [
+         0.007,
+         0.04
+        ]
+       },
+       "unsupported": {
+        "k": 1,
+        "n": 287,
+        "rate": 0.003,
+        "ci95": [
+         0.001,
+         0.019
+        ]
+       }
+      },
+      "items_all_supported": {
+       "k": 75,
+       "n": 81,
+       "rate": 0.926,
+       "ci95": [
+        0.848,
+        0.966
+       ]
+      },
+      "fail": {
+       "unsupported": {
+        "k": 4,
+        "n": 90,
+        "rate": 0.044,
+        "ci95": [
+         0.017,
+         0.109
+        ]
+       },
+       "made_up_number": {
+        "k": 0,
+        "n": 90,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.041
+        ]
+       },
+       "out_of_scope_fail": {
+        "k": 0,
+        "n": 0,
+        "rate": null,
+        "ci95": [
+         0.0,
+         0.0
+        ],
+        "of": "out_of_scope"
+       },
+       "ask_back_fail": {
+        "k": 0,
+        "n": 2,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.658
+        ],
+        "of": "ask_back"
+       },
+       "no_source_fail": {
+        "k": 0,
+        "n": 2,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.658
+        ],
+        "of": "no_source"
+       },
+       "recommend": {
+        "k": 0,
+        "n": 90,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.041
+        ]
+       },
+       "defect_verdict": {
+        "k": 0,
+        "n": 90,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.041
+        ]
+       },
+       "missed_point": {
+        "k": 15,
+        "n": 90,
+        "rate": 0.167,
+        "ci95": [
+         0.104,
+         0.257
+        ]
+       },
+       "hard_to_read": {
+        "k": 4,
+        "n": 90,
+        "rate": 0.044,
+        "ci95": [
+         0.017,
+         0.109
+        ]
+       }
+      },
+      "answered": {
+       "counts": {
+        "yes": 46,
+        "partial": 25,
+        "no": 19
+       },
+       "yes": {
+        "k": 46,
+        "n": 90,
+        "rate": 0.511,
+        "ci95": [
+         0.41,
+         0.612
+        ]
+       },
+       "yes_or_partial": {
+        "k": 71,
+        "n": 90,
+        "rate": 0.789,
+        "ci95": [
+         0.694,
+         0.86
+        ]
+       }
+      },
+      "made_up_number": 0,
+      "made_up_number_zero": true
+     }
+    },
+    "bad_fields": 0
+   },
+   "B": {
+    "variants": {
+     "C3": {
+      "n": 90,
+      "expect": {
+       "answer": 85,
+       "engine": 1,
+       "no_source": 2,
+       "ask_back": 2
+      },
+      "sentences": {
+       "all": 347,
+       "policy": 54,
+       "supported": {
+        "k": 277,
+        "n": 293,
+        "rate": 0.945,
+        "ci95": [
+         0.913,
+         0.966
+        ]
+       },
+       "partial": {
+        "k": 15,
+        "n": 293,
+        "rate": 0.051,
+        "ci95": [
+         0.031,
+         0.083
+        ]
+       },
+       "unsupported": {
+        "k": 1,
+        "n": 293,
+        "rate": 0.003,
+        "ci95": [
+         0.001,
+         0.019
+        ]
+       }
+      },
+      "items_all_supported": {
+       "k": 69,
+       "n": 82,
+       "rate": 0.841,
+       "ci95": [
+        0.747,
+        0.905
+       ]
+      },
+      "fail": {
+       "unsupported": {
+        "k": 1,
+        "n": 90,
+        "rate": 0.011,
+        "ci95": [
+         0.002,
+         0.06
+        ]
+       },
+       "made_up_number": {
+        "k": 0,
+        "n": 90,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.041
+        ]
+       },
+       "out_of_scope_fail": {
+        "k": 0,
+        "n": 0,
+        "rate": null,
+        "ci95": [
+         0.0,
+         0.0
+        ],
+        "of": "out_of_scope"
+       },
+       "ask_back_fail": {
+        "k": 0,
+        "n": 2,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.658
+        ],
+        "of": "ask_back"
+       },
+       "no_source_fail": {
+        "k": 0,
+        "n": 2,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.658
+        ],
+        "of": "no_source"
+       },
+       "recommend": {
+        "k": 0,
+        "n": 90,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.041
+        ]
+       },
+       "defect_verdict": {
+        "k": 0,
+        "n": 90,
+        "rate": 0.0,
+        "ci95": [
+         0.0,
+         0.041
+        ]
+       },
+       "missed_point": {
+        "k": 10,
+        "n": 90,
+        "rate": 0.111,
+        "ci95": [
+         0.061,
+         0.193
+        ]
+       },
+       "hard_to_read": {
+        "k": 4,
+        "n": 90,
+        "rate": 0.044,
+        "ci95": [
+         0.017,
+         0.109
+        ]
+       }
+      },
+      "answered": {
+       "counts": {
+        "yes": 44,
+        "partial": 27,
+        "no": 19
+       },
+       "yes": {
+        "k": 44,
+        "n": 90,
+        "rate": 0.489,
+        "ci95": [
+         0.388,
+         0.59
+        ]
+       },
+       "yes_or_partial": {
+        "k": 71,
+        "n": 90,
+        "rate": 0.789,
+        "ci95": [
+         0.694,
+         0.86
+        ]
+       }
+      },
+      "made_up_number": 0,
+      "made_up_number_zero": true
+     }
+    },
+    "bad_fields": 0
+   }
+  }
+ },
+ "agreement": {
+  "e3_c": {
+   "overlap": 72,
+   "answered": {
+    "n": 72,
+    "agree": 0.875,
+    "kappa": 0.812
+   },
+   "fail": {
+    "unsupported": {
+     "n": 72,
+     "agree": 1.0,
+     "kappa": 1.0,
+     "a_true": 2,
+     "b_true": 2
+    },
+    "made_up_number": {
+     "n": 72,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "out_of_scope_fail": {
+     "n": 72,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "ask_back_fail": {
+     "n": 72,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "no_source_fail": {
+     "n": 72,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "recommend": {
+     "n": 72,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "defect_verdict": {
+     "n": 72,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "missed_point": {
+     "n": 72,
+     "agree": 0.958,
+     "kappa": 0.909,
+     "a_true": 27,
+     "b_true": 24
+    },
+    "hard_to_read": {
+     "n": 72,
+     "agree": 0.903,
+     "kappa": 0.538,
+     "a_true": 11,
+     "b_true": 6
+    }
+   },
+   "sentences": {
+    "n": 210,
+    "agree": 0.976,
+    "kappa": 0.932,
+    "split_mismatch": 5
+   },
+   "items_all_supported": {
+    "n": 72,
+    "agree": 0.972,
+    "kappa": 0.736
+   }
+  },
+  "e3_abc": {
+   "overlap": 90,
+   "answered": {
+    "n": 90,
+    "agree": 0.844,
+    "kappa": 0.762
+   },
+   "fail": {
+    "unsupported": {
+     "n": 90,
+     "agree": 0.933,
+     "kappa": 0.63,
+     "a_true": 9,
+     "b_true": 9
+    },
+    "made_up_number": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "out_of_scope_fail": {
+     "n": 90,
+     "agree": 0.989,
+     "kappa": 0.795,
+     "a_true": 3,
+     "b_true": 2
+    },
+    "ask_back_fail": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "no_source_fail": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "recommend": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "defect_verdict": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "missed_point": {
+     "n": 90,
+     "agree": 0.889,
+     "kappa": 0.679,
+     "a_true": 19,
+     "b_true": 21
+    },
+    "hard_to_read": {
+     "n": 90,
+     "agree": 0.9,
+     "kappa": 0.686,
+     "a_true": 13,
+     "b_true": 22
+    }
+   },
+   "sentences": {
+    "n": 282,
+    "agree": 0.979,
+    "kappa": 0.959,
+    "split_mismatch": 6
+   },
+   "items_all_supported": {
+    "n": 90,
+    "agree": 0.933,
+    "kappa": 0.63
+   }
+  },
+  "e3_c2": {
+   "overlap": 90,
+   "answered": {
+    "n": 90,
+    "agree": 0.878,
+    "kappa": 0.809
+   },
+   "fail": {
+    "unsupported": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "made_up_number": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "out_of_scope_fail": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "ask_back_fail": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "no_source_fail": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "recommend": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "defect_verdict": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "missed_point": {
+     "n": 90,
+     "agree": 0.933,
+     "kappa": 0.746,
+     "a_true": 15,
+     "b_true": 13
+    },
+    "hard_to_read": {
+     "n": 90,
+     "agree": 0.956,
+     "kappa": 0.0,
+     "a_true": 4,
+     "b_true": 0
+    }
+   },
+   "sentences": {
+    "n": 292,
+    "agree": 0.993,
+    "kappa": 0.985,
+    "split_mismatch": 0
+   },
+   "items_all_supported": {
+    "n": 90,
+    "agree": 0.989,
+    "kappa": 0.0
+   }
+  },
+  "e3d": {
+   "overlap": 30,
+   "answered": {
+    "n": 30,
+    "agree": 0.867,
+    "kappa": 0.794
+   },
+   "fail": {
+    "unsupported": {
+     "n": 30,
+     "agree": 0.967,
+     "kappa": 0.783,
+     "a_true": 3,
+     "b_true": 2
+    },
+    "made_up_number": {
+     "n": 30,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "out_of_scope_fail": {
+     "n": 30,
+     "agree": 0.967,
+     "kappa": 0.0,
+     "a_true": 1,
+     "b_true": 0
+    },
+    "ask_back_fail": {
+     "n": 30,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "no_source_fail": {
+     "n": 30,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "recommend": {
+     "n": 30,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "defect_verdict": {
+     "n": 30,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "missed_point": {
+     "n": 30,
+     "agree": 1.0,
+     "kappa": 1.0,
+     "a_true": 1,
+     "b_true": 1
+    },
+    "hard_to_read": {
+     "n": 30,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    }
+   },
+   "sentences": {
+    "n": 58,
+    "agree": 0.914,
+    "kappa": 0.844,
+    "split_mismatch": 12
+   },
+   "items_all_supported": {
+    "n": 30,
+    "agree": 0.933,
+    "kappa": 0.793
+   }
+  },
+  "e3_c3": {
+   "overlap": 90,
+   "answered": {
+    "n": 90,
+    "agree": 0.778,
+    "kappa": 0.643
+   },
+   "fail": {
+    "unsupported": {
+     "n": 90,
+     "agree": 0.967,
+     "kappa": 0.389,
+     "a_true": 4,
+     "b_true": 1
+    },
+    "made_up_number": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "out_of_scope_fail": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "ask_back_fail": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "no_source_fail": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "recommend": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "defect_verdict": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": null,
+     "a_true": 0,
+     "b_true": 0
+    },
+    "missed_point": {
+     "n": 90,
+     "agree": 0.922,
+     "kappa": 0.677,
+     "a_true": 15,
+     "b_true": 10
+    },
+    "hard_to_read": {
+     "n": 90,
+     "agree": 1.0,
+     "kappa": 1.0,
+     "a_true": 4,
+     "b_true": 4
+    }
+   },
+   "sentences": {
+    "n": 347,
+    "agree": 0.965,
+    "kappa": 0.894,
+    "split_mismatch": 0
+   },
+   "items_all_supported": {
+    "n": 90,
+    "agree": 0.9,
+    "kappa": 0.479
+   }
+  }
+ },
+ "e4": {
+  "A": {
+   "questions": 24,
+   "complete": 24,
+   "incomplete": 0,
+   "win_multi": 15,
+   "win_single": 1,
+   "tie": 8,
+   "order_effect": 0,
+   "multi_win_rate": {
+    "k": 15,
+    "n": 24,
+    "rate": 0.625,
+    "ci95": [
+     0.427,
+     0.788
+    ]
+   },
+   "single_win_rate": {
+    "k": 1,
+    "n": 24,
+    "rate": 0.042,
+    "ci95": [
+     0.007,
+     0.202
+    ]
+   },
+   "multi_share_of_decided": {
+    "k": 15,
+    "n": 16,
+    "rate": 0.938,
+    "ci95": [
+     0.717,
+     0.989
+    ]
+   },
+   "order_effect_rate": {
+    "k": 0,
+    "n": 24,
+    "rate": 0.0,
+    "ci95": [
+     0.0,
+     0.138
+    ]
+   },
+   "parts_covered_mean": {
+    "단일": 0.285,
+    "다중": 0.729
+   },
+   "bad_rows": 0
+  }
+ },
+ "before_after": {
+  "A": {
+   "pairs": 90,
+   "answered_before": {
+    "yes": 25,
+    "partial": 30,
+    "no": 35
+   },
+   "answered_after": {
+    "yes": 27,
+    "partial": 22,
+    "no": 41
+   },
+   "yes_before": {
+    "k": 25,
+    "n": 90,
+    "rate": 0.278,
+    "ci95": [
+     0.196,
+     0.378
+    ]
+   },
+   "yes_after": {
+    "k": 27,
+    "n": 90,
+    "rate": 0.3,
+    "ci95": [
+     0.215,
+     0.401
+    ]
+   },
+   "better": 8,
+   "same": 67,
+   "worse": 15,
+   "moves": {
+    "no->no": 28,
+    "no->partial": 2,
+    "no->yes": 5,
+    "partial->no": 11,
+    "partial->partial": 18,
+    "partial->yes": 1,
+    "yes->no": 2,
+    "yes->partial": 2,
+    "yes->yes": 21
+   },
+   "supported_before": {
+    "k": 215,
+    "n": 223,
+    "rate": 0.964,
+    "ci95": [
+     0.931,
+     0.982
+    ]
+   },
+   "supported_after": {
+    "k": 186,
+    "n": 187,
+    "rate": 0.995,
+    "ci95": [
+     0.97,
+     0.999
+    ]
+   },
+   "fail": {
+    "unsupported": {
+     "before": 3,
+     "after": 0,
+     "fixed": 3,
+     "new": 0
+    },
+    "made_up_number": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "out_of_scope_fail": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "ask_back_fail": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "no_source_fail": {
+     "before": 2,
+     "after": 0,
+     "fixed": 2,
+     "new": 0
+    },
+    "recommend": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "defect_verdict": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "missed_point": {
+     "before": 35,
+     "after": 15,
+     "fixed": 24,
+     "new": 4
+    },
+    "hard_to_read": {
+     "before": 14,
+     "after": 4,
+     "fixed": 12,
+     "new": 2
+    }
+   },
+   "now_unknown": 28,
+   "now_unknown_answered": {
+    "no": 26,
+    "partial": 1,
+    "yes": 1
+   }
+  },
+  "B": {
+   "pairs": 72,
+   "answered_before": {
+    "yes": 20,
+    "partial": 27,
+    "no": 25
+   },
+   "answered_after": {
+    "yes": 24,
+    "partial": 15,
+    "no": 33
+   },
+   "yes_before": {
+    "k": 20,
+    "n": 72,
+    "rate": 0.278,
+    "ci95": [
+     0.188,
+     0.39
+    ]
+   },
+   "yes_after": {
+    "k": 24,
+    "n": 72,
+    "rate": 0.333,
+    "ci95": [
+     0.235,
+     0.448
+    ]
+   },
+   "better": 11,
+   "same": 48,
+   "worse": 13,
+   "moves": {
+    "no->no": 20,
+    "no->partial": 3,
+    "no->yes": 2,
+    "partial->no": 9,
+    "partial->partial": 12,
+    "partial->yes": 6,
+    "yes->no": 4,
+    "yes->yes": 16
+   },
+   "supported_before": {
+    "k": 177,
+    "n": 182,
+    "rate": 0.973,
+    "ci95": [
+     0.937,
+     0.988
+    ]
+   },
+   "supported_after": {
+    "k": 150,
+    "n": 150,
+    "rate": 1.0,
+    "ci95": [
+     0.975,
+     1.0
+    ]
+   },
+   "fail": {
+    "unsupported": {
+     "before": 2,
+     "after": 0,
+     "fixed": 2,
+     "new": 0
+    },
+    "made_up_number": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "out_of_scope_fail": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "ask_back_fail": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "no_source_fail": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "recommend": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "defect_verdict": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "missed_point": {
+     "before": 24,
+     "after": 12,
+     "fixed": 17,
+     "new": 5
+    },
+    "hard_to_read": {
+     "before": 6,
+     "after": 0,
+     "fixed": 6,
+     "new": 0
+    }
+   },
+   "now_unknown": 21,
+   "now_unknown_answered": {
+    "no": 21
+   }
+  }
+ },
+ "before_after_c3": {
+  "A": {
+   "pairs": 90,
+   "answered_before": {
+    "yes": 27,
+    "partial": 22,
+    "no": 41
+   },
+   "answered_after": {
+    "yes": 46,
+    "partial": 25,
+    "no": 19
+   },
+   "yes_before": {
+    "k": 27,
+    "n": 90,
+    "rate": 0.3,
+    "ci95": [
+     0.215,
+     0.401
+    ]
+   },
+   "yes_after": {
+    "k": 46,
+    "n": 90,
+    "rate": 0.511,
+    "ci95": [
+     0.41,
+     0.612
+    ]
+   },
+   "better": 28,
+   "same": 58,
+   "worse": 4,
+   "moves": {
+    "no->no": 17,
+    "no->partial": 6,
+    "no->yes": 18,
+    "partial->no": 1,
+    "partial->partial": 17,
+    "partial->yes": 4,
+    "yes->no": 1,
+    "yes->partial": 2,
+    "yes->yes": 24
+   },
+   "supported_before": {
+    "k": 186,
+    "n": 187,
+    "rate": 0.995,
+    "ci95": [
+     0.97,
+     0.999
+    ]
+   },
+   "supported_after": {
+    "k": 281,
+    "n": 287,
+    "rate": 0.979,
+    "ci95": [
+     0.955,
+     0.99
+    ]
+   },
+   "fail": {
+    "unsupported": {
+     "before": 0,
+     "after": 4,
+     "fixed": 0,
+     "new": 4
+    },
+    "made_up_number": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "out_of_scope_fail": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "ask_back_fail": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "no_source_fail": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "recommend": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "defect_verdict": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "missed_point": {
+     "before": 15,
+     "after": 15,
+     "fixed": 2,
+     "new": 2
+    },
+    "hard_to_read": {
+     "before": 4,
+     "after": 4,
+     "fixed": 0,
+     "new": 0
+    }
+   },
+   "now_unknown": 6,
+   "now_unknown_answered": {
+    "no": 6
+   }
+  },
+  "B": {
+   "pairs": 90,
+   "answered_before": {
+    "yes": 30,
+    "partial": 19,
+    "no": 41
+   },
+   "answered_after": {
+    "yes": 44,
+    "partial": 27,
+    "no": 19
+   },
+   "yes_before": {
+    "k": 30,
+    "n": 90,
+    "rate": 0.333,
+    "ci95": [
+     0.245,
+     0.436
+    ]
+   },
+   "yes_after": {
+    "k": 44,
+    "n": 90,
+    "rate": 0.489,
+    "ci95": [
+     0.388,
+     0.59
+    ]
+   },
+   "better": 29,
+   "same": 55,
+   "worse": 6,
+   "moves": {
+    "no->no": 15,
+    "no->partial": 10,
+    "no->yes": 16,
+    "partial->no": 1,
+    "partial->partial": 15,
+    "partial->yes": 3,
+    "yes->no": 3,
+    "yes->partial": 2,
+    "yes->yes": 25
+   },
+   "supported_before": {
+    "k": 186,
+    "n": 186,
+    "rate": 1.0,
+    "ci95": [
+     0.98,
+     1.0
+    ]
+   },
+   "supported_after": {
+    "k": 277,
+    "n": 293,
+    "rate": 0.945,
+    "ci95": [
+     0.913,
+     0.966
+    ]
+   },
+   "fail": {
+    "unsupported": {
+     "before": 0,
+     "after": 1,
+     "fixed": 0,
+     "new": 1
+    },
+    "made_up_number": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "out_of_scope_fail": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "ask_back_fail": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "no_source_fail": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "recommend": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "defect_verdict": {
+     "before": 0,
+     "after": 0,
+     "fixed": 0,
+     "new": 0
+    },
+    "missed_point": {
+     "before": 13,
+     "after": 10,
+     "fixed": 4,
+     "new": 1
+    },
+    "hard_to_read": {
+     "before": 0,
+     "after": 4,
+     "fixed": 0,
+     "new": 4
+    }
+   },
+   "now_unknown": 6,
+   "now_unknown_answered": {
+    "no": 6
+   }
+  }
+ },
+ "d_vs_abc": {
+  "A": {
+   "questions": 30,
+   "d_vs_c": {
+    "same": 20,
+    "d_worse": 5,
+    "d_better": 5
+   },
+   "per_variant": {
+    "A": {
+     "n": 30,
+     "yes": {
+      "k": 7,
+      "n": 30,
+      "rate": 0.233,
+      "ci95": [
+       0.118,
+       0.409
+      ]
+     },
+     "yes_or_partial": {
+      "k": 20,
+      "n": 30,
+      "rate": 0.667,
+      "ci95": [
+       0.488,
+       0.808
+      ]
+     },
+     "supported": {
+      "k": 54,
+      "n": 56,
+      "rate": 0.964,
+      "ci95": [
+       0.879,
+       0.99
+      ]
+     },
+     "missed_point": 3,
+     "unsupported": 2,
+     "hard_to_read": 0,
+     "made_up_number": 0
+    },
+    "B": {
+     "n": 30,
+     "yes": {
+      "k": 5,
+      "n": 30,
+      "rate": 0.167,
+      "ci95": [
+       0.073,
+       0.336
+      ]
+     },
+     "yes_or_partial": {
+      "k": 17,
+      "n": 30,
+      "rate": 0.567,
+      "ci95": [
+       0.392,
+       0.726
+      ]
+     },
+     "supported": {
+      "k": 38,
+      "n": 42,
+      "rate": 0.905,
+      "ci95": [
+       0.779,
+       0.962
+      ]
+     },
+     "missed_point": 9,
+     "unsupported": 4,
+     "hard_to_read": 8,
+     "made_up_number": 0
+    },
+    "C": {
+     "n": 30,
+     "yes": {
+      "k": 8,
+      "n": 30,
+      "rate": 0.267,
+      "ci95": [
+       0.142,
+       0.444
+      ]
+     },
+     "yes_or_partial": {
+      "k": 23,
+      "n": 30,
+      "rate": 0.767,
+      "ci95": [
+       0.591,
+       0.882
+      ]
+     },
+     "supported": {
+      "k": 77,
+      "n": 80,
+      "rate": 0.963,
+      "ci95": [
+       0.895,
+       0.987
+      ]
+     },
+     "missed_point": 7,
+     "unsupported": 3,
+     "hard_to_read": 5,
+     "made_up_number": 0
+    },
+    "D": {
+     "n": 30,
+     "yes": {
+      "k": 9,
+      "n": 30,
+      "rate": 0.3,
+      "ci95": [
+       0.167,
+       0.479
+      ]
+     },
+     "yes_or_partial": {
+      "k": 21,
+      "n": 30,
+      "rate": 0.7,
+      "ci95": [
+       0.521,
+       0.833
+      ]
+     },
+     "supported": {
+      "k": 41,
+      "n": 48,
+      "rate": 0.854,
+      "ci95": [
+       0.728,
+       0.928
+      ]
+     },
+     "missed_point": 1,
+     "unsupported": 3,
+     "hard_to_read": 0,
+     "made_up_number": 0
+    }
+   }
+  },
+  "B": {
+   "questions": 30,
+   "d_vs_c": {
+    "same": 19,
+    "d_better": 4,
+    "d_worse": 7
+   },
+   "per_variant": {
+    "A": {
+     "n": 30,
+     "yes": {
+      "k": 7,
+      "n": 30,
+      "rate": 0.233,
+      "ci95": [
+       0.118,
+       0.409
+      ]
+     },
+     "yes_or_partial": {
+      "k": 18,
+      "n": 30,
+      "rate": 0.6,
+      "ci95": [
+       0.423,
+       0.754
+      ]
+     },
+     "supported": {
+      "k": 55,
+      "n": 58,
+      "rate": 0.948,
+      "ci95": [
+       0.859,
+       0.982
+      ]
+     },
+     "missed_point": 5,
+     "unsupported": 3,
+     "hard_to_read": 0,
+     "made_up_number": 0
+    },
+    "B": {
+     "n": 30,
+     "yes": {
+      "k": 7,
+      "n": 30,
+      "rate": 0.233,
+      "ci95": [
+       0.118,
+       0.409
+      ]
+     },
+     "yes_or_partial": {
+      "k": 17,
+      "n": 30,
+      "rate": 0.567,
+      "ci95": [
+       0.392,
+       0.726
+      ]
+     },
+     "supported": {
+      "k": 40,
+      "n": 43,
+      "rate": 0.93,
+      "ci95": [
+       0.814,
+       0.976
+      ]
+     },
+     "missed_point": 7,
+     "unsupported": 3,
+     "hard_to_read": 13,
+     "made_up_number": 0
+    },
+    "C": {
+     "n": 30,
+     "yes": {
+      "k": 9,
+      "n": 30,
+      "rate": 0.3,
+      "ci95": [
+       0.167,
+       0.479
+      ]
+     },
+     "yes_or_partial": {
+      "k": 22,
+      "n": 30,
+      "rate": 0.733,
+      "ci95": [
+       0.556,
+       0.858
+      ]
+     },
+     "supported": {
+      "k": 80,
+      "n": 83,
+      "rate": 0.964,
+      "ci95": [
+       0.899,
+       0.988
+      ]
+     },
+     "missed_point": 9,
+     "unsupported": 3,
+     "hard_to_read": 9,
+     "made_up_number": 0
+    },
+    "D": {
+     "n": 30,
+     "yes": {
+      "k": 5,
+      "n": 30,
+      "rate": 0.167,
+      "ci95": [
+       0.073,
+       0.336
+      ]
+     },
+     "yes_or_partial": {
+      "k": 21,
+      "n": 30,
+      "rate": 0.7,
+      "ci95": [
+       0.521,
+       0.833
+      ]
+     },
+     "supported": {
+      "k": 46,
+      "n": 51,
+      "rate": 0.902,
+      "ci95": [
+       0.79,
+       0.957
+      ]
+     },
+     "missed_point": 1,
+     "unsupported": 2,
+     "hard_to_read": 0,
+     "made_up_number": 0
+    }
+   }
+  }
+ },
+ "missing": [],
+ "missing_packs": []
+}

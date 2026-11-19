@@ -33,16 +33,20 @@ def clean_name(v: str) -> str:
 
 
 class SignupIn(BaseModel):
-    """일반 회원가입"""
+    """일반 회원가입. 휴대폰은 넣지 않아도 돼요(9판 C05 '휴대폰 (선택)', 업체에는 가지 않음 · security.md 7.1)."""
 
     name: str = Field(max_length=50)
-    phone: str = Field(max_length=20)
+    phone: str | None = Field(default=None, max_length=20, description="비우면 저장하지 않아요")
     email: str = Field(max_length=254)
     password: str = Field(min_length=8, max_length=128)
 
     _email = field_validator("email")(normalize_email)
     _name = field_validator("name")(clean_name)
-    _phone = field_validator("phone")(normalize_phone)
+
+    @field_validator("phone")
+    @classmethod
+    def _phone(cls, v: str | None) -> str | None:
+        return None if v is None or not v.strip() else normalize_phone(v)
 
 
 class LoginIn(BaseModel):

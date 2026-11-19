@@ -1,0 +1,8 @@
+/* 업체 확정 확인 카드(C34): 폰 · 웹 같은 가운데 카드 모양(W2 A). */
+.wrap { display: flex; justify-content: center; }
+.card { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: var(--mj-dialog-w); padding: 22px var(--mj-pad-group) var(--mj-pad-group); border-radius: var(--mj-radius-sheet); background: var(--mj-surface); box-shadow: var(--mj-shadow-pop); }
+.title { font-size: var(--mj-type-title-s); font-weight: var(--mj-weight-bold); line-height: var(--mj-lh-title); letter-spacing: var(--mj-track-title); }
+.note { font-size: var(--mj-type-caption); color: var(--mj-text-mute); line-height: var(--mj-lh-ui); }
+.err { display: flex; align-items: flex-start; gap: 6px; font-size: var(--mj-type-label); color: var(--mj-danger); }
+.err svg { flex: none; margin-top: 2px; }
+.done { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }

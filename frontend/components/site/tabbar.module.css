@@ -1,0 +1,18 @@
+/* 폰 아래 탭 바(9판 k-tab): 64px + 아래 안전 영역. sticky라 자기 자리를 차지해 본문을 가리지 않아요(Main 바로 뒤에 둬요) */
+.bar {
+  position: sticky; bottom: 0; z-index: var(--mj-z-header);
+  display: grid; grid-template-columns: repeat(var(--tabs, 5), minmax(0, 1fr));
+  min-height: calc(var(--mj-tabbar-h) + env(safe-area-inset-bottom, 0px));
+  padding: 2px max(0px, env(safe-area-inset-right, 0px)) var(--mj-safe-bottom) max(0px, env(safe-area-inset-left, 0px));
+  background: var(--mj-surface); box-shadow: var(--mj-edge-top);
+}
+.tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; color: var(--mj-text-mute); font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); text-decoration: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+.tab:hover { color: var(--mj-text); }
+.tab[aria-current="page"] { color: var(--mj-text); font-weight: var(--mj-weight-bold); }
+.tab:focus-visible { outline-offset: -4px; border-radius: 12px; }
+.ic { position: relative; display: inline-grid; place-items: center; }
+.count { position: absolute; top: -6px; left: calc(50% + 6px); box-shadow: 0 0 0 2px var(--mj-surface); }
+
+@media (min-width: 768px) {
+  .bar { display: none; }
+}

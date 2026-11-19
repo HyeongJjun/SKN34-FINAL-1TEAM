@@ -1,14 +1,30 @@
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidatorFunctionWrapHandler,
+    WrapValidator,
+    field_validator,
+    model_validator,
+)
+
+from app.shared.errors import app_error
+from app.shared.regions import is_region
 
 SizeBand = Literal["10", "20", "30", "40", "50"]
 Budget = Literal["u300", "300-500", "500-700", "700-1000", "o1000", "undecided"]
 MokItem = Literal["molding", "base", "door", "flatten"]
-DobaeGrade = Literal["economy", "basic"]  # 저가형 · 기본형
+DobaeGrade = Literal["economy", "basic"]  # 저가형 · 기본형 (v3 화면 말: 합지 · 실크)
+# v3 기본 정보
+Scope = Literal["full", "partial"]  # 전체 · 부분 공사
+Face = Literal["wall", "ceiling"]  # 벽 · 천장
+# 거실 · 주방 · 안방 · 작은방 1 · 작은방 2 · 복도 · 현관 · 드레스룸
+SpaceKind = Literal["living", "kitchen", "master", "room1", "room2", "hall", "entry", "dress"]
 MAX_PHOTOS_PER_SPACE = 10
 MAX_PLANS = 5
 
@@ -163,6 +179,120 @@ class PhotoOut(BaseModel):
     space_id: uuid.UUID
 
 
+class HomeInfoIn(BaseModel):
+    """v3 기본 정보 (C02 · D11). 로그인 전 손님 계산(POST /guest/standard)과 가입 뒤 공사 만들기
+    (POST /projects, 머리 Idempotency-Key = 기기 답의 key)가 같은 칸을 쓴다. 금액은 서버 계산 엔진이 다시 센다."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    trade: Literal["dobae"] = "dobae"
+    scope: Scope = "full"
+    spaces: list[SpaceKind] = Field(
+        default=[], max_length=8, description="부분 공사일 때 고른 공간 (전체면 비움)"
+    )
+    faces: list[Face] = Field(
+        default=["wall", "ceiling"], min_length=1, max_length=2, description="전체는 벽 + 천장"
+    )
+    housing: Literal["apt"] = Field(
+        default="apt", description="아파트만 (나머지는 화면에서 '준비 중')"
+    )
+    sido: str = Field(min_length=1, max_length=20)
+    sgg: str = Field(min_length=1, max_length=20)
+    emd: str | None = Field(
+        default=None,
+        max_length=20,
+        description="읍면동 (옛 화면 호환). 지금 화면은 시 · 군 · 구까지만 받아 비워 둬요",
+    )
+    area_m2: Decimal = Field(gt=10, lt=400, decimal_places=1, description="㎡ (평은 화면 도움)")
+    area_basis: Literal["supply", "exclusive"]
+    occupied: bool = Field(description="짐이 있는 집")
+    grade: DobaeGrade = Field(description="합지(economy) · 실크(basic)")
+    budget_won: int | None = Field(
+        default=None,
+        ge=100_000,
+        le=10_000_000_000,
+        multiple_of=10_000,
+        description="예산(원, 만 원 단위). 비우면 '아직 몰라요'",
+    )
+    start_date: date | None = Field(default=None, description="공사 시작 희망일 (모르면 비움)")
+
+    @field_validator("emd")
+    @classmethod
+    def _emd(cls, v: str | None) -> str | None:
+        return (v or "").strip() or None
+
+    @model_validator(mode="after")
+    def _scope(self) -> "HomeInfoIn":
+        if len(set(self.spaces)) != len(self.spaces) or len(set(self.faces)) != len(self.faces):
+            raise ValueError("같은 공간 · 면을 두 번 골랐어요.")
+        if self.scope == "full" and (self.spaces or set(self.faces) != {"wall", "ceiling"}):
+            raise ValueError("전체 공사는 공간을 고르지 않고 벽 · 천장을 모두 해요.")
+        if self.scope == "partial" and not self.spaces:
+            raise ValueError("부분 공사할 공간을 골라 주세요.")
+        return self
+
+
+def check_home(data: HomeInfoIn, today: date) -> None:
+    """모양 검사로 못 보는 것: 있는 시 · 군 · 구인지, 시작 희망일(오늘 ~ 2년 안).
+    서비스 지역 · 동은 보지 않는다. 표준견적서는 모든 시 · 군 · 구에서 나오고, 업체는 업체 고르기에서
+    시공 지역으로 거른다. 틀리면 422 invalid + 칸(fields). 손님 계산과 공사 만들기 · 고치기가 같이 쓴다.
+    입력값은 오류에 넣지 않는다."""
+
+    def bad(loc: str, msg: str):
+        return app_error("invalid", msg, fields=[{"loc": [loc], "msg": msg}])
+
+    if not is_region(data.sido, data.sgg):
+        raise bad("sgg", "지역을 다시 골라 주세요.")
+    if data.start_date is not None:
+        if data.start_date < today:
+            raise bad("start_date", "오늘 이후 날짜를 골라 주세요.")
+        if data.start_date > date(today.year + 2, today.month, min(today.day, 28)):
+            raise bad("start_date", "2년 안의 날짜를 골라 주세요.")
+
+
+# v3에만 있는 칸. 하나라도 있으면 v3 몸통(HomeInfoIn)으로, 아니면 지금 화면 몸통(ProjectCreate)으로 본다
+V3_ONLY_KEYS = frozenset(HomeInfoIn.model_fields) - frozenset(ProjectCreate.model_fields)
+
+
+def _one_shape(v: Any, _: ValidatorFunctionWrapHandler) -> "ProjectCreate | HomeInfoIn":
+    """두 모양 중 하나만 검사한다. 그래서 422 fields의 loc는 지금처럼 칸 이름만 있다(모양 이름이 붙지 않음)."""
+    if isinstance(v, ProjectCreate | HomeInfoIn):
+        return v
+    if isinstance(v, dict) and V3_ONLY_KEYS & v.keys():
+        return HomeInfoIn.model_validate(v)
+    return ProjectCreate.model_validate(v)
+
+
+# POST · PATCH /projects 몸통 (contract 3.2). OpenAPI에는 두 모양이 anyOf로 다 보인다
+ProjectBody = Annotated[ProjectCreate | HomeInfoIn, WrapValidator(_one_shape)]
+
+
+class HomeInfoOut(BaseModel):
+    """저장한 v3 기본 정보 (넣은 그대로). v2로 만든 공사는 비어 있다."""
+
+    trade: str
+    scope: Scope
+    spaces: list[SpaceKind]
+    faces: list[Face]
+    housing: str
+    sido: str
+    sgg: str
+    emd: str | None
+    area_m2: Decimal
+    area_basis: str
+    occupied: bool
+    grade: DobaeGrade | None
+    budget_won: int | None
+    start_date: date | None
+
+
+class EmdOut(BaseModel):
+    """읍면동 한 줄 (B6 자료)"""
+
+    name: str = Field(description="상계동")
+    code: str | None = Field(default=None, description="행정동 코드 (있을 때만)")
+
+
 class ProjectOut(BaseModel):
     id: uuid.UUID
     code: str
@@ -183,6 +313,13 @@ class ProjectOut(BaseModel):
     photos: list[PhotoOut]
     plans: list[uuid.UUID]
     created_at: datetime
+    # ---- v3 (1단계에서 채움) ----
+    source: Literal["v2", "guest", "member"] = Field(
+        default="v2", description="만든 길: 옛 v2 · 손님 답 옮김 · 가입 뒤 바로"
+    )
+    emd: str | None = Field(default=None, description="읍면동")
+    budget_won: int | None = Field(default=None, description="예산(원)")
+    home: HomeInfoOut | None = Field(default=None, description="v3 기본 정보 (넣은 그대로)")
 
 
 class ProjectListItem(BaseModel):

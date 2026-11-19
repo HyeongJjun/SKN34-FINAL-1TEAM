@@ -1,0 +1,19 @@
+.wrap { position: relative; display: inline-flex; }
+.iconBtn { display: inline-grid; place-items: center; width: var(--mj-hit); height: var(--mj-hit); padding: 0; border: 0; border-radius: 50%; background: none; color: var(--mj-text-sub); cursor: pointer; }
+.iconBtn:hover, .iconBtn[aria-expanded="true"] { background: var(--mj-fill); color: var(--mj-text); }
+.iconBtn:focus-visible { border-radius: 50%; }
+.textBtn { display: inline-flex; align-items: center; gap: 4px; min-height: var(--mj-hit); padding: 0 8px; border: 0; border-radius: var(--mj-radius-field); background: none; color: var(--mj-text-sub); font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); cursor: pointer; white-space: nowrap; }
+.textBtn:hover, .textBtn[aria-expanded="true"] { background: var(--mj-fill); color: var(--mj-text); }
+.chev { transition: transform var(--mj-dur-fast) var(--mj-ease-out); }
+.textBtn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+
+.pop { position: absolute; top: calc(100% + 6px); z-index: var(--mj-z-pop); width: var(--mj-menu-w); max-width: calc(100vw - 2 * var(--mj-gutter)); padding: 6px; border-radius: 14px; background: var(--mj-surface); box-shadow: var(--mj-shadow-pop); animation: pop var(--mj-dur) var(--mj-ease-out); }
+.end { right: 0; }
+.start { left: 0; }
+@keyframes pop { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: none; } }
+.pop ul { margin: 0; padding: 0; list-style: none; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: var(--mj-hit); padding: 0 12px; border: 0; border-radius: 9px; background: none; color: var(--mj-text); font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); text-align: left; text-decoration: none; cursor: pointer; }
+.row:hover { background: var(--mj-fill); color: var(--mj-text); }
+.row small { font-size: var(--mj-type-caption); color: var(--mj-text-mute); font-weight: 400; }
+.danger, .danger:hover { color: var(--mj-danger); }
+.row[aria-disabled="true"] { color: var(--mj-text-disabled); cursor: not-allowed; background: none; }

@@ -1,0 +1,34 @@
+/* 담긴 칸 너비로 목록 ↔ 표를 바꿔요(컨테이너 쿼리, 560px) */
+.wrap { container-type: inline-size; min-width: 0; }
+
+.list { margin: 0; padding: 0; list-style: none; }
+.row { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 14px 0; border-bottom: 1px solid var(--mj-line-soft); min-width: 0; }
+.row:last-child { border-bottom: 0; }
+.rl { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.rl b { font-size: var(--mj-type-body); font-weight: var(--mj-weight-semibold); }
+.rl span { font-size: var(--mj-type-label); color: var(--mj-text-mute); }
+.code { color: var(--mj-text-mute); font-weight: 500; font-variant-numeric: tabular-nums; }
+.rv { flex: none; font-size: var(--mj-type-body); font-weight: var(--mj-weight-bold); white-space: nowrap; text-align: right; }
+.sm { font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); color: var(--mj-text-sub); }
+.out .rl b, .out .rv { color: var(--mj-text-mute); }
+.out .rv { font-weight: 500; }
+.first { border-top: 2px solid var(--mj-line-ink); }
+.tot .rl b, .tot .rv { font-size: var(--mj-type-body); font-weight: var(--mj-weight-heavy); color: var(--mj-text); }
+.tot + .row { border-top: 0; }
+
+.table { display: none; width: 100%; border-collapse: collapse; font-size: var(--mj-type-label); }
+.table th, .table td { padding: 12px; border-bottom: 1px solid var(--mj-line-soft); text-align: left; vertical-align: middle; font-weight: 400; }
+.table thead th { padding: 10px 12px; font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); color: var(--mj-text-mute); white-space: nowrap; border-bottom: 1px solid var(--mj-line); }
+.table tbody th b { display: block; font-size: var(--mj-type-body); font-weight: var(--mj-weight-semibold); }
+.sub { display: block; font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+.table .r { text-align: right; white-space: nowrap; }
+.table td { font-size: var(--mj-type-body); }
+.cCode { width: 72px; color: var(--mj-text-mute); }
+.table tr.out th b, .table tr.out td { color: var(--mj-text-mute); }
+.table tfoot th, .table tfoot td { border-top: 2px solid var(--mj-line-ink); border-bottom: 0; font-weight: var(--mj-weight-bold); }
+.table tfoot td b { font-size: var(--mj-type-body); font-weight: var(--mj-weight-heavy); }
+
+@container (min-width: 560px) {
+  .list { display: none; }
+  .table { display: table; }
+}

@@ -1,9 +1,9 @@
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from app.calc.schedule import JOB_MAX_DAYS
 from app.quote.models import QUOTE_FILES_MAX
@@ -21,6 +21,9 @@ class StandardLineOut(BaseModel):
     amount: int | None
     state: str
     source: str
+    basis: str | None = Field(
+        default=None, description="v3: public · market · assumed · none (줄 근거)"
+    )
 
 
 class StandardTradeOut(BaseModel):
@@ -57,6 +60,20 @@ class StandardOut(BaseModel):
     vat: int
     total: int
     budget: BudgetOut | None
+    # ---- v3 (C07 · C60 · D01, 1단계에서 채움): 도배지 평 × 시장 평균 · 부분 공사 공간 몫 ----
+    scope: Literal["full", "partial"] | None = Field(default=None, description="전체 · 부분")
+    spaces: list[str] = Field(default=[], description="부분 공사 공간 kind 사본")
+    faces: list[str] = Field(default=[], description="벽 · 천장 사본")
+    share_ver: str | None = Field(default=None, description="공간 몫 표 판 (부분일 때만)")
+    market_ver: str | None = Field(default=None, description="벽지 시장 평균 가격 판 (도배지 줄)")
+    budget_fit: Literal["within", "over"] | None = Field(
+        default=None, description="예산(원) 안 · 밖 (예산이 없으면 비움)"
+    )
+    days: Decimal | None = Field(
+        default=None,
+        description="예상 공사 일수 (C07 '예상 2일', 반나절 단위 · 계산 엔진, 손님 계산 days와 같은 값."
+        " 여러 공정이면 공정별 일수의 합)",
+    )
 
 
 class QuoteDraftIn(BaseModel):
@@ -70,6 +87,20 @@ class QuoteDraftIn(BaseModel):
     vat_mode: VatMode | None = None
     days: int | None = Field(default=None, ge=1, le=JOB_MAX_DAYS, description="공사 기간 (일)")
     valid_until: date | None = Field(default=None, description="견적 유효기간 (이날까지)")
+    # v3 '포함됐나요?' 칩 4칸 (D21). 비우면 '안 적었어요'
+    incl_removal: bool | None = Field(default=None, description="기존 벽지 철거 포함")
+    incl_waste: bool | None = Field(default=None, description="폐기물 처리 포함")
+    paper_spec: Annotated[str, StringConstraints(strip_whitespace=True, max_length=60)] | None = (
+        Field(default=None, description="벽지 제조사 · 규격 (LX 베스띠 · 폭 106cm)")
+    )
+    warranty_months: int | None = Field(
+        default=None, ge=0, le=120, description="하자 보수 기간(개월)"
+    )
+
+    @field_validator("paper_spec")
+    @classmethod
+    def _blank(cls, v: str | None) -> str | None:
+        return v or None
 
     @model_validator(mode="after")
     def _files(self) -> "QuoteDraftIn":
@@ -104,6 +135,11 @@ class VendorQuoteOut(BaseModel):
     created_at: datetime
     updated_at: datetime
     files: list[QuoteFileOut]
+    # v3 '포함됐나요?' 칩 4칸 (D21)
+    incl_removal: bool | None = None
+    incl_waste: bool | None = None
+    paper_spec: str | None = None
+    warranty_months: int | None = None
 
 
 class QuoteBriefOut(BaseModel):

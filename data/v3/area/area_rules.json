@@ -1,0 +1,90 @@
+{
+ "checked_at": "2026-11-18",
+ "pyeong_m2": 3.3058,
+ "definitions": [
+  "주거전용면적: 세대가 혼자 쓰는 안쪽 면적(발코니 제외). 분양 · 임대 공고와 등기의 기준이에요",
+  "주거공용면적: 계단 · 복도 · 엘리베이터처럼 같은 동 세대가 함께 쓰는 면적이에요",
+  "공급면적 = 주거전용 + 주거공용. '34평형'처럼 부르는 평형은 보통 공급면적 기준이에요",
+  "계약면적 = 공급면적 + 그 밖의 공용(관리사무소 · 주차장 등). 발코니는 서비스면적이라 어디에도 안 들어가요"
+ ],
+ "definitions_source": "용어 뜻은 공공 분양 공고(LH 청약플러스 · iH · 서울시 정비사업) 면적표의 구성(전용 · 주거공용 · 공급)으로 확인했어요. 법령 조항 번호는 이번에 확인 못 했어요",
+ "exclusive_ratio": {
+  "전용 50㎡ 미만": {
+   "n": 1,
+   "median": 0.727,
+   "min": 0.727,
+   "max": 0.727,
+   "supply_over_excl_median": 1.376
+  },
+  "전용 50~60㎡": {
+   "n": 6,
+   "median": 0.727,
+   "min": 0.717,
+   "max": 0.76,
+   "supply_over_excl_median": 1.376
+  },
+  "전용 60~85㎡": {
+   "n": 7,
+   "median": 0.76,
+   "min": 0.75,
+   "max": 0.789,
+   "supply_over_excl_median": 1.315
+  },
+  "전용 85㎡ 초과": {
+   "n": 6,
+   "median": 0.818,
+   "min": 0.79,
+   "max": 0.883,
+   "supply_over_excl_median": 1.223
+  },
+  "전체": {
+   "n": 20,
+   "median": 0.76,
+   "min": 0.717,
+   "max": 0.883,
+   "supply_over_excl_median": 1.315
+  }
+ },
+ "plan_paper_area": {
+  "n_plans": 20,
+  "assumptions": "천장 2.3m · 문 0.9 × 2.1m · 창 높이 2.1/1.2m · 주방 벽 절반 · 욕실은 도배 안 함(plan_qty 규칙)",
+  "expanded": {
+   "paper_over_supply_median": 2.194,
+   "paper_over_supply_q1_q3": [
+    2.028,
+    2.27
+   ],
+   "paper_over_excl_median": 2.918,
+   "ceiling_share_median": 0.349,
+   "silk_rolls_per_pyeong_median": 0.647
+  },
+  "not_expanded": {
+   "n": 15,
+   "paper_over_supply_median": 1.898
+  }
+ },
+ "market_rolls": {
+  "silk": {
+   "rolls_per_pyeong": 0.532,
+   "n": 292,
+   "paper_over_supply": 2.213
+  },
+  "hapji": {
+   "rolls_per_pyeong": 0.5,
+   "n": 75,
+   "paper_over_supply": 2.08
+  }
+ },
+ "team_values": {
+  "house_py_supply_per_exclusive": "1.2 (backend/app/refprice/house.py · market_band.SUPPLY_PER_EXCLUSIVE)",
+  "book_area_factor": "공급 × 2.5 · 전용 × 3.0, 천장 25% (book.py DOBAE_2026H2, 팀 가정값)",
+  "market_area_factor": "실크 2.24 · 합지 2.16, 천장 37% (market.py, 실견적 롤 수 관행)",
+  "plan_qty_rolls": "실크 1.06 × 15.6m(16.5㎡) · 합지(소폭) 0.53 × 12.5m"
+ },
+ "takeaways": [
+  "전용률 중앙값 0.76 → 공급 ≈ 전용 × 1.315. 팀 가정 1.2보다 커요(전용 50㎡ 미만 소형은 더 커요)",
+  "평면도 계산 도배 면적(확장, 천장 포함) ≈ 공급 × 2.194, 전용 × 2.918",
+  "실견적 롤 수로 되짚은 값 ≈ 공급 × 2.213(실크) · 2.08(합지)",
+  "표준견적서의 공급 × 2.5는 평면도 계산 · 실견적 롤 수보다 커요"
+ ]
+}

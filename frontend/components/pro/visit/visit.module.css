@@ -1,0 +1,12 @@
+/* 실측 요청 화면(V04 · D14 · V05 · V06 · V07) */
+.titleRow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.vt { font-size: var(--mj-type-title-s); font-weight: var(--mj-weight-bold); }
+.calT { font-size: var(--mj-type-body); font-weight: var(--mj-weight-bold); }
+.err { display: flex; align-items: center; gap: 6px; font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); color: var(--mj-danger); }
+.acts { display: flex; gap: 8px; }
+.acts > * { flex: 1 1 0; min-width: 0; }
+.sep { width: 100%; margin: 4px 0; border: 0; border-top: 1px solid var(--mj-line); }
+.opts { display: flex; flex-direction: column; }
+/* 폰 · 태블릿만 아래 단추 띠(웹은 오른쪽 칸에 단추). display: contents라 띠가 화면 끝에 그대로 붙어요 */
+.phoneBar { display: contents; }
+@media (min-width: 1024px) { .phoneBar { display: none; } }

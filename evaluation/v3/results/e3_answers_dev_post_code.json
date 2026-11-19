@@ -1,0 +1,125 @@
+{
+ "split": "dev",
+ "cards": "cards@bfb4969670aa",
+ "corpus": "13_interior_guide_book_rag@0287c91fe04d+consult_knowledge_rag@b91e7e48a53c+v3_knowledge_iter2_rag@b0dc76e5fcb7+v3_knowledge_rag@0a83514a1704+team657",
+ "grid": [],
+ "variants": {
+  "A": {
+   "bank": {
+    "n": 330,
+    "answered_rate": 0.227,
+    "answered_rate_on_answerable": "72/290",
+    "trade_ok": "69/72",
+    "fabricated_numbers": 0,
+    "out_of_scope_ok": "14/17",
+    "ask_back_ok": "22/23",
+    "answered_ci95": [
+     0.202,
+     0.301
+    ]
+   },
+   "rag": {
+    "n_answer": 206,
+    "answered_rate": 0.403,
+    "grounded_given_answered": 0.843,
+    "grounded_ci95": [
+     0.75,
+     0.906
+    ],
+    "grounded_of_all": 0.34,
+    "no_source_answered": "2/36",
+    "engine_answered_with_text": "3/13",
+    "fabricated_numbers": 0
+   }
+  },
+  "B": {
+   "bank": {
+    "n": 330,
+    "answered_rate": 0.055,
+    "answered_rate_on_answerable": "17/290",
+    "trade_ok": "14/17",
+    "fabricated_numbers": 0,
+    "out_of_scope_ok": "14/17",
+    "ask_back_ok": "23/23",
+    "answered_ci95": [
+     0.037,
+     0.092
+    ]
+   },
+   "rag": {
+    "n_answer": 206,
+    "answered_rate": 0.199,
+    "grounded_given_answered": 0.488,
+    "grounded_ci95": [
+     0.343,
+     0.635
+    ],
+    "grounded_of_all": 0.097,
+    "no_source_answered": "2/36",
+    "engine_answered_with_text": "0/13",
+    "fabricated_numbers": 0
+   }
+  },
+  "C": {
+   "bank": {
+    "n": 330,
+    "answered_rate": 0.245,
+    "answered_rate_on_answerable": "77/290",
+    "trade_ok": "72/77",
+    "fabricated_numbers": 0,
+    "out_of_scope_ok": "14/17",
+    "ask_back_ok": "22/23",
+    "answered_ci95": [
+     0.218,
+     0.319
+    ]
+   },
+   "rag": {
+    "n_answer": 206,
+    "answered_rate": 0.471,
+    "grounded_given_answered": 0.773,
+    "grounded_ci95": [
+     0.68,
+     0.845
+    ],
+    "grounded_of_all": 0.364,
+    "no_source_answered": "3/36",
+    "engine_answered_with_text": "3/13",
+    "fabricated_numbers": 0
+   }
+  },
+  "K": {
+   "bank": {
+    "n": 330,
+    "answered_rate": 0.148,
+    "answered_rate_on_answerable": "47/290",
+    "trade_ok": "43/47",
+    "fabricated_numbers": 0,
+    "out_of_scope_ok": "14/17",
+    "ask_back_ok": "23/23",
+    "answered_ci95": [
+     0.124,
+     0.209
+    ]
+   },
+   "rag": {
+    "n_answer": 206,
+    "answered_rate": 0.383,
+    "grounded_given_answered": 0.722,
+    "grounded_ci95": [
+     0.614,
+     0.808
+    ],
+    "grounded_of_all": 0.277,
+    "no_source_answered": "3/36",
+    "engine_answered_with_text": "1/13",
+    "fabricated_numbers": 0
+   }
+  }
+ },
+ "chosen": {
+  "t_card": 0.55,
+  "bonus3": 0.1,
+  "t_high": 0.62
+ }
+}

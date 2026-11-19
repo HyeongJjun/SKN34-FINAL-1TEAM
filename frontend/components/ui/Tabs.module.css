@@ -1,0 +1,52 @@
+.tabs { min-width: 0; }
+.list {
+  position: relative; display: flex; align-items: stretch; gap: 6px;
+  margin: 0; padding: 4px; margin-inline: -4px; list-style: none;
+  overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.list::-webkit-scrollbar { display: none; }
+.list > li { display: flex; flex: none; }
+.tab {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: none;
+  min-height: var(--mj-hit); padding: 0 8px; margin: 0; border: 0; background: none;
+  font: inherit; font-size: var(--mj-type-body); font-weight: var(--mj-weight-semibold); line-height: var(--mj-lh-ui);
+  color: var(--mj-text-mute); white-space: nowrap; text-decoration: none; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab:hover { color: var(--mj-text); }
+.tab:focus-visible { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: -3px; border-radius: var(--mj-radius-badge); }
+.n { font-variant-numeric: tabular-nums; }
+.ic { flex: none; }
+.off, .off:hover { color: var(--mj-text-disabled); cursor: not-allowed; }
+
+/* 밑줄 탭: 아래 1px 줄 위에 지금 칸만 2px 진한 줄 */
+.line .list { gap: 4px; padding-block: 0; box-shadow: inset 0 -1px 0 var(--mj-line); }
+.line .tab { padding: 0 10px; }
+.line .tab:is([aria-current="page"], [aria-selected="true"]) { color: var(--mj-text); font-weight: var(--mj-weight-bold); box-shadow: inset 0 -2px 0 var(--mj-line-ink); }
+@media (max-width: 767px) {
+  .fill .list > li, .fill .list > .tab { flex: 1 1 0; }
+  .fill .list > li > .tab { flex: 1 1 auto; }
+}
+
+/* 알약: 거르기(pill) · 종류(type) */
+.pill .tab, .type .tab {
+  min-height: var(--mj-chip-h); padding: 0 14px; border-radius: var(--mj-radius-pill);
+  background: var(--mj-surface); box-shadow: inset 0 0 0 1px var(--mj-line);
+  font-size: var(--mj-type-label);
+}
+.pill .tab:hover, .type .tab:hover { background: var(--mj-surface-sub); }
+.pill .tab:focus-visible, .type .tab:focus-visible { outline-offset: 2px; border-radius: var(--mj-radius-pill); }
+.pill .tab:is([aria-current="page"], [aria-selected="true"]) { background: var(--mj-surface-inverse); color: var(--mj-text-inverse); box-shadow: none; font-weight: var(--mj-weight-bold); }
+.pill .tab:is([aria-current="page"], [aria-selected="true"]) .ic { color: currentColor; }
+.type .tab:is([aria-current="page"], [aria-selected="true"]) { background: var(--mj-primary-weak); color: var(--mj-on-primary-weak); box-shadow: inset 0 0 0 1.5px var(--mj-primary); font-weight: var(--mj-weight-bold); }
+.pill .off, .type .off { background: var(--mj-surface-sub); }
+
+/* 상태 아이콘 색(StateTag와 같아요). 글자는 칸 색 그대로 */
+.todo { color: var(--mj-st-todo); }
+.wait { color: var(--mj-st-wait); }
+.ok { color: var(--mj-st-ok); }
+.done { color: var(--mj-st-done); }
+.late { color: var(--mj-st-late); }
+
+.panel { min-width: 0; }
+.panel:focus-visible { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: 4px; border-radius: var(--mj-radius-badge); }

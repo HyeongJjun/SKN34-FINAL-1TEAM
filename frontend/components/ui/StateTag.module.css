@@ -1,0 +1,10 @@
+.tag { display: inline-flex; align-items: center; gap: 6px; font-size: var(--mj-type-label); font-weight: var(--mj-weight-bold); line-height: 1.3; color: var(--mj-text); white-space: nowrap; }
+.ic { flex: none; }
+.todo .ic { color: var(--mj-st-todo); }
+.wait .ic { color: var(--mj-st-wait); }
+.ok .ic { color: var(--mj-st-ok); }
+.done .ic { color: var(--mj-st-done); }
+.late .ic { color: var(--mj-st-late); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 0; list-style: none; }
+.legend .tag { font-size: var(--mj-type-caption); color: var(--mj-text-sub); }

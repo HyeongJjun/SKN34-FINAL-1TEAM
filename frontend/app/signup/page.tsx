@@ -1,29 +1,36 @@
-// 이메일 가입(시안 WSignup). '카카오로 시작하기'는 카카오에서 휴대폰 번호를 받는다고 보고, 연결 전까지는 준비 중 안내만 보인다.
-import { SiteHeader } from "@/components/site/SiteHeader";
+// /signup — 가입 고르기(C04) · ?step=email이면 이메일 가입 · 약관 동의(C05). 웹은 가운데 카드 460(W9: 가입 · 로그인만).
+// 이미 로그인했으면 가입 화면을 보이지 않고 그 사람 첫 화면으로 보내요.
+import { redirect } from "next/navigation";
+import { AppHeader } from "@/components/site/AppHeader";
+import { Main, PageHead } from "@/components/site/Frame";
+import { SignupChoice } from "@/components/auth/SignupChoice";
 import { SignupForm } from "@/components/auth/SignupForm";
-import { DraftAside } from "@/components/auth/DraftAside";
-import { AuthTabs, VendorJoin } from "@/components/auth/parts";
-import s from "@/components/auth/auth.module.css";
+import { HOME, safeNext, withNext } from "@/components/auth/next";
+import { MOCK_V3A } from "@/lib/mock/v3a/mode";
+import { getSession } from "@/lib/session";
+import s from "@/components/auth/card.module.css";
 
 export const metadata = { title: "가입" };
 
-export default async function SignupPage({ searchParams }: { searchParams: Promise<{ next?: string | string[] }> }) {
-  const raw = (await searchParams).next;
-  const next = Array.isArray(raw) ? raw[0] : raw;
+export default async function SignupPage({ searchParams }: { searchParams: Promise<{ step?: string; next?: string | string[] }> }) {
+  const sp = await searchParams;
+  const next = safeNext(Array.isArray(sp.next) ? sp.next[0] : sp.next) ?? undefined;
+  const session = await getSession();
+  if (session) redirect(next ?? HOME[session.role]);
+  const email = sp.step === "email";
   return (
     <>
-      <SiteHeader />
-      <main id="main" className={`mj-wrap ${s.page}`}>
-        <div className={s.cols}>
-          <div className={s.col}>
-            <h1 className="mj-sr">믿집 가입</h1>
-            <AuthTabs current="signup" next={next} />
-            <SignupForm next={next} />
-            <VendorJoin />
-          </div>
-          <DraftAside action="가입" />
-        </div>
-      </main>
+      <AppHeader phone={email ? { title: "이메일로 가입", back: withNext("/signup", next) } : { title: "가입", back: "/start/standard" }} />
+      <Main narrow>
+        {email ? (
+          <>
+            <div className={s.card}><PageHead title="이메일로 가입" /></div>
+            <SignupForm next={next} mock={MOCK_V3A} />
+          </>
+        ) : (
+          <SignupChoice next={next} />
+        )}
+      </Main>
     </>
   );
 }

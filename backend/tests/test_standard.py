@@ -16,7 +16,8 @@ def test_standard_is_saved_once_and_counts_only_included(api):
     st = r.json()
     assert [t["trade"] for t in st["trades"]] == ["mokgong", "dobae"]
     dobae = st["trades"][1]
-    assert dobae["supply"] == 2_878_687 and dobae["total"] == 3_166_556  # 시안 예시 집
+    # v3: 도배지 줄 = 96.0 벽지 평 × 시장 평균 10,749원 (옛 317.4㎡ × 3,325원 → 2,878,687 · 3,166,556)
+    assert dobae["supply"] == 2_855_236 and dobae["total"] == 3_140_760
     assert dobae["man_day"] == "7.5"
     counted = sum(ln["amount"] for ln in dobae["lines"] if ln["state"] in ("included", "separate"))
     assert counted == dobae["supply"]

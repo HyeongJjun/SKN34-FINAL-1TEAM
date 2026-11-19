@@ -1,0 +1,47 @@
+﻿date,weekday,name,kind,is_weekend,work_day_lost,basis,in_repo_holidays_py,in_repo_v2_extra,source_url,checked_at
+2026-01-01,목,1월 1일,공휴일,아니오,예,관공서의 공휴일에 관한 규정 제2조,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-02-16,월,설날 연휴,공휴일,아니오,예,규정 제2조,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-02-17,화,설날,공휴일,아니오,예,규정 제2조,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-02-18,수,설날 연휴,공휴일,아니오,예,규정 제2조,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-03-01,일,3 · 1절,국경일,예,아니오,규정 제2조,아니오,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-03-02,월,대체공휴일(3 · 1절),대체공휴일,아니오,예,규정 제3조,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-05-01,금,노동절,공휴일,아니오,예,"규정 개정(2026-04-28 국무회의, 2026-05-01부터)",예,아니오,https://www.mpm.go.kr/mpm/comm/newsPress/newsPressRelease/?cntId=4250&mode=view,2026-11-18
+2026-05-05,화,어린이날,공휴일,아니오,예,규정 제2조,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-05-24,일,부처님오신날,공휴일,예,아니오,규정 제2조,아니오,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-05-25,월,대체공휴일(부처님오신날),대체공휴일,아니오,예,규정 제3조,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-06-03,수,전국동시지방선거,선거일,아니오,예,공직선거법에 따른 임기만료 선거일,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-06-06,토,현충일,공휴일,예,아니오,규정 제2조(대체공휴일 없음),아니오,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-07-17,금,제헌절,국경일 · 공휴일,아니오,예,"공휴일 재지정(법 개정 2026-05-11 시행, 규정 개정 2026-04-28)",예,아니오,https://www.mpm.go.kr/mpm/comm/newsPress/newsPressRelease/?cntId=4250&mode=view,2026-11-18
+2026-08-15,토,광복절,국경일,예,아니오,규정 제2조,아니오,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-08-17,월,대체공휴일(광복절),대체공휴일,아니오,예,규정 제3조,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-09-24,목,추석 연휴,공휴일,아니오,예,규정 제2조,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-09-25,금,추석,공휴일,아니오,예,규정 제2조,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-09-26,토,추석 연휴,공휴일,예,아니오,토요일과 겹쳐도 설 · 추석은 대체공휴일 없음,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-10-03,토,개천절,국경일,예,아니오,규정 제2조,아니오,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-10-05,월,대체공휴일(개천절),대체공휴일,아니오,예,규정 제3조,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-10-09,금,한글날,국경일,아니오,예,규정 제2조,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2026-12-25,금,기독탄신일,공휴일,아니오,예,규정 제2조,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026,2026-11-18
+2027-01-01,금,1월 1일,공휴일,아니오,예,2027년도 월력요항,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-02-06,토,설날 연휴,공휴일,예,아니오,월력요항,아니오,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-02-07,일,설날,공휴일,예,아니오,월력요항,아니오,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-02-08,월,설날 연휴,공휴일,아니오,예,월력요항,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-02-09,화,대체공휴일(설날),대체공휴일,아니오,예,설날이 일요일과 겹침,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-03-01,월,3 · 1절,국경일,아니오,예,월력요항,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-05-01,토,노동절,공휴일,예,아니오,월력요항,아니오,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-05-03,월,대체공휴일(노동절),대체공휴일,아니오,예,노동절이 토요일과 겹침,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-05-05,수,어린이날,공휴일,아니오,예,월력요항,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-05-13,목,부처님오신날,공휴일,아니오,예,월력요항,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-06-06,일,현충일,공휴일,예,아니오,대체공휴일 없음,아니오,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-07-17,토,제헌절,국경일 · 공휴일,예,아니오,월력요항,아니오,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-07-19,월,대체공휴일(제헌절),대체공휴일,아니오,예,제헌절이 토요일과 겹침,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-08-15,일,광복절,국경일,예,아니오,월력요항,아니오,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-08-16,월,대체공휴일(광복절),대체공휴일,아니오,예,월력요항,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-09-14,화,추석 연휴,공휴일,아니오,예,월력요항,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-09-15,수,추석,공휴일,아니오,예,월력요항,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-09-16,목,추석 연휴,공휴일,아니오,예,월력요항,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-10-03,일,개천절,국경일,예,아니오,월력요항,아니오,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-10-04,월,대체공휴일(개천절),대체공휴일,아니오,예,월력요항,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-10-09,토,한글날,국경일,예,아니오,월력요항,아니오,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-10-11,월,대체공휴일(한글날),대체공휴일,아니오,예,월력요항,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-12-25,토,기독탄신일,공휴일,예,아니오,월력요항,아니오,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18
+2027-12-27,월,대체공휴일(기독탄신일),대체공휴일,아니오,예,월력요항,예,아니오,https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027,2026-11-18

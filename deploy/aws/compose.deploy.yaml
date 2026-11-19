@@ -48,6 +48,8 @@ services:
     restart: unless-stopped
     environment:
       API_INTERNAL_URL: http://api:8000
+      # true면 화면 CSP를 알리기만 한다(.env.release에 넣어 잠깐 되돌릴 때). 비우면 막는다
+      CSP_REPORT_ONLY: ${CSP_REPORT_ONLY:-}
     depends_on:
       api:
         condition: service_healthy

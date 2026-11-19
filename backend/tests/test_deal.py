@@ -96,7 +96,7 @@ def test_confirm_makes_a_deal_and_closes_the_others(api):
 
     assert notes("maru@mitjip.test") == [
         {
-            "body": "고객이 확정했어요 · 공사 날짜를 내 주세요",
+            "body": "고객이 확정했어요 · 공사 날짜를 내 주세요 · 노원구 도배",  # v3: 공사 이름
             "link": f"/vendor/jobs/{d['id']}",
             "dedup_key": f"deal:{d['id']}",
         }
@@ -122,9 +122,8 @@ def test_confirm_makes_a_deal_and_closes_the_others(api):
     assert confirm(api, pid, vb).json()["error"]["message"] == "이미 업체를 확정했어요."
 
     login(api, "maru@mitjip.test")
-    assert (
-        api.get(f"/vendor/visits/{va}").json()["customer"]["phone"] == "01012345678"
-    )  # 확정: 계속 보인다
+    # v3(B3): 업체 화면에는 고객 연락처 칸이 없다 (확정 뒤 연락은 채팅으로)
+    assert "customer" not in api.get(f"/vendor/visits/{va}").json()
     (job,) = api.get("/vendor/visits", params={"tab": "jobs"}).json()["items"]
     assert (job["id"], job["deal_id"], job["deal_status"], job["overdue"]) == (
         va,
@@ -132,14 +131,15 @@ def test_confirm_makes_a_deal_and_closes_the_others(api):
         "confirmed",
         False,
     )
-    assert job["customer"]["name"] == "고객" and job["dates_due_at"] == d["dates_due_at"]
+    # v3(B3): 작업함 줄에는 고객 이름 · 연락처 칸이 없다 (채팅으로, architecture 10장)
+    assert "customer" not in job and job["dates_due_at"] == d["dates_due_at"]
     assert api.get("/vendor/visits", params={"tab": "waiting"}).json()["items"] == []
     summary = api.get("/vendor/visits/summary").json()
     assert (summary["jobs"], summary["waiting"], summary["recent"]["chosen"]) == (1, 0, 1)
     query("update deals set dates_due_at = now() - interval '1 hour'")
     assert api.get("/vendor/visits", params={"tab": "jobs"}).json()["items"][0]["overdue"] is True
     login(api, "gyeol@mitjip.test")
-    assert api.get(f"/vendor/visits/{vb}").json()["customer"] is None  # 닫힘: 바로 가려진다
+    assert "customer" not in api.get(f"/vendor/visits/{vb}").json()  # v3(B3): 연락처 칸 없음
     (gone,) = api.get("/vendor/visits", params={"tab": "done"}).json()["items"]
     assert (gone["status"], gone["close_reason"]) == ("closed", "other_chosen")
     assert api.get("/vendor/visits/summary").json()["jobs"] == 0

@@ -1,0 +1,39 @@
+﻿id,type,supply_m2,exclusive_m2,ratio_excl_over_supply,supply_over_excl,supply_pyeong,band,used,why_not,publisher,source_url,retrieved
+fp01,59A,78.7671,59.9,0.7605,1.315,23.8,전용 50~60㎡,예,,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020906&ccrCnntSysDsCd=03&uppAisTpCd=05&aisTpCd=05&mi=1027,2026-11-11
+fp02,59B,78.754,59.89,0.7605,1.315,23.8,전용 50~60㎡,예,,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020906&ccrCnntSysDsCd=03&uppAisTpCd=05&aisTpCd=05&mi=1027,2026-11-11
+fp03,74A,98.5049,74.91,0.7605,1.315,29.8,전용 60~85㎡,예,,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020906&ccrCnntSysDsCd=03&uppAisTpCd=05&aisTpCd=05&mi=1027,2026-11-11
+fp04,84A,111.7205,84.96,0.7605,1.315,33.8,전용 60~85㎡,예,,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020906&ccrCnntSysDsCd=03&uppAisTpCd=05&aisTpCd=05&mi=1027,2026-11-11
+fp05,84B,111.4049,84.72,0.7605,1.315,33.7,전용 60~85㎡,예,,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020906&ccrCnntSysDsCd=03&uppAisTpCd=05&aisTpCd=05&mi=1027,2026-11-11
+fp06,59A,83.5828,59.89,0.7165,1.3956,25.3,전용 50~60㎡,예,,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020598&ccrCnntSysDsCd=03&uppAisTpCd=05&aisTpCd=05&mi=1027,2026-11-11
+fp07,59B-1,83.6665,59.95,0.7165,1.3956,25.3,전용 50~60㎡,예,,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020598&ccrCnntSysDsCd=03&uppAisTpCd=05&aisTpCd=05&mi=1027,2026-11-11
+fp08,74,,74.54,,,,전용 60~85㎡,아니오,공급면적 없음 · 추정,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020606&ccrCnntSysDsCd=03&uppAisTpCd=05&aisTpCd=05&mi=1027,2026-11-11
+fp09,84A,,84.85,,,,전용 60~85㎡,아니오,공급면적 없음 · 추정,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020606&ccrCnntSysDsCd=03&uppAisTpCd=05&aisTpCd=05&mi=1027,2026-11-11
+fp10,84C,,84.92,,,,전용 60~85㎡,아니오,공급면적 없음 · 추정,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020606&ccrCnntSysDsCd=03&uppAisTpCd=05&aisTpCd=05&mi=1027,2026-11-11
+fp11,59A,,59.98,,,,전용 50~60㎡,아니오,공급면적 없음 · 추정,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300021000&ccrCnntSysDsCd=03&uppAisTpCd=05&aisTpCd=05&mi=1027,2026-11-11
+fp12,46,,46.6,,,,전용 50㎡ 미만,아니오,공급면적 없음 · 추정,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020996&ccrCnntSysDsCd=03&uppAisTpCd=06&aisTpCd=07&mi=1026,2026-11-11
+fp13,39,,39.72,,,,전용 50㎡ 미만,아니오,공급면적 없음 · 추정,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020987&ccrCnntSysDsCd=03&uppAisTpCd=06&aisTpCd=07&mi=1026,2026-11-11
+fp14,49,,49.43,,,,전용 50㎡ 미만,아니오,공급면적 없음 · 추정,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300019920&ccrCnntSysDsCd=03&uppAisTpCd=06&aisTpCd=08&mi=1026,2026-11-11
+fp15,39,,39.99,,,,전용 50㎡ 미만,아니오,공급면적 없음 · 추정,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020062&ccrCnntSysDsCd=03&uppAisTpCd=06&aisTpCd=08&mi=1026,2026-11-11
+fp16,39A,,39.51,,,,전용 50㎡ 미만,아니오,공급면적 없음 · 추정,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020756&ccrCnntSysDsCd=03&uppAisTpCd=06&aisTpCd=08&mi=1026,2026-11-11
+fp17,17A,58.8468,39.51,0.6714,1.4894,17.8,전용 50㎡ 미만,아니오,공급면적 없음 · 추정,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020508&ccrCnntSysDsCd=03&uppAisTpCd=06&aisTpCd=08&mi=1026,2026-11-11
+fp18,39(16평형),55.0333,39.99,0.7267,1.3762,16.6,전용 50㎡ 미만,예,,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300019326&ccrCnntSysDsCd=03&uppAisTpCd=06&aisTpCd=08&mi=1026,2026-11-11
+fp19,67㎡형,,49.97,,,,전용 50㎡ 미만,아니오,공급면적 없음 · 추정,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020573&ccrCnntSysDsCd=03&uppAisTpCd=06&aisTpCd=08&mi=1026,2026-11-11
+fp20,42.93,42.93,31.32,0.7296,1.3707,13.0,전용 50㎡ 미만,아니오,공급면적 없음 · 추정,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300021050&ccrCnntSysDsCd=03&uppAisTpCd=06&aisTpCd=09&mi=1026,2026-11-11
+fp21,A,112.9266,84.7379,0.7504,1.3327,34.2,전용 60~85㎡,예,,iH 인천도시공사,https://www.ih.co.kr/main/complex/complexSalesDetail.do?complex_seq=5,2026-11-11
+fp22,B,112.6289,84.4963,0.7502,1.3329,34.1,전용 60~85㎡,예,,iH 인천도시공사,https://www.ih.co.kr/main/complex/complexSalesDetail.do?complex_seq=5,2026-11-11
+fp23,C,113.2968,84.9792,0.7501,1.3332,34.3,전용 60~85㎡,예,,iH 인천도시공사,https://www.ih.co.kr/main/complex/complexSalesDetail.do?complex_seq=5,2026-11-11
+fp24,38A,125.8886,101.53,0.8065,1.2399,38.1,전용 85㎡ 초과,예,,iH 인천도시공사,https://www.ih.co.kr/main/complex/complexSalesDetail.do?complex_seq=3,2026-11-11
+fp25,47PY,156.3761,128.33,0.8206,1.2185,47.3,전용 85㎡ 초과,예,,iH 인천도시공사,https://www.ih.co.kr/main/complex/complexSalesDetail.do?complex_seq=3,2026-11-11
+fp26,56B,187.6986,153.08,0.8156,1.2261,56.8,전용 85㎡ 초과,예,,iH 인천도시공사,https://www.ih.co.kr/main/complex/complexSalesDetail.do?complex_seq=3,2026-11-11
+fp27,32T,107.6946,84.96,0.7889,1.2676,32.6,전용 60~85㎡,예,,iH 인천도시공사,https://www.ih.co.kr/main/complex/complexSalesDetail.do?complex_seq=1,2026-11-11
+fp28,38T,128.6848,101.69,0.7902,1.2655,38.9,전용 85㎡ 초과,예,,iH 인천도시공사,https://www.ih.co.kr/main/complex/complexSalesDetail.do?complex_seq=1,2026-11-11
+fp29,44A,146.2819,119.91,0.8197,1.2199,44.3,전용 85㎡ 초과,예,,iH 인천도시공사,https://www.ih.co.kr/main/complex/complexSalesDetail.do?complex_seq=1,2026-11-11
+fp30,62A,206.17,182.05,0.883,1.1325,62.4,전용 85㎡ 초과,예,,iH 인천도시공사,https://www.ih.co.kr/main/complex/complexSalesDetail.do?complex_seq=1,2026-11-11
+fp31,51A,72.39,51.87,0.7165,1.3956,21.9,전용 50~60㎡,예,,LH 청약플러스,https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020598&ccrCnntSysDsCd=03&uppAisTpCd=05&aisTpCd=05&mi=1027,2026-11-11
+fp32,51A,70.3748,51.359,0.7298,1.3703,21.3,전용 50~60㎡,아니오,확인 안 함,서울특별시 정비사업 정보몽땅,https://cleanup.seoul.go.kr/service/opendata/cafeOthbc/vscrCafe.do?cafeId=380100001045A59&othbcIemSn=205,2026-11-11
+fp33,51A,69.9994,51.3663,0.7338,1.3627,21.2,전용 50~60㎡,아니오,공급면적 없음 · 추정,서울특별시 정비사업 정보몽땅,https://cleanup.seoul.go.kr/service/opendata/cafeOthbc/vscrCafe.do?cafeId=230100003014a12&othbcIemSn=205,2026-11-11
+fp34,51A,70.98,51.87,0.7308,1.3684,21.5,전용 50~60㎡,아니오,공급면적 없음 · 추정,서울특별시 정비사업 정보몽땅,https://cleanup.seoul.go.kr/service/opendata/cafeOthbc/vscrCafe.do?cafeId=140100002005u31&othbcIemSn=205,2026-11-11
+fp35,51A,70.252,51.8088,0.7375,1.356,21.3,전용 50~60㎡,예,,서울특별시 정비사업 정보몽땅,https://cleanup.seoul.go.kr/service/opendata/cafeOthbc/vscrCafe.do?cafeId=590100009000r61&othbcIemSn=205,2026-11-11
+fp36,49A,67.29,49.96,0.7425,1.3469,20.4,전용 50㎡ 미만,아니오,공급면적 없음 · 추정,서울특별시 정비사업 정보몽땅,https://cleanup.seoul.go.kr/service/opendata/cafeOthbc/vscrCafe.do?cafeId=350100002006m96&othbcIemSn=205,2026-11-11
+fp37,49A,,,,,,,아니오,공급면적 없음 · 추정,서울특별시 정비사업 정보몽땅,https://cleanup.seoul.go.kr/service/opendata/cafeOthbc/vscrCafe.do?cafeId=530900000630b81&othbcIemSn=205,2026-11-11
+fp38,49A,69.35,49.92,0.7198,1.3892,21.0,전용 50㎡ 미만,아니오,공급면적 없음 · 추정,서울특별시 정비사업 정보몽땅,https://cleanup.seoul.go.kr/service/opendata/cafeOthbc/vscrCafe.do?cafeId=650900000648l45&othbcIemSn=205,2026-11-11

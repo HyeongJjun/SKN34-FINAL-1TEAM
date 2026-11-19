@@ -1,0 +1,250 @@
+"use client";
+// 도배 기본 정보(C02 · C03 · D11): '어떤 공사 · 우리 집 · 희망' 세 묶음. 웹 ≥1024는 오른쪽 '넣은 내용' 요약 칸.
+// - 손님: 답은 이 기기에만 저장돼요(mj_guest_v3). '표준견적서 보기'를 누르면 가입 없이 /start/standard로 가요(N1 A).
+// - 로그인한 고객: 같은 답으로 POST /projects(Idempotency-Key = 기기 답의 key) → 내 공사 표준견적서로 가요.
+// - 고치기(?edit=): 그 공사 값을 채우고 PATCH /projects/{id}(첫 요청 뒤에는 서버가 409 locked, 화면은 C50).
+// - 검사는 '표준견적서 보기'를 누를 때 한 번(I6 B): 맨 위 '고칠 칸이 n개 있어요' + 칸 아래 오류 + 첫 틀린 칸으로 옮겨 가요.
+// - 금액은 서버 계산 엔진이 세요. 여기서는 단위만 바꿔요(평 → ㎡ 넣기 도움 · 만 원 → 원).
+// - 칸 아래 도움말 · 저장 안내 · 아래 띠 요약 줄은 두지 않아요(11-19 사용자 결정: 화면을 가볍게).
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Main, PageHead, type Crumb } from "@/components/site/Frame";
+import { BottomBar } from "@/components/ui/BottomBar";
+import { Button } from "@/components/ui/Button";
+import { ChoiceChips } from "@/components/ui/ChoiceChip";
+import { Segmented } from "@/components/ui/Segmented";
+import { Field } from "@/components/ui/Field";
+import { Icon } from "@/components/ui/Icon";
+import type { Region } from "@/lib/api/project";
+import { call, errorText, type Schemas } from "@/lib/backend/client";
+import { dateShort } from "@/lib/format";
+import {
+  EMPTY_DRAFT, ERROR_NAME, ERROR_ORDER, FACES, SPACES, checkDraft, placeText, summaryRows, toHomeInfo,
+  type Face, type InfoDraft, type InfoErrors, type SpaceKind,
+} from "@/lib/guest/info";
+import { clearGuest, draftOf, readGuest, writeGuest } from "@/lib/guest/store";
+import { DateSheet } from "./DateSheet";
+import { PyeongSheet } from "./PyeongSheet";
+import { RegionSheet } from "./RegionSheet";
+import s from "./info.module.css";
+
+export type InfoMode = "guest" | "member" | "edit";
+
+const FIELD_ID: Record<keyof InfoErrors, string> = {
+  spaces: "inf-spaces", faces: "inf-faces", region: "inf-region", area: "inf-area", occupied: "inf-occupied", grade: "inf-grade", budget: "inf-budget",
+};
+
+export function InfoForm({ regions, today, mode, projectId, initial, mock, crumbs }: {
+  regions: Region[];
+  /** 웹 이동 경로(마지막 줄은 이 화면) */
+  crumbs: Crumb[];
+  /** 오늘(서울 날짜, 서버 값) */
+  today: string;
+  mode: InfoMode;
+  projectId?: string;
+  /** 고치기: 그 공사의 저장된 값 */
+  initial?: InfoDraft;
+  /** 개발 예시(NEXT_PUBLIC_MJ_MOCK) */
+  mock: boolean;
+}) {
+  const router = useRouter();
+  const [d, setD] = useState<InfoDraft>(initial ?? EMPTY_DRAFT);
+  const [ready, setReady] = useState(mode === "edit");
+  const [dirty, setDirty] = useState(false);
+  const [tried, setTried] = useState(false);
+  const [errors, setErrors] = useState<InfoErrors>({});
+  const [sheet, setSheet] = useState<null | "pyeong" | "region" | "date">(null);
+  const [busy, setBusy] = useState(false);
+  const [formErr, setFormErr] = useState<string | null>(null);
+  const sumRef = useRef<HTMLDivElement>(null);
+  const budgetRef = useRef<HTMLInputElement>(null);
+
+  // 이 기기에 둔 답을 이어서 채워요(고치기는 그 공사 값)
+  useEffect(() => {
+    if (mode === "edit") return;
+    const g = readGuest();
+    if (g) setD(draftOf(g));
+    setReady(true);
+  }, [mode]);
+  // 바꿀 때마다 이 기기에 저장해요(손님 · 새 공사). 고치기는 저장하지 않아요
+  useEffect(() => { if (ready && dirty && mode !== "edit") writeGuest(d); }, [d, ready, dirty, mode]);
+  // 한 번 눌러 본 뒤로는 고칠 때마다 오류를 다시 맞춰요(칸을 떠날 때는 검사하지 않아요)
+  useEffect(() => { if (tried) setErrors(checkDraft(d)); }, [d, tried]);
+
+  const set = (patch: Partial<InfoDraft>) => { setD((p) => ({ ...p, ...patch })); setDirty(true); setFormErr(null); };
+
+  function focusField(k: keyof InfoErrors) {
+    const box = document.getElementById(FIELD_ID[k]);
+    const el = box?.matches("input, button") ? box : box?.querySelector<HTMLElement>("input:not([disabled]), button");
+    el?.focus();
+    box?.scrollIntoView({ block: "center" });
+  }
+
+  async function submit(e?: React.FormEvent) {
+    e?.preventDefault();
+    if (busy) return;
+    const err = checkDraft(d);
+    setErrors(err);
+    setTried(true);
+    setFormErr(null);
+    const first = ERROR_ORDER.find((k) => err[k]);
+    if (first) { requestAnimationFrame(() => focusField(first)); return; }
+    if (mode === "guest") {
+      writeGuest(d);
+      router.push("/start/standard");
+      return;
+    }
+    setBusy(true);
+    try {
+      if (mode === "edit" && projectId) {
+        if (!mock) await call("PATCH", `/projects/${encodeURIComponent(projectId)}`, toHomeInfo(d));
+        router.push(`/projects/${projectId}/standard`);
+        router.refresh();
+        return;
+      }
+      const g = writeGuest(d);
+      if (mock) {
+        const { MOCK_PROJECT } = await import("@/lib/mock/v3a/mode");
+        clearGuest();
+        router.push(`/projects/${d.scope === "partial" ? MOCK_PROJECT.part : MOCK_PROJECT.full}/standard`);
+        return;
+      }
+      const p = await call<Schemas["ProjectOut"]>("POST", "/projects", toHomeInfo(d), { "Idempotency-Key": g.key });
+      clearGuest();
+      router.push(`/projects/${p.id}/standard`);
+    } catch (er) {
+      setFormErr(errorText(er));
+      setBusy(false);
+    }
+  }
+
+  const errKeys = ERROR_ORDER.filter((k) => errors[k]);
+  const place = placeText(regions, d);
+  const cta = d.scope === "partial" ? "부분 표준견적서 보기" : "표준견적서 보기";
+  const ctaLabel = busy ? "저장하는 중" : cta;
+
+  return (
+    <>
+      <Main>
+      <PageHead title="도배 기본 정보" crumbs={crumbs} />
+      <div className={s.layout}>
+        <form id="info-form" className={s.form} onSubmit={submit} noValidate aria-label="도배 기본 정보">
+          {tried && errKeys.length ? (
+            <div ref={sumRef} className={s.summary} role="alert">
+              <Icon name="error" size={18} />
+              <p>고칠 칸이 {errKeys.length}개 있어요 · {errKeys.map((k) => ERROR_NAME[k]).join(" · ")}</p>
+            </div>
+          ) : null}
+
+          <section className={s.group} aria-labelledby="g-what">
+            <h2 id="g-what" className={s.grp}>어떤 공사</h2>
+            <div className={s.cols}>
+              <ChoiceChips legend="공사 종류" value="dobae" onChange={() => {}} options={[{ value: "dobae", label: "도배" }, { value: "mokgong", label: "목공", soon: true }]} />
+              <div className={s.f}>
+                <Segmented legend="공사 범위" value={d.scope} onChange={(v) => set(v === "partial" ? { scope: "partial" } : { scope: "full", spaces: [], faces: ["wall", "ceiling"] })}
+                  options={[{ value: "full", label: "전체" }, { value: "partial", label: "부분" }]} />
+                <p className={s.help}>전체는 벽 + 천장이에요. 부분을 고르면 공간과 면(벽 · 천장)을 골라요</p>
+              </div>
+            </div>
+            {d.scope === "partial" ? (
+              <div className={s.part}>
+                <div id={FIELD_ID.spaces}>
+                  <ChoiceChips multiple legend="공간" value={d.spaces} error={errors.spaces} onChange={(v) => set({ spaces: v as SpaceKind[] })} options={SPACES.map((x) => ({ value: x.key, label: x.label }))} />
+                </div>
+                <div id={FIELD_ID.faces}>
+                  <ChoiceChips multiple legend="면" value={d.faces} error={errors.faces} onChange={(v) => set({ faces: v as Face[] })} options={FACES.map((x) => ({ value: x.key, label: x.label }))} />
+                </div>
+              </div>
+            ) : null}
+          </section>
+
+          <section className={s.group} aria-labelledby="g-home">
+            <h2 id="g-home" className={s.grp}>우리 집</h2>
+            <ChoiceChips legend="주거 종류" value="apt" onChange={() => {}} options={[
+              { value: "apt", label: "아파트" }, { value: "villa", label: "빌라 · 다세대", soon: true }, { value: "officetel", label: "오피스텔", soon: true }, { value: "house", label: "단독주택", soon: true },
+            ]} />
+            <div className={s.f}>
+              <p className={s.fl} id="inf-region-l">지역</p>
+              <button id={FIELD_ID.region} type="button" className={errors.region ? `${s.pick} ${s.bad}` : s.pick} aria-labelledby="inf-region-l inf-region-v" aria-describedby={errors.region ? "inf-region-e" : undefined} aria-invalid={errors.region ? true : undefined} onClick={() => setSheet("region")}>
+                <span id="inf-region-v" className={place ? undefined : s.ph}>{place || "지역 고르기"}</span>
+                <Icon name="chevron-down" size={18} />
+              </button>
+              {errors.region ? <p id="inf-region-e" className={s.err}><Icon name="error" size={16} />{errors.region}</p> : null}
+            </div>
+          </section>
+
+          <section className={s.group} aria-labelledby="g-area">
+            <h2 id="g-area" className={s.fl}>면적</h2>
+            <div className={s.cols}>
+              <Segmented legend="면적 기준" hideLegend value={d.basis} onChange={(v) => set({ basis: v === "exclusive" ? "exclusive" : "supply" })} options={[{ value: "supply", label: "공급면적" }, { value: "exclusive", label: "전용면적" }]} />
+              <Field id={FIELD_ID.area} label={`${d.basis === "exclusive" ? "전용" : "공급"}면적(㎡)`} hideLabel unit="㎡" num value={d.area} error={errors.area} maxLength={8}
+                onChange={(e) => set({ area: e.target.value })} />
+            </div>
+            <div className={s.gh}>
+              <Button variant="text" onClick={() => setSheet("pyeong")}>평으로 넣기</Button>
+            </div>
+            <div id={FIELD_ID.occupied}>
+              <ChoiceChips legend="공사할 때 집은" value={d.occupied === null ? null : d.occupied ? "yes" : "no"} error={errors.occupied} onChange={(v) => set({ occupied: v === "yes" })}
+                options={[{ value: "yes", label: "사는 중" }, { value: "no", label: "빈 집" }]} />
+            </div>
+          </section>
+
+          <section className={s.group} aria-labelledby="g-want">
+            <h2 id="g-want" className={s.grp}>희망</h2>
+            <div className={s.cols}>
+              <div className={s.f} id={FIELD_ID.grade}>
+                <ChoiceChips legend="벽지" value={d.grade} error={errors.grade} onChange={(v) => set({ grade: v as InfoDraft["grade"] })} options={[{ value: "economy", label: "합지" }, { value: "basic", label: "실크" }]} />
+              </div>
+              <div className={s.f}>
+                <Field ref={budgetRef} id={FIELD_ID.budget} label="예산" unit="만 원" num inputMode="numeric" value={d.budget} error={errors.budget} maxLength={7}
+                  onChange={(e) => set({ budget: e.target.value })} />
+                <ChoiceChips multiple legend="예산을 모르면" hideLegend value={d.budget.trim() ? [] : ["unknown"]} options={[{ value: "unknown", label: "아직 몰라요" }]}
+                  onChange={(v) => (v.includes("unknown") ? set({ budget: "" }) : budgetRef.current?.focus())} />
+              </div>
+            </div>
+          </section>
+
+          <section className={s.group} aria-labelledby="inf-start-l">
+            <div className={s.cols}>
+              <div className={s.f}>
+                <p className={s.fl} id="inf-start-l">공사 시작 희망일</p>
+                <button type="button" className={s.pick} aria-labelledby="inf-start-l inf-start-v" onClick={() => setSheet("date")}>
+                  <span id="inf-start-v" className={d.start ? "mj-num" : s.ph}>{d.start ? dateShort(d.start, today) : "날짜 고르기"}</span>
+                  <Icon name="chevron-down" size={18} />
+                </button>
+              </div>
+              <ChoiceChips multiple legend="시작일을 모르면" hideLegend value={d.start ? [] : ["unknown"]} options={[{ value: "unknown", label: "아직 몰라요" }]}
+                onChange={(v) => (v.includes("unknown") ? set({ start: null }) : setSheet("date"))} />
+            </div>
+          </section>
+
+          {formErr ? <p className={s.formErr} role="alert"><Icon name="error" size={18} />{formErr}</p> : null}
+        </form>
+
+        <aside className={s.aside} aria-labelledby="inf-sum">
+          <h2 id="inf-sum" className={s.eb}>넣은 내용</h2>
+          <dl className={s.rows}>
+            {summaryRows(d, { fullRegion: place }).map((r) => (
+              <div key={r.label} className={s.row}>
+                <dt>{r.label}{r.sub ? <span>{r.sub}</span> : null}</dt>
+                <dd className="mj-num">{r.value || "—"}</dd>
+              </div>
+            ))}
+          </dl>
+          <Button type="submit" form="info-form" size="lg" block busy={busy}>{ctaLabel}</Button>
+        </aside>
+      </div>
+      </Main>
+
+      <div className={s.phoneBar}>
+        <BottomBar>
+          <Button type="submit" form="info-form" size="lg" busy={busy}>{ctaLabel}</Button>
+        </BottomBar>
+      </div>
+
+      <PyeongSheet open={sheet === "pyeong"} basis={d.basis} onClose={() => setSheet(null)} onApply={(m2, basis) => { set({ area: m2, basis }); setSheet(null); }} />
+      <RegionSheet open={sheet === "region"} regions={regions} value={{ sido: d.sido, sgg: d.sgg }} onClose={() => setSheet(null)} onApply={(p) => { set({ ...p, emd: "" }); setSheet(null); }} />
+      <DateSheet open={sheet === "date"} value={d.start} today={today} onClose={() => setSheet(null)} onApply={(day) => { set({ start: day }); setSheet(null); }} />
+    </>
+  );
+}

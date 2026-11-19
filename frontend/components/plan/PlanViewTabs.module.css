@@ -1,0 +1,9 @@
+/* 확정 공정표 두 보기 탭 */
+.wrap { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+/* 고르기 전(첫 그림 · 하이드레이션 전): 9판대로 폰은 날짜별, 웹은 공정별만 보여요 */
+.autoTrades { display: none; }
+@media (min-width: 768px) {
+  .autoDays { display: none; }
+  .autoTrades { display: block; }
+}

@@ -1,0 +1,9441 @@
+{
+ "A": [
+  {
+   "pid": "cc1e57e8a",
+   "qid": "qv3-floor-029",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.502,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c1380071b",
+   "qid": "xd077",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.344,
+    "extract_refs": [
+     "K408",
+     "K2048"
+    ],
+    "extract_cover": 0.538,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함",
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c0c0eb5d4",
+   "qid": "xc098",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.487,
+    "extract_refs": [
+     "K20044"
+    ],
+    "extract_cover": 0.667,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "cc4f8c41f",
+   "qid": "qv3-paint-036",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.577,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c62f87f82",
+   "qid": "xd095",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.409,
+    "extract_refs": [
+     "K535",
+     "K20128"
+    ],
+    "extract_cover": 0.5,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c51338aec",
+   "qid": "xm059",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.384,
+    "extract_refs": [
+     "K1002"
+    ],
+    "extract_cover": 0.357,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c12497b4c",
+   "qid": "qv3-mokgong-008",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.666,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c289f2aad",
+   "qid": "qv3-kitchen-010",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.435,
+    "extract_refs": [
+     "K278"
+    ],
+    "extract_cover": 0.429,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c45921c42",
+   "qid": "qv3-dobae-006",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.549,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c231f1ca6",
+   "qid": "xc003",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.436,
+    "extract_refs": [
+     "K2033"
+    ],
+    "extract_cover": 0.375,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "cece0fc24",
+   "qid": "d32",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "비교 · 고르기",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.533,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cdca2659d",
+   "qid": "qv3-bath-026",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.454,
+    "extract_refs": [
+     "K476",
+     "K490"
+    ],
+    "extract_cover": 0.455,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c0fc8ed68",
+   "qid": "xc002",
+   "fail": {
+    "unsupported": true,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.383,
+    "extract_refs": [
+     "K167",
+     "K2391",
+     "K725"
+    ],
+    "extract_cover": 0.286,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "cc244c966",
+   "qid": "m25",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.362,
+    "extract_refs": [
+     "K1428"
+    ],
+    "extract_cover": 0.3,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c9c37d74b",
+   "qid": "qv3-bath-006",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.428,
+    "extract_refs": [
+     "K375",
+     "K202"
+    ],
+    "extract_cover": 0.75,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "ceaccd676",
+   "qid": "c20",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.518,
+    "extract_refs": [
+     "K1292",
+     "K20051"
+    ],
+    "extract_cover": 0.444,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cdf5d6251",
+   "qid": "xc099",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.372,
+    "extract_refs": [
+     "K1397",
+     "K1423"
+    ],
+    "extract_cover": 0.444,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c433ae894",
+   "qid": "d17",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.293,
+    "extract_refs": [
+     "K1200",
+     "K257"
+    ],
+    "extract_cover": 0.667,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": [
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "cfb33451b",
+   "qid": "m22",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.44,
+    "extract_refs": [
+     "K1361",
+     "K241"
+    ],
+    "extract_cover": 0.667,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": [
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c06223032",
+   "qid": "c04",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.502,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cdc7e7670",
+   "qid": "xd002",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "비교 · 고르기",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 1.0,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c3f2fc075",
+   "qid": "qv3-plumbing-011",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.306,
+    "extract_refs": [
+     "K1253"
+    ],
+    "extract_cover": 0.3,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함",
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c807137d3",
+   "qid": "qv3-plumbing-013",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.7,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c9ad17000",
+   "qid": "d14",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.316,
+    "extract_refs": [
+     "K751"
+    ],
+    "extract_cover": 0.5,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c649b5a3e",
+   "qid": "xd105",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.354,
+    "extract_refs": [
+     "K751"
+    ],
+    "extract_cover": 0.4,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c3e3d4174",
+   "qid": "qv3-tile-024",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.493,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c7b110308",
+   "qid": "xc089",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.356,
+    "extract_refs": [
+     "K1018",
+     "K20051"
+    ],
+    "extract_cover": 0.455,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "cf7045a0f",
+   "qid": "d02",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.622,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c1b9f1826",
+   "qid": "xc082",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.463,
+    "extract_refs": [
+     "K222"
+    ],
+    "extract_cover": 0.5,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "cd84c3e79",
+   "qid": "qv3-bath-011",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.399,
+    "extract_refs": [
+     "K1278",
+     "K20059"
+    ],
+    "extract_cover": 0.545,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음"
+   ]
+  },
+  {
+   "pid": "c3b50ec81",
+   "qid": "qv3-common-016",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.52,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "c7191aa35",
+   "qid": "qv3-bath-025",
+   "fail": {
+    "unsupported": true,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.268,
+    "extract_refs": [
+     "K1277",
+     "K1311",
+     "K1277"
+    ],
+    "extract_cover": 0.429,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c0c79cf7b",
+   "qid": "xd087",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.479,
+    "extract_refs": [
+     "K746"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "ca4102359",
+   "qid": "qv3-paint-030",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.483,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c90d1ed54",
+   "qid": "m13",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.386,
+    "extract_refs": [
+     "K1205",
+     "K998"
+    ],
+    "extract_cover": 0.643,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c5492ccac",
+   "qid": "qv3-common-010",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.592,
+    "extract_refs": [
+     "K582",
+     "K20048"
+    ],
+    "extract_cover": 0.643,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)"
+   ]
+  },
+  {
+   "pid": "c63332d07",
+   "qid": "qv3-common-022",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.552,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c2ba10517",
+   "qid": "xc010",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.405,
+    "extract_refs": [
+     "K825",
+     "K1389"
+    ],
+    "extract_cover": 0.5,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c4101158f",
+   "qid": "qv3-window-009",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.369,
+    "extract_refs": [
+     "K505",
+     "K1288"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c511f98a9",
+   "qid": "qv3-floor-014",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.538,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c72189563",
+   "qid": "xd102",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.293,
+    "extract_refs": [
+     "K20042"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c62441ee4",
+   "qid": "qv3-plumbing-014",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.627,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cd140deea",
+   "qid": "xm008",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.531,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cfc366481",
+   "qid": "qv3-electric-029",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.429,
+    "extract_refs": [
+     "K237"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c83ededfc",
+   "qid": "qv3-floor-023",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.255,
+    "extract_refs": [
+     "K1370"
+    ],
+    "extract_cover": 0.444,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c43ad817b",
+   "qid": "m04",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "비교 · 고르기",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.338,
+    "extract_refs": [
+     "K624"
+    ],
+    "extract_cover": 0.429,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함",
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "cfdcd8b90",
+   "qid": "xm027",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.85,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c9a7b2c5a",
+   "qid": "xc094",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.326,
+    "extract_refs": [
+     "K182"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c21f3e165",
+   "qid": "xc079",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.577,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "c6915eab9",
+   "qid": "qv3-film-030",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.543,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cfe767388",
+   "qid": "qv3-window-018",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.347,
+    "extract_refs": [
+     "K271"
+    ],
+    "extract_cover": 0.429,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c7206ed78",
+   "qid": "d19",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.52,
+    "extract_refs": [
+     "K405"
+    ],
+    "extract_cover": 0.455,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c5c24230f",
+   "qid": "m20",
+   "fail": {
+    "unsupported": true,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "card",
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.41,
+    "extract_refs": [
+     "K1205",
+     "K1207"
+    ],
+    "extract_cover": 0.412,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": [
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c5c829f02",
+   "qid": "xc036",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.466,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cae49e498",
+   "qid": "xm004",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.545,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "caea4277a",
+   "qid": "xd064",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.489,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "ccb0e9708",
+   "qid": "xd021",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.477,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cadde8a83",
+   "qid": "qv3-mokgong-010",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": true,
+    "card": false,
+    "best_card": 0.419,
+    "extract_refs": [
+     "K1206",
+     "K2140"
+    ],
+    "extract_cover": 0.167,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c060931a9",
+   "qid": "qv3-demolition-025",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.35,
+    "extract_refs": [
+     "K375",
+     "K202"
+    ],
+    "extract_cover": 0.556,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c9e1f5f7e",
+   "qid": "qv3-film-025",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.429,
+    "extract_refs": [
+     "K20190"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c0735aca0",
+   "qid": "xc085",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.459,
+    "extract_refs": [
+     "K1301",
+     "K20059"
+    ],
+    "extract_cover": 0.5,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "caa765afa",
+   "qid": "qv3-paint-025",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.359,
+    "extract_refs": [
+     "K912"
+    ],
+    "extract_cover": 0.3,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "cde9ce9b5",
+   "qid": "xc057",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.387,
+    "extract_refs": [
+     "K1172"
+    ],
+    "extract_cover": 0.429,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c57802ff1",
+   "qid": "qv3-kitchen-024",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": true,
+    "card": false,
+    "best_card": 0.267,
+    "extract_refs": [
+     "K20190"
+    ],
+    "extract_cover": 0.235,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c6e07812b",
+   "qid": "m16",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.487,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c4db44525",
+   "qid": "qv3-paint-020",
+   "fail": {
+    "unsupported": true,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "비교 · 고르기",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": true,
+    "card": false,
+    "best_card": 0.438,
+    "extract_refs": [
+     "K732"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "ca3265c5e",
+   "qid": "xd037",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.614,
+    "extract_refs": [
+     "K757",
+     "K948"
+    ],
+    "extract_cover": 0.556,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "cf41e07e1",
+   "qid": "xc074",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.555,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c4b6123c7",
+   "qid": "xd009",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.821,
+    "extract_refs": [
+     "K317"
+    ],
+    "extract_cover": 0.429,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c76110488",
+   "qid": "qv3-tile-031",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.574,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cdecdab5b",
+   "qid": "qv3-floor-031",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.473,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c0efd7f25",
+   "qid": "qv3-common-015",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.667,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "c3c68adca",
+   "qid": "qv3-tile-028",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.585,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "c7ae7b183",
+   "qid": "xm063",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.366,
+    "extract_refs": [
+     "K911",
+     "K941"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "cdcf5fee9",
+   "qid": "xc080",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.236,
+    "extract_refs": [
+     "K965"
+    ],
+    "extract_cover": 0.455,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "cec40149d",
+   "qid": "xc028",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.308,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음"
+   ]
+  },
+  {
+   "pid": "c7b9b06bd",
+   "qid": "qv3-film-003",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.408,
+    "extract_refs": [
+     "K344",
+     "K20190"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함",
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "cb91ff207",
+   "qid": "xm081",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.739,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c7b19660e",
+   "qid": "qv3-electric-021",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.387,
+    "extract_refs": [
+     "K1329"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c7c38aa7e",
+   "qid": "qv3-paint-016",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.472,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cc8fedcbb",
+   "qid": "qv3-electric-035",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.288,
+    "extract_refs": [
+     "K1330"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c63e91094",
+   "qid": "xd006",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.702,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "c3e791d94",
+   "qid": "xc067",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.284,
+    "extract_refs": [
+     "K608",
+     "K1170"
+    ],
+    "extract_cover": 0.4,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함",
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c97b5d785",
+   "qid": "xc023",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": true,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.292,
+    "extract_refs": [
+     "K275",
+     "K28"
+    ],
+    "extract_cover": 0.5,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c82693206",
+   "qid": "xd050",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.282,
+    "extract_refs": [
+     "K831"
+    ],
+    "extract_cover": 0.4,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c69f19646",
+   "qid": "xc075",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.519,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "ce0ca3f1b",
+   "qid": "qv3-film-027",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.507,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c07129803",
+   "qid": "qv3-kitchen-018",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "비교 · 고르기",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.495,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cdc8d6316",
+   "qid": "qv3-plumbing-004",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.214,
+    "extract_refs": [
+     "K1248"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c575931c8",
+   "qid": "m29",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.767,
+    "extract_refs": [
+     "K2042",
+     "K301"
+    ],
+    "extract_cover": 0.625,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": [
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c8e71d54c",
+   "qid": "xd013",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.534,
+    "extract_refs": [
+     "K650",
+     "K874"
+    ],
+    "extract_cover": 0.455,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)",
+    "조각이 엉뚱함",
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c3448daf8",
+   "qid": "c16",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.531,
+    "extract_refs": [
+     "K962",
+     "K609"
+    ],
+    "extract_cover": 0.429,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)",
+    "조각이 엉뚱함",
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "ce96d02ed",
+   "qid": "qv3-paint-006",
+   "fail": {
+    "unsupported": true,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.367,
+    "extract_refs": [
+     "K733",
+     "K794",
+     "K208"
+    ],
+    "extract_cover": 0.25,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함",
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "ccdea9da7",
+   "qid": "xd075",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.311,
+    "extract_refs": [
+     "K250"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "cb73e82bf",
+   "qid": "m08",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "준비 · 확인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.492,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cafb84bef",
+   "qid": "qv3-paint-008",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.293,
+    "extract_refs": [
+     "K179"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c720284ac",
+   "qid": "xd098",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.551,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cee108995",
+   "qid": "c19",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.767,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c5cdd9447",
+   "qid": "m14",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.471,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c3630871b",
+   "qid": "qv3-demolition-012",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.433,
+    "extract_refs": [
+     "K375",
+     "K20110",
+     "K375",
+     "K1278",
+     "K1418"
+    ],
+    "extract_cover": 0.286,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "cc49e877b",
+   "qid": "xm021",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.31,
+    "extract_refs": [
+     "K1166"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함",
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c6b5f4b44",
+   "qid": "xm034",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.403,
+    "extract_refs": [
+     "K717"
+    ],
+    "extract_cover": 0.308,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c483f92a7",
+   "qid": "xd017",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": true,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.323,
+    "extract_refs": [
+     "K972"
+    ],
+    "extract_cover": 0.429,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "ccd927cab",
+   "qid": "xm048",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "비교 · 고르기",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.461,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c25f45ac3",
+   "qid": "xd012",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.498,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "c610b26eb",
+   "qid": "qv3-mokgong-025",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.543,
+    "extract_refs": [
+     "K136",
+     "K1411"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c3cd5206d",
+   "qid": "qv3-kitchen-036",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.327,
+    "extract_refs": [
+     "K275"
+    ],
+    "extract_cover": 0.3,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c4a6a16f0",
+   "qid": "qv3-tile-025",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.565,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c8e1280fe",
+   "qid": "qv3-kitchen-009",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.527,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "c9a4b8f9d",
+   "qid": "d25",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.622,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c24f5f549",
+   "qid": "c10",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.616,
+    "extract_refs": [
+     "K20059",
+     "K490"
+    ],
+    "extract_cover": 0.556,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c25589040",
+   "qid": "d07",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 1.0,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c0f847773",
+   "qid": "qv3-window-039",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.509,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "cf63edf71",
+   "qid": "qv3-window-016",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.541,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c7a682074",
+   "qid": "qv3-common-018",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.536,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cbe458184",
+   "qid": "m05",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.596,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c421c6345",
+   "qid": "xc011",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.513,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "ca363920d",
+   "qid": "m32",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "비교 · 고르기",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.446,
+    "extract_refs": [
+     "K135"
+    ],
+    "extract_cover": 0.417,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cdca0d699",
+   "qid": "qv3-film-008",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.426,
+    "extract_refs": [
+     "K818"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "ce6487635",
+   "qid": "xc008",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.385,
+    "extract_refs": [
+     "K820",
+     "K824"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c13487a8f",
+   "qid": "xd086",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.436,
+    "extract_refs": [
+     "K1278",
+     "K20059"
+    ],
+    "extract_cover": 0.455,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cb4addbaf",
+   "qid": "xd093",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.53,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c52cf3880",
+   "qid": "qv3-mokgong-028",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": true,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "비교 · 고르기",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.4,
+    "extract_refs": [
+     "K889",
+     "K1005"
+    ],
+    "extract_cover": 0.417,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c7737a63b",
+   "qid": "qv3-plumbing-020",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.401,
+    "extract_refs": [
+     "K20"
+    ],
+    "extract_cover": 0.385,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c43de0e61",
+   "qid": "xd054",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.562,
+    "extract_refs": [
+     "K1290",
+     "K20058"
+    ],
+    "extract_cover": 0.556,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c36bf41f2",
+   "qid": "qv3-paint-002",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.463,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "c726b0bea",
+   "qid": "xd035",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "용어 · 뜻",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.294,
+    "extract_refs": [
+     "K268"
+    ],
+    "extract_cover": 0.375,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c671d5d8d",
+   "qid": "qv3-dobae-003",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.461,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c7f0c08c9",
+   "qid": "qv3-electric-032",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.615,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c251ccf70",
+   "qid": "xm016",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.32,
+    "extract_refs": [
+     "K998",
+     "K1404"
+    ],
+    "extract_cover": 0.6,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함",
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c2881db35",
+   "qid": "xd111",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.632,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "c72b5e114",
+   "qid": "qv3-film-034",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.278,
+    "extract_refs": [
+     "K336"
+    ],
+    "extract_cover": 0.312,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함",
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c3605a64d",
+   "qid": "d20",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.406,
+    "extract_refs": [
+     "K2559"
+    ],
+    "extract_cover": 0.444,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c9b607a4a",
+   "qid": "qv3-floor-010",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.322,
+    "extract_refs": [
+     "K958"
+    ],
+    "extract_cover": 0.312,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c32b7d896",
+   "qid": "xc029",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.271,
+    "extract_refs": [
+     "K938"
+    ],
+    "extract_cover": 0.417,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c8193c8d6",
+   "qid": "d16",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.604,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c8ac3271d",
+   "qid": "m19",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.528,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "c25f8a0b6",
+   "qid": "c13",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.648,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cc3da44f0",
+   "qid": "xd041",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.653,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cd9b5b432",
+   "qid": "qv3-paint-004",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.453,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c0afd8f08",
+   "qid": "xd094",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.318,
+    "extract_refs": [
+     "K177",
+     "K844"
+    ],
+    "extract_cover": 0.357,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c09ed252c",
+   "qid": "c05",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 1.0,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c62a7aacd",
+   "qid": "xd067",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.355,
+    "extract_refs": [
+     "K614",
+     "K482"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": [
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c60968e11",
+   "qid": "d10",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.532,
+    "extract_refs": [
+     "K742",
+     "K740"
+    ],
+    "extract_cover": 0.714,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c40dbad44",
+   "qid": "xd060",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.448,
+    "extract_refs": [
+     "K1352"
+    ],
+    "extract_cover": 0.429,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c8bb21e60",
+   "qid": "xc054",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.553,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c32d035f1",
+   "qid": "qv3-tile-032",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.657,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c77fcbff9",
+   "qid": "qv3-demolition-035",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": true,
+    "card": false,
+    "best_card": 0.214,
+    "extract_refs": [
+     "K1396",
+     "K415"
+    ],
+    "extract_cover": 0.083,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함",
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c8f283de2",
+   "qid": "qv3-plumbing-027",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.45,
+    "extract_refs": [
+     "K380"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "ce7abe5be",
+   "qid": "d23",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.424,
+    "extract_refs": [
+     "K20143",
+     "K969"
+    ],
+    "extract_cover": 0.667,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c166215aa",
+   "qid": "m11",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.555,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cdc83501b",
+   "qid": "qv3-demolition-021",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.435,
+    "extract_refs": [
+     "K202"
+    ],
+    "extract_cover": 0.385,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c0559a082",
+   "qid": "xd080",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.868,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c9d69cc5f",
+   "qid": "xc055",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.382,
+    "extract_refs": [
+     "K20118",
+     "K20062"
+    ],
+    "extract_cover": 0.417,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c63a94694",
+   "qid": "qv3-plumbing-003",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.446,
+    "extract_refs": [
+     "K1262"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "cd7a518da",
+   "qid": "qv3-demolition-019",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.371,
+    "extract_refs": [
+     "K130",
+     "K1293"
+    ],
+    "extract_cover": 0.556,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c5025d8ea",
+   "qid": "qv3-floor-032",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.519,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c48b0b101",
+   "qid": "qv3-kitchen-004",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.526,
+    "extract_refs": [
+     "K1004"
+    ],
+    "extract_cover": 0.357,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c8b1aa644",
+   "qid": "d04",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "준비 · 확인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.679,
+    "extract_refs": [
+     "K751",
+     "K160"
+    ],
+    "extract_cover": 0.833,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c2dfcc780",
+   "qid": "c01",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.852,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c2ac5d379",
+   "qid": "xm022",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.486,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "c79d375d0",
+   "qid": "c02",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.638,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cb048880d",
+   "qid": "xd024",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.269,
+    "extract_refs": [
+     "K751",
+     "K356"
+    ],
+    "extract_cover": 0.571,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음"
+   ]
+  },
+  {
+   "pid": "c3f0d7217",
+   "qid": "qv3-tile-001",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.661,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c035d4df7",
+   "qid": "qv3-film-002",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.343,
+    "extract_refs": [
+     "K20190"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c6b7687ff",
+   "qid": "xm046",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.392,
+    "extract_refs": [
+     "K1390",
+     "K244"
+    ],
+    "extract_cover": 0.429,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "ca91ee413",
+   "qid": "xc083",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.465,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "ce1427a81",
+   "qid": "xm080",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.503,
+    "extract_refs": [
+     "K1419",
+     "K1428"
+    ],
+    "extract_cover": 0.455,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "cdfe1bb40",
+   "qid": "xc050",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.521,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c53ad07e6",
+   "qid": "d08",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.859,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "ca82d8391",
+   "qid": "qv3-paint-035",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.72,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c39571111",
+   "qid": "qv3-electric-030",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.532,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "ce9698f1b",
+   "qid": "qv3-demolition-028",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.508,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "cdbd53095",
+   "qid": "xd032",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": true,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.286,
+    "extract_refs": [
+     "K824"
+    ],
+    "extract_cover": 0.3,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "cf6fe5d47",
+   "qid": "m23",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.466,
+    "extract_refs": [
+     "K20146",
+     "K2047"
+    ],
+    "extract_cover": 0.714,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c5c3ad003",
+   "qid": "qv3-paint-033",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.501,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cdec7108c",
+   "qid": "c22",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.327,
+    "extract_refs": [
+     "K1001"
+    ],
+    "extract_cover": 0.545,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "ce33ec77e",
+   "qid": "qv3-kitchen-026",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.801,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c88f9a423",
+   "qid": "qv3-demolition-003",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.715,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "ccd783274",
+   "qid": "qv3-common-026",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.301,
+    "extract_refs": [
+     "K689"
+    ],
+    "extract_cover": 0.5,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음"
+   ]
+  },
+  {
+   "pid": "c2bec3049",
+   "qid": "xc025",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.295,
+    "extract_refs": [
+     "K1022",
+     "K1345"
+    ],
+    "extract_cover": 0.385,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c1880af3f",
+   "qid": "xd046",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.313,
+    "extract_refs": [
+     "K751"
+    ],
+    "extract_cover": 0.375,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c4d66137b",
+   "qid": "qv3-demolition-020",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.303,
+    "extract_refs": [
+     "K20054"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c964f6876",
+   "qid": "qv3-dobae-020",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.297,
+    "extract_refs": [
+     "K20030"
+    ],
+    "extract_cover": 0.357,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c38dd681c",
+   "qid": "xm005",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.592,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cf0fd11f5",
+   "qid": "xm058",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.516,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c056d4c39",
+   "qid": "m10",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.501,
+    "extract_refs": [
+     "K1202",
+     "K255"
+    ],
+    "extract_cover": 0.5,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c4392873a",
+   "qid": "qv3-demolition-017",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.455,
+    "extract_refs": [
+     "K20121"
+    ],
+    "extract_cover": 0.462,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c0f3e0739",
+   "qid": "qv3-kitchen-006",
+   "fail": {
+    "unsupported": true,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "card",
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.525,
+    "extract_refs": [
+     "K923",
+     "K932",
+     "K923",
+     "K932"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "cf679a5d6",
+   "qid": "qv3-window-008",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.334,
+    "extract_refs": [
+     "K359",
+     "K267"
+    ],
+    "extract_cover": 0.571,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음"
+   ]
+  },
+  {
+   "pid": "c2abf4715",
+   "qid": "qv3-common-019",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.567,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cb61e5d44",
+   "qid": "qv3-floor-007",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "비교 · 고르기",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.641,
+    "extract_refs": [
+     "K955",
+     "K796"
+    ],
+    "extract_cover": 0.417,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c984e9f1a",
+   "qid": "xc092",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": true,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.315,
+    "extract_refs": [
+     "K823"
+    ],
+    "extract_cover": 0.3,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c6f63fe27",
+   "qid": "xd107",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.404,
+    "extract_refs": [
+     "K236",
+     "K821"
+    ],
+    "extract_cover": 0.444,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "cc32609a9",
+   "qid": "qv3-paint-034",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.731,
+    "extract_refs": [
+     "K183",
+     "K317"
+    ],
+    "extract_cover": 0.417,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "ca16eb39f",
+   "qid": "xd066",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.523,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c8d3fe030",
+   "qid": "qv3-common-012",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.569,
+    "extract_refs": [
+     "K1271",
+     "K20032"
+    ],
+    "extract_cover": 0.5,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "caa7c98aa",
+   "qid": "qv3-common-001",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.764,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "ccb49a2b1",
+   "qid": "qv3-bath-005",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.575,
+    "extract_refs": [
+     "K197",
+     "K163"
+    ],
+    "extract_cover": 0.417,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)",
+    "조각이 엉뚱함",
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "cc57e4af4",
+   "qid": "xc041",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.38,
+    "extract_refs": [
+     "K847"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c5e2a55ed",
+   "qid": "xc007",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": true,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.552,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cd1e4751e",
+   "qid": "qv3-tile-026",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.473,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cffdf7dde",
+   "qid": "xd039",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.504,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c7ffadedb",
+   "qid": "qv3-floor-036",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.607,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c1b82785c",
+   "qid": "m02",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.408,
+    "extract_refs": [
+     "K1205"
+    ],
+    "extract_cover": 0.6,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c27d011f7",
+   "qid": "qv3-film-010",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.264,
+    "extract_refs": [
+     "K20007",
+     "K20006"
+    ],
+    "extract_cover": 0.375,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c4179653f",
+   "qid": "qv3-plumbing-023",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "비교 · 고르기",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.495,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c6121882f",
+   "qid": "xc087",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.524,
+    "extract_refs": [
+     "K422",
+     "K460"
+    ],
+    "extract_cover": 0.786,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)"
+   ]
+  },
+  {
+   "pid": "cc33a2852",
+   "qid": "xd004",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "준비 · 확인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.6,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c2878a860",
+   "qid": "d22",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.852,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cbbd4e0a4",
+   "qid": "qv3-tile-015",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.37,
+    "extract_refs": [
+     "K553"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "cb977a685",
+   "qid": "qv3-common-009",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.54,
+    "extract_refs": [
+     "K1172"
+    ],
+    "extract_cover": 0.312,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "ce8481ade",
+   "qid": "c14",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.606,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "c5bcd7992",
+   "qid": "d05",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "비교 · 고르기",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.621,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cdf56dbaa",
+   "qid": "qv3-plumbing-021",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.504,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  }
+ ],
+ "B": [
+  {
+   "pid": "c1380071b",
+   "qid": "xd077",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.344,
+    "extract_refs": [
+     "K408",
+     "K2048"
+    ],
+    "extract_cover": 0.538,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c62f87f82",
+   "qid": "xd095",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.409,
+    "extract_refs": [
+     "K535",
+     "K20128"
+    ],
+    "extract_cover": 0.5,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c289f2aad",
+   "qid": "qv3-kitchen-010",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.435,
+    "extract_refs": [
+     "K278"
+    ],
+    "extract_cover": 0.429,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "cece0fc24",
+   "qid": "d32",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "비교 · 고르기",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.533,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cc244c966",
+   "qid": "m25",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.362,
+    "extract_refs": [
+     "K1428"
+    ],
+    "extract_cover": 0.3,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "cdf5d6251",
+   "qid": "xc099",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.372,
+    "extract_refs": [
+     "K1397",
+     "K1423"
+    ],
+    "extract_cover": 0.444,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c06223032",
+   "qid": "c04",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.502,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c807137d3",
+   "qid": "qv3-plumbing-013",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.7,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c3e3d4174",
+   "qid": "qv3-tile-024",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.493,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c1b9f1826",
+   "qid": "xc082",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.463,
+    "extract_refs": [
+     "K222"
+    ],
+    "extract_cover": 0.5,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c7191aa35",
+   "qid": "qv3-bath-025",
+   "fail": {
+    "unsupported": true,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.268,
+    "extract_refs": [
+     "K1277",
+     "K1311",
+     "K1277"
+    ],
+    "extract_cover": 0.429,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c90d1ed54",
+   "qid": "m13",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.386,
+    "extract_refs": [
+     "K1205",
+     "K998"
+    ],
+    "extract_cover": 0.643,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c2ba10517",
+   "qid": "xc010",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.405,
+    "extract_refs": [
+     "K825",
+     "K1389"
+    ],
+    "extract_cover": 0.5,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c72189563",
+   "qid": "xd102",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.293,
+    "extract_refs": [
+     "K20042"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cfc366481",
+   "qid": "qv3-electric-029",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.429,
+    "extract_refs": [
+     "K237"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "cfdcd8b90",
+   "qid": "xm027",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.85,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c6915eab9",
+   "qid": "qv3-film-030",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.543,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c5c24230f",
+   "qid": "m20",
+   "fail": {
+    "unsupported": true,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "card",
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.41,
+    "extract_refs": [
+     "K1205",
+     "K1207"
+    ],
+    "extract_cover": 0.412,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "caea4277a",
+   "qid": "xd064",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.489,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c060931a9",
+   "qid": "qv3-demolition-025",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.35,
+    "extract_refs": [
+     "K375",
+     "K202"
+    ],
+    "extract_cover": 0.556,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "caa765afa",
+   "qid": "qv3-paint-025",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.359,
+    "extract_refs": [
+     "K912"
+    ],
+    "extract_cover": 0.3,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c6e07812b",
+   "qid": "m16",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.487,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cf41e07e1",
+   "qid": "xc074",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.555,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cdecdab5b",
+   "qid": "qv3-floor-031",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.473,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c7ae7b183",
+   "qid": "xm063",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.366,
+    "extract_refs": [
+     "K911",
+     "K941"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c7b9b06bd",
+   "qid": "qv3-film-003",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.408,
+    "extract_refs": [
+     "K344",
+     "K20190"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c7c38aa7e",
+   "qid": "qv3-paint-016",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.472,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c3e791d94",
+   "qid": "xc067",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.284,
+    "extract_refs": [
+     "K608",
+     "K1170"
+    ],
+    "extract_cover": 0.4,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함",
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c69f19646",
+   "qid": "xc075",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.519,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cdc8d6316",
+   "qid": "qv3-plumbing-004",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.214,
+    "extract_refs": [
+     "K1248"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c3448daf8",
+   "qid": "c16",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": true
+   },
+   "answered": "no",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.531,
+    "extract_refs": [
+     "K962",
+     "K609"
+    ],
+    "extract_cover": 0.429,
+    "gold_hit": false,
+    "da_quote": true
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)",
+    "조각이 엉뚱함",
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "cb73e82bf",
+   "qid": "m08",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "준비 · 확인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.492,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cee108995",
+   "qid": "c19",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.767,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cc49e877b",
+   "qid": "xm021",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.31,
+    "extract_refs": [
+     "K1166"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "ccd927cab",
+   "qid": "xm048",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "비교 · 고르기",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.461,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c3cd5206d",
+   "qid": "qv3-kitchen-036",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.327,
+    "extract_refs": [
+     "K275"
+    ],
+    "extract_cover": 0.3,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c9a4b8f9d",
+   "qid": "d25",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.622,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c0f847773",
+   "qid": "qv3-window-039",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.509,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "cbe458184",
+   "qid": "m05",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.596,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cdca0d699",
+   "qid": "qv3-film-008",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.426,
+    "extract_refs": [
+     "K818"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "cb4addbaf",
+   "qid": "xd093",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.53,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c43de0e61",
+   "qid": "xd054",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.562,
+    "extract_refs": [
+     "K1290",
+     "K20058"
+    ],
+    "extract_cover": 0.556,
+    "gold_hit": true,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c671d5d8d",
+   "qid": "qv3-dobae-003",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.461,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c2881db35",
+   "qid": "xd111",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.632,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "c9b607a4a",
+   "qid": "qv3-floor-010",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.322,
+    "extract_refs": [
+     "K958"
+    ],
+    "extract_cover": 0.312,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c8ac3271d",
+   "qid": "m19",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.528,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "cd9b5b432",
+   "qid": "qv3-paint-004",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.453,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c62a7aacd",
+   "qid": "xd067",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": true
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.355,
+    "extract_refs": [
+     "K614",
+     "K482"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": [
+    "원문 -다 인용"
+   ]
+  },
+  {
+   "pid": "c8bb21e60",
+   "qid": "xc054",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.553,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c8f283de2",
+   "qid": "qv3-plumbing-027",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.45,
+    "extract_refs": [
+     "K380"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "cdc83501b",
+   "qid": "qv3-demolition-021",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.435,
+    "extract_refs": [
+     "K202"
+    ],
+    "extract_cover": 0.385,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c63a94694",
+   "qid": "qv3-plumbing-003",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.446,
+    "extract_refs": [
+     "K1262"
+    ],
+    "extract_cover": 0.333,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c48b0b101",
+   "qid": "qv3-kitchen-004",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.526,
+    "extract_refs": [
+     "K1004"
+    ],
+    "extract_cover": 0.357,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(아깝게 놓침)",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c2ac5d379",
+   "qid": "xm022",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "방법 · 순서",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.486,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "c3f0d7217",
+   "qid": "qv3-tile-001",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.661,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "ca91ee413",
+   "qid": "xc083",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.465,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c53ad07e6",
+   "qid": "d08",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.859,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "ce9698f1b",
+   "qid": "qv3-demolition-028",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.508,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": [
+    "맞추기 기준(잘못 받음)"
+   ]
+  },
+  {
+   "pid": "c5c3ad003",
+   "qid": "qv3-paint-033",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card",
+     "template"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.501,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c88f9a423",
+   "qid": "qv3-demolition-003",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.715,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c1880af3f",
+   "qid": "xd046",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.313,
+    "extract_refs": [
+     "K751"
+    ],
+    "extract_cover": 0.375,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "c38dd681c",
+   "qid": "xm005",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "기타",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.592,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c4392873a",
+   "qid": "qv3-demolition-017",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.455,
+    "extract_refs": [
+     "K20121"
+    ],
+    "extract_cover": 0.462,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c2abf4715",
+   "qid": "qv3-common-019",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "책임 · 절차",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.567,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c6f63fe27",
+   "qid": "xd107",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.404,
+    "extract_refs": [
+     "K236",
+     "K821"
+    ],
+    "extract_cover": 0.444,
+    "gold_hit": true,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "c8d3fe030",
+   "qid": "qv3-common-012",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "기간 · 일정",
+    "sources": [
+     "extract",
+     "template"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.569,
+    "extract_refs": [
+     "K1271",
+     "K20032"
+    ],
+    "extract_cover": 0.5,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cc57e4af4",
+   "qid": "xc041",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": true,
+    "hard_to_read": false
+   },
+   "answered": "no",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.38,
+    "extract_refs": [
+     "K847"
+    ],
+    "extract_cover": 0.364,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": [
+    "카드 없음",
+    "조각이 엉뚱함"
+   ]
+  },
+  {
+   "pid": "cffdf7dde",
+   "qid": "xd039",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "가격 · 비용",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.504,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "c27d011f7",
+   "qid": "qv3-film-010",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.264,
+    "extract_refs": [
+     "K20007",
+     "K20006"
+    ],
+    "extract_cover": 0.375,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cc33a2852",
+   "qid": "xd004",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "yes",
+   "diag": {
+    "type": "준비 · 확인",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.6,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": false,
+    "da_quote": false
+   },
+   "causes": []
+  },
+  {
+   "pid": "cb977a685",
+   "qid": "qv3-common-009",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "하자 · 원인",
+    "sources": [
+     "extract"
+    ],
+    "unknown": false,
+    "card": false,
+    "best_card": 0.54,
+    "extract_refs": [
+     "K1172"
+    ],
+    "extract_cover": 0.312,
+    "gold_hit": null,
+    "da_quote": true
+   },
+   "causes": []
+  },
+  {
+   "pid": "cdf56dbaa",
+   "qid": "qv3-plumbing-021",
+   "fail": {
+    "unsupported": false,
+    "made_up_number": false,
+    "out_of_scope_fail": false,
+    "ask_back_fail": false,
+    "no_source_fail": false,
+    "recommend": false,
+    "defect_verdict": false,
+    "missed_point": false,
+    "hard_to_read": false
+   },
+   "answered": "partial",
+   "diag": {
+    "type": "해도 되나 · 판단",
+    "sources": [
+     "card"
+    ],
+    "unknown": false,
+    "card": true,
+    "best_card": 0.504,
+    "extract_refs": [],
+    "extract_cover": 0.0,
+    "gold_hit": null,
+    "da_quote": false
+   },
+   "causes": []
+  }
+ ],
+ "extract_curve": [
+  {
+   "min_cover": 0.3,
+   "kept": 112,
+   "kept_missed": 63,
+   "dropped_but_ok": 3
+  },
+  {
+   "min_cover": 0.4,
+   "kept": 66,
+   "kept_missed": 33,
+   "dropped_but_ok": 19
+  },
+  {
+   "min_cover": 0.5,
+   "kept": 33,
+   "kept_missed": 14,
+   "dropped_but_ok": 33
+  },
+  {
+   "min_cover": 0.6,
+   "kept": 14,
+   "kept_missed": 5,
+   "dropped_but_ok": 43
+  },
+  {
+   "min_cover": 0.7,
+   "kept": 5,
+   "kept_missed": 1,
+   "dropped_but_ok": 48
+  }
+ ]
+}

@@ -10,12 +10,16 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 import app.auth.models
 import app.chat.models
 import app.files.models
+import app.jobs.models
 import app.knowledge.models
 import app.notify.models
 import app.project.models
 import app.quote.models
 import app.refprice.models
+import app.report.models
+import app.review.models
 import app.schedule.models
+import app.thread.models
 import app.v2.models
 import app.vendor.models
 import app.visit.models  # noqa: F401
@@ -28,8 +32,9 @@ config = context.config
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
+# disable_existing_loggers=False: 테스트처럼 앱 안에서 migration을 돌릴 때 app 로거(경고 · 오류)를 끄지 않는다.
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 # add your model's MetaData object here
 # for 'autogenerate' support

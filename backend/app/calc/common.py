@@ -12,13 +12,14 @@ AreaBasis = Literal["supply", "exclusive"]
 # 포함 상태 6종. 합계에는 included(포함) · separate(따로 계산)만 들어간다
 LineState = Literal["included", "bundled", "separate", "optional", "after_visit", "excluded"]
 COUNTED = ("included", "separate")
-# 줄 단가의 근거: 공공 기준 · 팀 가정값 · 공공 단가 없음(업체 견적에서 확인)
-Basis = Literal["public", "assumed", "none"]
+# 줄 단가의 근거: 공공 기준 · 시장 데이터 기준(v3 도배지 시장 평균) · 팀 가정값 · 공공 단가 없음(업체 견적에서 확인)
+Basis = Literal["public", "market", "assumed", "none"]
 
 PYEONG_M2 = Decimal("3.3058")
 BASIS_LABEL = {"supply": "공급면적", "exclusive": "전용면적"}
 # 계산 산식 버전. 공정 계산 · 공정표 잇기 · 평 계산이 바뀌면 올린다. 저장한 표준견적서 · 공정표에 같이 남긴다
-FORMULA_VERSION = "2026.11.1"
+# 2026.11.2: v3 표준견적서(도배지 줄 벽지 평 × 시장 평균 · 부분 공사 공간 몫)
+FORMULA_VERSION = "2026.11.2"
 
 
 @dataclass(frozen=True)
@@ -127,3 +128,8 @@ def add_money(items: Iterable[Money]) -> Money:
 def sum_won(values: Iterable[int]) -> int:
     """원 단위 금액 여러 개를 더한다 (공정별 낼 금액 합계)."""
     return sum(values)
+
+
+def sum_days(values: Iterable[Decimal]) -> Decimal:
+    """공정별 예상 일수(반나절 단위)를 차례로 한 것처럼 더한다 (표준견적서 '예상 2일')."""
+    return m2(sum(values, Decimal(0)))

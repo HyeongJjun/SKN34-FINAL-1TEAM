@@ -1,0 +1,108 @@
+{
+ "corpus": "13_interior_guide_book_rag@0287c91fe04d+consult_knowledge_rag@b91e7e48a53c+v3_knowledge_iter2_rag@b0dc76e5fcb7+v3_knowledge_rag@0a83514a1704+team657",
+ "cards": "cards@bfb4969670aa",
+ "splits": {
+  "dev": {
+   "rag": {
+    "서버 키워드(지금 무료 모드)": {
+     "n": 206,
+     "hit@1": 0.218,
+     "hit@5": 0.563,
+     "hit5_ci95": [
+      0.495,
+      0.629
+     ],
+     "mrr": 0.489
+    },
+    "v3 12공종 무게(search3)": {
+     "n": 206,
+     "hit@1": 0.204,
+     "hit@5": 0.553,
+     "hit5_ci95": [
+      0.485,
+      0.62
+     ],
+     "mrr": 0.471
+    },
+    "v3 + 카드 열쇠 색인": {
+     "n": 206,
+     "hit@1": 0.257,
+     "hit@5": 0.636,
+     "hit5_ci95": [
+      0.568,
+      0.699
+     ],
+     "mrr": 0.555
+    }
+   },
+   "bank_10trades_proxy": {
+    "서버 키워드(지금 무료 모드)": {
+     "n": 267,
+     "trade_match@5": 0.876,
+     "ci95": [
+      0.832,
+      0.911
+     ],
+     "by_trade": {
+      "bath": 20,
+      "demolition": 15,
+      "dobae": 21,
+      "electric": 20,
+      "film": 14,
+      "floor": 18,
+      "kitchen": 23,
+      "mokgong": 18,
+      "paint": 25,
+      "plumbing": 23,
+      "tile": 22,
+      "window": 15
+     }
+    },
+    "v3 12공종 무게(search3)": {
+     "n": 267,
+     "trade_match@5": 0.903,
+     "ci95": [
+      0.861,
+      0.933
+     ],
+     "by_trade": {
+      "bath": 22,
+      "demolition": 19,
+      "dobae": 21,
+      "electric": 20,
+      "film": 13,
+      "floor": 18,
+      "kitchen": 25,
+      "mokgong": 15,
+      "paint": 25,
+      "plumbing": 23,
+      "tile": 25,
+      "window": 15
+     }
+    },
+    "v3 + 카드 열쇠 색인": {
+     "n": 267,
+     "trade_match@5": 0.948,
+     "ci95": [
+      0.914,
+      0.969
+     ],
+     "by_trade": {
+      "bath": 22,
+      "demolition": 20,
+      "dobae": 23,
+      "electric": 20,
+      "film": 16,
+      "floor": 19,
+      "kitchen": 25,
+      "mokgong": 20,
+      "paint": 24,
+      "plumbing": 23,
+      "tile": 28,
+      "window": 13
+     }
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,3 @@
+/* 이어 하기 확인 창(C41) 본문 글 */
+.line { margin: 0; font-size: var(--mj-type-body); font-weight: var(--mj-weight-bold); color: var(--mj-text); overflow-wrap: anywhere; }
+.sub { margin: 4px 0 0; font-size: var(--mj-type-label); color: var(--mj-text-sub); }

@@ -1,0 +1,5 @@
+.empty { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 40px 16px; text-align: center; }
+.ic { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 24px; background: var(--mj-fill); color: var(--mj-text-mute); }
+.title { font-size: var(--mj-type-title); font-weight: var(--mj-weight-bold); line-height: var(--mj-lh-title); letter-spacing: var(--mj-track-title); }
+.desc { max-width: var(--mj-read-max); font-size: var(--mj-type-label); color: var(--mj-text-sub); }
+.act { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }

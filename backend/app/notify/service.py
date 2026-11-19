@@ -1,4 +1,5 @@
-"""화면 알림. 다른 기능 service는 add()만 부르고 commit은 부르는 쪽이 한다."""
+"""화면 알림. 다른 기능 service는 add()만 부르고 commit은 부르는 쪽이 한다.
+v3: commit 뒤에 push_unread()로 안 읽은 수를 실시간 줄기에 보낸다. kind · link 목록은 notify/catalog.py."""
 
 import uuid
 
@@ -8,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.notify.models import Notification
 from app.notify.schemas import NotificationOut, NotificationPage
+from app.realtime import service as realtime
 from app.shared.clock import now_utc
 from app.shared.errors import AppError
 
@@ -23,9 +25,10 @@ async def add(
     link: str,
     dedup_key: str,
     project_id: uuid.UUID | None = None,
-) -> None:
-    """알림 한 줄을 쓴다. 같은 (user, dedup_key)가 이미 있으면 아무것도 하지 않는다."""
-    await s.execute(
+) -> bool:
+    """알림 한 줄을 쓴다. 같은 (user, dedup_key)가 이미 있으면 아무것도 하지 않는다.
+    돌려주는 값: 새로 썼는지 (기한 일 처리 함수가 두 번째 실행을 알아보는 데 쓴다)."""
+    res = await s.execute(
         insert(Notification)
         .values(
             user_id=user_id,
@@ -36,7 +39,15 @@ async def add(
             dedup_key=dedup_key,
         )
         .on_conflict_do_nothing(constraint="uq_notifications_user_dedup")
+        .returning(Notification.id)
     )
+    return res.scalar_one_or_none() is not None
+
+
+async def push_unread(s: AsyncSession, user_ids: list[uuid.UUID | None]) -> None:
+    """commit 뒤에 부른다: 사람마다 안 읽은 알림 수를 실시간 줄기(notif {unread})로 보낸다."""
+    for uid in {u for u in user_ids if u is not None}:
+        await realtime.push([uid], "notif", {"unread": await unread_count(s, uid)})
 
 
 async def unread_count(s: AsyncSession, user_id: uuid.UUID) -> int:

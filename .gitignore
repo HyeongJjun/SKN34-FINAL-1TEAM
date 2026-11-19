@@ -23,6 +23,10 @@ htmlcov/
 node_modules/
 .pnpm-store/
 .next/
+# v3: 역할별 dev · build 출력 폴더(NEXT_DIST_DIR)
+.next-*/
+# v3: e2e 결과 · 스크린샷 · 서버 기록(playwright.config.ts outputDir)
+frontend/e2e/.out/
 next-env.d.ts
 *.tsbuildinfo
 .nuxt/
@@ -55,3 +59,4 @@ data/local/
 evaluation/rag/.cache/
 evaluation/answer/.cache/
 evaluation/trade/.cache/
+evaluation/v3/.cache/

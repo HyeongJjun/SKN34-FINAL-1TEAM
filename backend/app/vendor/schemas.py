@@ -11,19 +11,29 @@ from pydantic import (
     ConfigDict,
     Field,
     StringConstraints,
+    ValidationInfo,
     field_validator,
     model_validator,
 )
 
 from app.auth.schemas import clean_name, normalize_email, normalize_phone
-from app.vendor.models import LINKS_MAX, NEEDS_INFO_CODES, PORTFOLIO_MAX, REJECT_CODES
+from app.vendor.models import (
+    LINKS_MAX,
+    NEEDS_INFO_CODES,
+    PORTFOLIO_MAX,
+    REJECT_CODES,
+    REVIEW_LINKS_MAX,
+)
 
 Trade = Literal["dobae", "mokgong"]
 # 전화 · 문자 · 카카오톡 채널 · 홈페이지 상담
 ContactMethod = Literal["phone", "sms", "kakao", "web"]
 FaqKey = Literal["process", "pricing", "extra_cost", "duration", "as_refund"]
+TaxKind = Literal["general", "simplified", "exempt"]  # 일반 · 간이(L02) · 면세
+PriceMode = Literal["price", "included", "excluded"]  # 단가 × 수량 · 다른 줄에 포함 · 빼기
 Text = Annotated[str, StringConstraints(strip_whitespace=True)]
 VISIT_FEE_MAX = 1_000_000
+INTRO_MAX = 60  # 한 줄 소개 (V15)
 
 
 def clean_url(v: str | None) -> str | None:
@@ -47,6 +57,11 @@ def clean_url(v: str | None) -> str | None:
 
 def _blank_none(v: str | None) -> str | None:
     return v or None
+
+
+def _one_line(v):
+    """줄바꿈 · 겹친 빈칸을 한 칸으로 (한 줄 소개). 글이 아니면 그대로 넘겨 형식 검사에 맡긴다."""
+    return " ".join(v.split()) if isinstance(v, str) else v
 
 
 def _local_time(v: time | None) -> time | None:
@@ -80,7 +95,7 @@ def normalize_biz_no(v: str) -> str:
 
 
 class ApplicationFields(BaseModel):
-    """가입 신청서 칸. 가입 · 거절 뒤 다시 신청이 같이 쓴다 (사업자등록번호는 가입 때만 받는다)."""
+    """가입 신청서 칸. 가입 · 거절 뒤 다시 신청이 같이 쓴다 (사업자등록번호는 가입 · 다시 신청 때만)."""
 
     biz_name: str = Field(max_length=100, description="상호")
     owner_name: str = Field(max_length=50, description="대표자 이름")
@@ -124,11 +139,19 @@ class VendorSignupIn(ApplicationFields):
 
 
 class ReapplyIn(ApplicationFields):
-    """거절된 업체가 같은 계정 · 같은 사업자등록번호로 다시 신청. 새 등록증은 먼저 POST /files (kind=license)."""
+    """거절된 업체가 같은 계정으로 다시 신청. 사업자등록번호도 고칠 수 있다(VS02, 비우면 그대로).
+    새 등록증은 먼저 POST /files (kind=license)."""
 
     model_config = ConfigDict(extra="forbid")
 
+    biz_no: str | None = Field(
+        default=None,
+        max_length=20,
+        description="v3: 고친 사업자등록번호 10자리 (- 는 빼도 된다, 비우면 지금 번호 그대로)",
+    )
     license_file_id: uuid.UUID | None = None
+
+    _biz_no = field_validator("biz_no")(lambda v: None if v is None else normalize_biz_no(v))
 
 
 class ResubmitIn(BaseModel):
@@ -220,6 +243,11 @@ class VendorAdminOut(BaseModel):
 
 class VendorAdminDetailOut(VendorAdminOut):
     reviews: list[ReviewOut] = Field(description="처리 기록 (최근 순)")
+    # ---- v3 (A01) ----
+    review_links: list["ReviewLinkAdminOut"] = Field(default=[], description="외부 리뷰 링크")
+    same_name: list["SameNameOut"] = Field(default=[], description="같은 상호 · 번호 · 대표자")
+    suspended_at: datetime | None = None
+    suspend_scope: str | None = None
 
 
 class ReviewSummaryOut(BaseModel):
@@ -280,10 +308,25 @@ class LinkIn(BaseModel):
 class PortfolioMeta(BaseModel):
     title: Annotated[Text, Field(min_length=1, max_length=60)]
     space: Annotated[Text, Field(max_length=20)] | None = None
-    pyeong: int | None = Field(default=None, ge=1, le=200)
+    pyeong: int | None = Field(default=None, ge=1, le=200, description="옛 칸 (v3는 area_m2)")
     taken_on: date | None = None
+    area_m2: Decimal | None = Field(
+        default=None, gt=0, lt=1000, decimal_places=1, description="v3: 면적은 ㎡로 (V16)"
+    )
+    paper: Literal["economy", "basic"] | None = Field(default=None, description="합지 · 실크")
+    area_basis: Literal["supply", "exclusive"] | None = Field(
+        default=None,
+        description="v3: 면적 기준 공급 · 전용 (C47 '공급 79.3㎡', 면적을 넣을 때만). 고칠 때 안 보내면 그대로",
+    )
 
     _space = field_validator("space")(_blank_none)
+
+    @field_validator("area_basis")
+    @classmethod
+    def _basis_needs_area(cls, v: str | None, info: ValidationInfo) -> str | None:
+        if v is not None and info.data.get("area_m2") is None:
+            raise ValueError("면적을 넣을 때만 공급 · 전용을 고를 수 있어요.")
+        return v
 
 
 class PortfolioIn(PortfolioMeta):
@@ -299,6 +342,10 @@ class PortfolioEdit(PortfolioMeta):
 class PortfolioOut(PortfolioMeta):
     id: uuid.UUID
     file_id: uuid.UUID
+    area_text: str | None = Field(
+        default=None,
+        description="화면 글 '공급 79.3㎡' (기준이 없으면 '79.3㎡', 면적이 없으면 비어 있다)",
+    )
 
 
 class ProfileIn(BaseModel):
@@ -320,7 +367,23 @@ class ProfileIn(BaseModel):
     call_end: time | None = None
     visit_fee: int = Field(ge=0, le=VISIT_FEE_MAX, description="원, 부가세 포함. 0 = 무료")
     visit_fee_refund: bool = False
-    tax_kind: Literal["general", "exempt"] = "general"
+    tax_kind: TaxKind = Field(
+        default="general", description="일반 · 간이(부가세를 따로 안 붙임) · 면세"
+    )
+    instant_default: bool | None = Field(
+        default=None, description="v3: 기간 답하기 '바로 확정' 처음 값 (비우면 그대로)"
+    )
+    visit_capacity: int | None = Field(
+        default=None,
+        ge=1,
+        le=3,
+        description="v3: 반나절 한 칸에 받는 실측 수 1~3 (L03, 비우면 그대로)",
+    )
+    intro: str | None = Field(
+        default=None,
+        max_length=INTRO_MAX,
+        description="v3: 한 줄 소개 60자 (V15). 줄바꿈은 한 칸으로, 빈 글이면 지우고 null이면 그대로",
+    )
     interior_license: Annotated[Text, Field(max_length=100)] | None = None
     insurance: Annotated[Text, Field(max_length=100)] | None = None
     faqs: list[FaqIn] = Field(default_factory=list, max_length=5)
@@ -335,6 +398,7 @@ class ProfileIn(BaseModel):
     _site = field_validator("site_url", "contact_url")(clean_url)
     _blank = field_validator("address", "interior_license", "insurance")(_blank_none)
     _time = field_validator("call_start", "call_end")(_local_time)
+    _intro = field_validator("intro", mode="before")(_one_line)
 
     @model_validator(mode="after")
     def _check(self) -> "ProfileIn":
@@ -393,6 +457,11 @@ class ProfileOut(PublicProfileOut):
     address: str | None
     site_url: str | None
     contact_url: str | None
+    # ---- v3 ----
+    instant_default: bool | None = Field(default=None, description="'바로 확정' 처음 값")
+    visit_capacity: int | None = Field(default=None, description="반나절 한 칸에 받는 실측 수")
+    suspended_at: datetime | None = Field(default=None, description="관리자가 업체 기능을 멈춘 때")
+    intro: str | None = Field(default=None, description="한 줄 소개 (V15, 비었으면 비어 있다)")
 
 
 UNIT_PRICE_MAX = 10_000_000
@@ -498,6 +567,9 @@ class PricesOut(BaseModel):
     files: list[PriceFileOut]
     draft: PriceSetOut | None
     confirmed: PriceSetOut | None
+    v3: "PricesV3Out | None" = Field(
+        default=None, description="v3 단가표 1201~1208 (1단계에서 채움)"
+    )
 
 
 class ContactOut(BaseModel):
@@ -511,3 +583,212 @@ class ContactOut(BaseModel):
     call_end: time | None
     visit_fee: int | None
     visit_fee_refund: bool
+
+
+# ---- v3 단가표 1201~1208 (dev-06, D02) ----
+
+
+class PriceLineV3In(BaseModel):
+    """v3 단가 줄 한 줄: 받는 법(mode)에 따라 단가 · 포함 대상이 있다 (빈 단가는 422)"""
+
+    key: str = Field(
+        max_length=20,
+        description="putty · paper_hapji · paper_silk · material · labor · meal · truck",
+    )
+    mode: PriceMode
+    unit_price: int | None = Field(
+        default=None, ge=0, le=UNIT_PRICE_MAX, description="원, 부가세 빼고"
+    )
+    included_in: str | None = Field(default=None, max_length=20)
+
+    @model_validator(mode="after")
+    def _mode(self) -> "PriceLineV3In":
+        if (self.mode == "price") != (self.unit_price is not None):
+            raise ValueError("단가를 넣어 주세요.")
+        if (self.mode == "included") != (self.included_in is not None):
+            raise ValueError("어느 줄에 포함되는지 골라 주세요.")
+        if self.included_in == self.key:
+            raise ValueError("자기 줄에는 포함할 수 없어요.")
+        return self
+
+
+class ConfirmPricesIn(BaseModel):
+    """'확인하고 저장' 한 번 (D02): 본 판 + 줄 전부. 본 판 + 1이 아니면 409 stale. 10배 경고는 저장된다."""
+
+    base_version: int = Field(ge=0, description="화면이 본 확인 묶음 판 (처음이면 0)")
+    lines: list[PriceLineV3In] = Field(min_length=1, max_length=20)
+
+    @model_validator(mode="after")
+    def _unique(self) -> "ConfirmPricesIn":
+        if len({ln.key for ln in self.lines}) != len(self.lines):
+            raise ValueError("같은 줄을 두 번 넣었어요.")
+        return self
+
+
+class PriceRowV3Out(BaseModel):
+    """v3 단가표 한 줄 + '공급 69.4㎡ 집이면' 예시 (계산 엔진)"""
+
+    code: str = Field(description="화면 코드 1201 · 1203 · 1204 … (표시값)")
+    key: str
+    name: str
+    unit: str = Field(description="벽지 평 · 품 · 대처럼 분명히")
+    mode: PriceMode | None = Field(description="아직 안 넣었으면 비어 있다")
+    unit_price: int | None
+    included_in: str | None
+    example_qty: Decimal
+    example_amount: int
+    warn: Literal["too_high", "too_low"] | None = Field(
+        description="시장 기준보다 10배 넘게 다름 (L01, 저장은 된다)"
+    )
+    warn_high: int | None = Field(
+        default=None,
+        description="이 값보다 크면 '10배쯤' 경고 (기준 단가 × 10, 화면이 저장 전에 씀)",
+    )
+    warn_low: int | None = Field(
+        default=None, description="이 값보다 작으면 '10분의 1쯤' 경고 (기준 단가 ÷ 10 올림)"
+    )
+
+
+class EstimateV3LineOut(BaseModel):
+    """가견적 v3 줄 (업체 단가 × 계산 엔진 수량)"""
+
+    code: str
+    key: str
+    name: str
+    qty: Decimal
+    unit: str
+    unit_price: int | None
+    amount: int = Field(description="포함 · 빼기 줄은 0")
+    mode: PriceMode
+    included_in: str | None
+    in_standard: bool = Field(
+        default=True,
+        description="표준견적서에 같은 일이 있는 줄. False(퍼티 · 식대 · 운송비)는 비교 %에서 빼고"
+        " '표준견적서에 없는 줄'로 따로 보여요",
+    )
+
+
+class EstimateV3Out(BaseModel):
+    """가견적 v3 (믿집 계산). 간이 · 면세 업체는 부가세 0(L02)."""
+
+    rows_ver: Literal["dobae_v3"]
+    set_id: uuid.UUID | None = Field(description="쓴 확인 묶음 (요청 때 고정한다)")
+    version: int | None
+    grade: Literal["economy", "basic"]
+    tax_kind: TaxKind
+    lines: list[EstimateV3LineOut]
+    supply: int
+    vat: int
+    total: int = Field(description="고객이 낼 금액 (부가세 포함)")
+    vs_standard_pct: Decimal | None = Field(description="표준견적서 대비 % (표준에 없는 줄은 뺀다)")
+    paper_ok: bool = Field(
+        default=True,
+        description="고른 벽지 줄이 '빼기'가 아니에요. False면 '이 벽지는 안 해요' (담기 409 paper_unsupported)",
+    )
+
+
+class PricesV3Out(BaseModel):
+    """업체 단가표 화면 v3 (D02). 옛 v2 묶음만 있으면 빈 v3 표 + 안내(needs_setup)"""
+
+    rows_ver: Literal["dobae_v3"]
+    version: int = Field(
+        description="지금 확인 묶음 판 (없으면 0). 확인할 때 base_version으로 보낸다"
+    )
+    confirmed_at: datetime | None
+    needs_setup: bool = Field(description="v3 단가를 아직 확인하지 않았어요")
+    lines: list[PriceRowV3Out]
+    example: EstimateV3Out | None = Field(description="예시 집(공급 69.4㎡ · 실크) 가견적")
+    example_home: str = Field(
+        description="예시 집 이름 '공급 69.4㎡ 집' (D02 열 '… 집이면' · 아래 '… 집 가견적')"
+    )
+
+
+# ---- 외부 리뷰 링크 (V18 · A01) · 별점 요약 ----
+
+
+class ReviewLinkIn(BaseModel):
+    label: Annotated[Text, Field(max_length=40)] | None = None
+    url: str = Field(max_length=300, description="https:// 주소만")
+
+    _label = field_validator("label")(_blank_none)
+
+    @field_validator("url")
+    @classmethod
+    def _https(cls, v: str) -> str:
+        out = clean_url(v)
+        if out is None or not out.startswith("https://"):
+            raise ValueError("https://로 시작하는 주소를 적어 주세요.")
+        return out
+
+
+class ReviewLinksIn(BaseModel):
+    """외부 리뷰 링크 통째로 저장 (3개까지). 바뀐 링크는 '확인 중'이 된다."""
+
+    links: list[ReviewLinkIn] = Field(default_factory=list, max_length=REVIEW_LINKS_MAX)
+
+
+class ReviewLinkOut(BaseModel):
+    sort: int
+    label: str | None
+    url: str
+    status: Literal["checking", "shown", "hidden"] = Field(
+        description="고객 화면에는 shown만 나간다"
+    )
+
+
+class ReviewLinkAdminOut(ReviewLinkOut):
+    note: str | None
+    checked_at: datetime | None
+
+
+class LinkCheckIn(BaseModel):
+    """관리자 링크 확인 (A01)"""
+
+    status: Literal["shown", "hidden"]
+    note: Annotated[Text, Field(max_length=300)] | None = None
+    url: str | None = Field(
+        default=None,
+        max_length=300,
+        description="관리자가 본 주소. 그사이 업체가 주소를 고쳤으면 409 stale (고친 링크를 보이지 않게)",
+    )
+
+
+class RatingOut(BaseModel):
+    """별점 요약 (읽을 때 계산, 반올림은 계산 엔진). 숨긴 리뷰는 뺀다."""
+
+    avg: Decimal | None = Field(description="소수 한 자리 (리뷰가 없으면 비움)")
+    count: int
+    done_count: int = Field(description="믿집에서 끝낸 공사 수")
+    tags: dict[str, int] = Field(description="칩별 수: seam · on_time · kind · tidy")
+
+
+# ---- 관리자: 업체 멈춤 (D26) ----
+
+
+class SuspendIn(BaseModel):
+    scope: Literal["new", "all"] = Field(description="새 요청만 막기 · 진행 중인 것도 닫기")
+    note: Annotated[Text, Field(min_length=1, max_length=300)]
+
+
+class UnsuspendIn(BaseModel):
+    note: Annotated[Text, Field(max_length=300)] | None = None
+
+
+class VendorSuspendOut(BaseModel):
+    vendor_id: uuid.UUID
+    suspended_at: datetime | None
+    suspend_scope: Literal["new", "all"] | None
+    closed_visits: int = Field(description="진행 중이라 닫은 요청 수 (all일 때)")
+
+
+class SameNameOut(BaseModel):
+    """같은 상호 · 등록번호 · 대표자인 다른 업체 (A01)"""
+
+    user_id: uuid.UUID
+    biz_name: str | None
+    status: str
+    match: list[Literal["biz_name", "biz_no", "owner_name"]]
+
+
+VendorAdminDetailOut.model_rebuild()
+PricesOut.model_rebuild()
