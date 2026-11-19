@@ -104,6 +104,37 @@ def test_clear_other_intent_leaves_waiting_agent():
     assert (found.label, found.source) == ("quote_explanation", "model")
 
 
+def test_trade_word_turns_out_of_scope_into_trade():
+    out = Intent(label="out_of_scope", confidence=0.91, source="model")
+    kept = route.keep_in_scope("벽지 추천해 주세요", out)
+    assert (kept.label, kept.source, kept.confidence) == ("trade", "rule", 0.0)
+
+
+def test_keep_in_scope_leaves_others_alone():
+    out = Intent(label="out_of_scope", confidence=0.91, source="model")
+    # 도배 · 목공 낱말이 없으면 그대로 범위 밖
+    assert route.keep_in_scope("주말에 볼 만한 영화 추천해 줘", out) is out
+    guide = Intent(label="orchestrator", confidence=0.9, source="model")
+    assert route.keep_in_scope("벽지가 뭐예요?", guide) is guide  # 범위 밖이 아니면 그대로
+    assert route.keep_in_scope("벽지 추천해 주세요", None) is None
+
+
+@pytest.mark.parametrize(
+    "message",
+    ["벽지 추천해 주세요", "합지랑 실크 중에 추천해 주세요", "도배지 추천해 주실 수 있어요?"],
+)
+def test_wallpaper_request_is_not_out_of_scope(message, jev_calls):
+    # 학습 모델은 '추천해 주세요'를 범위 밖으로 읽는다. 도배 낱말이 있으면 고정 안내로 끝내지 않는다
+    found = asyncio.run(classify(message))
+    assert found is not None and found.label != "out_of_scope" and jev_calls == []
+
+
+def test_jev_out_of_scope_with_trade_word_goes_to_trade(jev_calls):
+    llm.set_jev_stub("out_of_scope", 0.9)
+    found = asyncio.run(classify("실크벽지 추천 좀요"))  # 모델 신뢰도가 낮아 Jev가 본다
+    assert (found.label, found.source) == ("trade", "rule") and len(jev_calls) == 1
+
+
 @pytest.mark.parametrize("label", ["quote_explanation", "schedule"])
 def test_no_project_goes_to_orchestrator(label):
     message = {

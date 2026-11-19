@@ -114,6 +114,14 @@ def test_out_of_scope_in_chat_saves_nothing(api, fake):
     assert len(_messages(chat_id)) == 2
 
 
+def test_wallpaper_request_reaches_llm(api, fake):
+    """학습 모델이 범위 밖으로 읽는 말투('추천해 주세요')여도 도배 낱말이 있으면 고정 안내로 끝내지 않는다 (#147)."""
+    f = fake({"text": "실크와 합지 중에서 골라 보세요."})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": "벽지 추천해 주세요"}).json()
+    assert out["gate"] is None and out["intent"]["label"] == "trade" and len(f.seen) == 1
+
+
 @pytest.mark.parametrize(
     "answer",
     [

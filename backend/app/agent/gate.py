@@ -41,7 +41,14 @@ async def gate(state: ChatState) -> dict:
 
 
 async def classify(message: str, waiting: IntentLabel | None = None) -> Intent | None:
-    """학습 모델 → 기다리던 담당 유지 → 신뢰도 낮으면 Jev 한 번 → 실패면 None(되묻기)."""
+    """학습 모델 → 기다리던 담당 유지 → 신뢰도 낮으면 Jev 한 번 → 실패면 None(되묻기).
+
+    끝에 범위 밖이라는 결과를 한 번 더 본다: 도배 · 목공 낱말이 있으면 공정 상담으로 보낸다.
+    """
+    return route.keep_in_scope(message, await _classify(message, waiting))
+
+
+async def _classify(message: str, waiting: IntentLabel | None) -> Intent | None:
     threshold = settings.intent_confidence_threshold
     model = intent_model.predict(message)
     kept = route.keep_waiting(waiting, model, threshold)
