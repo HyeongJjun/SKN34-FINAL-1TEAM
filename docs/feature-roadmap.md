@@ -1,16 +1,16 @@
 # 기능 개발표 — 믿집
 
-[문서 목차](README.md) · [API 안내·목록](api/README.md) · [v2 구조](v2/structure.md) · [v2 ERD](v2/erd.md) · [팀 기여 가이드](../CONTRIBUTING.md) · [개발 안내](development.md) · [검증 안내](testing.md) · [에이전트 협약](agent-contract.md) · [기준 데이터](reference-data.md) · [이번 근거 점검](verification/2026-11-18-documentation.md)
+[문서 목차](README.md) · [API 안내·목록](api/README.md) · [v2 구조](v2/structure.md) · [v2 ERD](v2/erd.md) · [팀 기여 가이드](../CONTRIBUTING.md) · [개발 안내](development.md) · [검증 안내](testing.md) · [에이전트 협약](agent-contract.md) · [기준 데이터](reference-data.md) · [문서 검증 이력](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)
 
-> 기준: 2026-11-18, `dev` 커밋 `1a3e65661924e93225914ebb4b440bbd8330cc2a` (PR #141 병합). 현재 코드와 라우터 등록·화면 호출을 먼저 확인하고 이슈·PR 병합 기록과 CI를 대조했다. 아래는 서비스 기능별 실제 동작을 한 행에 기록한다.
+> 구현 기준: 2026-11-19, `dev` 커밋 `93097f35abb4be12d4f9c85f0a41004f385daa04` (PR #140 병합). 코드·호출·테스트와 이슈·PR 기록을 대조했다. 과거 2026-11-18 `dev` `1a3e656`의 검증 결과는 [이슈 #143](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)에 날짜·대상 SHA를 구분해 보존한다.
 
 **개발 상태**: `구현`=현재 코드의 동작 경로가 존재함, `부분`=API 또는 화면·임시 저장·시연 기능만 존재하거나 사용자 흐름 일부만 연결됨, `진행`=열린 이슈/PR의 제안으로 기준 커밋에 미반영, `미구현`=구체 처리 코드가 없음, `미확인`=운영 환경 등 코드 밖의 실태를 확인하지 못함. 구현은 실서비스 배포 완료를 뜻하지 않는다.
 
-**검증 상태**: `CI`=관련 테스트 또는 CI 검사 경로가 있고 기준 `dev`의 [CI 성공](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/actions/runs/44270185547)을 확인함, `로컬`=기준 HEAD에서 별도로 실행한 해당 검사 통과(해당 검사는 CI에서 실행하지 않음), `코드`=코드·호출을 읽었으나 해당 동작의 자동 또는 수동 통과 근거는 확보하지 못함, `미검증`=동작 확인 자료 없음. `CI`여도 실제 LLM·AWS 운영·브라우저 E2E 검증은 별도다. 실행 범위는 [검증기록](verification/2026-11-18-documentation.md)을 참조한다.
+**검증 상태**: `CI`=관련 테스트 또는 CI 검사 경로가 있고 기준 `dev`의 [CI 성공](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/actions/runs/44467179321)을 확인함, `로컬`=해당 검사 로컬 통과(현재 CI에 포함되지 않은 평가 코드 등), `코드`=코드·호출을 읽었으나 해당 동작의 통과 근거는 확보하지 못함, `미검증`=동작 확인 자료 없음. `CI`여도 유료 LLM·AWS 운영·브라우저 전 기능 E2E 검증은 별도다. 범위·이전 실행 결과는 [이슈 #143](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)에 구분한다.
 
 **근거 읽기**: 이슈는 담당자와 개발 제안을 나타내고 PR은 코드 반영 이력을 나타낸다. 이슈 종료와 개발 완료는 별개이며 병합과 배포도 별개다. `없음`은 확인된 직접 이슈·PR이 없다는 뜻이다. 이슈/PR 번호는 현재 저장소의 기록만 사용했다.
 
-**MVP 분류 기준(2026-11-19)**: MVP 필수는 확인된 1차 제품 흐름·수용 규칙·현행 범위 이슈의 기능, 후속은 명시적으로 제외·유예한 기능, 확인 필요는 이번 조회 근거만으로 출시 범위·시점을 확정할 수 없는 기능이다. 이 표는 기존 팀 근거를 연결한 검토 자료이지 새 팀 승인이나 출시 판정이 아니다. 기존 187행은 세부 기능 단위이지 팀 승인 요구사항 수·MVP 완료율이 아니다. 구현·검증 상태는 **2026-11-18 dev 1a3e656** 기준이다.
+**MVP 분류 기준(2026-11-19)**: MVP 필수는 확인된 1차 제품 흐름·수용 규칙·현행 범위 이슈의 기능, 후속은 명시적으로 제외·유예한 기능, 확인 필요는 이번 조회 근거만으로 출시 범위·시점을 확정할 수 없는 기능이다. 이 표는 기존 팀 근거를 연결한 검토 자료이지 새 팀 승인이나 출시 판정이 아니다. 기존 187행은 세부 기능 단위이지 팀 승인 요구사항 수·MVP 완료율이 아니다. **구현·검증 기준은 2026-11-19 dev 93097f3**이며 MVP 구분은 코드 병합 여부로 바꾸지 않는다.
 
 **근거**: [T1][mvp-t1]=AGENTS §1(1차 흐름), [T2][mvp-t2]=원본 v2 기능표, [T4][mvp-t4]=AGENTS §4(AI), [A2][mvp-a2]·[A3][mvp-a3]·[A5][mvp-a5]·[A6][mvp-a6]·[A7][mvp-a7]=AGENTS 각 절, [R][mvp-r]=원본 README 향후 계획, [C110][mvp-c110]=11/16 C안. 이슈 #번호와 PR #번호는 구분한다. [이슈 #86 최종 댓글](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/86#issuecomment-6909385821)의 SSE 후속과 [이슈 #131](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/131)의 v2 도배 화면 제한을 적용했다.
 
@@ -174,7 +174,7 @@
 | AI-04 | 입구 관문 | 대기 중인 질문 답변이면 이전 역할 유지 | 구현 | CI | [agent/route.py](../backend/app/agent/route.py) · [v2/ask_chat.py](../backend/app/v2/ask_chat.py) | [tests/test_v2_ask_chat.py](../backend/tests/test_v2_ask_chat.py) | [#120][i120] (담당 HyeongJjun) · [PR #122][p122] | MVP 필수 · [C110][mvp-c110] waiting 이어받기·범위 밖 안내 |
 | AI-05 | 입구 관문 | 범위 밖 공종은 LLM 없이 고정 안내 | 구현 | CI | [v2/ask.py](../backend/app/v2/ask.py) · [agent/gate.py](../backend/app/agent/gate.py) | [tests/test_v2_ask.py](../backend/tests/test_v2_ask.py) | [#72][i72] (담당 HyeongJjun) · [PR #87][p87] · [#128][i128] (담당 HyeongJjun) · [PR #129][p129] | MVP 필수 · [C110][mvp-c110] waiting 이어받기·범위 밖 안내 |
 | AI-06 | 입구 관문 | Jev 실패 시 v2 상담 화면에 선택지 카드 제공 | 미구현 | 미검증 | [v2/ask.py](../backend/app/v2/ask.py) · [agent/gate.py](../backend/app/agent/gate.py) | 없음 | [#123][i123] (담당 HyeongJjun) | MVP 필수 · [T4][mvp-t4] Jev 실패 되묻기·[이슈 #123][i123] 수정 요청 |
-| AI-07 | 역할 상담 | 일반 안내·공종 상담에서 지시문 chat_v3 사용 | 구현 | 코드 | [v2/ask.py](../backend/app/v2/ask.py) · [v2/prompts/chat_v3.md](../backend/app/v2/prompts/chat_v3.md) | 없음 | [#131][i131] (담당 lsm15111) · [PR #130][p130] | MVP 필수 · [C110][mvp-c110] 하나의 LLM이 역할 전환 |
+| AI-07 | 역할 상담 | 일반 안내·공종 상담에서 현행 지시문 chat_v4 사용 | 구현 | CI | [v2/ask.py](../backend/app/v2/ask.py) · [v2/prompts/chat_v4.md](../backend/app/v2/prompts/chat_v4.md) | [tests/test_v2_ask.py](../backend/tests/test_v2_ask.py) | [#131][i131] (담당 lsm15111) · [PR #130][p130] · [PR #140][p140] (병합) | MVP 필수 · [C110][mvp-c110] 하나의 LLM이 역할 전환 |
 | AI-08 | 공종 상담 | 질문 낱말로 도배·목공을 고르고 공종별 지시문 추가 | 구현 | CI | [v2/ask.py](../backend/app/v2/ask.py) · [agent/trades/dobae.py](../backend/app/agent/trades/dobae.py) | [tests/test_v2_ask.py](../backend/tests/test_v2_ask.py) | [#131][i131] (담당 lsm15111) · [PR #130][p130] | MVP 필수 · [이슈 #131][i131] 도배·목공 공정 설정으로 상담 |
 | AI-09 | 공종 에이전트 | 독립 하위 공종 에이전트가 조건·주의점 응답 생성 | 미구현 | 미검증 | [agent/trade_agent.py](../backend/app/agent/trade_agent.py) | 없음 | [#71][i71] (담당 HyeongJjun) · [PR #81][p81] · [#85][i85] (담당 없음) | 후속 · [C110][mvp-c110]·[T4][mvp-t4] 독립 공종 하위 호출은 후속 |
 | AI-10 | 견적 설명 | 계산된 견적 사실을 넣어 LLM 설명 생성 | 구현 | CI | [v2/ask.py](../backend/app/v2/ask.py) · [v2/prompts/quote_explanation_v2.md](../backend/app/v2/prompts/quote_explanation_v2.md) | [tests/test_v2_ask.py](../backend/tests/test_v2_ask.py) | [#99][i99] (담당 lsm15111) · [PR #100][p100] · [#131][i131] (담당 lsm15111) · [PR #130][p130] | MVP 필수 · [C110][mvp-c110] 견적·일정 설명 역할 |
@@ -192,7 +192,7 @@
 | AI-22 | 대화 보기 | 새로고침 뒤 서버에 저장된 과거 대화를 화면에 복원 | 미구현 | 미검증 | [chat/router.py](../backend/app/chat/router.py) · [UI/v2/ai/ask.tsx](../frontend/components/v2/ai/ask.tsx) | 없음 | [#127][i127] (담당 HyeongJjun) | 확인 필요 · [이슈 #127][i127] 시연 범위인지 팀 판단 필요 명시 |
 | AI-23 | 응답 전송 | 대화 API에서 SSE 글자 단위 스트리밍 | 미구현 | 미검증 | [v2/router.py](../backend/app/v2/router.py) · [chat/router.py](../backend/app/chat/router.py) | 없음 | [#86][i86] (담당 HyeongJjun) | 후속 · [이슈 #86][i86] 최종 댓글: SSE 흘려보내기는 후속 |
 | AI-24 | 안전 검사 | 화면 도구 결과를 허용 숫자의 신뢰 근거로 제한 | 부분 | 코드 | [v2/ask.py](../backend/app/v2/ask.py) · [v2/guard.py](../backend/app/v2/guard.py) | 없음 | [#124][i124] (담당 HyeongJjun) | MVP 필수 · [이슈 #124][i124] 화면 입력은 숫자 신뢰 근거 아님 |
-| AI-25 | 미병합 수정 | 평형·기간·빈 질문 개선과 chat_v4 지시문 | 진행 | 미검증 | [v2/prompts/chat_v3.md](../backend/app/v2/prompts/chat_v3.md) | 없음 | [#139][i139] (담당 HyeongJjun) · [PR #140][p140] (열림) | 확인 필요 · [이슈 #139][i139] 수정 진행 중이나 MVP 출시 필수 판단 없음 |
+| AI-25 | 상담 입력 보호 | chat_v4·평형과 도면이 모두 없는 상담의 금액·기간 계산 차단·이미지 없는 일반 채팅의 무문자 안내·거주 근거(living_said) 문구 확인 및 화면 인자 제외 | 구현 | CI | [v2/ask.py](../backend/app/v2/ask.py) · [v2/prompts/chat_v4.md](../backend/app/v2/prompts/chat_v4.md) | [tests/test_v2_ask.py](../backend/tests/test_v2_ask.py) · [tests/test_v2_ask_chat.py](../backend/tests/test_v2_ask_chat.py) | [#139][i139] (담당 HyeongJjun, 이슈 열림) · [PR #140][p140] (병합) | 확인 필요 · [이슈 #139][i139] 코드 병합과 MVP 출시 필수 여부는 별개 |
 | AI-26 | 사용 제한 | v2 상담 호출 횟수·도구 호출 상한 적용 | 구현 | CI | [v2/ask.py](../backend/app/v2/ask.py) | [tests/test_v2_ask.py](../backend/tests/test_v2_ask.py) | [#99][i99] (담당 lsm15111) · [PR #100][p100] | MVP 필수 · [이슈 #99][i99] 호출·도구 실행 한도 |
 
 ## 기준 데이터 적재·RAG 검색
@@ -262,9 +262,9 @@
 - `frontend/lib/api/admin.ts`의 회원 목록은 예시 데이터다. 업체 심사 목록은 별도 실제 API다. 카카오 로그인·비밀번호 재설정 메일·문자 인증은 안내 화면만 있다.
 - v2 예시 평면도의 수량 계산은 서버의 **준비된 도면 데이터**를 이용한다. 고객이 업로드한 이미지의 도형 인식·OCR은 구현되지 않았다. 도배만 열어 둔 화면과 목공 계산 엔진을 구분했다.
 - 실측 견적서는 업체가 수정본을 임시 저장하고 버전 2·3으로 다시 제출할 수 있다. 수정 없는 반복 전송·동시 중복·업체 확정 후 제출에만 409 제한이 있다. 공사 날짜를 수락한 후에도 `kind=change` 날짜 제안·고객 수락·확정 공정표 새 버전 생성이 가능하다. 다른 업체의 자동 재조정·전체 재확정은 별도 미구현 단계다.
-- 현재 v2 대화 API는 일반 JSON 응답이다. `chat_v3`를 사용하고, 공종 하위 에이전트는 실패 반환 뼈대이며 일정 MCP 서버는 비어 있다. `jobs` 영속 작업과 시연 외 worker는 구현되지 않았다.
+- 현재 v2 대화 API는 일반 JSON 응답이고 `chat_v4`를 사용한다. 이미지 없는 일반 상담의 무문자 입력은 LLM·저장 없이 안내하며, 거주(`living`)는 모델이 의미를 판단하고 서버가 인용 문구(`living_said`)의 존재만 확인한다. 짧은 네/아니요 답은 직전 AI 질문도 참고하고, 근거 칸은 모델 기록에만 두며 화면 도구 인자에서는 제거한다. 상담 `price_reference`는 평형·도면 없이 계산하지 않지만 원시 `/v2/quote`에는 32평 기본값이 남아 있다. 공종 하위 에이전트는 실패 반환 뼈대이고 일정 MCP는 비어 있다. 일반 `jobs` 영속화와 시연 외 worker 자동 업무는 미구현이다.
 - 정형 기준 데이터 4종의 `status=False` 유지와 자료 행 보존은 PR #106으로 정한 **현행 정책**이다. 장래 DB 기반 계산 연결을 위해서는 새 정책·개발 결정이 필요하다. 수동 CSV 적재는 `app.data_ingest`, 상담 지식 JSON→CSV 생성은 별도 `app.knowledge.json_csv`가 맡는다. RAG 검색은 **DB에서 활성화한 지식 버전이 있을 때** 동작한다. 이번 점검에서 AWS 활성 데이터 자체는 읽지 않았다.
-- 후속 이슈 [#123][i123]·[#124][i124]·[#127][i127]·[#139][i139]는 열려 있다. PR #140도 열려 있으며 기준 `dev`에 미반영이다. PR #141은 병합됐지만 관련 이슈 [#142][i142]는 조회 당시 열려 있었다.
+- 후속 이슈 [#123][i123]·[#124][i124]·[#127][i127]의 구현은 기능별 근거를 따른다. [#139][i139] 이슈는 열려 있지만 관련 [PR #140][p140]은 2026-11-19 기준 `dev`에 병합됐다. 이슈 상태와 코드 반영·MVP 분류는 각각 별개다. 과거 PR #141·이슈 [#142][i142]의 11월 18일 상태는 [이슈 #143](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)의 당시 기록을 따른다.
 
 ### 참조 링크
 

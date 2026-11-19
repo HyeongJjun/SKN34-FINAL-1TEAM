@@ -7,7 +7,7 @@
 - **Swagger:** `http://localhost:8000/docs`
 - **OpenAPI JSON:** `http://localhost:8000/openapi.json`
 - `APP_ENV=production`에서는 두 주소가 비활성화되며 ReDoc은 제공하지 않습니다.
-- 확인 기준: `dev` 커밋 `1a3e656`의 [라우터 등록](../../backend/app/main.py). 86개 경로, 97개 HTTP API. 실행 서버 버전은 별도 확인합니다.
+- 확인 기준: 2026-11-19 `dev` 커밋 `93097f3`(PR #140 병합)의 [라우터 등록](../../backend/app/main.py). 기존 86개 경로, 97개 HTTP API에 새 라우트 추가는 없고 `/v2/ask` 내부 동작만 변경되었습니다. 실행 서버 버전은 별도 확인합니다.
 
 인증 없이 지역 목록을 확인하는 간단한 예시:
 

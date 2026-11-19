@@ -22,7 +22,7 @@
 
 | 문서 | 내용 |
 | --- | --- |
-| [코드·PR·CI 근거](verification/2026-11-18-documentation.md) | 당시 코드 기준 검증 기록 |
+| [코드·PR·CI 근거](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143) | 당시 실행 기록과 현재 코드 기준을 구분한 문서화 검증 이력 |
 | [RAG 평가](../evaluation/rag/README.md) · [답변 평가](../evaluation/answer/README.md) · [공정 평가](../evaluation/trade/README.md) | 질문 세트, 방법과 당시 측정 |
 | [시공일지 처리 규칙](../data/sigong_ilji/SPEC.md) · [읽기 안내](../data/sigong_ilji/READER.md) | 로컬 전용 자료의 처리·공유 경계 |
 | [초기 v2 구현 계획](v2/features.md) · [과거 dev/main 전환](archive/2026-11-dev-main-transition.md) | 과거 계획·일회성 절차(현행 절차 아님) |

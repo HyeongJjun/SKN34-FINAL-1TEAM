@@ -1,6 +1,6 @@
 # 테스트와 QA
 
-[문서 목록](README.md) · [개발 환경](development.md) · [API 계약·오류](api/README.md) · [검증 기록](verification/2026-11-18-documentation.md)
+[문서 목록](README.md) · [개발 환경](development.md) · [API 계약·오류](api/README.md) · [검증 기록](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)
 
 ## 무엇을 확인했는지 구분하기
 

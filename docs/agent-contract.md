@@ -18,7 +18,8 @@ AI 상담(C안, #110)의 현재 구현과 팀이 정한 후속 약속이다. 규
 
 - 지금은 가이드 · 공정 상담이 `chat_v4.md` 하나를 같이 쓰고, 관문 라벨에 맞는 역할 힌트를 붙인다. 공정 상담은 질문 낱말로 공정 하나가 분명하면 그 공정 지시문(`trade_dobae_v1` · `trade_mokgong_v1`)과 공정 설정을 더한다(공정은 코드가 고른다). 나누는 것은 eval을 붙인 `prompt` PR로 한다.
 - 현재 역할별 사용 가능 도구는 `v2/ask_tools.py`의 `BY_KIND`가 정한다. `trade_agent.py`의 `trade()`는 `AgentAnswer(failed=True)`를 반환하고 오케스트레이터에서 호출되지 않는다.
-- 글자 없는 질문은 관문·LLM 호출 전에 고정 안내로 끝나며 대화에 저장하지 않는다. `set_home_info`의 `living_said`는 모델이 제출한 거주 판단의 인용 근거를 고객 발화와 대조하기 위한 내부 값으로, 화면 도구 인자에는 보내지 않는다(PR #140).
+- **이미지 없는 일반 상담(`kind=chat`)에 한해** `?` · `ㅠㅠ` 등 낱말 없는 질문은 관문·LLM 호출 전에 고정 안내로 끝나며 저장하지 않는다. 이 조건에서 낱말이 있을 때만 의도 분류를 실행한다. 이미지 있는 채팅·견적·공정표 설명 요청은 무문자 검사와 의도 분류를 모두 건너뛴다(PR #140).
+- `set_home_info`에서 `living`의 의미(거주·비거주·미정)는 모델이 판단한다. 서버는 모델이 옮긴 `living_said` 문구가 실제 고객 발화에 있는지(짧은 네/아니요 답은 직전 AI 질문까지) 확인한다. `living_said`는 모델 쪽 대화 기록에 보존하지만 화면에 보낼 도구 인자에서는 제거한다. 이는 인용 문구 존재 확인이지 **거주 의미를 서버가 검증했다는 뜻은 아니다**.
 
 ## 2. 파일 나누기
 
@@ -33,7 +34,7 @@ AI 상담(C안, #110)의 현재 구현과 팀이 정한 후속 약속이다. 규
 | 대화 저장 | `backend/app/chat/`(`chats` · `chat_messages` 저장) | — |
 | 공용 | `backend/app/agent/schemas.py` · `llm.py` · `trades/base.py`, `backend/app/v2/ask_tools.py` · `schemas.py`, `backend/app/config.py` | 공용 파일 수정은 아래 팀 조정 규칙을 유지 |
 
-**2026-11-18 `dev` 기준 SHA `1a3e656`:** `/v2/ask`의 지시문 버전은 **`chat_v3` · `quote_explanation_v2` · `schedule_v1`**이고 공종 힌트로 `trade_dobae_v1` · `trade_mokgong_v1`을 붙인다(`backend/app/v2/ask.py`의 `PROMPT_VERSION` · `TRADE_PROMPTS`). `evaluation/intent/` · `rag/` · `answer/` · `trade/` · `ask_back/`에는 실제 평가 자료 또는 실행 파일이 있다. 폴더가 존재한다는 이유로 `guide/orchestrator/quote_explanation/schedule` 전용 평가가 완성됐다고 기록하지 않는다. 당시 미병합 PR #140의 `chat_v4`는 이 기준 SHA의 현행 지시문에 포함되지 않는다.
+**현재 기준: 2026-11-19 `dev` `93097f3` (PR #140 병합).** `/v2/ask`는 **`chat_v4` · `quote_explanation_v2` · `schedule_v1`** 및 공종 힌트 `trade_dobae_v1` · `trade_mokgong_v1`을 사용한다(`backend/app/v2/ask.py`의 `PROMPT_VERSION` · `TRADE_PROMPTS`). 이전 **2026-11-18 `dev` `1a3e656`** 당시의 상담 프롬프트는 `chat_v3`였다. `evaluation/intent/` · `rag/` · `answer/` · `trade/` · `ask_back/`에는 실제 평가 자료 또는 실행 파일이 있지만, 폴더 존재만으로 `guide/orchestrator/quote_explanation/schedule` 역할 전용 평가가 완성됐다고 보지 않는다.
 
 - 자기 묶음 파일만 고친다.
 - `trades/base.py`(공정 설정 모양)는 공종 · 견적 설명 · 공정표가 같이 읽으므로 공용이다. 공정별 값은 공종이 맡는다.
@@ -87,7 +88,7 @@ AI 상담(C안, #110)의 현재 구현과 팀이 정한 후속 약속이다. 규
 | 순서 | 하는 일 | DB 세션 |
 | --- | --- | --- |
 | 1. 열기 | `ask_chat.start`. 일반 상담(`kind=chat`)이고 `chat_id`가 있을 때만 내 대화를 연다(`get_for`). 남의 대화 · 없는 대화는 404. `rev` · `waiting` · 지난 대화(`recent`)를 들고 간다. 새 대화는 여기서 만들지 않는다 | 짧은 세션, 닫고 나온다 |
-| 2. 관문 | `ask.start` → `gate.classify(message, waiting)`(일반 상담 · 사진 없을 때만). 글자 없는 질문("?" · "ㅠㅠ")은 관문 전에, 범위 밖은 관문 뒤에 고정 안내(저장 안 함). 기다리던 역할을 이어 받은 의도(출처 `rule`)는 신뢰도와 상관없이 역할 힌트를 붙인다 | 없음 |
+| 2. 관문 | `ask.start`: **`kind=chat` · 이미지 없음**인 경우, 무문자 질문("?" · "ㅠㅠ")은 고정 안내로 끝내고 저장하지 않는다. **같은 조건에서 낱말이 있는 경우에만** `gate.classify(message, waiting)` 후 범위 밖이면 고정 안내(미저장). 이미지 있는 채팅·견적·공정표 설명은 두 검사 모두 건너뛴다. 기다리던 역할(출처 `rule`)은 신뢰도와 무관하게 역할 힌트를 붙인다 | 없음 |
 | 3. 실행 | 지시문(`chat_v4` 등) + 지난 대화 + 이번 질문으로 LLM ↔ 도구. 서버 도구는 바로 실행한다. 화면 도구를 부르면 턴을 Redis에 두고 `done=false` · `turn` · `tool_calls`로 응답한다 | 쥐지 않는다 |
 | 3-1. 재개 | 브라우저가 `/v2/ask/{turn}`로 결과를 보낸다 → `ask_chat.resume` → `ask.take` → `ask.resume`으로 3을 이어 간다 | 쥐지 않는다 |
 | 4. 검사 | 출력 검사(`v2/guard.py`): 숫자 · 근거 · 금지 표현 · 가림. 남은 글이 없으면 실패 | 없음 |
@@ -96,6 +97,7 @@ AI 상담(C안, #110)의 현재 구현과 팀이 정한 후속 약속이다. 규
 | 7. 응답 | `V2AskOut`. commit 뒤에만 보낸다 | 없음 |
 
 - 실패한 답은 저장하지 않는다. 빈 대화가 남지 않고 `rev`가 그대로라 다음 질문이 이어진다.
+- 상담의 `price_reference`는 평형과 도면 모두 없으면 계산하지 않고 평형 입력을 안내한다. 별도 원시 `/v2/quote` 계산 API의 32평 기본값은 유지되므로 상담 도구의 규칙과 다르다.
 - **범위 밖 고정 안내도 저장하지 않는다**(반영된 #128·PR #129). 새 `chats` 행을 만들지 않고 기존 대화의 `rev`·`waiting`도 변경하지 않는다(`v2/ask_chat.py`의 `out.gate == "out"`). 범위 밖 관문 결과가 저장되지 않으므로 오분류 점검은 #118의 별도 eval 대상이다.
 - 견적서 · 공정표 화면 버튼의 설명(`kind=quote_explanation` · `schedule`)은 대화 표에 쌓지 않는다. `chat_id`는 늘 비어 있다
 
