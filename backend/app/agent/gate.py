@@ -51,7 +51,7 @@ async def classify(message: str, waiting: IntentLabel | None = None) -> Intent |
 async def _classify(message: str, waiting: IntentLabel | None) -> Intent | None:
     threshold = settings.intent_confidence_threshold
     model = intent_model.predict(message)
-    kept = route.keep_waiting(waiting, model, threshold)
+    kept = route.keep_waiting(waiting, model, threshold, message)
     if kept is not None:
         return kept
     if model is not None and model.confidence >= threshold:

@@ -113,6 +113,38 @@ def test_clear_other_intent_leaves_waiting_agent():
     assert (found.label, found.source) == ("quote_explanation", "model")
 
 
+@pytest.mark.parametrize(
+    "message",
+    [
+        "추천해 주세요",
+        "그렇게 해 주세요",
+        "네 그렇게 해 주세요",
+        "더 알려 주세요",
+        "응 해줘",
+        "좋아요",
+    ],
+)
+def test_reply_only_answer_stays_with_waiting_agent(monkeypatch, message, jev_calls):
+    # 되물음에 대답 · 부탁 말로만 답하면, 모델이 범위 밖이라고 확신해도 기다리던 담당이 받는다
+    model_says(monkeypatch, "out_of_scope", 0.9)
+    found = gate_of(message, waiting="trade")
+    assert (found.label, found.source) == ("trade", "rule") and jev_calls == []
+
+
+@pytest.mark.parametrize("message", ["주식 추천해줘", "욕실 타일도 해 주세요"])
+def test_new_topic_out_of_scope_leaves_waiting_agent(monkeypatch, message):
+    # 다른 주제 낱말이 있으면 기다리던 담당이 있어도 범위 밖으로 옮긴다 (#128)
+    model_says(monkeypatch, "out_of_scope", 0.9)
+    found = gate_of(message, waiting="trade")
+    assert (found.label, found.source) == ("out_of_scope", "model")
+
+
+def test_reply_only_answer_without_waiting_is_unchanged(monkeypatch):
+    # 기다리던 담당이 없으면 이 규칙을 쓰지 않는다
+    model_says(monkeypatch, "out_of_scope", 0.9)
+    assert gate_of("추천해 주세요").label == "out_of_scope"
+
+
 def test_trade_word_turns_out_of_scope_into_trade():
     out = Intent(label="out_of_scope", confidence=0.91, source="model")
     kept = route.keep_in_scope("벽지 추천해 주세요", out)
