@@ -1,18 +1,38 @@
 # 기능 개발표 — 믿집
 
-[문서 목차](README.md) · [API 안내·목록](api/README.md) · [v2 구조](v2/structure.md) · [v2 ERD](v2/erd.md) · [팀 기여 가이드](../CONTRIBUTING.md) · [개발 안내](development.md) · [검증 안내](testing.md) · [에이전트 협약](agent-contract.md) · [기준 데이터](reference-data.md) · [문서 검증 이력](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)
+[문서 목차](README.md) · [API 안내·목록](api/README.md) · [v3 구조](v3/architecture.md) · [v3 데이터 모델](v3/data-model.md) · [v2 구조](v2/structure.md) · [v2 ERD](v2/erd.md) · [팀 기여 가이드](../CONTRIBUTING.md) · [개발 안내](development.md) · [검증 안내](testing.md) · [에이전트 협약](agent-contract.md) · [기준 데이터](reference-data.md) · [문서 검증 이력](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)
 
-> 구현 기준: 2026-11-19, `dev` 커밋 `6d41f94646649ae3500047811740cdcf2e6d77e2` (PR #140·#148 병합). 코드·호출·테스트와 이슈·PR 기록을 대조했다. 과거 2026-11-18 `dev` `1a3e656`의 검증 결과는 [이슈 #143](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)에 날짜·대상 SHA를 구분해 보존한다.
+> **아래 187행 표는 v2 기준 기록**: 2026-11-19 `dev` `6d41f94646649ae3500047811740cdcf2e6d77e2` (PR #140·#148 병합). 당시 코드·호출·테스트·이슈·PR을 대조했다. 과거 2026-11-18 `dev` `1a3e656`의 결과는 [이슈 #143](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)에 보존한다. 현행 v3 구현은 바로 아래 별도 표에서 구분한다.
 
-**개발 상태**: `구현`=현재 코드의 동작 경로가 존재함, `부분`=API 또는 화면·임시 저장·시연 기능만 존재하거나 사용자 흐름 일부만 연결됨, `진행`=열린 이슈/PR의 제안으로 기준 커밋에 미반영, `미구현`=구체 처리 코드가 없음, `미확인`=운영 환경 등 코드 밖의 실태를 확인하지 못함. 구현은 실서비스 배포 완료를 뜻하지 않는다.
+**v2 표의 개발 상태**: `구현`=당시 기준 코드의 동작 경로가 존재함, `부분`=API 또는 화면·임시 저장·시연 기능만 존재하거나 사용자 흐름 일부만 연결됨, `진행`=열린 이슈/PR의 제안으로 기준 커밋에 미반영, `미구현`=당시 구체 처리 코드가 없음, `미확인`=운영 환경 등 코드 밖의 실태를 확인하지 못함. 구현은 실서비스 배포 완료를 뜻하지 않는다.
 
-**검증 상태**: `CI`=관련 테스트 또는 CI 검사 경로가 있고 기준 `dev`의 [CI 성공](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/actions/runs/44484925761)을 확인함, `로컬`=해당 검사 로컬 통과(현재 CI에 포함되지 않은 평가 코드 등), `코드`=코드·호출을 읽었으나 해당 동작의 통과 근거는 확보하지 못함, `미검증`=동작 확인 자료 없음. `CI`여도 유료 LLM·AWS 운영·브라우저 전 기능 E2E 검증은 별도다. 범위·이전 실행 결과는 [이슈 #143](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)에 구분한다.
+**v2 표의 검증 상태**: `CI`=당시 관련 검사 경로가 있고 v2 기준 `dev`의 [CI 성공](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/actions/runs/44484925761)을 확인함, `로컬`=해당 검사 로컬 통과(당시 CI에 포함되지 않은 평가 코드 등), `코드`=코드·호출을 읽었으나 동작 통과 근거는 확보하지 못함, `미검증`=동작 확인 자료 없음. `CI`여도 유료 LLM·AWS 운영·브라우저 전 기능 E2E 검증은 별도다. 당시 범위·실행 결과는 [이슈 #143](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)에 구분한다.
 
 **근거 읽기**: 이슈는 담당자와 개발 제안을 나타내고 PR은 코드 반영 이력을 나타낸다. 이슈 종료와 개발 완료는 별개이며 병합과 배포도 별개다. `없음`은 확인된 직접 이슈·PR이 없다는 뜻이다. 이슈/PR 번호는 현재 저장소의 기록만 사용했다.
 
-**MVP 분류 기준(2026-11-19)**: MVP 필수는 확인된 1차 제품 흐름·수용 규칙·현행 범위 이슈의 기능, 후속은 명시적으로 제외·유예한 기능, 확인 필요는 이번 조회 근거만으로 출시 범위·시점을 확정할 수 없는 기능이다. 이 표는 기존 팀 근거를 연결한 검토 자료이지 새 팀 승인이나 출시 판정이 아니다. 기존 187행은 세부 기능 단위이지 팀 승인 요구사항 수·MVP 완료율이 아니다. **현행 구현 기준은 2026-11-19 dev 6d41f94**이며 MVP 구분은 코드 병합 여부로 바꾸지 않는다.
+**MVP 분류 기준(2026-11-19)**: MVP 필수는 확인된 1차 제품 흐름·수용 규칙·현행 범위 이슈의 기능, 후속은 명시적으로 제외·유예한 기능, 확인 필요는 이번 조회 근거만으로 출시 범위·시점을 확정할 수 없는 기능이다. 이 표는 기존 팀 근거를 연결한 검토 자료이지 새 팀 승인이나 출시 판정이 아니다. 기존 187행은 세부 기능 단위이지 팀 승인 요구사항 수·MVP 완료율이 아니다. **표의 구현·검증 기준은 v2 dev 6d41f94**이며 MVP 구분은 코드 병합 여부로 바꾸지 않는다.
 
 **근거**: [T1][mvp-t1]=AGENTS §1(1차 흐름), [T2][mvp-t2]=원본 v2 기능표, [T4][mvp-t4]=AGENTS §4(AI), [A2][mvp-a2]·[A3][mvp-a3]·[A5][mvp-a5]·[A6][mvp-a6]·[A7][mvp-a7]=AGENTS 각 절, [R][mvp-r]=원본 README 향후 계획, [C110][mvp-c110]=11/16 C안. 이슈 #번호와 PR #번호는 구분한다. [이슈 #86 최종 댓글](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/86#issuecomment-6909385821)의 SSE 후속과 [이슈 #131](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/131)의 v2 도배 화면 제한을 적용했다.
+
+## 현행 v3 구현 (2026-11-19 `dev` `344f6dc`, PR #151)
+
+이 표는 **v3에서 확인한 코드 경로**를 기존 v2 기능표와 구분한 현황이다. 새 MVP 승인·기능 ID를 부여하지 않는다. 현행 [CI 성공](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/actions/runs/44516531421)·[Security 성공](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/actions/runs/44516531323)을 확인했으나 개별 화면 전체·AWS 운영·유료 모델 품질까지 검증한 것은 아니다([v3 QA 범위](testing.md#v3-병합-기준-검증-기록)).
+
+| 영역 | v3 코드에 반영된 동작 | 구현 근거 |
+| --- | --- | --- |
+| 비회원 · 공사 | 저장 없는 표준견적서, 가입 뒤 프로젝트 생성·집 정보·부분 공사 범위 | [guest/service.py](../backend/app/guest/service.py) · [project/service.py](../backend/app/project/service.py) |
+| 업체 · 가견적 | v3 단가·업체 정보, 업체 선택과 요청 시 가견적 고정 | [vendor/service.py](../backend/app/vendor/service.py) · [visit/service.py](../backend/app/visit/service.py) |
+| 실측 중계 | 업체 담기·가능 기간·반나절 선택·확정·일정 변경, 충돌 시 409 | [visit/service.py](../backend/app/visit/service.py) · [calc/slots.py](../backend/app/calc/slots.py) |
+| 견적 · 공사 | 실측 견적서·날짜 제안·추가 금액·공사 완료 경로 | [quote/service.py](../backend/app/quote/service.py) · [schedule/service.py](../backend/app/schedule/service.py) |
+| 영속 기한 일 | `jobs` DB와 worker 1분 주기 `sweep_jobs`, 실측·견적·공사 기한 처리 | [jobs/models.py](../backend/app/jobs/models.py) · [worker.py](../backend/app/worker.py) |
+| 대화 · 실시간 | 업체-고객 `thread` 채팅·읽음·차단, Redis 이벤트 `GET /stream` | [thread/router.py](../backend/app/thread/router.py) · [realtime/router.py](../backend/app/realtime/router.py) |
+| 리뷰 · 신고 | 리뷰·업체 답글, 신고·관리자 조치·회원 관리 | [review/router.py](../backend/app/review/router.py) · [report/router.py](../backend/app/report/router.py) |
+| AI 상담 | `/ai/turns`: 규칙·분류기(관문 Jev 없음), 무료 카드·키워드 검색 기본; 키+`LLM_LIVE`일 때 일부 재작성. **저장 완료 뒤** 문장·카드·완료 SSE 전송 | [chat/router.py](../backend/app/chat/router.py) · [agent/v3/turn.py](../backend/app/agent/v3/turn.py) · [agent/v3/gate.py](../backend/app/agent/v3/gate.py) |
+| 스키마 · 남은 일 | Alembic 파일 34개(`0001`~`0035`, `0031` 없음). 일정 MCP·예약된 AI 설명/수집 worker는 미구현 | [migrations/versions](../backend/migrations/versions) · [mcp_server.py](../backend/app/mcp_server.py) |
+
+**확인된 한계**: 과거 headed E2E 20건 중 9건 통과·11건 오래된 문구/링크 기대값으로 실패했고, 별도로 PC 4개·360px 휴대폰 3개 흐름이 통과했다. AI 전용 QA DB에 키워드 검색 자료를 적재하고 실제 LLM 재작성 1건을 확인했다. 계좌번호 공백 가림 문제 [#154](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/154)는 현행 코드에 남아 있다(수정 PR #155는 미병합). 자세한 범위는 [테스트와 QA](testing.md#v3-병합-기준-검증-기록)를 따른다.
+
+## v2 기준 기능 187행 (`6d41f94`)
 
 ## 회원·계정
 
@@ -23,12 +43,12 @@
 | AUT-03 | 세션 | 로그아웃 시 세션 폐기와 쿠키 삭제 | 구현 | CI | [auth/router.py](../backend/app/auth/router.py) | [tests/test_auth.py](../backend/tests/test_auth.py) | [PR #3][p3] | MVP 필수 · [AGENTS §2][mvp-a2] 세션 호출 · [이슈 #4](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/4) |
 | AUT-04 | 내 정보 | 본인 정보·권한·업체 승인 상태 조회 (v2에서 연락처·심사 세부 정보 확장) | 구현 | CI | [auth/router.py](../backend/app/auth/router.py) · [auth/service.py](../backend/app/auth/service.py) · [lib/session.ts](../frontend/lib/session.ts) | [tests/test_auth.py](../backend/tests/test_auth.py) | [PR #3][p3] (내 정보 조회) · [PR #39][p39] (연락처·업체 심사정보 확장) | MVP 필수 · [AGENTS §2][mvp-a2] 내 정보·권한 조회 · [이슈 #4](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/4) |
 | AUT-05 | 내 정보 | 이름 수정 및 v2에서 연락처 부분 수정 지원 | 구현 | CI | [auth/router.py](../backend/app/auth/router.py) · [auth/service.py](../backend/app/auth/service.py) · [page/account/page.tsx](../frontend/app/account/page.tsx) | [tests/test_auth.py](../backend/tests/test_auth.py) | [PR #3][p3] (이름 수정) · [PR #39][p39] (휴대폰·부분 수정) | 확인 필요 · 내 정보 변경의 출시 필수 합의 없음 ([원본 v2 기능표][mvp-t2] 범위 대조) |
-| AUT-06 | 연락처 | 로그인 고객의 휴대폰 번호 입력·수정 | 구현 | CI | [page/signup/phone/page.tsx](../frontend/app/signup/phone/page.tsx) · [auth/service.py](../backend/app/auth/service.py) | [tests/test_auth.py](../backend/tests/test_auth.py) | [PR #39][p39] | MVP 필수 · [T2][mvp-t2] 휴대폰 입력 화면 |
+| AUT-06 | 연락처 | 로그인 고객의 휴대폰 번호 입력·수정 | 구현 | CI | [page/signup/phone/page.tsx](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/blob/6d41f94646649ae3500047811740cdcf2e6d77e2/frontend/app/signup/phone/page.tsx) · [auth/service.py](../backend/app/auth/service.py) | [tests/test_auth.py](../backend/tests/test_auth.py) | [PR #39][p39] | MVP 필수 · [T2][mvp-t2] 휴대폰 입력 화면 |
 | AUT-07 | 회원 탈퇴 | 비밀번호 재확인 후 탈퇴와 세션 삭제 | 구현 | CI | [account/router.py](../backend/app/account/router.py) · [page/account/page.tsx](../frontend/app/account/page.tsx) | [tests/test_account.py](../backend/tests/test_account.py) | [PR #3][p3] (탈퇴 API) · [PR #39][p39] (계정 화면 개편) | 확인 필요 · 회원 탈퇴의 MVP 필수 합의 없음 ([원본 v2 기능표][mvp-t2] 범위 대조) |
 | AUT-08 | 권한 | 고객·업체·관리자 접근 역할 검사 | 구현 | CI | [auth/deps.py](../backend/app/auth/deps.py) · [lib/session.ts](../frontend/lib/session.ts) | [tests/test_guards.py](../backend/tests/test_guards.py) | [PR #3][p3] (권한 검사) · [PR #39][p39] (v2 화면 분기) | MVP 필수 · [AGENTS §2][mvp-a2] 역할 검사 · [원본 v2 기능표][mvp-t2] |
 | AUT-09 | 소셜 인증 | 카카오 로그인 실제 인증·계정 연동 | 미구현 | 미검증 | [page/login/page.tsx](../frontend/app/login/page.tsx) | 없음 | 없음 | 후속 · [T2][mvp-t2] 카카오 실제 인증은 나중 |
 | AUT-10 | 계정 복구 | 비밀번호 재설정 메일·토큰 처리 | 미구현 | 미검증 | [page/reset-password/page.tsx](../frontend/app/reset-password/page.tsx) | 없음 | 없음 | 후속 · [T2][mvp-t2] 비밀번호 메일 복구는 나중 |
-| AUT-11 | 전화 인증 | 문자 전송·번호 인증 | 미구현 | 미검증 | [page/signup/phone/page.tsx](../frontend/app/signup/phone/page.tsx) | 없음 | 없음 | 후속 · [T2][mvp-t2] 문자 인증 내부 기능은 나중 |
+| AUT-11 | 전화 인증 | 문자 전송·번호 인증 | 미구현 | 미검증 | [page/signup/phone/page.tsx](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/blob/6d41f94646649ae3500047811740cdcf2e6d77e2/frontend/app/signup/phone/page.tsx) | 없음 | 없음 | 후속 · [T2][mvp-t2] 문자 인증 내부 기능은 나중 |
 
 ## 프로젝트·집 정보
 
@@ -69,7 +89,7 @@
 | VIS-01 | 업체 선택 | 해당 집 공종에 맞는 업체 목록과 가견적 정렬 | 구현 | CI | [visit/router.py](../backend/app/visit/router.py) · [page/projects/[id]/vendors/page.tsx](../frontend/app/projects/[id]/vendors/page.tsx) | [tests/test_visit_vendors.py](../backend/tests/test_visit_vendors.py) | [PR #39][p39] · [PR #55][p55] | MVP 필수 · [T1][mvp-t1] 업체 선택·가견적 확인 |
 | VIS-02 | 업체 선택 | 업체 상세·가견적·연락 방식 확인 | 구현 | CI | [visit/router.py](../backend/app/visit/router.py) · [page/projects/[id]/vendors/[vid]/page.tsx](../frontend/app/projects/[id]/vendors/[vid]/page.tsx) | [tests/test_visit_vendors.py](../backend/tests/test_visit_vendors.py) | [PR #39][p39] · [PR #55][p55] | MVP 필수 · [T1][mvp-t1] 업체 선택·가견적 확인 |
 | VIS-03 | 업체 선택 | 해당 업체 포트폴리오 사진 공개 범위 검사 | 구현 | CI | [visit/router.py](../backend/app/visit/router.py) | [tests/test_visit_vendors.py](../backend/tests/test_visit_vendors.py) | [PR #39][p39] | 확인 필요 · 포트폴리오 공개 기능의 MVP 포함 미명시 ([AGENTS §1][mvp-t1] 범위 대조) |
-| VIS-04 | 실측 요청 | 공정당 최대 3곳에 실측 요청 | 구현 | CI | [visit/router.py](../backend/app/visit/router.py) · [UI/vendors/RequestDialog.tsx](../frontend/components/vendors/RequestDialog.tsx) | [tests/test_visit_request.py](../backend/tests/test_visit_request.py) | [PR #39][p39] | MVP 필수 · [T1][mvp-t1] 실측 요청·업체별 연락처 동의 |
+| VIS-04 | 실측 요청 | 공정당 최대 3곳에 실측 요청 | 구현 | CI | [visit/router.py](../backend/app/visit/router.py) · [UI/vendors/RequestDialog.tsx](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/blob/6d41f94646649ae3500047811740cdcf2e6d77e2/frontend/components/vendors/RequestDialog.tsx) | [tests/test_visit_request.py](../backend/tests/test_visit_request.py) | [PR #39][p39] | MVP 필수 · [T1][mvp-t1] 실측 요청·업체별 연락처 동의 |
 | VIS-05 | 실측 요청 | 선택 업체별 연락처 제공 동의·요청 문구 생성 | 구현 | CI | [visit/service.py](../backend/app/visit/service.py) | [tests/test_visit_request.py](../backend/tests/test_visit_request.py) | [PR #39][p39] | MVP 필수 · [T1][mvp-t1] 실측 요청·업체별 연락처 동의 |
 | VIS-06 | 실측 요청 | 내 요청 목록·상태·남은 요청 가능 건수 조회 | 구현 | CI | [visit/router.py](../backend/app/visit/router.py) · [page/projects/[id]/visits/page.tsx](../frontend/app/projects/[id]/visits/page.tsx) | [tests/test_visit_request.py](../backend/tests/test_visit_request.py) | [PR #39][p39] | MVP 필수 · [T2][mvp-t2] 실측 요청 상태·취소 |
 | VIS-07 | 실측 요청 | 견적서 수신 전 고객 요청 취소 | 구현 | CI | [visit/router.py](../backend/app/visit/router.py) | [tests/test_visit_request.py](../backend/tests/test_visit_request.py) | [PR #39][p39] | MVP 필수 · [T2][mvp-t2] 실측 요청 상태·취소 |
@@ -259,10 +279,10 @@
 ## 경계와 후속 확인
 
 - 초기 회원 인증·역할 가드·FastAPI·Compose·worker ping은 PR #3에서 들어왔고, PR #39가 휴대폰·심사 필드·v2 고객·업체 업무를 더했다. 해당 동작의 최초 도입과 후속 변경을 구분해 기록했다. 화면·API 코드가 있어도 실서버 배포, 외부 발송, 실모델 품질까지 자동으로 인정하지 않았다.
-- `frontend/lib/api/admin.ts`의 회원 목록은 예시 데이터다. 업체 심사 목록은 별도 실제 API다. 카카오 로그인·비밀번호 재설정 메일·문자 인증은 안내 화면만 있다.
+- v2 기준 `frontend/lib/api/admin.ts`의 회원 목록은 예시 데이터였고, v3에는 관리자 회원 조회·상태 변경 API(`report/router.py`)가 추가됐다. 카카오 로그인·비밀번호 재설정 메일·문자 인증은 기존 구현 범위와 구분한다.
 - v2 예시 평면도의 수량 계산은 서버의 **준비된 도면 데이터**를 이용한다. 고객이 업로드한 이미지의 도형 인식·OCR은 구현되지 않았다. 도배만 열어 둔 화면과 목공 계산 엔진을 구분했다.
 - 실측 견적서는 업체가 수정본을 임시 저장하고 버전 2·3으로 다시 제출할 수 있다. 수정 없는 반복 전송·동시 중복·업체 확정 후 제출에만 409 제한이 있다. 공사 날짜를 수락한 후에도 `kind=change` 날짜 제안·고객 수락·확정 공정표 새 버전 생성이 가능하다. 다른 업체의 자동 재조정·전체 재확정은 별도 미구현 단계다.
-- 현재 v2 대화 API는 일반 JSON 응답이고 `chat_v4`를 사용한다. 이미지 없는 일반 상담의 무문자 입력은 LLM·저장 없이 안내하며, 거주(`living`)는 모델이 의미를 판단하고 서버가 인용 문구(`living_said`)의 존재만 확인한다. 짧은 네/아니요 답은 직전 AI 질문도 참고하고, 근거 칸은 모델 기록에만 두며 화면 도구 인자에서는 제거한다. 상담 `price_reference`는 평형·도면 없이 계산하지 않지만 원시 `/v2/quote`에는 32평 기본값이 남아 있다. 공종 하위 에이전트는 실패 반환 뼈대이고 일정 MCP는 비어 있다. 일반 `jobs` 영속화와 시연 외 worker 자동 업무는 미구현이다.
+- 기존 v2 대화 API는 일반 JSON 응답이고 `chat_v4`를 사용한다. 이미지 없는 일반 상담의 무문자 입력은 LLM·저장 없이 안내하며, 거주(`living`)는 모델이 의미를 판단하고 서버가 인용 문구(`living_said`)의 존재만 확인한다. 짧은 네/아니요 답은 직전 AI 질문도 참고하고, 근거 칸은 모델 기록에만 두며 화면 도구 인자에서는 제거한다. 상담 `price_reference`는 평형·도면 없이 계산하지 않지만 원시 `/v2/quote`에는 32평 기본값이 남아 있다. v2 공종 하위 에이전트는 실패 반환 뼈대이며 일정 MCP는 비어 있다. 위 OPS-13의 `미구현`은 v2 당시 판정이고 v3는 기한 `jobs`를 구현했다(예약된 LLM 설명·수집 업무는 후속).
 - 정형 기준 데이터 4종의 `status=False` 유지와 자료 행 보존은 PR #106으로 정한 **현행 정책**이다. 장래 DB 기반 계산 연결을 위해서는 새 정책·개발 결정이 필요하다. 수동 CSV 적재는 `app.data_ingest`, 상담 지식 JSON→CSV 생성은 별도 `app.knowledge.json_csv`가 맡는다. RAG 검색은 **DB에서 활성화한 지식 버전이 있을 때** 동작한다. 이번 점검에서 AWS 활성 데이터 자체는 읽지 않았다.
 - 후속 이슈 [#123][i123]·[#124][i124]·[#127][i127]의 구현은 기능별 근거를 따른다. [#139][i139] 이슈는 열려 있지만 관련 [PR #140][p140]은 2026-11-19 기준 `dev`에 병합됐다. 이슈 상태와 코드 반영·MVP 분류는 각각 별개다. 과거 PR #141·이슈 [#142][i142]의 11월 18일 상태는 [이슈 #143](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)의 당시 기록을 따른다.
 

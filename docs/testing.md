@@ -2,6 +2,8 @@
 
 [문서 목록](README.md) · [개발 환경](development.md) · [API 계약·오류](api/README.md) · [검증 기록](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)
 
+현행 v3 `dev`는 `344f6dc`(PR #151 병합), 기존 v2 기능표·[이슈 #143](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)의 검사 기준은 당시 별도 커밋이다. 각 테스트 기록은 **실제로 검사한 SHA·환경·자료**에만 적용한다.
+
 ## 무엇을 확인했는지 구분하기
 
 | 구분 | 확인할 수 있는 것 | 이것만으로 판단하지 않을 것 |
@@ -32,9 +34,9 @@ uv run ruff format --check .
 uv run pytest -q
 ```
 
-`tests/conftest.py`는 `POSTGRES_USER`, `POSTGRES_PASSWORD`, `DB_HOST_PORT`를 환경변수 또는 루트 `.env`에서 읽는다. **pytest 실행당 세션 시작 때 한 번** `mitjip_test` DB를 재생성하고 마이그레이션 올림·내림·재적용을 확인한다. **각 테스트 전** 전체 업무 표를 비우고 Redis 15번 DB를 초기화한다. 테스트용 인스턴스에만 연결한다. 다른 포트는 `TEST_DB_HOST`, `DB_HOST_PORT`, `TEST_REDIS_URL`로 지정한다. `LLM_LIVE=false`를 유지한다.
+`tests/conftest.py`는 `POSTGRES_USER`, `POSTGRES_PASSWORD`, `DB_HOST_PORT`를 환경변수 또는 루트 `.env`에서 읽는다. **pytest 실행당 세션 시작 때 한 번** 기본 `mitjip_test` DB를 재생성하고 마이그레이션 올림·내림·재적용을 확인한다. **각 테스트 전** 전체 업무 표를 비우고 Redis 15번 DB를 초기화한다. 테스트용 인스턴스에만 연결한다. 다른 테스트 DB 이름은 `TEST_DB_NAME`, 호스트·포트는 `TEST_DB_HOST`·`DB_HOST_PORT`, Redis 주소는 `TEST_REDIS_URL`로 지정한다. `LLM_LIVE=false`를 유지한다.
 
-변경 범위가 좁으면 해당 테스트부터 실행한다. 예를 들어 상담은 `tests/test_v2_ask.py tests/test_v2_ask_chat.py`, 데이터 적재는 `tests/test_data_ingest.py tests/test_reference_schema.py tests/test_knowledge_search.py`다.
+변경 범위가 좁으면 해당 테스트부터 실행한다. 기존 v2 상담은 `tests/test_v2_ask.py tests/test_v2_ask_chat.py`, v3 상담은 `tests/test_v3_ai_api.py tests/test_v3_agent_turn.py tests/test_v3_agent_gate.py`, v3 기한 일·실측·채팅·리뷰·신고는 각각 `test_v3_jobs_sweep.py`·`test_v3_visit_flow.py`·`test_v3_thread_api.py`·`test_v3_review_api.py`·`test_v3_report_api.py`다. 데이터 적재는 `tests/test_data_ingest.py tests/test_reference_schema.py tests/test_knowledge_search.py`를 확인한다.
 
 `frontend/`에서:
 
@@ -76,8 +78,24 @@ API 계약은 FastAPI `/openapi.json`의 **메서드·경로와 입력/성공 �
 
 held-out 데이터는 반복 조정에 사용하지 않는다. 의도 평가의 held-out 실행에는 `--final`이 필요하다. 과거 평가 수치를 현재 결과로 옮기지 않는다.
 
+## v3 병합 기준 검증 기록
+
+2026-11-19 PR #151 검수 대상 `1573200`과 병합 `dev` `344f6dc`는 동일 Git tree로 확인됐다. 검증 범위와 실행 기록은 [문서 검증 이슈 #143](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)에 구분해 남긴다. 아래는 **선택된 검증 범위**이며 전체 E2E·운영 품질 승인으로 확대하지 않는다.
+
+| 구분 | 실제 확인 결과 | 범위·한계 |
+| --- | --- | --- |
+| 백엔드 | 선택 테스트 **171개 통과, 실패 0** | 전체 테스트를 모두 실행했다는 뜻은 아님 |
+| 원본 headed E2E | **20건 중 9건 통과, 11건 실패** | 변경 전 문구·데스크톱 링크 기대값이 오래되어 실패한 항목 포함. 실패한 후속 단계는 검증되지 않음 |
+| 별도 보이는 화면 검증 | **PC 4개 흐름·360px 휴대폰 3개 흐름 통과** | 비회원 견적·가입, 업체 응답·채팅, 견적·공사 일정, 업체 승인 등 선별 흐름. 모든 시나리오 통과 주장은 하지 않음 |
+| v3 AI | 전용 QA DB에 저장소 RAG CSV·v3 JSONL 적재 후 **무료 7건·LLM 모드 3건**, 실제 LLM 재작성 **1건** 확인 | **키워드 검색만 사용**, 임베딩 호출 없음. 평가 질문 일부는 자료 부족을 안내했으며 전체 답변 품질 점수 없음 |
+| 보안·운영 | 현행 [CI](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/actions/runs/44516531421)·[Security](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/actions/runs/44516531323) 성공 | AWS/운영 환경·전체 파일 보안 감사·모든 실제 모델 질문 검증 없음 |
+
+**확인된 잔여 오류:** v3 `agent/v3/check.py`에서 은행명 뒤 공백 4칸이 있는 합성 계좌번호가 AI 대화 이력에 남는 [이슈 #154](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/154)가 재현됐다. 수정 [PR #155](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/pull/155)는 기준 `dev`에 **미병합**이므로 해결로 기록하지 않는다. 실제 외부 LLM 유출이나 운영 사고가 확인됐다는 뜻도 아니다.
+
+v3 `POST /ai/turns`는 답·저장 완료 후 `token`(완성된 문장)·`card`·`done` 이벤트를 내보낸다([구현](../backend/app/chat/router.py)). 이 SSE를 모델 토큰의 실시간 생성, 완전한 브라우저 E2E 통과 또는 RAG 전체 데이터 적재 검증으로 기록하지 않는다.
+
 ## CI와 승인
 
-[CI](../.github/workflows/ci.yml)는 저장소 검사, backend, frontend, 컨테이너 빌드를 실행한다. [Security](../.github/workflows/security.yml)는 CodeQL과 Dependency Review를 실행한다. 유료 모델 호출은 하지 않는다.
+[CI](../.github/workflows/ci.yml)는 저장소 검사, backend, frontend, 컨테이너 빌드를 실행한다. [Security](../.github/workflows/security.yml)는 CodeQL · Dependency Review · Audit(`pip-audit`·`pnpm audit`·`bandit`·`semgrep`)를 실행한다. 유료 모델 호출은 하지 않는다.
 
 리뷰는 최종 PR head 기준으로 남긴다. 수정이 필요한 재현 오류는 원인 파일·입력·실제 결과·수정 방향을 적고 Request changes로 남긴다. 범위와 검증이 충족되면 승인한다. CI 통과와 업무 동작의 승인 판단은 별개다.

@@ -29,7 +29,7 @@ Compose는 `compose.yaml`에 `compose.override.yaml`을 덧붙인다. DB 준비 
 | PostgreSQL | `127.0.0.1:5433` | `DB_HOST_PORT` |
 | Redis | `127.0.0.1:6379` | `REDIS_HOST_PORT` |
 
-`/docs`와 `/openapi.json`은 `APP_ENV=production`이면 비활성화된다. API의 주소·쿠키 인증·Swagger 쓰기 요청의 Origin 제한·현재 97개 엔드포인트는 [API 사용 안내](api/README.md)를 참고한다. 브라우저에서는 `/api/*`를 사용하고, FastAPI 원본은 `/api` 접두어가 없다.
+`/docs`와 `/openapi.json`은 `APP_ENV=local`·`test`에서만 연다. API의 주소·쿠키 인증·Swagger 쓰기 요청의 Origin 제한·현재 v3 포함 146개 경로(162개 HTTP 메서드·경로 조합)는 [API 사용 안내](api/README.md)를 참고한다. 브라우저에서는 `/api/*`를 사용하고, FastAPI 원본은 `/api` 접두어가 없다.
 
 `watch`를 끈 동안 수정한 웹 코드는 `docker compose up -d --build web`으로 다시 반영한다. 종료할 때는 `docker compose down`을 사용한다. `down -v`는 DB·파일 볼륨까지 지우므로 개발자가 보존 여부를 판단한 경우에만 실행한다.
 
@@ -64,12 +64,12 @@ pnpm dev --hostname 127.0.0.1 --port 3100
 ## 시험 계정과 시연
 
 - `.env`의 `SEED_PASSWORD`를 설정하면 로컬 Compose의 migrate 단계가 시험 계정을 만든다. 계정 목록과 생성 규칙은 [seed.py](../backend/app/seed.py)를 따른다.
-- `/demo`는 로컬·시연 데이터용 흐름이다. [demo.py](../backend/app/demo.py)와 [시연 테스트](../backend/tests/test_demo.py)를 확인한다.
-- `DEMO_AUTO=true`면 worker가 시연 업체의 견적·날짜 응답을 대신한다. production에서는 작동하지 않는다. 실제 업체가 응답한 것처럼 검증 결과를 적지 않는다.
+- `/demo`는 로컬·시연 데이터용 흐름이다. [demo.py](../backend/app/demo.py)는 기본 `python -m app.demo` 실행으로 v3 단계별 시연 데이터를 만들고, 명시적인 `--v2` 옵션으로 기존 v2 시연 데이터를 만든다. [v3 시연 테스트](../backend/tests/test_v3_demo_build.py)와 [기존 시연 테스트](../backend/tests/test_demo.py)를 구분한다.
+- `DEMO_AUTO=true`는 기존 v2 시연의 업체 견적·날짜 자동 답변이며 production에서는 작동하지 않는다. 기본 v3 시연 데이터 생성과는 별개다. 실제 업체가 응답한 것처럼 검증 결과를 적지 않는다.
 
 ## AI와 데이터
 
-- 기본값 `LLM_LIVE=false`는 스텁 응답이다. 실제 상담에는 `LLM_LIVE=true`와 `OPENAI_API_KEY`가 필요하며 비용이 발생한다.
-- Jev는 `OPENROUTER_API_KEY`를 별도로 사용한다. `JEV_ENABLED=false`는 비교·시험용 설정이며 정상 운영 품질 검증과 구분한다.
-- 모델·추론 강도·키는 [설정 코드](../backend/app/config.py)와 `.env.example`을 함께 확인한다. 예시 환경변수에 이름이 있어도 모두 연결된 기능은 아니다. `AGENT_DAILY_TOKEN_LIMIT`(일일 토큰 한도), `MCP_SERVER_URL`·`MCP_HOST_PORT`(일정 MCP), `VOYAGE_API_KEY`·`VOYAGE_RERANK_MODEL`(Voyage 리랭커)은 현재 앱 설정·호출에 연결되지 않았다. 검색은 현재 BM25와 pgvector를 조합한다.
+- **v3 `/ai/turns`**는 기본값 `LLM_LIVE=false`에서도 분류기·규칙·카드·키워드(BM25) 검색으로 무료 답을 만든다. `LLM_LIVE=true`와 `OPENAI_API_KEY`가 모두 있을 때만 일부 문장을 LLM으로 다시 쓴다. 고득점 카드·정해진 글·계산 내용은 LLM을 건너뛸 수 있다([v3 턴 구현](../backend/app/agent/v3/turn.py), [v3 검색](../backend/app/knowledge/search3.py)).
+- **기존 v2 `/v2/ask`**는 `LLM_LIVE=false`일 때 스텁을 사용하며 실제 LLM 상담에는 키와 `LLM_LIVE=true`가 필요하다. v2 Jev는 `OPENROUTER_API_KEY`를 사용하고 `JEV_ENABLED=false`는 비교·시험용이다. **v3 관문에는 Jev 호출이 없다.**
+- 모델·추론 강도·키는 [설정 코드](../backend/app/config.py)와 `.env.example`을 함께 확인한다. 예시 환경변수에 이름이 있어도 모두 연결된 기능은 아니다. `AGENT_DAILY_TOKEN_LIMIT`(일일 토큰 한도), `MCP_SERVER_URL`·`MCP_HOST_PORT`(일정 MCP), `VOYAGE_API_KEY`·`VOYAGE_RERANK_MODEL`(Voyage 리랭커)은 현재 앱 설정·호출에 연결되지 않았다. 기존 v2 검색의 BM25+pgvector 경로와 v3 카드·키워드 검색 경로를 구분한다.
 - DB 마이그레이션은 데이터 적재·임베딩을 대신하지 않는다. [기준 데이터 안내](reference-data.md)의 순서로 따로 진행한다.

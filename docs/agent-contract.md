@@ -1,6 +1,18 @@
 # 에이전트 작업 협약
 
-AI 상담(C안, #110)의 현재 구현과 팀이 정한 후속 약속이다. 규칙 원문은 [AGENTS.md](../AGENTS.md) 4절, 실제 라우터·저장소는 [v2 구조](v2/structure.md)와 [ERD](v2/erd.md), 진행 상태·근거는 [기능 개발표](feature-roadmap.md)를 따른다. 후속 설계는 현재 API가 이미 실행하는 기능으로 해석하지 않는다. 누가 맡는지는 GitHub 이슈 담당자로 정한다.
+**현행 v3 `dev` `344f6dc`**의 AI 경로와 **기존 v2 C안(#110)**을 구분한다. 아래 1~8절의 `chat_v4`·Jev·`/v2/ask`·`living_said`·평가 데이터 2:1 규칙은 계속 남아 있는 **v2 구현·설계 기록**이다. 현행 v3 호출은 [v3 구조](v3/architecture.md)와 코드, 기존 v2 호출은 [v2 구조](v2/structure.md)·[v2 ERD](v2/erd.md)를 따른다. 후속 설계를 구현 완료로 해석하지 않는다.
+
+## 현행 v3 AI 상담 (`/ai/turns`)
+
+| 단계 | 구현과 책임 | 근거 |
+| --- | --- | --- |
+| 질문·인증 | 로그인 고객이 `POST /ai/turns`로 질문. 세션 소유 대화·공사만 사용하고, 새 대화는 첫 성공 턴에 저장. 같은 대화 `rev` 충돌은 409, `client_key` 재전송은 짧은 캐시로 같은 답 사용 | [chat/router.py](../backend/app/chat/router.py) · [chat/service.py](../backend/app/chat/service.py) |
+| 입구 관문 | 버튼·대기 역할, 정책, 12공종 낱말, 학습 분류기, 규칙, 화면 문맥으로 역할·범위를 정함. **v3는 Jev 호출 없음**. 단일 담당은 바로 답하고 복합 요청은 코드 오케스트레이터가 조각을 합침 | [agent/v3/gate.py](../backend/app/agent/v3/gate.py) · [orchestrator.py](../backend/app/agent/v3/orchestrator.py) |
+| 기본 답 | `LLM_LIVE=false`가 기본. 무료 카드·키워드 BM25 검색(활성 지식이 있을 때)·정해진 안내·계산 결과를 사용하며, 모르는 것은 모른다고 답함. 도배·목공 계산과 다른 공종의 지식 안내를 구분 | [agent/v3/answer.py](../backend/app/agent/v3/answer.py) · [knowledge/search3.py](../backend/app/knowledge/search3.py) |
+| 선택 LLM | `LLM_LIVE=true`와 `OPENAI_API_KEY`가 모두 있을 때에만 가이드·공종·복합 답의 일부 카드·조각 문장을 재작성. 높은 점수 카드·정해진 글·계산 묶음은 건너뛰고, 실패·출력 검사 탈락 시 무료 답을 유지 | [chat/service.py](../backend/app/chat/service.py) · [agent/v3/turn.py](../backend/app/agent/v3/turn.py) |
+| 저장·SSE | **정상 답은** 서버가 계산·검사하고 대화를 **commit한 뒤**, `token`(완성된 문장) → `card`(화면 카드) → `done`(전체 답) SSE를 보낸다. **실시간 모델 토큰 생성 스트리밍은 아니다.** 고객·업체 `/threads` 채팅과도 별도 | [chat/router.py](../backend/app/chat/router.py) · [thread/router.py](../backend/app/thread/router.py) |
+
+계획 문서 [v3 AI 설계](v3/agents.md)의 모든 기능을 구현으로 간주하지 않는다. 실제 [worker](../backend/app/worker.py)는 `ping`·선택적 시연 자동 응답과 실측·견적·공사 기한 `sweep_jobs`를 등록했고, 예약형 AI 답변·지식 수집 LLM 업무는 아직 등록하지 않았다. [`mcp_server.py`](../backend/app/mcp_server.py)는 빈 파일로, 일정 MCP 호출도 미구현이다. [검증 기록](testing.md#v3-병합-기준-검증-기록)은 선택 테스트·별도 AI QA DB 범위를 따른다.
 
 ## 1. 역할
 
@@ -34,7 +46,7 @@ AI 상담(C안, #110)의 현재 구현과 팀이 정한 후속 약속이다. 규
 | 대화 저장 | `backend/app/chat/`(`chats` · `chat_messages` 저장) | — |
 | 공용 | `backend/app/agent/schemas.py` · `llm.py` · `trades/base.py`, `backend/app/v2/ask_tools.py` · `schemas.py`, `backend/app/config.py` | 공용 파일 수정은 아래 팀 조정 규칙을 유지 |
 
-**현재 기준: 2026-11-19 `dev` `6d41f94` (PR #140·#148 병합).** `/v2/ask`는 **`chat_v4` · `quote_explanation_v2` · `schedule_v1`** 및 공종 힌트 `trade_dobae_v1` · `trade_mokgong_v1`을 사용한다(`backend/app/v2/ask.py`의 `PROMPT_VERSION` · `TRADE_PROMPTS`). 이전 **2026-11-18 `dev` `1a3e656`** 당시의 상담 프롬프트는 `chat_v3`였다. `evaluation/intent/` · `rag/` · `answer/` · `trade/` · `ask_back/`에는 실제 평가 자료 또는 실행 파일이 있지만, 폴더 존재만으로 `guide/orchestrator/quote_explanation/schedule` 역할 전용 평가가 완성됐다고 보지 않는다.
+**v2 기록 기준: 2026-11-19 `dev` `6d41f94` (PR #140·#148 병합).** `/v2/ask`는 **`chat_v4` · `quote_explanation_v2` · `schedule_v1`** 및 공종 힌트 `trade_dobae_v1` · `trade_mokgong_v1`을 사용한다(`backend/app/v2/ask.py`의 `PROMPT_VERSION` · `TRADE_PROMPTS`). 이전 **2026-11-18 `dev` `1a3e656`** 당시의 상담 프롬프트는 `chat_v3`였다. `evaluation/intent/` · `rag/` · `answer/` · `trade/` · `ask_back/`에는 실제 평가 자료 또는 실행 파일이 있지만, 폴더 존재만으로 `guide/orchestrator/quote_explanation/schedule` 역할 전용 평가가 완성됐다고 보지 않는다.
 
 - 자기 묶음 파일만 고친다.
 - `trades/base.py`(공정 설정 모양)는 공종 · 견적 설명 · 공정표가 같이 읽으므로 공용이다. 공정별 값은 공종이 맡는다.
