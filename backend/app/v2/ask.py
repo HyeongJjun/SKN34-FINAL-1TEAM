@@ -639,7 +639,7 @@ HOME_CUES = {
     # 공사 중 어디 있을지를 말했는지 본다: 살 예정 · 지내 · 머물 · 집에 (계속) 있 · 나가 있 · 본가 · 숙소 ·
     # 빈집 · 비울/비워 · 이사 ('살짝' · '몇 살' · '집 전체' · '재고가 있'은 아님)
     "living": re.compile(
-        r"살(?:면서|고|아|\s*(?:예정|거|계획))|거주|지내|머물|집에\s*(?:계속\s*|그대로\s*)?있|나가\s*있"
+        r"살(?:면서|고|아|\s*(?:예정|거|건|겁|계획))|거주|지내|머물|집에\s*(?:계속\s*|그대로\s*)?있|나가\s*있"
         r"|본가|친정|시댁|숙소|호텔|빈\s*집|비(?:어|워|울|우)|이사"
     ),
     "move": re.compile(r"이사|입주|\d+\s*월"),
@@ -650,6 +650,19 @@ SHORT_REPLY = re.compile(
 )
 # 아직 안 정한 말("집에 있을지 모르겠어요")은 거주 단서가 있어도 담지 않는다 (지시문대로 되묻게)
 UNSURE = re.compile(r"모르|미정|고민|정하지|정\s*못|안\s*정했|글쎄")
+# 미정은 거주 이야기가 있는 마디에서만 본다. "거주할 예정이고, 벽지는 모르겠어요"의 미정은 벽지 이야기다
+CLAUSE = re.compile(r"[,.!?\n]|고\s|데\s|지만\s")
+STAY_WORD = re.compile(
+    r"살|거주|지내|머물|집에|집을|집\s*비|비(?:어|워|울|우)|나가|본가|숙소|호텔|이사|있을지"
+)
+
+
+def _living_said(question: str, prev: str) -> bool:
+    """고객이 공사 중 거주 여부를 정해서 말했는지. 네 · 아니요 답이면 앞 AI 질문이 거주를 물었는지 본다"""
+    if SHORT_REPLY.match(question):
+        return bool(HOME_CUES["living"].search(prev)) and not UNSURE.search(question)
+    unsure = any(UNSURE.search(c) and STAY_WORD.search(c) for c in CLAUSE.split(question))
+    return bool(HOME_CUES["living"].search(question)) and not unsure
 
 
 def _home_args(args: dict, question: str, prev: str = "") -> dict:
@@ -663,9 +676,10 @@ def _home_args(args: dict, question: str, prev: str = "") -> dict:
             continue  # 화면은 10~90 밖이면 오류 ('105동'을 평형으로 넣는 경우)
         if k == "region" and str(v)[:2] not in said:
             continue
-        if k in HOME_CUES and not HOME_CUES[k].search(said):
-            continue
-        if k == "living" and UNSURE.search(question):
+        if k == "living":
+            if not _living_said(question, prev):
+                continue
+        elif k in HOME_CUES and not HOME_CUES[k].search(said):
             continue
         out[k] = v
     return out

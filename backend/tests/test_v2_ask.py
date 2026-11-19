@@ -131,6 +131,14 @@ def test_home_info_keeps_only_what_customer_said(api, fake):
         ("공사 기간엔 본가에 가 있을게요", "vacant"),
         ("공사할 때는 나가 있을 거예요", "vacant"),
         ("공사 중엔 호텔에서 머물 거예요", "vacant"),
+        # 다른 항목(벽지 등)이 미정이어도 거주 이야기는 남긴다 (리뷰 #140)
+        ("40평이고 공사 중에도 거주할 예정이고, 벽지는 아직 뭘 고를지 모르겠어요", "living"),
+        ("공사 중에도 거주할 예정이고 벽지는 아직 모르겠어요", "living"),
+        ("벽지는 고민인데 공사할 때는 집 비울 거예요", "vacant"),
+        ("40평이고 공사 중에도 집에 있고 벽지는 아직 모르겠어요", "living"),
+        ("공사할 땐 지내고 벽지는 미정이에요", "living"),
+        ("공사 중엔 집 비우고 벽지는 고민이에요", "vacant"),
+        ("공사 중에도 계속 살 건데 벽지는 모르겠어요", "living"),
     ],
 )
 def test_home_info_keeps_clear_living(api, fake, message, living):
@@ -169,6 +177,8 @@ def test_home_info_yes_to_living_question(api, fake):
         "벽지가 살짝 들떴어요",
         "실크 재고가 있나요?",
         "공사할 때 집에 있을지는 아직 모르겠어요",
+        "벽지는 정했는데 공사 중에 살지는 아직 고민이에요",
+        "공사 중에 살고 있을지 아직 모르겠어요",
     ],
 )
 def test_home_info_drops_guessed_living(api, fake, message):
