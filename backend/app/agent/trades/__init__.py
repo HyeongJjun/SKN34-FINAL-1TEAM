@@ -11,9 +11,13 @@ from app.agent.trades.mokgong import MOKGONG
 TRADES: dict[Trade, TradeConfig] = {c.trade: c for c in (DOBAE, MOKGONG)}
 
 
+# 일상에서도 쓰는 낱말: 이것만으로는 범위 안이라고 보지 않는다 ("실크 스카프", "사진 테두리")
+EVERYDAY = frozenset({"실크", "낙서", "테두리"})
+
+
 def has_trade_word(text: str) -> bool:
     """문장에 도배 · 목공을 알아보는 낱말이 하나라도 있는지 (입구 관문이 범위 밖 판단을 다시 볼 때 쓴다)"""
-    return any(w in text for c in TRADES.values() for w in c.symptom_words)
+    return any(w in text for c in TRADES.values() for w in c.symptom_words if w not in EVERYDAY)
 
 
 def match_trades(text: str) -> list[Trade]:

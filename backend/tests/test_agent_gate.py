@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import re
 import uuid
 from typing import get_args
 
@@ -12,6 +13,8 @@ from app.agent import gate as gate_module
 from app.agent import intent, llm, route
 from app.agent.gate import OUT_OF_SCOPE_TEXT, classify, fixed_reply, gate
 from app.agent.schemas import Intent, IntentLabel, TurnContext
+from app.agent.trades import has_trade_word
+from app.knowledge import bm25
 
 NO_PROJECT = TurnContext(user_id=uuid.uuid4(), chat_id=uuid.uuid4())
 WITH_PROJECT = TurnContext(user_id=uuid.uuid4(), chat_id=uuid.uuid4(), project_id=uuid.uuid4())
@@ -117,6 +120,50 @@ def test_keep_in_scope_leaves_others_alone():
     guide = Intent(label="orchestrator", confidence=0.9, source="model")
     assert route.keep_in_scope("벽지가 뭐예요?", guide) is guide  # 범위 밖이 아니면 그대로
     assert route.keep_in_scope("벽지 추천해 주세요", None) is None
+
+
+@pytest.mark.parametrize(
+    "message", ["퍼티 추천해 주세요", "정배 추천해 주세요", "경첩 추천해 주세요"]
+)
+def test_route_only_words_are_in_scope_too(message):
+    # 담당 고르기(bm25)에만 있던 낱말도 관문이 범위 안으로 본다
+    out = Intent(label="out_of_scope", confidence=0.95, source="model")
+    assert route.keep_in_scope(message, out).label == "trade"
+
+
+@pytest.mark.parametrize("message", ["실크 스카프 추천해 줘", "사진 테두리 예쁘게 꾸며 줘"])
+def test_everyday_word_alone_stays_out_of_scope(message):
+    # '실크' · '테두리'처럼 일상에서도 쓰는 낱말만으로는 범위 안으로 보지 않는다
+    out = Intent(label="out_of_scope", confidence=0.9, source="model")
+    assert route.keep_in_scope(message, out) is out
+
+
+def test_everyday_word_with_trade_word_is_in_scope():
+    out = Intent(label="out_of_scope", confidence=0.9, source="model")
+    assert route.keep_in_scope("합지랑 실크 중에 추천해 주세요", out).label == "trade"
+
+
+# 담당 고르기(bm25.TRADE_WORDS) 낱말 중 관문이 범위 안으로 보지 않는 것과 그 이유
+NOT_GATE_WORDS = {
+    "실크": "스카프 · 블라우스에도 쓴다",
+    "방문": "실측 방문 · 방문 상담",
+    "문짝": "싱크대 · 붙박이장 문짝",
+    "도어": "도어락",
+    "석고": "석고보드로 본다",
+    "단열": "창호 · 보일러에도 쓴다",
+    "목재": "가구에도 쓴다",
+    "칸막이": "사무실 · 욕실 칸막이",
+}
+
+
+def test_gate_knows_route_words():
+    """담당 고르기에 낱말을 더하면 agent/trades의 낱말에도 더하거나, 위 목록에 이유와 함께 적는다."""
+    plain = {
+        w
+        for t in bm25.SCOPES
+        for w in re.sub(r"\(\?<?[!=][^)]*\)", "", bm25.TRADE_WORDS[t]).split("|")
+    }
+    assert sorted(w for w in plain - set(NOT_GATE_WORDS) if not has_trade_word(w)) == []
 
 
 @pytest.mark.parametrize(
