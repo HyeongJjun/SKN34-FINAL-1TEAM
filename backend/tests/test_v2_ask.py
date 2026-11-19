@@ -103,6 +103,72 @@ def test_client_tool_round_trip_and_owner(api, fake):
     )
 
 
+def test_home_info_keeps_only_what_customer_said(api, fake):
+    """'40평이에요'에 모델이 거주 여부 · 지역까지 채워도(근거 없이) 화면에는 평형만 간다"""
+    guess = {"pyeong": 40, "region": "", "living": "vacant", "move": ""}
+    fake({"tool_calls": [call("set_home_info", guess)]})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": "40평이에요"}).json()
+    assert out["tool_calls"][0]["arguments"] == {"pyeong": 40}
+
+
+@pytest.mark.parametrize(
+    ("message", "said", "kept"),
+    [
+        # 근거가 고객 말에 있으면 남긴다 (뜻 판단은 모델 몫. 띄어쓰기 차이는 무시)
+        (
+            "40평이고 공사 중 거주할 예정이고 벽지는 어떤 걸 살지 모르겠어요",
+            "공사 중 거주할 예정",
+            True,
+        ),
+        ("공사할 땐 집 비울 거예요", "집비울 거예요", True),
+        # 근거가 없거나, 고객 말에 없는 말을 지어냈으면 뺀다
+        ("40평이에요", "", False),
+        ("40평이에요", "공사 중에도 거주할 예정", False),
+        ("벽지는 실크로 살 거예요", "살", False),
+    ],
+)
+def test_home_info_living_needs_quote(api, fake, message, said, kept):
+    """거주는 모델이 옮긴 근거(living_said)가 고객 말에 실제로 있을 때만 남기고, 근거 칸은 화면에 안 보낸다"""
+    args = {"pyeong": 0, "living": "living", "living_said": said}
+    f = fake({"tool_calls": [call("set_home_info", args)]})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": message}).json()
+    sent = out["tool_calls"][0]["arguments"] if out.get("tool_calls") else {}
+    assert sent == ({"living": "living"} if kept else {})
+    if kept:  # 모델 쪽 기록에는 근거를 남겨 같은 제안을 다시 부르지 않게 한다 (평형 0은 빠짐)
+        api.post(f"/v2/ask/{out['turn']}", json={"results": [{"id": "c1", "content": "{}"}]})
+        mine = f.seen[-1]["messages"][-2]["tool_calls"][0]["arguments"]
+        assert mine == {"living": "living", "living_said": said}
+
+
+def test_home_info_yes_to_living_question(api, fake):
+    """AI가 거주를 되묻고 고객이 '네 맞아요'로만 답하면, 근거는 앞 AI 질문에서 찾는다"""
+    q = "공사하는 동안에도 집에서 지내실 예정인가요?"
+    yes = {
+        "tool_calls": [
+            call("set_home_info", {"living": "living", "living_said": "집에서 지내실 예정"})
+        ]
+    }
+    fake({"text": q + "\n[되물음]"}, yes, {"text": "실크는 닦기 쉬워요."}, yes)
+    signup(api)
+    first = api.post("/v2/ask", json={"message": "도배하려고요"}).json()
+    out = api.post("/v2/ask", json={"message": "네 맞아요", "chat_id": first["chat_id"]}).json()
+    assert out["tool_calls"][0]["arguments"] == {"living": "living"}
+    # 앞 답이 거주를 묻지 않았으면 같은 근거라도 대화에 없어 빼고, 빈 제안은 화면에 보내지 않는다
+    other = api.post("/v2/ask", json={"message": "실크 관리는요?"}).json()
+    out = api.post("/v2/ask", json={"message": "네", "chat_id": other["chat_id"]}).json()
+    assert out["done"] and not out.get("tool_calls")
+
+
+def test_home_info_drops_pyeong_out_of_range(api, fake):
+    """'105동'을 평형으로 넣으면 화면이 10~90 밖이라 오류를 내므로 뺀다"""
+    fake({"tool_calls": [call("set_home_info", {"pyeong": 105})]})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": "105동이에요"}).json()
+    assert out["done"] and not out.get("tool_calls")
+
+
 def test_resume_finishes(api, fake):
     fake({"tool_calls": [call("show_step", {"step": "quote"})]}, {"text": "실크는 닦기 쉬워요."})
     signup(api)
@@ -135,6 +201,47 @@ def test_price_tool_runs_on_server_and_guard_drops_made_up_numbers(api, fake):
     out = api.post("/v2/ask", json={"message": "32평 도배 비용 얼마예요?", "quote": QUOTE}).json()
     assert out["done"] and f"{dobae['total']:,}원" in out["text"]
     assert "2만 원이면" not in out["text"] and len(out["dropped"]) == 1
+
+
+def test_price_tool_without_pyeong_gives_no_amount(api, fake):
+    """평형을 모르면 계산 엔진이 32평으로 잡으므로 금액을 넘기지 않는다"""
+    f = fake({"tool_calls": [call("price_reference")]}, {"text": "평형이 어떻게 되세요?"})
+    signup(api)
+    no_py = {k: v for k, v in QUOTE.items() if k != "pyeong"}
+    out = api.post("/v2/ask", json={"message": "도배 얼마예요?", "quote": no_py}).json()
+    tool = json.loads(f.seen[1]["messages"][-1]["content"])
+    assert "error" in tool and "공정" not in tool
+    assert out["text"] == "평형이 어떻게 되세요?"
+
+
+def test_price_tool_gives_days_from_engine(api, fake):
+    """공사 기간은 계산 엔진 결과(price_reference)에 있어야 출력 검사를 통과한다"""
+
+    def answer(messages):
+        dobae = json.loads(messages[-1]["content"])["공정"][1]
+        return {"text": f"도배는 작업 {dobae['기간_일']}일이에요."}
+
+    fake({"tool_calls": [call("price_reference")]}, answer)
+    signup(api)
+    out = api.post("/v2/ask", json={"message": "도배 며칠 걸려요?", "quote": QUOTE}).json()
+    assert out["text"].startswith("도배는 작업") and out["dropped"] == []
+
+
+@pytest.mark.parametrize("message", ["?", "ㅠㅠ", "..."])
+def test_no_word_message_answers_without_llm(api, fake, message):
+    f = fake()
+    signup(api)
+    out = api.post("/v2/ask", json={"message": message}).json()
+    assert out["done"] and out["gate"] == "out" and out["text"] == ask.EMPTY_TEXT
+    assert f.seen == []
+
+
+def test_consonant_reply_goes_to_llm(api, fake):
+    """되물음에 'ㅇㅇ'(네)로 답해도 고정 안내로 끊지 않는다"""
+    f = fake({"text": "네, 천장까지 할게요."})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": "ㅇㅇ"}).json()
+    assert out["text"] == "네, 천장까지 할게요." and len(f.seen) == 1
 
 
 def test_numbers_in_customer_message_are_allowed(api, fake):

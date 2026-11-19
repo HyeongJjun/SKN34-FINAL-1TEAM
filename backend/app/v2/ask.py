@@ -31,7 +31,7 @@ from app.v2.level import level_text
 
 _DIR = Path(__file__).with_name("prompts")
 PROMPT_VERSION = {
-    "chat": "chat_v3",
+    "chat": "chat_v4",
     "quote_explanation": "quote_explanation_v2",
     "schedule": "schedule_v1",
 }
@@ -50,6 +50,8 @@ ASK_PER_HOUR = 60  # 사용자별 시간당 질문 수 (APP_ENV=local이면 세�
 TOO_MANY = "AI에게 너무 많이 물었어요. 잠시 뒤에 다시 해 주세요."
 GONE = "질문이 끝났거나 없어요. 다시 물어봐 주세요."
 OUT_TEXT = "지금은 아파트 도배와 목공만 도와드려요. 견적 · 공정표 · 업체 고르기는 물어봐 주세요."
+EMPTY_TEXT = "어떤 점이 궁금한지 한 줄로 적어 주세요."
+WORD = re.compile(r"[가-힣ㄱ-ㅎA-Za-z0-9]")  # 자음만 쓴 대답(ㅇㅇ · ㄴㄴ · ㅇㅋ)은 낱말로 본다
 FAILED = {
     "chat": "답을 만들지 못했어요. 다시 물어봐 주세요.",
     "quote_explanation": "설명을 만들지 못했어요. 계산 결과는 견적서에서 그대로 볼 수 있어요.",
@@ -61,7 +63,7 @@ QUOTE_CONSTS = "10% 2.5 3.3058 1.2 0.25 0.8 1.08 0.85 0.96 2.4 1.8 1.1 1.04 10.2
 # 팀 의도 라벨 → 지시문에 붙이는 힌트 (확신할 때만)
 HINTS = {
     "quote_explanation": "질문 종류(입구 관문): 견적 · 공사비. price_reference 도구를 먼저 쓰고 그 숫자만 말해.",
-    "schedule": "질문 종류(입구 관문): 공정 순서 · 기간. 기간 · 날짜 숫자는 지어내지 말고, 순서는 자료로 답한 뒤 "
+    "schedule": "질문 종류(입구 관문): 공정 순서 · 기간. 기간은 price_reference의 기간_일만 말하고 날짜는 지어내지 말고, 순서는 자료로 답한 뒤 "
     "공정표(show_step 'sched')로 안내해.",
     "trade": "질문 종류(입구 관문): 도배 · 목공 상담. 조건 · 주의점은 search_knowledge 자료로 답해.",
 }
@@ -234,14 +236,20 @@ def _quote_facts(q: v2.V2QuoteOut, budget: int | None) -> str:
 
 
 def _price_reference(q: v2.V2QuoteIn | None, today: date) -> dict:
-    if q is None:
-        return {"error": "집 정보가 없어 계산하지 못했어요. 평형부터 알려 달라고 해."}
+    # 평형을 모르면 계산 엔진이 32평으로 잡는다. 그 금액을 고객 집 금액처럼 말하지 않게 계산하지 않는다
+    if q is None or (q.pyeong is None and q.plan is None):
+        return {
+            "error": "화면에 평형이 아직 없어 계산하지 않았어요. 금액 · 기간은 말하지 마. "
+            "고객이 자기 집 평형을 말했으면 set_home_info(pyeong만)로 담기를 제안하고 '담기'를 누르면 "
+            "계산된다고 안내해. 말하지 않았으면 평형부터 물어봐."
+        }
     r = service.quote(q, today)
     return {
         "평형": r.inp.py,
         "공정": [
             {
                 "공정": t.ko,
+                "기간_일": t.days,
                 "표준견적서_부가세포함": t.total,
                 "시장기준_부가세별도": t.band.mk.supply,
                 "보통범위_부가세별도": [t.band.lo, t.band.hi],
@@ -443,6 +451,9 @@ async def start(
         await ratelimit.hit(ratelimit.key("v2-ask", user_id), ASK_PER_HOUR, 3600, TOO_MANY)
     intent: Intent | None = None
     if b.kind == "chat" and not b.images:
+        # "?" · "ㅠㅠ"처럼 낱말이 없으면 LLM을 부르지 않는다 (앞 답을 스스로 고치는 일을 막는다). 저장하지 않는다
+        if not WORD.search(b.message):
+            return v2.V2AskOut(done=True, text=EMPTY_TEXT, gate="out")
         intent = await agent_gate.classify(b.message, waiting)
         if intent is not None and intent.label == "out_of_scope":
             return v2.V2AskOut(done=True, text=OUT_TEXT, gate="out", intent=_intent_out(intent))
@@ -460,6 +471,10 @@ async def start(
     turn = {
         "user": user_id,
         "question": b.message,
+        # 바로 앞 AI 답 ('네'로만 답할 때 무엇을 물었는지 보려고)
+        "prev": next(
+            (h["content"] for h in reversed(history or []) if h["role"] == "assistant"), ""
+        ),
         "kind": b.kind,
         "today": today.isoformat(),
         "chat": chat,
@@ -562,6 +577,18 @@ async def _run(turn_id: str, turn: dict) -> v2.V2AskOut:
             return await _done(turn, failed=True)
         turn["calls"] += 1
         text, calls = r["text"], r["tool_calls"]
+        # 담기 제안은 받자마자 거른다. 모델이 다음 호출에서 거르기 전 값(짐작한 '빈집')을 보고 말하지 않게
+        calls = [
+            {
+                **c,
+                "arguments": _home_args(
+                    c.get("arguments") or {}, turn["question"], turn.get("prev", "")
+                ),
+            }
+            if c["name"] == "set_home_info"
+            else c
+            for c in calls
+        ]
         if text:
             turn["text"] = f"{turn['text']}\n{text}" if turn["text"] else text
         msg: dict = {"role": "assistant", "content": text}
@@ -587,8 +614,13 @@ async def _run(turn_id: str, turn: dict) -> v2.V2AskOut:
                     out = await _search_tool(turn, args)
                 else:
                     out = _set_cons(turn, args, today)
+            elif c["name"] == "set_home_info" and not c["arguments"]:
+                # 걸러서 담을 칸이 없으면 화면까지 보내지 않는다 (화면은 빈 제안을 오류로 돌려준다)
+                out = {"error": "고객이 말한 집 정보가 없어요. 담기 제안 없이 답해."}
             else:
-                client.append(c)
+                # 근거 칸(living_said)은 모델 기록에만 남기고 화면에는 보내지 않는다
+                args = {k: v for k, v in c["arguments"].items() if k != "living_said"}
+                client.append({**c, "arguments": args})
                 continue
             content = json.dumps(out, ensure_ascii=False)
             turn["messages"].append({"role": "tool", "tool_call_id": c["id"], "content": content})
@@ -602,6 +634,48 @@ async def _run(turn_id: str, turn: dict) -> v2.V2AskOut:
             return v2.V2AskOut(done=False, turn=turn_id, tool_calls=calls_out)
     await _drop(turn_id)
     return await _done(turn)
+
+
+# 담기 제안에서 고객이 말하지 않은 칸은 뺀다. 모델이 빈칸을 짐작해 채운다(평형만 말해도 '빈집')
+MOVE_CUE = re.compile(r"이사|입주|\d+\s*월")
+# 앞 답의 되물음에 '네' · '아니요'로 시작해 답한 말("네 맞아요"도). 이때는 앞 AI 질문도 근거로 본다
+SHORT_REPLY = re.compile(
+    r"^\s*(?:네|넵|예|응|ㅇㅇ|ㅇㅋ|맞아요|맞습니다|그래요|아니요|아뇨|ㄴㄴ)(?![가-힣])"
+)
+
+
+def _quoted(quote: str, source: str) -> bool:
+    """모델이 근거로 옮긴 말이 실제 대화에 있는지 (띄어쓰기 차이는 무시)"""
+    q, s = re.sub(r"\s+", "", quote), re.sub(r"\s+", "", source)
+    return len(q) >= 2 and q in s
+
+
+def _home_args(args: dict, question: str, prev: str = "") -> dict:
+    """prev: 바로 앞 AI 답. 고객이 네 · 아니요로 답했을 때 그 답이 무엇을 물었는지 본다.
+
+    거주(living)는 뜻 판단(살다 · 사다, 미정)을 모델에 맡기고, 근거로 옮긴 말(living_said)이
+    고객 말(네 · 아니요 답이면 앞 AI 질문까지)에 실제로 있는지만 본다. 거주를 남기면 근거 칸도
+    같이 남긴다(모델이 자기 호출에서 근거가 빠진 걸 보고 다시 부르지 않게. 화면에는 보내지 않는다).
+    """
+    said = f"{prev}\n{question}" if SHORT_REPLY.match(question) else question
+    out = {}
+    for k, v in args.items():
+        if not v:  # 빈칸 · 0
+            continue
+        if k == "living_said":
+            continue  # 거주를 남길 때만 아래에서 같이 넣는다
+        if k == "pyeong" and not (isinstance(v, int | float) and 10 <= v <= 90):
+            continue  # 화면은 10~90 밖이면 오류 ('105동'을 평형으로 넣는 경우)
+        if k == "region" and str(v)[:2] not in said:
+            continue
+        if k == "living" and not _quoted(str(args.get("living_said") or ""), said):
+            continue
+        if k == "move" and not MOVE_CUE.search(said):
+            continue
+        out[k] = v
+    if "living" in out:
+        out["living_said"] = args["living_said"]
+    return out
 
 
 def _quote_in(turn: dict) -> v2.V2QuoteIn | None:
