@@ -1,6 +1,6 @@
 # v2 프로젝트 구조
 
-기준: 2026-11-19 `dev` 커밋 `93097f3` (PR #140 병합). 현재 코드의 패키지와 호출을 기록한다. 전체 업무 흐름 및 팀의 계층 규칙은 [AGENTS.md](../../AGENTS.md) 2장, 실제 기능별 완료 판정은 [기능 개발표](../feature-roadmap.md)를 따른다. 이전 26개 커밋 시안은 [초기 구현 계획](features.md)에 별도 보존했다.
+기준: 2026-11-19 `dev` 커밋 `6d41f94` (PR #140·#148 병합). 현재 코드의 패키지와 호출을 기록한다. 전체 업무 흐름 및 팀의 계층 규칙은 [AGENTS.md](../../AGENTS.md) 2장, 실제 기능별 완료 판정은 [기능 개발표](../feature-roadmap.md)를 따른다. 이전 26개 커밋 시안은 [초기 구현 계획](features.md)에 별도 보존했다.
 
 ## backend/app
 
@@ -33,6 +33,7 @@
   → chat.service.get_for · recent (기존 대화일 때만)
   → ask.start → 이미지 없는 일반 상담이면 무문자 질문 사전 고정 안내(미저장)
   → 같은 조건에서 낱말이 있을 때만 agent.gate(의도 분류, 필요 시 Jev)
+  → 분류 후 out_of_scope 중 도배·목공 고유 증상어가 있으면 trade(source=rule, confidence=0)
   → chat_v4 + 공정 설정·지식 검색 → LLM ↔ 서버 도구(계산·검색)
   → 화면 도구를 요청하면 Redis에 턴 저장 → 브라우저 실행
   → /api/v2/ask/{turn_id} → ask_chat.resume → ask.take · ask.resume
@@ -42,6 +43,7 @@
 
 - 일반 상담은 성공한 최종 답만 `chats`·`chat_messages`에 저장한다. 범위 밖 고정 안내와 실패 답은 기록하지 않는다. 번호표 `rev` 불일치는 409, 같은 Redis 턴의 늦은 재개는 404다.
 - 무문자 게이트와 의도 분류는 모두 `kind=chat`이고 첨부 이미지가 **없을 때만** 적용한다. 무문자 질문에는 관문·LLM을 호출하지 않고 저장하지 않는다. 이미지 있는 채팅과 견적·공정표 설명은 두 검사를 건너뛰고 별도 경로로 처리한다.
+- 도배·목공 고유 증상어는 [공종 낱말 설정](../../backend/app/agent/trades/__init__.py)의 `symptom_words`에서 확인한다. 모델·waiting·Jev 분류 결과가 `out_of_scope`일 때만 [`keep_in_scope`](../../backend/app/agent/route.py)로 `trade` 재지정하며, 일상어 `실크`·`낙서`·`테두리`만으로는 전환하지 않는다([이슈 #147](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/147)·[PR #148](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/pull/148)).
 - 집 정보 담기 제안의 거주(`living`) 의미는 모델이 판단한다. 서버는 근거 문구(`living_said`)가 이번 고객 발화에 있는지 확인하고, 짧은 네/아니요 답이라면 직전 AI 질문도 확인한다. 근거는 모델 기록에 남지만 브라우저 도구 인자에서는 제거한다. 인용 문구 확인은 의미 판단의 정확성을 보장하지 않는다.
 - 상담 도구 `price_reference`는 평형·도면이 모두 없으면 견적·기간 계산 대신 입력을 요청한다. 원시 `POST /v2/quote`의 평형 미입력 32평 기본 계산과 구분한다.
 - 화면에서 고른 인테리어 상태는 별도로 `/v2/cases`의 `v2_cases`에 저장한다. 저장 시 화면에서 보낸 견적·공정표 입력을 서버가 재계산한다. `v2_cases`와 `chats` 사이에는 외래키가 없다.

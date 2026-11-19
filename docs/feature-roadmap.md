@@ -2,15 +2,15 @@
 
 [문서 목차](README.md) · [API 안내·목록](api/README.md) · [v2 구조](v2/structure.md) · [v2 ERD](v2/erd.md) · [팀 기여 가이드](../CONTRIBUTING.md) · [개발 안내](development.md) · [검증 안내](testing.md) · [에이전트 협약](agent-contract.md) · [기준 데이터](reference-data.md) · [문서 검증 이력](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)
 
-> 구현 기준: 2026-11-19, `dev` 커밋 `93097f35abb4be12d4f9c85f0a41004f385daa04` (PR #140 병합). 코드·호출·테스트와 이슈·PR 기록을 대조했다. 과거 2026-11-18 `dev` `1a3e656`의 검증 결과는 [이슈 #143](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)에 날짜·대상 SHA를 구분해 보존한다.
+> 구현 기준: 2026-11-19, `dev` 커밋 `6d41f94646649ae3500047811740cdcf2e6d77e2` (PR #140·#148 병합). 코드·호출·테스트와 이슈·PR 기록을 대조했다. 과거 2026-11-18 `dev` `1a3e656`의 검증 결과는 [이슈 #143](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)에 날짜·대상 SHA를 구분해 보존한다.
 
 **개발 상태**: `구현`=현재 코드의 동작 경로가 존재함, `부분`=API 또는 화면·임시 저장·시연 기능만 존재하거나 사용자 흐름 일부만 연결됨, `진행`=열린 이슈/PR의 제안으로 기준 커밋에 미반영, `미구현`=구체 처리 코드가 없음, `미확인`=운영 환경 등 코드 밖의 실태를 확인하지 못함. 구현은 실서비스 배포 완료를 뜻하지 않는다.
 
-**검증 상태**: `CI`=관련 테스트 또는 CI 검사 경로가 있고 기준 `dev`의 [CI 성공](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/actions/runs/44467179321)을 확인함, `로컬`=해당 검사 로컬 통과(현재 CI에 포함되지 않은 평가 코드 등), `코드`=코드·호출을 읽었으나 해당 동작의 통과 근거는 확보하지 못함, `미검증`=동작 확인 자료 없음. `CI`여도 유료 LLM·AWS 운영·브라우저 전 기능 E2E 검증은 별도다. 범위·이전 실행 결과는 [이슈 #143](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)에 구분한다.
+**검증 상태**: `CI`=관련 테스트 또는 CI 검사 경로가 있고 기준 `dev`의 [CI 성공](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/actions/runs/44484925761)을 확인함, `로컬`=해당 검사 로컬 통과(현재 CI에 포함되지 않은 평가 코드 등), `코드`=코드·호출을 읽었으나 해당 동작의 통과 근거는 확보하지 못함, `미검증`=동작 확인 자료 없음. `CI`여도 유료 LLM·AWS 운영·브라우저 전 기능 E2E 검증은 별도다. 범위·이전 실행 결과는 [이슈 #143](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/143)에 구분한다.
 
 **근거 읽기**: 이슈는 담당자와 개발 제안을 나타내고 PR은 코드 반영 이력을 나타낸다. 이슈 종료와 개발 완료는 별개이며 병합과 배포도 별개다. `없음`은 확인된 직접 이슈·PR이 없다는 뜻이다. 이슈/PR 번호는 현재 저장소의 기록만 사용했다.
 
-**MVP 분류 기준(2026-11-19)**: MVP 필수는 확인된 1차 제품 흐름·수용 규칙·현행 범위 이슈의 기능, 후속은 명시적으로 제외·유예한 기능, 확인 필요는 이번 조회 근거만으로 출시 범위·시점을 확정할 수 없는 기능이다. 이 표는 기존 팀 근거를 연결한 검토 자료이지 새 팀 승인이나 출시 판정이 아니다. 기존 187행은 세부 기능 단위이지 팀 승인 요구사항 수·MVP 완료율이 아니다. **구현·검증 기준은 2026-11-19 dev 93097f3**이며 MVP 구분은 코드 병합 여부로 바꾸지 않는다.
+**MVP 분류 기준(2026-11-19)**: MVP 필수는 확인된 1차 제품 흐름·수용 규칙·현행 범위 이슈의 기능, 후속은 명시적으로 제외·유예한 기능, 확인 필요는 이번 조회 근거만으로 출시 범위·시점을 확정할 수 없는 기능이다. 이 표는 기존 팀 근거를 연결한 검토 자료이지 새 팀 승인이나 출시 판정이 아니다. 기존 187행은 세부 기능 단위이지 팀 승인 요구사항 수·MVP 완료율이 아니다. **현행 구현 기준은 2026-11-19 dev 6d41f94**이며 MVP 구분은 코드 병합 여부로 바꾸지 않는다.
 
 **근거**: [T1][mvp-t1]=AGENTS §1(1차 흐름), [T2][mvp-t2]=원본 v2 기능표, [T4][mvp-t4]=AGENTS §4(AI), [A2][mvp-a2]·[A3][mvp-a3]·[A5][mvp-a5]·[A6][mvp-a6]·[A7][mvp-a7]=AGENTS 각 절, [R][mvp-r]=원본 README 향후 계획, [C110][mvp-c110]=11/16 C안. 이슈 #번호와 PR #번호는 구분한다. [이슈 #86 최종 댓글](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/86#issuecomment-6909385821)의 SSE 후속과 [이슈 #131](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/131)의 v2 도배 화면 제한을 적용했다.
 
@@ -172,7 +172,7 @@
 | AI-02 | 입구 관문 | 낮은 신뢰도에서 Jev 한 번 질의·실패 처리 | 구현 | CI | [agent/gate.py](../backend/app/agent/gate.py) · [agent/llm.py](../backend/app/agent/llm.py) | [tests/test_agent_gate.py](../backend/tests/test_agent_gate.py) | [#72][i72] (담당 HyeongJjun) · [PR #87][p87] · [#95][i95] (담당 HyeongJjun) · [PR #96][p96] | MVP 필수 · [C110][mvp-c110] 학습 의도 분류·입구 관문 |
 | AI-03 | 입구 관문 | 개발·테스트 설정으로 Jev 사용 끄기 | 구현 | CI | [agent/gate.py](../backend/app/agent/gate.py) | [tests/test_agent_gate.py](../backend/tests/test_agent_gate.py) | [#112][i112] (담당 HyeongJjun) · [PR #113][p113] | 확인 필요 · Jev 개발용 OFF 토글의 출시 조건 근거 없음 ([AGENTS §4][mvp-t4] 범위 대조) |
 | AI-04 | 입구 관문 | 대기 중인 질문 답변이면 이전 역할 유지 | 구현 | CI | [agent/route.py](../backend/app/agent/route.py) · [v2/ask_chat.py](../backend/app/v2/ask_chat.py) | [tests/test_v2_ask_chat.py](../backend/tests/test_v2_ask_chat.py) | [#120][i120] (담당 HyeongJjun) · [PR #122][p122] | MVP 필수 · [C110][mvp-c110] waiting 이어받기·범위 밖 안내 |
-| AI-05 | 입구 관문 | 범위 밖 공종은 LLM 없이 고정 안내 | 구현 | CI | [v2/ask.py](../backend/app/v2/ask.py) · [agent/gate.py](../backend/app/agent/gate.py) | [tests/test_v2_ask.py](../backend/tests/test_v2_ask.py) | [#72][i72] (담당 HyeongJjun) · [PR #87][p87] · [#128][i128] (담당 HyeongJjun) · [PR #129][p129] | MVP 필수 · [C110][mvp-c110] waiting 이어받기·범위 밖 안내 |
+| AI-05 | 입구 관문 | 모델·waiting·필요 시 Jev 분류 후 `out_of_scope`이면 도배·목공 증상 낱말(`symptom_words`, 일상어 실크·낙서·테두리 단독 제외)이 있을 때만 `trade`(`source=rule`·`confidence=0`)로 전환, 그 외는 고정 안내 | 구현 | CI | [v2/ask.py](../backend/app/v2/ask.py) · [agent/gate.py](../backend/app/agent/gate.py) · [agent/route.py의 `keep_in_scope`](../backend/app/agent/route.py) · [agent/trades/__init__.py](../backend/app/agent/trades/__init__.py) | [tests/test_v2_ask.py](../backend/tests/test_v2_ask.py) · [tests/test_agent_gate.py](../backend/tests/test_agent_gate.py) | [#72][i72] (담당 HyeongJjun) · [PR #87][p87] · [#128][i128] (담당 HyeongJjun) · [PR #129][p129] · [#147][i147] · [PR #148][p148] (병합) | MVP 필수 · [C110][mvp-c110] waiting 이어받기·범위 밖 안내 |
 | AI-06 | 입구 관문 | Jev 실패 시 v2 상담 화면에 선택지 카드 제공 | 미구현 | 미검증 | [v2/ask.py](../backend/app/v2/ask.py) · [agent/gate.py](../backend/app/agent/gate.py) | 없음 | [#123][i123] (담당 HyeongJjun) | MVP 필수 · [T4][mvp-t4] Jev 실패 되묻기·[이슈 #123][i123] 수정 요청 |
 | AI-07 | 역할 상담 | 일반 안내·공종 상담에서 현행 지시문 chat_v4 사용 | 구현 | CI | [v2/ask.py](../backend/app/v2/ask.py) · [v2/prompts/chat_v4.md](../backend/app/v2/prompts/chat_v4.md) | [tests/test_v2_ask.py](../backend/tests/test_v2_ask.py) | [#131][i131] (담당 lsm15111) · [PR #130][p130] · [PR #140][p140] (병합) | MVP 필수 · [C110][mvp-c110] 하나의 LLM이 역할 전환 |
 | AI-08 | 공종 상담 | 질문 낱말로 도배·목공을 고르고 공종별 지시문 추가 | 구현 | CI | [v2/ask.py](../backend/app/v2/ask.py) · [agent/trades/dobae.py](../backend/app/agent/trades/dobae.py) | [tests/test_v2_ask.py](../backend/tests/test_v2_ask.py) | [#131][i131] (담당 lsm15111) · [PR #130][p130] | MVP 필수 · [이슈 #131][i131] 도배·목공 공정 설정으로 상담 |
@@ -301,6 +301,7 @@
 [i134]: https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/134
 [i139]: https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/139
 [i142]: https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/142
+[i147]: https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/147
 [p3]: https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/pull/3
 [p7]: https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/pull/7
 [p20]: https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/pull/20
@@ -333,6 +334,7 @@
 [p138]: https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/pull/138
 [p140]: https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/pull/140
 [p141]: https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/pull/141
+[p148]: https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/pull/148
 
 [mvp-t1]: https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/blob/1a3e65661924e93225914ebb4b440bbd8330cc2a/AGENTS.md
 [mvp-t4]: https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/blob/1a3e65661924e93225914ebb4b440bbd8330cc2a/AGENTS.md

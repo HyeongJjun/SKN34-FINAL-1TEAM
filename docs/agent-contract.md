@@ -34,7 +34,7 @@ AI 상담(C안, #110)의 현재 구현과 팀이 정한 후속 약속이다. 규
 | 대화 저장 | `backend/app/chat/`(`chats` · `chat_messages` 저장) | — |
 | 공용 | `backend/app/agent/schemas.py` · `llm.py` · `trades/base.py`, `backend/app/v2/ask_tools.py` · `schemas.py`, `backend/app/config.py` | 공용 파일 수정은 아래 팀 조정 규칙을 유지 |
 
-**현재 기준: 2026-11-19 `dev` `93097f3` (PR #140 병합).** `/v2/ask`는 **`chat_v4` · `quote_explanation_v2` · `schedule_v1`** 및 공종 힌트 `trade_dobae_v1` · `trade_mokgong_v1`을 사용한다(`backend/app/v2/ask.py`의 `PROMPT_VERSION` · `TRADE_PROMPTS`). 이전 **2026-11-18 `dev` `1a3e656`** 당시의 상담 프롬프트는 `chat_v3`였다. `evaluation/intent/` · `rag/` · `answer/` · `trade/` · `ask_back/`에는 실제 평가 자료 또는 실행 파일이 있지만, 폴더 존재만으로 `guide/orchestrator/quote_explanation/schedule` 역할 전용 평가가 완성됐다고 보지 않는다.
+**현재 기준: 2026-11-19 `dev` `6d41f94` (PR #140·#148 병합).** `/v2/ask`는 **`chat_v4` · `quote_explanation_v2` · `schedule_v1`** 및 공종 힌트 `trade_dobae_v1` · `trade_mokgong_v1`을 사용한다(`backend/app/v2/ask.py`의 `PROMPT_VERSION` · `TRADE_PROMPTS`). 이전 **2026-11-18 `dev` `1a3e656`** 당시의 상담 프롬프트는 `chat_v3`였다. `evaluation/intent/` · `rag/` · `answer/` · `trade/` · `ask_back/`에는 실제 평가 자료 또는 실행 파일이 있지만, 폴더 존재만으로 `guide/orchestrator/quote_explanation/schedule` 역할 전용 평가가 완성됐다고 보지 않는다.
 
 - 자기 묶음 파일만 고친다.
 - `trades/base.py`(공정 설정 모양)는 공종 · 견적 설명 · 공정표가 같이 읽으므로 공용이다. 공정별 값은 공종이 맡는다.
@@ -88,7 +88,7 @@ AI 상담(C안, #110)의 현재 구현과 팀이 정한 후속 약속이다. 규
 | 순서 | 하는 일 | DB 세션 |
 | --- | --- | --- |
 | 1. 열기 | `ask_chat.start`. 일반 상담(`kind=chat`)이고 `chat_id`가 있을 때만 내 대화를 연다(`get_for`). 남의 대화 · 없는 대화는 404. `rev` · `waiting` · 지난 대화(`recent`)를 들고 간다. 새 대화는 여기서 만들지 않는다 | 짧은 세션, 닫고 나온다 |
-| 2. 관문 | `ask.start`: **`kind=chat` · 이미지 없음**인 경우, 무문자 질문("?" · "ㅠㅠ")은 고정 안내로 끝내고 저장하지 않는다. **같은 조건에서 낱말이 있는 경우에만** `gate.classify(message, waiting)` 후 범위 밖이면 고정 안내(미저장). 이미지 있는 채팅·견적·공정표 설명은 두 검사 모두 건너뛴다. 기다리던 역할(출처 `rule`)은 신뢰도와 무관하게 역할 힌트를 붙인다 | 없음 |
+| 2. 관문 | `ask.start`: **`kind=chat` · 이미지 없음**인 경우, 무문자 질문("?" · "ㅠㅠ")은 고정 안내로 끝내고 저장하지 않는다. **같은 조건에서 낱말이 있는 경우에만** `gate.classify(message, waiting)`를 실행한다(학습 모델 → waiting 유지 → 저신뢰 시 Jev → 범위 밖 재검사). 분류 뒤 [agent/route.py의 `keep_in_scope`](../backend/app/agent/route.py)는 결과가 `None`이거나 `out_of_scope`가 아니면 그대로 두고, `out_of_scope`이면서 도배·목공 `symptom_words`가 있을 때만 `trade` / `source=rule` / `confidence=0`으로 바꾼다. 일상어 `실크`·`낙서`·`테두리`만으로는 바꾸지 않고 범위 밖이면 고정 안내(미저장). 기다리던 역할(출처 `rule`)은 신뢰도와 무관하게 역할 힌트를 붙인다. 이미지 있는 채팅·견적·공정표 설명은 무문자 검사와 의도 분류를 모두 건너뛴다([이슈 #147](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/issues/147)·[PR #148](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/pull/148)) | 없음 |
 | 3. 실행 | 지시문(`chat_v4` 등) + 지난 대화 + 이번 질문으로 LLM ↔ 도구. 서버 도구는 바로 실행한다. 화면 도구를 부르면 턴을 Redis에 두고 `done=false` · `turn` · `tool_calls`로 응답한다 | 쥐지 않는다 |
 | 3-1. 재개 | 브라우저가 `/v2/ask/{turn}`로 결과를 보낸다 → `ask_chat.resume` → `ask.take` → `ask.resume`으로 3을 이어 간다 | 쥐지 않는다 |
 | 4. 검사 | 출력 검사(`v2/guard.py`): 숫자 · 근거 · 금지 표현 · 가림. 남은 글이 없으면 실패 | 없음 |
