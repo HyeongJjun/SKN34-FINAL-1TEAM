@@ -92,7 +92,7 @@ test("J5 업체 기간 답하기 → 고객 날짜 고르기 · 바로 확정 �
     expect(pick.next.due_at, "고르기 기한").toBeTruthy();
     expect(Math.abs(new Date(pick.next.due_at!).getTime() - answeredAt - 7 * 86400_000), "고르기 기한 = 업체 답 + 7일(2분 안)").toBeLessThan(120_000);
     const due = dueShort(pick.next.due_at!).replace(/까지$/, "");
-    await expect(shown(page.getByText(new RegExp(due.replace(/[().]/g, "\\$&")))).first()).toBeVisible();
+    await expect(shown(page.getByText(new RegExp(due.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")))).first()).toBeVisible();
     await expect(shown(page.getByText("답 기다림")).first()).toBeVisible(); // 결도배는 아직 답 전
     await expectNoEnglishState(page, "C14");
     await expectNoSideScroll(page, "C14 실측 일정(업체 답이 옴)");

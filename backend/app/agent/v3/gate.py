@@ -41,7 +41,8 @@ GUIDE_WORDS = re.compile(
 WHEN = re.compile(r"언제|날짜|며칠|몇\s*시|오전|오후|주말")
 VAGUE = re.compile(r"^\s*(?:이거|이건|저거|여기|이\s*줄|이\s*금액|이게|왜)")
 # 문장 나누기: 물음 · 이음말. '하고 · 랑'은 공종 낱말 사이에 있을 때만 나눈다(orchestrator.split)
-BREAK = re.compile(r"(?<=[?？!])\s*|\s*(?:그리고|그럼|그러면|아울러|또한|그다음에)\s+|\n+")
+# 공백 반복에 상한을 둬서 공백이 길게 이어진 입력에도 한 번만 훑어요(CodeQL ReDoS)
+BREAK = re.compile(r"(?<=[?？!])\s*|\s{0,3}(?:그리고|그럼|그러면|아울러|또한|그다음에)\s{1,3}|\n+")
 
 CHOICE_TEXT: dict[str, str] = {
     "guide": "처음이라 순서를 알고 싶어요",
