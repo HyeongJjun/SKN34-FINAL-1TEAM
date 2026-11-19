@@ -497,3 +497,35 @@ def test_trade_agent_searches_own_trade_by_default(api, fake, monkeypatch):
     signup(api)
     api.post("/v2/ask", json={"message": "벽지가 들떴어요"})
     assert seen == ["도배", "도배"]  # 첫 검색과 도구 검색 모두 도배 범위
+
+
+def test_tool_card_is_picked_by_code(api, fake):
+    f = fake({"text": "방 크기를 넣으면 계산기가 세 줘요."})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": "작은방 벽지 몇 롤 필요해요?"}).json()
+    assert out["card"] == {"tool": "calc", "arg": "wall", "label": "셀프 계산기로 벽지 롤 세기"}
+    assert "'셀프 계산기로 벽지 롤 세기' 버튼" in f.seen[0]["system"]
+    assert "show_step" in {t["name"] for t in f.seen[0]["tools"]}  # 카드는 도구가 아니다
+
+
+def test_tool_card_stays_when_llm_fails(api, fake):
+    fake(llm.LLMError("x"))
+    signup(api)
+    out = api.post("/v2/ask", json={"message": "관리사무소에 뭐 신고해야 해요?"}).json()
+    assert out["failed"] and out["card"]["tool"] == "check" and out["card"]["arg"] == "before"
+
+
+def test_no_tool_card_for_other_questions(api, fake):
+    f = fake({"text": "실크는 비닐 코팅 벽지예요."})
+    signup(api)
+    out = api.post("/v2/ask", json={"message": "실크벽지랑 합지벽지 차이가 뭐예요?"}).json()
+    assert out["card"] is None and "화면 도구(코드가 고름)" not in f.seen[0]["system"]
+
+
+def test_no_tool_card_with_photo(api, fake):
+    # 사진 질문은 화면이 카드 버튼을 띄우지 않는다. 답이 없는 버튼을 안내하지 않게 힌트도 뺀다
+    f = fake({"text": "사진으로는 벽지 상태가 깨끗해 보여요."})
+    signup(api)
+    body = {"message": "이 방 벽지 몇 롤 필요해요?", "images": ["A" * 100]}
+    out = api.post("/v2/ask", json=body).json()
+    assert out["card"] is None and "화면 도구(코드가 고름)" not in f.seen[0]["system"]

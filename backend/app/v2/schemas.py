@@ -705,6 +705,15 @@ class V2AskSuggest(BaseModel):
     ref: str | None = None  # 질문 은행 질문이 묶인 조각
 
 
+class V2AskCard(BaseModel):
+    """답 아래 버튼으로 보일 화면 도구 카드. 질문 낱말로 코드가 고른다 (v2.tool_card)"""
+
+    tool: Literal["calc", "check", "compare", "step"]
+    # calc: wall · trim · paint, check: before · contract · after, step: quote · materials · styles
+    arg: str | None = None
+    label: str
+
+
 class V2AskOut(BaseModel):
     chat_id: uuid.UUID | None = None  # 다음 질문에 같이 보낼 대화 id
     done: bool
@@ -720,6 +729,7 @@ class V2AskOut(BaseModel):
     cites_dropped: int = 0  # 보여 주지 않았거나 문장과 맞지 않아 뗀 [K번호] 수
     suggest: list[V2AskSuggest] = []  # 이어 물을 질문 0~3개 (일반 상담만)
     trade: str | None = None  # 답한 공정 담당 (도배 · 목공). 없으면 일반 상담
+    card: V2AskCard | None = None  # 화면 도구 카드 (일반 상담만)
 
 
 class V2AskHealthOut(BaseModel):

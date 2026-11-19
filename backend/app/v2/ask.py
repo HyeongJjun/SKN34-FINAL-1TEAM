@@ -24,7 +24,7 @@ from app.knowledge import service as knowledge
 from app.queue import redis
 from app.shared import ratelimit
 from app.shared.errors import AppError
-from app.v2 import guard, preview_service, service
+from app.v2 import guard, preview_service, service, tool_card
 from app.v2 import schemas as v2
 from app.v2.ask_tools import BY_KIND, CALC_TOOLS, RAG_TRADES, SERVER_TOOLS, tools_for
 from app.v2.level import level_text
@@ -463,9 +463,12 @@ async def start(
     )
     trade = route(b)
     first = await _search(b.message, trade=trade)
-    system, allowed, calc = _system(
-        b, today, HINTS.get(intent.label, "") if sure and intent else "", first, trade
-    )
+    hint = HINTS.get(intent.label, "") if sure and intent else ""
+    # 사진 질문은 화면이 카드 버튼을 띄우지 않는다. 힌트도 넣지 않는다
+    card = tool_card.pick(b.message) if b.kind == "chat" and not b.images else None
+    if card:
+        hint = "\n".join(x for x in (hint, card[1]) if x)
+    system, allowed, calc = _system(b, today, hint, first, trade)
     content: list[dict] = [{"type": "image", "data": d} for d in b.images]
     content.append({"type": "text", "text": b.message})
     turn = {
@@ -497,6 +500,7 @@ async def start(
         "cons": None,
         "intent": _intent_out(intent).model_dump() if intent else None,
         "trade": trade,
+        "card": card[0].model_dump() if card else None,
     }
     _remember(turn, first.hits)
     return await _run(secrets.token_urlsafe(16), turn)
@@ -687,20 +691,23 @@ async def _done(turn: dict, failed: bool = False) -> v2.V2AskOut:
     intent = v2.V2IntentOut(**turn["intent"]) if turn.get("intent") else None
     cons = v2.V2ConsIn.model_validate(turn["cons"]) if turn.get("cons") else None
     trade = turn.get("trade")
+    # 도구 카드는 답 글과 따로 화면이 계산한다. 답을 만들지 못해도 카드는 보여 준다
+    card = v2.V2AskCard(**turn["card"]) if turn.get("card") else None
     if failed or not turn["text"].strip():
         return v2.V2AskOut(
-            done=True, text=FAILED[kind], failed=True, intent=intent, cons=cons, trade=trade
-        )
+            done=True, text=FAILED[kind], failed=True, intent=intent, cons=cons, trade=trade,
+            card=card,
+        )  # fmt: skip
     # 공사 기간 숫자는 계산 엔진 결과(calc)에 있어야만 통과한다
     g = guard.check(turn["text"], "\n".join(turn["allowed"]), "\n".join(turn.get("calc") or []))
     if not g.text:
         return v2.V2AskOut(
             done=True, text=FAILED[kind], failed=True, intent=intent, dropped=g.dropped, cons=cons,
-            trade=trade,
+            trade=trade, card=card,
         )  # fmt: skip
     text, cites_dropped, sources = await _cites(turn, g.text)
     suggest = await _suggest(turn, sources) if kind == "chat" else []
     return v2.V2AskOut(
         done=True, text=text, intent=intent, dropped=g.dropped, cons=cons,
-        sources=sources, cites_dropped=cites_dropped, suggest=suggest, trade=trade,
+        sources=sources, cites_dropped=cites_dropped, suggest=suggest, trade=trade, card=card,
     )  # fmt: skip
