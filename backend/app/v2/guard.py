@@ -1,7 +1,7 @@
 """AI 답 출력 검사 (화면 guard.ts를 서버로 옮긴 것). 고객에게 보내기 전에 문장마다 본다.
 
 - 계산 결과 · 자료 · 고객이 쓴 글에 없는 숫자가 든 문장은 뺀다.
-- 공사 기간(일 · 주 · 개월)은 계산 엔진 결과에 있는 숫자만 허용한다.
+- 공사 기간(일 · 주 · 개월)은 계산 엔진 결과에 있는 숫자만 허용한다. 하루 · 이틀 · 일주일 · 한 달도 숫자로 읽는다.
 - 한글로 쓴 금액 · 면적, 쓰면 안 되는 표현이 든 문장도 뺀다.
 - 전화번호 · 동호수는 가린다.
 """
@@ -15,7 +15,30 @@ NUM = re.compile(
     re.ASCII,
 )
 COUNT_WORDS = re.compile(r"^\s*(가지|번|단계|번째|곳|군데|가지씩)")
-HANGUL_MONEY = re.compile(r"(?:[일이삼사오육칠팔구]?[십백천])+\s*(?:만|억)?\s*원")
+# 삼십만 원 · 수백만 원, 그리고 십 · 백 · 천 없는 오만 원 · 만 원 · 일억 원.
+# 뒤쪽은 앞 글자가 한글이면 조사("벽지만 원하는"), 숫자면 숫자 금액("336만 원")이라 뺀다
+HANGUL_MONEY = re.compile(
+    r"(?:[일이삼사오육칠팔구]?[십백천])+\s*(?:만|억)?\s*원"
+    r"|(?<![가-힣\d.,])(?<!\d\s)[일이삼사오육칠팔구]?[만억]\s*원"
+)
+# 고유어 기간: 숫자 기간과 같게 계산 결과 · 자료에 있어야 통과("이틀" = 2일, "한 달" = 1개월)
+NATIVE_DAYS = {
+    "하루": 1,
+    "이틀": 2,
+    "사흘": 3,
+    "나흘": 4,
+    "닷새": 5,
+    "엿새": 6,
+    "열흘": 10,
+    "보름": 15,
+}
+NATIVE_COUNT = {"한": 1, "두": 2, "세": 3, "석": 3, "네": 4, "넉": 4}
+NATIVE_PERIOD = re.compile(
+    r"(?<![가-힣])(?:(" + "|".join(NATIVE_DAYS) + r"|일주일)"
+    r"|(한|두|세|석|네|넉)\s?(?:달(?![러라려리])|주일|주간|주(?=\s|$|[.,!?~]|동안|정도|이면|쯤|만에|째)))"
+    # 기간이 아니라 단위 · 빈도 · 때로 쓴 말은 뺀다: 하루에 · 하루 시공량 · 하루 8시간 · 하루 중 · 한 달에 한 번
+    r"(?!\s?(?:에|의|중|단위|시공|작업|노임|인건비|\d|한\s))"
+)
 HANGUL_AREA = re.compile(r"(?:[일이삼사오육칠팔구]?[십백천])+\s*평")
 PHONE = re.compile(r"01[016789][-\s.]?\d{3,4}[-\s.]?\d{4}")
 UNIT_NO = re.compile(r"\d{1,4}\s*동\s*\d{1,4}\s*호")
@@ -45,6 +68,12 @@ def _val(raw: str, unit: str | None) -> float | None:
     return v * MULT.get((unit or "").replace(" ", ""), 1)
 
 
+def _native(m: re.Match) -> float:
+    if m.group(1):
+        return float(NATIVE_DAYS.get(m.group(1), 1))  # 일주일 = 1주 ("1주일"과 같게)
+    return float(NATIVE_COUNT[m.group(2)])
+
+
 def numbers(text: str) -> set[float]:
     """글에 나온 숫자. 10만 이상은 만 원 단위 반올림 · 버림 값도 허용한다 (3,364,291원 → 336만 원).
 
@@ -59,6 +88,7 @@ def numbers(text: str) -> set[float]:
         if v >= 100_000:
             out.add(round(v / 1e4) * 1e4)
             out.add((v // 1e4) * 1e4)
+    out.update(_native(m) for m in NATIVE_PERIOD.finditer(text or ""))
     return out
 
 
@@ -96,6 +126,9 @@ def _bad_number(
         if _small_count(v, m.group(2), sentence[m.end() :]):
             continue
         return m.group(0).strip()
+    for m in NATIVE_PERIOD.finditer(sentence):
+        if _native(m) not in (allowed if periods is None else periods):
+            return m.group(0).strip()
     return None
 
 
