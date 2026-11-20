@@ -8,7 +8,16 @@
 """
 
 from app.agent.v3 import templates
-from app.agent.v3.answer import KB, Part, Task, calc_box, drop_promise, knowledge
+from app.agent.v3.answer import (
+    KB,
+    Part,
+    Task,
+    calc_box,
+    drop_promise,
+    knowledge,
+    next_card,
+    use_card,
+)
 from app.agent.v3.schemas import Choice, UiCard
 from app.agent.v3.trades import BY_CODE
 
@@ -70,9 +79,14 @@ def run(task: Task, kb: KB) -> Part:
         )
 
     q = task.text
-    if task.slot and task.value:  # 되물은 칸의 답: 원래 질문 + 고른 값으로 다시 찾는다
-        q = f"{task.asked} {task.value}".strip()
-    how = knowledge(part, kb, q, trade=code, route="trade", facts=facts, policy=task.policy)  # type: ignore[arg-type]
+    nxt = next_card(kb, task.slot, task.value) if task.slot and task.value else None
+    if nxt is not None:  # 카드가 정해 둔 '고른 답 → 다음 카드'(상황별 안내)
+        use_card(part, kb, nxt, route="trade", trade=code, facts=facts)  # type: ignore[arg-type]
+        how = "card"
+    else:
+        if task.slot and task.value:  # 되물은 칸의 답: 원래 질문 + 고른 값으로 다시 찾는다
+            q = f"{task.asked} {task.value}".strip()
+        how = knowledge(part, kb, q, trade=code, route="trade", facts=facts, policy=task.policy)  # type: ignore[arg-type]
     if task.slot:
         part.ask = None  # 한 칸은 한 번만 묻는다(되묻기 반복 막기)
     if how == "unknown" and lines:

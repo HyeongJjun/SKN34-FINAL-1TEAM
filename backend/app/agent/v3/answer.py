@@ -13,11 +13,13 @@ from app.agent.v3 import check, templates
 from app.agent.v3.schemas import (
     AskSlot,
     CalcBox,
+    CompareTable,
     PolicyFlag,
     ProjectFacts,
     Route,
     Section,
     Sentence,
+    TableRow,
     TradeCode,
     TurnContext,
     UiCard,
@@ -168,11 +170,7 @@ def knowledge(
     best, matches = accept(matches, top)
     if best is not None:
         c = best.card
-        part.used_cards.append(c.tag)
-        part.used_chunks.extend(c.cites())
-        part.scores[c.tag] = best.score
-        part.add(card_section(c, route=route, trade=trade), card_allowed(kb, c))
-        _card_extras(part, c, facts)
+        use_card(part, kb, c, route=route, trade=trade, facts=facts, score=best.score)
         part.suggest.extend(
             m.card.keys[0] for m in matches[1:] if best.score - m.score < NEAR and m.score >= T_CARD
         )
@@ -211,6 +209,41 @@ def knowledge(
     return "unknown"
 
 
+def use_card(
+    part: Part,
+    kb: KB,
+    c: cards.AnswerCard,
+    *,
+    route: Route,
+    trade: TradeCode | None,
+    facts: ProjectFacts | None,
+    score: float = 1.0,
+) -> None:
+    """카드 하나를 몫에 담는다: 묶음 문장 + 비교표 · 계산 상자 · 되묻기."""
+    part.used_cards.append(c.tag)
+    part.used_chunks.extend(c.cites())
+    part.scores[c.tag] = score
+    part.add(card_section(c, route=route, trade=trade), card_allowed(kb, c))
+    _card_extras(part, c, facts)
+
+
+def next_card(kb: KB, slot: str, value: str) -> cards.AnswerCard | None:
+    """되물은 칸의 답에 이어 줄 카드(카드 ask.next). 버튼 글과 같거나 버튼 글이 답 안에 있으면 그 카드.
+
+    글로 답하면서 버튼 글이 둘 이상 들어 있으면("도배만 새로 말고 벽 · 천장까지 새로") 어느 쪽인지 모르니 정하지 않아요.
+    """
+    v = "".join(value.split())
+    for c in kb.cards.cards:
+        if not (c.ask and c.ask.slot == slot and c.ask.next):
+            continue
+        hit = [cid for opt, cid in c.ask.next.items() if (o := "".join(opt.split())) and o in v]
+        if len(hit) == 1:
+            return kb.cards.by_id.get(hit[0])
+        if hit:
+            return None
+    return None
+
+
 def drop_promise(part: Part) -> None:
     """추천 거절 글의 '…알려 드릴게요'는 기준 카드가 붙을 때만 둔다. 답이 모름이면 거절 한 문장만 남겨요."""
     for sec in part.sections:
@@ -220,7 +253,23 @@ def drop_promise(part: Part) -> None:
 
 
 def _card_extras(part: Part, c: cards.AnswerCard, facts: ProjectFacts | None) -> None:
-    """카드의 계산 상자 · 되묻기. 숫자는 facts(계산 엔진)에 있을 때만 상자로."""
+    """카드의 비교표 · 계산 상자 · 되묻기. 숫자는 facts(계산 엔진)에 있을 때만 상자로."""
+    if c.compare:
+        t = c.compare
+        refs = {r for row in t.rows for r in row.cites}
+        part.used_chunks.extend(sorted(refs))
+        titles = [s.title for s in c.sources if s.ref in refs]
+        part.cards.append(
+            UiCard(
+                kind="compare",
+                title=t.title,
+                table=CompareTable(
+                    cols=list(t.cols),
+                    rows=[TableRow(cells=list(r.cells), cites=list(r.cites)) for r in t.rows],
+                    sources=list(dict.fromkeys(titles)),
+                ),
+            )
+        )
     for cc in c.calc:
         box = calc_box(cc.ref, facts, label=cc.label)
         if box is not None:

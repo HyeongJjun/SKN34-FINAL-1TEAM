@@ -212,15 +212,30 @@ class DraftCard(BaseModel):
     recommend: VisitRecommendFact | None = None
 
 
+class TableRow(BaseModel):
+    cells: list[str]
+    cites: list[str] = []
+
+
+class CompareTable(BaseModel):
+    """검증된 카드의 비교표를 옮긴 것(AI가 만든 표가 아님). 출처는 제목만."""
+
+    cols: list[str]
+    rows: list[TableRow]
+    sources: list[str] = []
+
+
 class UiCard(BaseModel):
     kind: Literal[
-        "calc", "visit_draft", "open_calendar", "grade_preview", "faq", "choices", "next_step"
-    ]
+        "calc", "visit_draft", "open_calendar", "grade_preview", "faq", "choices", "next_step",
+        "compare",
+    ]  # fmt: skip
     title: str = ""
     text: str = ""
     choices: list[Choice] = []
     calc: list[CalcBox] = []
     draft: DraftCard | None = None
+    table: CompareTable | None = None
 
 
 class AskSlot(BaseModel):
