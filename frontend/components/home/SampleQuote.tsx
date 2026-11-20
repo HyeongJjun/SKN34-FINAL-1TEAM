@@ -3,11 +3,38 @@
 // 합계 밖 줄은 금액을 괄호로 두고 줄 아래에 '합계 밖'을 적어요.
 import { Money } from "@/components/ui/Money";
 import type { GuestStandard } from "@/lib/api/guest";
-import { decText, wonFull } from "@/lib/format";
+import { decText, numText, wonFull } from "@/lib/format";
 import { PYEONG_M2 } from "@/lib/guest/info";
+import { tradeLines, type MqOut } from "@/lib/guest/market";
 import { toQuoteLines } from "@/lib/guest/standard";
 import { LINE_STATES, outsideTotal } from "@/lib/labels";
 import s from "./home.module.css";
+
+/** 견본을 시장 단가(업체 견적서 235건 중앙값)로 보여요. 줄은 공종 줄만, 합계는 이윤 · 보험료 · 부가세까지 넣은 총액이에요 */
+export function SampleMarket({ q }: { q: MqOut }) {
+  const lines = q.trades.flatMap(tradeLines);
+  return (
+    <section className={`${s.group} ${s.sample}`} aria-labelledby="sample-t">
+      <p id="sample-t" className={s.eb}>표준견적서 · 견본</p>
+      <p className={`${s.sub} mj-num`}>{numText(q.pyeong)}평 · 업체 견적 {q.quotes}건 기준</p>
+      <p className={s.sampleBig}>
+        <Money value={q.total} size="mid" className={s.phoneOnly} />
+        <Money value={q.total} size="big" className={s.webOnlyInline} />
+      </p>
+      <ul className={s.rows} aria-label="견본 줄">
+        {lines.map((l) => (
+          <li key={l.key} className={s.row}>
+            <div className={s.rl}>
+              <b>{l.name}</b>
+              <span className={`${s.webOnlyInline} mj-num`}>{[l.note, `${numText(Number(l.qty))}${l.unit ?? ""} × ${wonFull(l.unitPrice ?? 0)}`].filter(Boolean).join(" · ")}</span>
+            </div>
+            <span className={`${s.rv} mj-num`}>{wonFull(l.amount ?? 0)}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 export function SampleQuote({ std }: { std: GuestStandard }) {
   const lines = toQuoteLines(std.lines, std.scope).filter((l) => l.amount != null);

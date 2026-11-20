@@ -6,9 +6,9 @@ import { AppHeader } from "@/components/site/AppHeader";
 import { Main } from "@/components/site/Frame";
 import { TabBar } from "@/components/site/TabBar";
 import { HomeLinks, HowItWorks, ResumeStrip } from "@/components/home/HomeParts";
-import { SampleQuote } from "@/components/home/SampleQuote";
+import { SampleMarket, SampleQuote } from "@/components/home/SampleQuote";
 import { StartCta } from "@/components/home/StartCta";
-import { getSampleStandard } from "@/lib/api/guest";
+import { getSampleMarket, getSampleStandard } from "@/lib/api/guest";
 import type { Ongoing } from "@/lib/guest/api";
 import { listMyProjects, type ApiProjectItem } from "@/lib/api/project";
 import { projectName, stepName } from "@/lib/guest/info";
@@ -32,7 +32,8 @@ function ongoingOf(list: ApiProjectItem[]): (Ongoing & { status: string; href: s
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ bye?: string; mock?: string; resume?: string }> }) {
   const { bye, mock, resume } = await searchParams;
-  const [session, std] = await Promise.all([getSession(), getSampleStandard()]);
+  // 견본은 시장 단가(업체 견적서 235건, /estimate와 같은 계산)로 보여요. 못 받으면 기존 견본, 그것도 없으면 칸을 숨겨요
+  const [session, std, market] = await Promise.all([getSession(), getSampleStandard(), MOCK_V3A ? null : getSampleMarket()]);
   const member = session?.role === "customer";
   // 개발 예시: /?mock=member로 로그인 뒤 홈(C40 · C41) 모양을 미리 봐요(운영에서는 꺼져요)
   const preview = MOCK_V3A && mock === "member";
@@ -53,7 +54,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
               <p className={s.note}>{member || preview ? "1분이면 나와요" : "1분 · 가입 없이 바로 봐요"}</p>
             </div>
           </section>
-          {std ? <SampleQuote std={std} /> : null}
+          {market ? <SampleMarket q={market} /> : std ? <SampleQuote std={std} /> : null}
         </div>
         <div className={s.webBlock}><HowItWorks /></div>
         <HomeLinks guest={!session && !preview} />

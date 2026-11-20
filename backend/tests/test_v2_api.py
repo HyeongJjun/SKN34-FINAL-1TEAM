@@ -57,6 +57,22 @@ def test_quote(api):
     assert api.post("/v2/quote", json=QUOTE | {"cats": ["garage"]}).status_code == 422
 
 
+def test_quote_sheet(api):
+    assert api.post("/v2/quote-sheet", json=QUOTE).status_code == 401
+    signup(api)
+    q = api.post("/v2/quote", json=QUOTE).json()
+    r = api.post("/v2/quote-sheet", json=QUOTE)
+    assert r.status_code == 200, r.text
+    s = r.json()
+    assert [t["trade"] for t in s["trades"]] == ["mokgong", "dobae"]
+    assert s["net"] == q["supply"] == s["material"] + s["labor"] + s["expense"]
+    assert s["supply"] == s["net"] + sum(o["amount"] for o in s["overheads"]) + s["cut"]
+    assert s["supply"] % 10_000 == 0 and s["total"] == s["supply"] + s["vat"]
+    assert s["missing"] == [t["ko"] for t in q["ref"]]
+    only_floor = QUOTE | {"cats": ["floor"]}
+    assert api.post("/v2/quote-sheet", json=only_floor).status_code == 422
+
+
 def test_plan_and_trial(api):
     signup(api)
     body = {
@@ -162,3 +178,28 @@ def test_plans_and_materials_extras(api):
     assert float(m["fixed"]["minus_mult"]) == 2
     per = {p["kind"]: p["per"] for p in m["products"]}
     assert per["door_set"] == "짝" and per["slide"] == "세트" and per["molding"] is None
+
+
+def test_market_quote_public(api):
+    # 로그인 없이 평형만 넣어도 계산한다
+    r = api.post("/v2/market-quote", json={"pyeong": 32, "rooms": 3, "baths": 2})
+    assert r.status_code == 200, r.text
+    q = r.json()
+    assert [t["key"] for t in q["trades"]] == ["dobae", "mokgong"]
+    assert q["total"] == q["supply"] + q["vat"] and q["supply"] % 10_000 == 0
+    assert {o["key"] for o in q["options"] if o["on"]} == {
+        o["key"] for o in q["options"] if o["common"]
+    }
+    r = api.post("/v2/market-quote", json={"area_m2": 84, "mokgong": False})
+    assert r.status_code == 200, r.text
+    assert r.json()["pyeong"] == 30.5 and r.json()["options"] == []
+    assert api.post("/v2/market-quote", json={}).status_code == 422
+    assert (
+        api.post("/v2/market-quote", json={"pyeong": 32, "options": ["sauna"]}).status_code == 422
+    )
+    assert (
+        api.post(
+            "/v2/market-quote", json={"pyeong": 32, "dobae": False, "mokgong": False}
+        ).status_code
+        == 422
+    )

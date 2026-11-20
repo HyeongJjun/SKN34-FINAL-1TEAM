@@ -1,6 +1,7 @@
 // 서버 쪽 읽기: 손님(로그인 없음). 홈 '표준견적서 · 견본'(C01 · C40 · D10)은 견본 입력을 서버 계산 엔진에 한 번 물어 1시간 둬요(routes.md C01).
 // 손님 계산은 쿠키를 보지 않는 길이라 로그인 쿠키를 넘기지 않아요(security-02). 값을 못 받으면 견본 칸을 숨겨요(지어낸 숫자를 보이지 않게).
 import type { Schemas } from "@/lib/backend/server";
+import { toMarketIn, type MqIn, type MqOut } from "@/lib/guest/market";
 import { MOCK_V3A } from "@/lib/mock/v3a/mode";
 import { SAMPLE_INFO, SAMPLE_STANDARD } from "@/lib/mock/v3a/standard";
 
@@ -23,4 +24,24 @@ export async function getSampleStandard(): Promise<GuestStandard | null> {
   } catch {
     return null;
   }
+}
+
+/** 시장 단가 표준견적서(업체 견적서 235건 중앙값, POST /v2/market-quote). 쿠키 없이 묻고, 못 받으면 null */
+export async function getMarketQuote(body: MqIn): Promise<MqOut | null> {
+  try {
+    const res = await fetch(`${BASE}/v2/market-quote`, {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify(body),
+      next: { revalidate: 3600 },
+    });
+    return res.ok ? ((await res.json()) as MqOut) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 홈 견본: 같은 견본 집(공급 69.4㎡ · 실크)을 시장 단가로 계산한 값 */
+export function getSampleMarket(): Promise<MqOut | null> {
+  return getMarketQuote(toMarketIn(SAMPLE_INFO));
 }

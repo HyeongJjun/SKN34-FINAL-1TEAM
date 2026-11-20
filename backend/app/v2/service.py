@@ -4,14 +4,24 @@
 AI는 agent.llm.chat_tools 한 번 부르기만 한다(도구는 화면이 실행한다).
 """
 
+from dataclasses import asdict
 from datetime import date, timedelta
 from decimal import Decimal
 
-from app.calc import market_band, precise_mokgong, quick_budget, v2_check, v2_plan, v2_tools
+from app.calc import (
+    market_band,
+    market_quote,
+    precise_mokgong,
+    quick_budget,
+    quote_sheet,
+    v2_check,
+    v2_plan,
+    v2_tools,
+)
 from app.calc.common import FORMULA_VERSION, from_entered, pyeong_to_m2
 from app.calc.plan_qty import PlanOptions, from_plan
 from app.calc.v2_quote import V2Books, V2Plan, V2QuoteInput, build, inputs, market_input
-from app.refprice import v2_ref
+from app.refprice import market_book, v2_ref
 from app.refprice.book import DOBAE_2026H2, MOKGONG_2026H2, SILK_2026, SILK_DEFAULT
 from app.refprice.floor_plans import plans
 from app.refprice.holidays import HOLIDAYS
@@ -122,6 +132,57 @@ def _build(q: v2.V2QuoteIn, today: date) -> tuple[V2QuoteInput, dict]:
 def quote(q: v2.V2QuoteIn, today: date) -> v2.V2QuoteOut:
     _, r = _build(q, today)
     return v2.V2QuoteOut(**r, formula_version=FORMULA_VERSION, price_ver=DOBAE_2026H2.version)
+
+
+def sheet(q: v2.V2QuoteIn, today: date) -> v2.V2SheetOut:
+    """표준견적서 총괄표: 정밀 공정(도배 · 목공)만 금액에 넣고, 그 밖 공정은 이름만 돌려준다."""
+    _, r = _build(q, today)
+    if not r["precise"]:
+        raise AppError(422, "invalid", "도배나 목공을 골라야 표준견적서를 만들 수 있어요.")
+    s = quote_sheet.build(r["precise"], Decimal(str(r["inp"]["py"])))
+    ko = books().cat_ko
+    others = [t["ko"] for t in r["ref"]] + [ko.get(c, c) for c in r["missing"]]
+    return v2.V2SheetOut.model_validate(
+        {**asdict(s), "code": r["code"], "at": r["at"], "missing": others}
+    )
+
+
+MARKET_BOOK = market_quote.Book(
+    market_book.VERSION, market_book.QUOTES, market_book.ITEMS, market_book.COEF
+)
+
+
+def market(b: v2.V2MqIn) -> v2.V2MqOut:
+    """도배 · 목공 표준견적서 (업체 견적 235건 시장 단가). 평형(또는 면적)만 있어도 계산한다. DB를 쓰지 않는다."""
+    note = ""
+    if b.pyeong is not None:
+        py = b.pyeong
+    else:
+        assert b.area_m2 is not None
+        k = MOKGONG_2026H2.supply_per_exclusive if b.area_basis == "exclusive" else None
+        py = market_quote.pyeong_from_m2(b.area_m2, k)
+        if k is not None:
+            note = f"전용 {b.area_m2}㎡를 공급면적으로 바꿔(× {k}) {py}평형으로 봤어요"
+        else:
+            note = f"공급 {b.area_m2}㎡를 {py}평형으로 봤어요"
+    r, ba = market_quote.default_rooms(py)
+    inp = market_quote.Input(
+        py,
+        b.rooms or r,
+        b.baths or ba,
+        b.dobae,
+        b.mokgong,
+        b.wallpaper,
+        b.door,
+        b.jungmun,
+        None if b.options is None else frozenset(b.options),
+    )
+    try:
+        q = market_quote.build(inp, MARKET_BOOK)
+    except ValueError as e:
+        raise AppError(422, "invalid", str(e)) from e
+    auto = b.rooms is None or b.baths is None
+    return v2.V2MqOut.model_validate(asdict(q) | {"area_note": note, "rooms_auto": auto})
 
 
 def market_extras() -> list[v2.V2MarketExtraOut]:

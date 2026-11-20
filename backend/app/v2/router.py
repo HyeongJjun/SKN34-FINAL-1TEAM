@@ -63,6 +63,17 @@ async def v2_quote(body: v2.V2QuoteIn, _: User = Depends(current_user)) -> v2.V2
     return service.quote(body, today_seoul())
 
 
+@router.post("/quote-sheet", response_model=v2.V2SheetOut, summary="v2 표준견적서 총괄표")
+async def v2_quote_sheet(body: v2.V2QuoteIn, _: User = Depends(current_user)) -> v2.V2SheetOut:
+    return service.sheet(body, today_seoul())
+
+
+@router.post("/market-quote", response_model=v2.V2MqOut, summary="도배 · 목공 표준견적서")
+async def v2_market_quote(body: v2.V2MqIn) -> v2.V2MqOut:
+    """로그인 없이 쓴다: 평형(또는 면적)만 넣으면 계산한다. 저장하지 않는다."""
+    return service.market(body)
+
+
 @router.get(
     "/market-extras",
     response_model=list[v2.V2MarketExtraOut],

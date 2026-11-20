@@ -1,8 +1,10 @@
 "use client";
 // 견적서 · 공정표 단계 (v10 quoteStep · openQuoteDoc · explainQuote · bandWhy(v5) · schedStep · openPlanDoc · schedAgent).
 // 계산은 API(quote · plan)가 하고, AI 설명은 F.agentAnswer → 서버(/v2/ask)가 지시문 · 계산 · 숫자 검사까지 맡는다.
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { errorText } from "@/lib/backend/client";
+import { saveSheetInput } from "../sheet/input";
 import { bot, F, feedEpoch, me, openOverlay, quick, stillHere } from "../engine";
 import { setStep } from "../flow";
 import { moveLabel } from "../dates";
@@ -57,6 +59,7 @@ function QuoteSumCard({ q }: { q: Quote }) {
       {q.inp.assumed.length ? <p className="muted">{q.inp.assumed.join(" · ")}</p> : null}
       <div className="row">
         <button type="button" className="btn btn-pri" onClick={() => openQuoteDoc()}>견적서 열기</button>
+        <Link className="btn" href="/v2/standard" onClick={() => saveSheetInput(quoteBody())}>쉽게 보기</Link>
         <button type="button" className="btn-text" onClick={() => explainQuote()}>
           <Spark />
           금액 풀이 듣기

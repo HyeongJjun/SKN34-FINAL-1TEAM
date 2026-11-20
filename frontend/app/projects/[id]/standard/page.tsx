@@ -9,8 +9,12 @@ import { Main, PageHead, WithAside } from "@/components/site/Frame";
 import { StandardSheet } from "@/components/start/StandardSheet";
 import { BottomBar } from "@/components/ui/BottomBar";
 import { Button } from "@/components/ui/Button";
+import { MarketSheet, MarketTotal, MarketTrust } from "@/components/v2/market/MarketQuote";
+import { getMarketQuote } from "@/lib/api/guest";
 import { getProjectShell } from "@/lib/api/project";
 import { getStandardView } from "@/lib/api/quote";
+import { toMarketIn } from "@/lib/guest/market";
+import { daysCaption } from "@/lib/guest/standard";
 
 export const metadata = { title: "표준견적서" };
 
@@ -20,14 +24,25 @@ export default async function StandardPage({ params }: { params: Promise<{ id: s
   if (!shell) notFound();
   const view = await getStandardView(shell);
   if (!view) notFound();
+  // 전체 도배는 시장 단가(업체 견적서 235건 중앙값)로 보여요. 부분 공사 · 시장 단가를 못 받으면 기존 표준견적서 그대로예요
+  const market = view.scope === "full" && shell.cond && !shell.mock ? await getMarketQuote(toMarketIn(shell.cond)) : null;
   const base = `/projects/${shell.id}`;
+  const changeHref = `/start?edit=${shell.id}`;
   return (
     <>
       <AppHeader only="phone" phone={{ title: "표준견적서", back: base, action: <AsideOpenButton /> }} />
       <Main>
         <PageHead title="표준견적서" crumbs={[{ label: "내 공사", href: "/my" }, { label: shell.name, href: base }, { label: "표준견적서" }]} />
         <WithAside aside={<AiPanel screen="standard" projectId={shell.id} />}>
-          <StandardSheet view={view} changeHref={`/start?edit=${shell.id}`} />
+          {market ? (
+            <>
+              <MarketTotal q={market} changeHref={changeHref} caption={["부가세 포함", daysCaption(view.days)].filter(Boolean).join(" · ")} />
+              <MarketSheet q={market} />
+              <MarketTrust q={market} />
+            </>
+          ) : (
+            <StandardSheet view={view} changeHref={changeHref} />
+          )}
         </WithAside>
       </Main>
       <BottomBar>
