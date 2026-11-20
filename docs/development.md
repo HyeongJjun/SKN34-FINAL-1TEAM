@@ -69,6 +69,10 @@ pnpm dev --hostname 127.0.0.1 --port 3100
 
 ## AI와 데이터
 
+AWS AI Secret JSON의 값은 모두 문자열로 저장하고, `LLM_LIVE`·`JEV_ENABLED` 플래그는 `"true"` 또는 `"false"`로 적는다. 숫자·불리언 JSON 값과 허용 목록 밖의 키는 배포 시 거부한다.
+
+AWS staging AI 설정은 배포 커밋에 고정된 `deploy/aws/runtime_env.py`가 Secrets Manager의 `mitjip-staging/ai-runtime` JSON을 읽어 EC2의 `/opt/mitjip/.env.runtime`(권한 0600)에 반영한다. 허용하는 설정은 `LLM_LIVE`, `OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `JEV_ENABLED`, `JEV_MODEL`, `OPENAI_AGENT_MODEL`, `OPENAI_REASONING_EFFORT`, `OPENAI_LIGHT_MODEL`, `OPENAI_LIGHT_EFFORT`, `OPENAI_LIGHT_ROLES`, `OPENAI_EMBEDDING_MODEL`이다. Secret이 아직 없다면 이전 배포와 같이 `LLM_LIVE=false`로 동작하며, `LLM_LIVE=true`라면 `OPENAI_API_KEY`도 있어야 한다. 권한 있는 담당자가 AWS에서만 비밀값을 설정하고, 값은 저장소·CLI 인수·배포 로그에 넣지 않는다. 접근 거부·잘못된 JSON은 배포를 중단하고, 실행 실패 시 이전 이미지와 런타임 설정을 함께 복원한다. 실제 LLM 동작과 AWS 권한 검증은 별도 환경 QA에서 진행한다.
+
 - **v3 `/ai/turns`**는 기본값 `LLM_LIVE=false`에서도 분류기·규칙·카드·키워드(BM25) 검색으로 무료 답을 만든다. `LLM_LIVE=true`와 `OPENAI_API_KEY`가 모두 있을 때만 일부 문장을 LLM으로 다시 쓴다. 고득점 카드·정해진 글·계산 내용은 LLM을 건너뛸 수 있다([v3 턴 구현](../backend/app/agent/v3/turn.py), [v3 검색](../backend/app/knowledge/search3.py)).
 - **기존 v2 `/v2/ask`**는 `LLM_LIVE=false`일 때 스텁을 사용하며 실제 LLM 상담에는 키와 `LLM_LIVE=true`가 필요하다. v2 Jev는 `OPENROUTER_API_KEY`를 사용하고 `JEV_ENABLED=false`는 비교·시험용이다. **v3 관문에는 Jev 호출이 없다.**
 - 모델·추론 강도·키는 [설정 코드](../backend/app/config.py)와 `.env.example`을 함께 확인한다. 예시 환경변수에 이름이 있어도 모두 연결된 기능은 아니다. `AGENT_DAILY_TOKEN_LIMIT`(일일 토큰 한도), `MCP_SERVER_URL`·`MCP_HOST_PORT`(일정 MCP), `VOYAGE_API_KEY`·`VOYAGE_RERANK_MODEL`(Voyage 리랭커)은 현재 앱 설정·호출에 연결되지 않았다. 기존 v2 검색의 BM25+pgvector 경로와 v3 카드·키워드 검색 경로를 구분한다.
