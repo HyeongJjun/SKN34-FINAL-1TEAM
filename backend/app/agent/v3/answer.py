@@ -6,6 +6,7 @@
 - 카드 · 조각 · 계산 결과 밖의 말은 하지 않는다. 못 찾으면 '확인하지 못했어요' + 확인할 곳 + 다음 할 일.
 """
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
@@ -227,20 +228,47 @@ def use_card(
     _card_extras(part, c, facts)
 
 
-def next_card(kb: KB, slot: str, value: str) -> cards.AnswerCard | None:
+@dataclass
+class NextPick:
+    """되물은 칸 답 고르기 결과: 다음 카드 하나, 또는 다시 물을 선택지(card는 None)."""
+
+    card: cards.AnswerCard | None = None
+    again: list[str] = field(default_factory=list)
+
+
+# 버튼 글 바로 뒤에 붙으면 '그건 아니에요'라는 뜻("벽 · 천장까지 새로 말고 도배만 새로")
+DENY_AFTER = re.compile(r"^(?:은|는|이|가|을|를)?(?:말고|아니고|아니라|빼고|대신|안해|안하|싫)")
+
+
+def _flat(s: str) -> str:
+    return re.sub(r"[\s·,]", "", s)
+
+
+def next_card(kb: KB, slot: str, value: str) -> NextPick | None:
     """되물은 칸의 답에 이어 줄 카드(카드 ask.next). 버튼 글과 같거나 버튼 글이 답 안에 있으면 그 카드.
 
-    글로 답하면서 버튼 글이 둘 이상 들어 있으면("도배만 새로 말고 벽 · 천장까지 새로") 어느 쪽인지 모르니 정하지 않아요.
+    글로 답할 때 버튼 글 바로 뒤에 '말고 · 아니고 · 빼고 · 안 해요'가 오면 그 선택지는 뺀 것으로 봐요.
+    남은 선택지가 하나면 그 카드, 둘 이상이거나 부정만 했으면 남은 선택지로 다시 물어요(일반 검색으로 넘기지 않음).
+    버튼 글이 하나도 없으면 None(원래 질문 + 답으로 다시 찾기).
     """
-    v = "".join(value.split())
+    v = _flat(value)
     for c in kb.cards.cards:
         if not (c.ask and c.ask.slot == slot and c.ask.next):
             continue
-        hit = [cid for opt, cid in c.ask.next.items() if (o := "".join(opt.split())) and o in v]
-        if len(hit) == 1:
-            return kb.cards.by_id.get(hit[0])
-        if hit:
-            return None
+        keep: list[str] = []
+        denied: list[str] = []
+        for opt in c.ask.next:
+            o = _flat(opt)
+            i = v.find(o) if o else -1
+            if i < 0:
+                continue
+            (denied if DENY_AFTER.match(v[i + len(o) :]) else keep).append(opt)
+        if len(keep) == 1:
+            return NextPick(card=kb.cards.by_id.get(c.ask.next[keep[0]]))
+        if keep:
+            return NextPick(again=keep)
+        if denied:
+            return NextPick(again=[o for o in c.ask.options if o not in denied])
     return None
 
 
