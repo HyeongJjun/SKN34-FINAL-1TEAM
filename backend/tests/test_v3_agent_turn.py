@@ -358,3 +358,86 @@ def test_receipt_and_tax_invoice_questions_get_common_contract_cards(text, card)
 
 def test_paying_through_mitjip_is_still_out_of_scope():
     assert turn("믿집에서 카드 결제 돼요?").answer.trace.route == "out_of_scope"
+
+
+# ---- 몰딩: 용어 · 비교표 · 상황별 추천 ----
+def _ids(a: AgentAnswer) -> list[str]:
+    return [c.split("@")[0].removeprefix("card:") for c in a.trace.cards]
+
+
+def test_term_question_is_not_answered_by_a_longer_term_card():
+    a = turn("몰딩이 뭐야?").answer  # '무몰딩이 뭐예요?' 카드가 글자로 더 비슷해도 몰딩 종류 카드
+    assert _ids(a) == ["mokgong.material.molding-types"]
+
+
+@pytest.mark.parametrize("text", ["몰딩 종류좀 알려주고 차이좀 알려줘", "몰딩 종류가 뭐가 있어요?"])
+def test_molding_types_come_with_compare_table(text):
+    a = turn(text).answer
+    assert _ids(a) == ["mokgong.material.molding-types"]
+    [card] = [c for c in a.cards if c.kind == "compare"]
+    assert [r.cells[0] for r in card.table.rows] == ["일반 몰딩", "마이너스 몰딩", "무몰딩"]
+    assert card.table.sources and all(r.cites for r in card.table.rows)
+    assert not DIGIT_MONEY.search(" ".join(x for r in card.table.rows for x in r.cells))
+
+
+@pytest.mark.parametrize(
+    ("value", "card"),
+    [
+        ("벽 · 천장까지 새로", "mokgong.choose.molding-full"),
+        ("도배만 새로", "mokgong.choose.molding-dobae-only"),
+        ("몰딩 색만 바꾸기", "mokgong.diy.molding-color"),
+    ],
+)
+def test_molding_reco_asks_scope_then_shows_that_situation(value, card):
+    first = turn("몰딩 추천좀해줄래")
+    assert _ids(first.answer) == ["mokgong.choose.molding"]
+    assert first.answer.ask and first.answer.ask.slot == "mokgong.molding_scope"
+    r = turn(value, waiting=first.waiting,
+             button=Button(route="trade", trade="mokgong", slot="mokgong.molding_scope", value=value))  # fmt: skip
+    assert _ids(r.answer) == [card]
+    assert r.answer.ask is None and r.waiting is None
+
+
+def test_typed_scope_answer_also_finds_the_situation_card():
+    first = turn("몰딩 추천좀해줄래")
+    r = turn("도배만 새로 할 거예요", waiting=first.waiting)
+    assert _ids(r.answer) == ["mokgong.choose.molding-dobae-only"]
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "벽 천장까지 새로 말고 도배만 새로",
+        "벽 · 천장까지 새로 말고 도배만 새로",
+        "벽 · 천장까지 새로는 아니고 도배만 새로요",
+    ],
+)
+def test_denied_option_is_dropped_and_the_other_card_shown(text):
+    # 리뷰(#166): 거절한 '벽 · 천장까지 새로' 안내가 나오던 문제
+    first = turn("몰딩 추천좀해줄래")
+    r = turn(text, waiting=first.waiting)
+    assert _ids(r.answer) == ["mokgong.choose.molding-dobae-only"]
+    assert r.answer.ask is None and r.waiting is None
+
+
+@pytest.mark.parametrize(
+    ("text", "again"),
+    [
+        ("도배만 새로는 안 해요", ["벽 · 천장까지 새로", "몰딩 색만 바꾸기"]),
+        ("벽 · 천장까지 새로랑 도배만 새로 둘 다 고민돼요", ["벽 · 천장까지 새로", "도배만 새로"]),
+    ],
+)
+def test_unclear_scope_answer_asks_again_with_remaining_options(text, again):
+    first = turn("몰딩 추천좀해줄래")
+    r = turn(text, waiting=first.waiting)
+    assert r.answer.ask and r.answer.ask.slot == "mokgong.molding_scope"
+    assert r.answer.ask.options == again
+    assert "mokgong.choose.molding-full" not in _ids(r.answer)
+    assert r.waiting and r.waiting["slot"] == "mokgong.molding_scope"
+
+
+def test_molding_types_card_explains_the_seam_in_plain_words():
+    c = KB.cards.by_id["mokgong.material.molding-types"]
+    cells = [x for r in c.compare.rows for x in r.cells]
+    assert not any("이음매" in x for x in cells)  # 표 칸은 쉬운 말만
+    assert "일반 몰딩은 이음매를" not in " ".join(s.text for s in c.answer)
