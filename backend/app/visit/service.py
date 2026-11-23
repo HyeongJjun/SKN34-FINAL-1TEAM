@@ -982,6 +982,10 @@ async def inbox_summary(s: AsyncSession, vendor: User) -> InboxSummaryOut:
     )
 
 
+# 출입 방법(고객이 적은 한 줄)을 업체에 보이는 때: 실측이 확정된 뒤부터
+SITE_NOTE_FROM = ("booked", "visited", "quoted", "chosen")
+
+
 async def vendor_visit(
     s: AsyncSession,
     vendor: User,
@@ -1017,6 +1021,7 @@ async def vendor_visit(
         message=v.message,
         photos=[ph.file_id for ph in photos],
         photo_labels=[ph.label for ph in photos],
+        site=await project_service.site_for(s, v.project_id, with_note=v.status in SITE_NOTE_FROM),
         **extra,
     )
 

@@ -1700,6 +1700,7 @@ async def job_for(s: AsyncSession, vendor: User, deal_id: uuid.UUID, today: date
         contact_until=out.contact_until,
         fixing_note=out.fixing_note,
         can_finish=d.status in FINISHABLE and d.end_date is not None and today >= d.end_date,
+        checks=await project_service.checks(s, d.project_id),
         work_days=out.work_days,
         done_note=out.done_note,
         done_posted_at=out.done_posted_at,

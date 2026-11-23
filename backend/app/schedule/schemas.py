@@ -343,6 +343,9 @@ class JobOut(BaseModel):
     can_finish: bool = Field(
         description="'공사 끝냈어요'를 누를 수 있는지 (마지막 공사일부터, 공사 중 · 남은 일일 때)"
     )
+    checks: list[ProjectCheckOut] = Field(
+        default=[], description="고객이 켠 공사 전 준비 체크 (업체는 보기만)"
+    )
     # ---- v3 (V11 · V13 · V23, 1단계에서 채움) ----
     work_days: list[date] = Field(default=[], description="수락한 공사 날 (하나씩)")
     done_note: str | None = None

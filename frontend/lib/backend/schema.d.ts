@@ -373,6 +373,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{project_id}/site": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 현장 정보 보기: 주차 · 엘리베이터 · 출입 방법 (만든 고객만) */
+        get: operations["get_site_projects__project_id__site_get"];
+        /** 현장 정보 적기 (만든 고객만). 주차 · 엘리베이터는 업체 요청 화면에, 출입 방법은 실측 확정 뒤에 보인다 */
+        put: operations["set_site_projects__project_id__site_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projects/{project_id}/standard": {
         parameters: {
             query?: never;
@@ -4522,6 +4540,12 @@ export interface components {
              */
             can_finish: boolean;
             /**
+             * Checks
+             * @description 고객이 켠 공사 전 준비 체크 (업체는 보기만)
+             * @default []
+             */
+            checks: components["schemas"]["ProjectCheckOut"][];
+            /**
              * Work Days
              * @description 수락한 공사 날 (하나씩)
              * @default []
@@ -7111,6 +7135,45 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /**
+         * SiteIn
+         * @description 현장 정보: 업체가 방문을 준비할 때 보는 것. 주소 · 연락처 · 비밀번호는 적지 않는다.
+         */
+        SiteIn: {
+            /**
+             * Parking
+             * @description 주차할 수 있는지
+             */
+            parking?: ("yes" | "no") | null;
+            /**
+             * Elevator
+             * @description 엘리베이터가 있는지
+             */
+            elevator?: ("yes" | "no") | null;
+            /**
+             * Entry Note
+             * @description 출입 방법 한 줄 (실측이 확정된 뒤에만 업체에 보인다)
+             */
+            entry_note?: string | null;
+        };
+        /** SiteOut */
+        SiteOut: {
+            /**
+             * Parking
+             * @description 주차할 수 있는지
+             */
+            parking?: ("yes" | "no") | null;
+            /**
+             * Elevator
+             * @description 엘리베이터가 있는지
+             */
+            elevator?: ("yes" | "no") | null;
+            /**
+             * Entry Note
+             * @description 출입 방법 한 줄 (실측이 확정된 뒤에만 업체에 보인다)
+             */
+            entry_note?: string | null;
         };
         /**
          * SizeIn
@@ -10822,6 +10885,8 @@ export interface components {
             reply_due_at?: string | null;
             /** Thread Id */
             thread_id?: string | null;
+            /** @description 고객이 적은 현장 정보(주차 · 엘리베이터). 출입 방법은 실측이 확정된 뒤에만 든다 */
+            site?: components["schemas"]["SiteOut"] | null;
         };
         /** VendorVisitStateOut */
         VendorVisitStateOut: {
@@ -12049,7 +12114,7 @@ export interface operations {
             header?: never;
             path: {
                 project_id: string;
-                key: "office_report";
+                key: "office_report" | "furniture_moved" | "fragile_away" | "neighbors_told";
             };
             cookie?: never;
         };
@@ -12066,6 +12131,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProjectCheckOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_site_projects__project_id__site_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_site_projects__project_id__site_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SiteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteOut"];
                 };
             };
             /** @description Validation Error */

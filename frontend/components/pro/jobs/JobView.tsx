@@ -10,7 +10,7 @@ import { enc } from "../send";
 import { logText } from "../text";
 import { Notice } from "@/components/ui/Notice";
 import { Eyebrow, Group, Row, Rows, Small } from "../ui/parts";
-import { occ, visitTitle } from "../visit/facts";
+import { occ, siteLine, visitTitle } from "../visit/facts";
 import { daysText } from "./days";
 import s from "./jobs.module.css";
 
@@ -42,6 +42,7 @@ export function JobView({ job, log }: { job: JobV3; log: VendorJobLog }) {
           <Badge tone={st.tone}>{st.label}</Badge>
           <h2 className={s.jt}>{visitTitle(v)} · {occ(v)}</h2>
           <p className={`${s.js} mj-num`}>{["도배 전체", days.length ? daysText(days, true) : null, job.quote.days ? `${job.quote.days}일` : null, crew ? `${crew}명` : null].filter(Boolean).join(" · ")}</p>
+          {siteLine(v) ? <Small>현장 정보 · {siteLine(v)}</Small> : null}
         </Group>
         <Group flush>
           <Rows label="공사 한 건">
@@ -68,6 +69,15 @@ export function JobView({ job, log }: { job: JobV3; log: VendorJobLog }) {
               {items.map((x) => <Row key={x.id} label={x.title} sub={`${ANSWER[x.answer] ?? "고객 답 기다림"} · ${dateShort(x.created_at)}`} value={won(x.total)} />)}
             </Rows>
             <Small>고객이 승인하기 전에는 합계에 넣지 않아요.</Small>
+          </Group>
+        ) : null}
+        {working || job.dates_state === "scheduled" ? (
+          <Group flush>
+            <Eyebrow>고객 준비</Eyebrow>
+            <Rows label="고객 준비">
+              {(job.checks ?? []).map((c) => <Row key={c.key} label={c.label} value={c.done ? "했어요" : "아직"} />)}
+            </Rows>
+            <Small>고객이 체크한 그대로예요. 안 된 것은 채팅으로 물어봐 주세요.</Small>
           </Group>
         ) : null}
         {job.done_posted_at || job.work_done_on ? (

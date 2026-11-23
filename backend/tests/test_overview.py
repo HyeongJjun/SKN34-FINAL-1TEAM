@@ -78,13 +78,18 @@ def test_overview_of_two_trades(api):
         until.isoformat(),
     )
     assert c["contact"]["phone"]
-    assert o["checks"] == [
-        {
-            "key": "office_report",
-            "label": "관리사무소에 공사 신고를 했어요",
-            "done": False,
-            "done_at": None,
-        }
+    assert o["checks"][0] == {
+        "key": "office_report",
+        "label": "관리사무소에 공사 신고를 했어요",
+        "done": False,
+        "done_at": None,
+    }
+    # 0036: 준비 체크 항목이 넷으로 늘었다(업체도 본다)
+    assert [c["key"] for c in o["checks"]] == [
+        "office_report",
+        "furniture_moved",
+        "fragile_away",
+        "neighbors_told",
     ]
 
 

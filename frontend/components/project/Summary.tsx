@@ -1,4 +1,4 @@
-// 한 공사 화면 · 요약(C43): 지금 할 일 · 6단계 + 실측 뒤 작은 단계 · 업체 · 서류 · 기본 정보(잠김).
+// 한 공사 화면 · 요약(C43): 지금 할 일 · 6단계 + 실측 뒤 작은 단계 · 업체 · 서류 · 기본 정보(잠김) · 현장 정보(공사 끝 전까지).
 // 금액 · 단계 · 할 일은 API 값(overview · 비교) 그대로예요. 화면은 줄 세우기 · 이름 붙이기만 해요.
 import type { ApiCompare, ApiOverview } from "@/lib/api/schedule";
 import type { VisitProject } from "@/lib/api/visit";
@@ -8,6 +8,7 @@ import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { AFTER_VISIT_STEPS, PROJECT_STEPS, Steps, SubSteps } from "@/components/ui/Steps";
 import { Eyebrow, Group, Row, Rows, Strip, Title } from "./Kit";
+import { SiteInfoCard } from "./SiteInfoCard";
 import s from "./home.module.css";
 
 const TONE: Record<StateTone, BadgeTone> = { todo: "now", wait: "wait", ok: "ok", done: "mute", late: "bad" };
@@ -91,6 +92,7 @@ export function Summary({ p, ov, compare }: { p: VisitProject; ov: ApiOverview; 
       </Group>
 
       <Strip label="기본 정보" sub={homeSub} href={`/start?edit=${encodeURIComponent(p.id)}`} />
+      {ov.phase === "done" ? null : <SiteInfoCard projectId={p.id} />}
     </>
   );
 }
