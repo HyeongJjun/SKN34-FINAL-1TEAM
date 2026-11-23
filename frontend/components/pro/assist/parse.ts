@@ -35,7 +35,11 @@ function daysIn(part: string, today: string, month: { m: number }): string[] {
   return out;
 }
 
-/** "12/2부터 12/5까지 돼요, 12/4는 안 돼요" → 기간과 빼는 날. 못 읽으면 null */
+/** 기간 표시: '부터 · 까지 · ~ · -'가 있어야 처음 ~ 끝을 기간으로 봐요 */
+const RANGE = /부터|까지|~|∼|(?<=\d\s*일?\s*)[-–](?=\s*\d)/;
+
+/** "12/2부터 12/5까지 돼요, 12/4는 안 돼요" → 기간과 빼는 날. 못 읽으면 null.
+ *  "12월 2일과 12월 5일만 가능"처럼 날짜만 늘어놓으면 기간이 아니라서 비워요(하루만 말하면 그 하루) */
 export function parsePeriod(text: string, today: string, baseMonth?: string | null): PeriodFill | null {
   const month = { m: Number((baseMonth ?? today).slice(5, 7)) };
   const ok: string[] = [];
@@ -45,6 +49,7 @@ export function parsePeriod(text: string, today: string, baseMonth?: string | nu
     (NO.test(part) ? no : ok).push(...daysIn(part, today, month));
   }
   if (!ok.length) return null;
+  if (new Set(ok).size > 1 && !RANGE.test(text)) return null;
   ok.sort();
   const start = ok[0];
   const end = ok[ok.length - 1];
@@ -52,20 +57,40 @@ export function parsePeriod(text: string, today: string, baseMonth?: string | nu
   return { start, end, excluded: nos.filter((d) => d > start && d < end), outside: nos.filter((d) => d < start || d > end) };
 }
 
-/** 금액: "455만 원" · "455만 5천 원" · "455만 5,000원" · "4,550,000원". 만 뒤 숫자는 바로 '원'이 붙을 때만 더해요("455만 3일"의 3은 금액이 아니에요) */
+const num = (s: string) => Number(s.replace(/,/g, ""));
+/** 금액 앞에 붙으면 '전체 금액'으로 보는 말 */
+const TOTAL = /(?:전체|총|합계|견적)\s*(?:금액|견적|은|는|이|가)?\s*$/;
+
+/** 금액: "455만 원" · "455.5만 원" · "455만 5천 원" · "455만 5,000원" · "4,550,000원". 만 뒤 숫자는 바로 '원'이 붙을 때만 더해요("455만 3일"의 3은 금액이 아니에요).
+ *  금액이 둘 이상이면 '전체 · 총 · 합계 · 견적'이 붙은 하나만 쓰고, 고를 수 없으면 비워요("철거 20만 원 별도 전체 견적 455만 원"은 455만) */
 function amountIn(text: string): number | undefined {
-  const man = text.match(/(\d[\d,]*)\s*만\s*(?:(\d)\s*천)?\s*(?:(\d[\d,]*)\s*원)?/);
-  if (man) return Number(man[1].replace(/,/g, "")) * 10000 + (man[2] ? Number(man[2]) * 1000 : 0) + (man[3] ? Number(man[3].replace(/,/g, "")) : 0);
-  const raw = text.match(/(\d{1,3}(?:,\d{3})+|\d{6,})\s*원?/);
-  return raw ? Number(raw[1].replace(/,/g, "")) : undefined;
+  const hits: { at: number; end: number; won: number }[] = [];
+  for (const m of text.matchAll(/(\d[\d,]*(?:\.\d+)?)\s*만\s*(?:(\d)\s*천)?\s*(?:(\d[\d,]*)\s*원)?/g)) {
+    const won = Math.round(num(m[1]) * 10000) + (m[2] ? Number(m[2]) * 1000 : 0) + (m[3] ? num(m[3]) : 0);
+    hits.push({ at: m.index, end: m.index + m[0].length, won });
+  }
+  for (const m of text.matchAll(/(\d{1,3}(?:,\d{3})+|\d{6,})\s*원?/g)) {
+    if (!hits.some((h) => m.index >= h.at && m.index < h.end)) hits.push({ at: m.index, end: m.index + m[0].length, won: num(m[1]) });
+  }
+  if (hits.length <= 1) return hits[0]?.won;
+  const total = hits.filter((h) => TOTAL.test(text.slice(Math.max(0, h.at - 12), h.at)));
+  return total.length === 1 ? total[0].won : undefined;
 }
 
-/** 부가세: '부가세 · VAT' 바로 뒤 말만 봐요("부가세 포함, 철거는 별도"는 포함이에요) */
+/** 바로 뒤에 붙으면 그 말을 버리는 부정("면세는 아니고") */
+const NOT = /^\s*(?:은|는|이|가)?\s*(?:아니|아님|없)/;
+
+/** 부가세: '부가세 · VAT' 바로 뒤 말만 봐요("부가세 포함, 철거는 별도"는 포함이에요).
+ *  "면세는 아니고 부가세 포함"처럼 부정한 말은 버리고, 남은 방식이 하나일 때만 채워요 */
 function vatIn(text: string): QuoteFill["vat"] {
-  if (/면세/.test(text)) return "exempt";
-  const m = text.match(/(?:부가세|부가가치세|VAT)\s*(?:는|은)?\s*(별도|빼고|미포함|따로|포함)/i);
-  if (!m) return undefined;
-  return m[1] === "포함" ? "included" : "excluded";
+  const said = new Set<NonNullable<QuoteFill["vat"]>>();
+  for (const m of text.matchAll(/면세/g)) {
+    if (!NOT.test(text.slice(m.index + m[0].length))) said.add("exempt");
+  }
+  for (const m of text.matchAll(/(?:부가세|부가가치세|VAT)\s*(?:는|은)?\s*(별도|빼고|미포함|따로|포함)/gi)) {
+    if (!NOT.test(text.slice(m.index + m[0].length))) said.add(m[1] === "포함" ? "included" : "excluded");
+  }
+  return said.size === 1 ? [...said][0] : undefined;
 }
 
 /** 유효기간: '유효'라는 말이 있을 때만, 그 말에 가장 가까운 "…까지"를 써요("12/11까지 공사, 12/17까지 유효"는 12/17) */
