@@ -268,3 +268,27 @@ def test_patch_v3_until_first_request_then_locked(api):
     query("update projects set locked_at = now() where id = $1", uuid.UUID(p["id"]))
     locked = api.patch(f"/projects/{p['id']}", json=HOME)
     assert locked.status_code == 409 and locked.json()["error"]["code"] == "locked"
+
+
+def test_project_market_quote_is_what_screen_and_ai_show(api):
+    """공급 69.4㎡ · 실크 · 빈집: 화면(GET /v2/projects/{id}/market-quote)과 AI 칸 사실이 같은 금액."""
+    from app.chat.tools import market_facts
+    from app.quote.schemas import StandardOut
+    from app.quote.service import market_of
+
+    signup(api)
+    p = create(api, HOME).json()
+    r = api.get(f"/v2/projects/{p['id']}/market-quote")
+    assert r.status_code == 200, r.text
+    assert r.json()["total"] == 4_070_000
+    st = StandardOut.model_validate(api.get(f"/projects/{p['id']}/standard").json())
+    m = market_of(st)
+    assert m is not None and market_facts(m[0]).total == r.json()["total"]
+
+    part = create(api, PART).json()
+    assert (
+        api.get(f"/v2/projects/{part['id']}/market-quote").json() is None
+    )  # 부분 공사는 기존 표준견적서
+
+    signup(api, "other@mitjip.test")
+    assert api.get(f"/v2/projects/{p['id']}/market-quote").status_code == 404

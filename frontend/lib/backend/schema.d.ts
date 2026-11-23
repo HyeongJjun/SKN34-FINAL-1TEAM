@@ -1417,6 +1417,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v2/projects/{project_id}/market-quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 내 공사 시장 단가 표준견적서 (전체 도배, 아니면 null)
+         * @description 화면(/projects/{id}/standard)과 AI 칸이 같은 계산(quote.service.market_for)을 읽는다.
+         */
+        get: operations["v2_project_market_quote_v2_projects__project_id__market_quote_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v2/market-extras": {
         parameters: {
             query?: never;
@@ -14196,6 +14216,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["V2MqOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_project_market_quote_v2_projects__project_id__market_quote_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2MqOut"] | null;
                 };
             };
             /** @description Validation Error */

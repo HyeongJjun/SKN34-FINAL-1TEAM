@@ -52,3 +52,44 @@ def test_earliest_pick_has_no_made_up_formula():
 def test_no_vendor_answer_means_no_recommend():
     assert pick_facts(_pick(window=None)) is None
     assert pick_facts(_pick(recommend=None)) is None
+
+
+# ---- 표준견적서: 화면과 AI 칸이 같은 시장 단가 견적을 쓴다 (PR #164 리뷰) ----
+def _st(scope="full", grade="basic", trades=("dobae",)):
+    from decimal import Decimal
+
+    return SimpleNamespace(
+        scope=scope,
+        area_m2=Decimal("69.4"),
+        area_basis="supply",
+        trades=[SimpleNamespace(trade=t, grade=grade) for t in trades],
+    )
+
+
+def test_ai_standard_equals_screen_market_quote():
+    from decimal import Decimal
+
+    from app.chat.tools import market_facts
+    from app.quote.service import market_of
+    from app.v2 import schemas as v2
+    from app.v2.service import market
+
+    q, _ = market_of(_st())
+    # 화면이 예전에 보내던 손님 계산 입력(toMarketIn)과 같은 값
+    screen = market(
+        v2.V2MqIn(area_m2=Decimal("69.4"), area_basis="supply", dobae=True, mokgong=False)
+    )
+    facts = market_facts(q)
+    assert facts.total == q.total == screen.total == 4_070_000
+    assert (facts.supply, facts.vat) == (screen.supply, screen.vat)
+    assert sum(ln.amount or 0 for ln in facts.lines) == facts.supply
+
+
+def test_market_only_for_full_dobae():
+    from app.quote.service import market_of
+
+    assert market_of(_st(scope="partial")) is None
+    assert market_of(_st(trades=("mokgong",))) is None
+    assert market_of(_st(scope=None)) is not None  # v2 공사는 전체로 본다
+    silk = market_of(_st(grade="basic"))[0].total
+    assert market_of(_st(grade="economy"))[0].total < silk

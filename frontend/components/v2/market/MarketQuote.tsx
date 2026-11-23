@@ -111,10 +111,14 @@ export function MarketQuote() {
   const seq = useRef(0);
   const set = (p: Partial<Form>) => setF((x) => ({ ...x, ...p }));
 
-  // 입력이 바뀌면 잠깐 기다렸다가 다시 계산한다. 늦게 온 옛 응답은 버린다
+  // 입력이 바뀌면 잠깐 기다렸다가 다시 계산한다. 늦게 온 옛 응답은 버린다.
+  // 입력이 틀리거나 계산이 실패하면 이전 금액을 지운다(지금 조건의 견적처럼 보이지 않게)
   useEffect(() => {
     const b = body(f);
     if (!b) {
+      seq.current++;
+      setQ(null);
+      setBusy(false);
       setErr(!(f.dobae || f.mokgong) ? "도배나 목공 중 하나는 골라 주세요." : f.mode === "py" ? "평형을 넣어 주세요." : "면적을 넣어 주세요.");
       return;
     }
@@ -130,6 +134,7 @@ export function MarketQuote() {
         },
         (e) => {
           if (my !== seq.current) return;
+          setQ(null);
           setErr(errorText(e));
           setBusy(false);
         },

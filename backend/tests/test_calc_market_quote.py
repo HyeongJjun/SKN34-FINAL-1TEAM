@@ -5,7 +5,7 @@ from decimal import Decimal
 import pytest
 
 from app.calc import market_quote as mq
-from app.v2.service import MARKET_BOOK
+from app.quote.service import MARKET_BOOK
 
 
 def _q(**kw) -> mq.Quote:

@@ -75,6 +75,20 @@ async def v2_market_quote(body: v2.V2MqIn) -> v2.V2MqOut:
 
 
 @router.get(
+    "/projects/{project_id}/market-quote",
+    response_model=v2.V2MqOut | None,
+    summary="내 공사 시장 단가 표준견적서 (전체 도배, 아니면 null)",
+)
+async def v2_project_market_quote(
+    project_id: uuid.UUID,
+    user: User = Depends(current_user),
+    s: AsyncSession = Depends(get_session),
+) -> v2.V2MqOut | None:
+    """화면(/projects/{id}/standard)과 AI 칸이 같은 계산(quote.service.market_for)을 읽는다."""
+    return await service.market_for(s, user, project_id)
+
+
+@router.get(
     "/market-extras",
     response_model=list[v2.V2MarketExtraOut],
     summary="v2 받은 견적 맞춰 보기 목공 추가 항목",

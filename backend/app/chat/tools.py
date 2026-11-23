@@ -3,7 +3,7 @@
 - 에이전트(app.agent)는 기능 service를 import하지 않는다. 여기(chat)가 읽어서 넘긴다.
 - 숫자 · 날짜는 계산 엔진이 이미 만든 값만 옮긴다(표준견적서 · 공정표 · 실측 초안). 여기서 계산하지 않는다.
 - 남의 프로젝트는 기능 service가 404로 막는다(project.service.get_for). 동 · 호 · 연락처는 옮기지 않는다.
-- 부르는 함수는 B1a 계약(docs/v3/contract.md 5장)만: project.get_for · quote.standard_for · schedule.plan_for ·
+- 부르는 함수는 B1a 계약(docs/v3/contract.md 5장)만: project.get_for · quote.standard_for(+ market_of) · schedule.plan_for ·
   schedule.overview_for · visit.vendors_for · visit.draft_for · visit.pick_view(날짜 고르기 화면, context.ids의 실측 id).
   1단계 함수가 아직 없거나 그 칸이 비면 그 사실을 비운다
   (답은 '계산 없음' 정해 둔 글로). 업체끼리 줄 차이는 계산 엔진 함수가 생기기 전까지 넘기지 않는다(여기서 빼기 계산 안 함).
@@ -28,6 +28,7 @@ from app.agent.v3.schemas import (
 )
 from app.agent.v3.templates import md
 from app.auth.models import User
+from app.calc import market_quote
 from app.shared.clock import now_utc
 from app.shared.errors import AppError
 
@@ -110,6 +111,10 @@ async def _standard(s: AsyncSession, user: User, project_id: uuid.UUID) -> Stand
         st = await quote_service.standard_for(s, user, project_id)
     except AppError:
         return None
+    # 전체 도배는 화면(/projects/{id}/standard)처럼 시장 단가 견적을 쓴다. 같은 함수라 금액이 같다
+    m = quote_service.market_of(st)
+    if m is not None:
+        return market_facts(m[0])
     lines = [
         StandardLineFact(
             key=ln.key,
@@ -127,6 +132,36 @@ async def _standard(s: AsyncSession, user: User, project_id: uuid.UUID) -> Stand
         if ln.state in STATES
     ]
     return StandardFacts(total=st.total, supply=st.supply, vat=st.vat, lines=lines)
+
+
+def market_facts(q: market_quote.Quote) -> StandardFacts:
+    """시장 단가 견적 → 표준견적서 사실. 공종 줄 + 양식 요율 + 단수 정리 줄(합이 공급가). 금액은 계산 엔진 값 그대로."""
+    lines = [
+        StandardLineFact(
+            key=f"{t.key}-{ln.item}-{i}",
+            name=ln.name,
+            state="included",
+            qty=float(ln.qty),
+            unit=ln.unit,
+            unit_price=ln.unit_price,
+            amount=ln.amount,
+            trade=t.key,
+        )
+        for t in q.trades
+        for i, ln in enumerate(t.lines)
+    ]
+    trade = q.trades[0].key if q.trades else "dobae"
+    lines += [
+        StandardLineFact(key=o.key, name=o.name, state="included", amount=o.amount, trade=trade)
+        for o in q.overheads
+    ]
+    if q.cut:
+        lines.append(
+            StandardLineFact(
+                key="cut", name="단수 정리", state="included", amount=q.cut, trade=trade
+            )
+        )
+    return StandardFacts(total=q.total, supply=q.supply, vat=q.vat, lines=lines)
 
 
 async def _plan(
