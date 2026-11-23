@@ -24,7 +24,7 @@ import { daysText } from "./days";
 import { PhotoPick, type PickedPhoto } from "./PhotoPick";
 import { AssistBox } from "../assist/AssistBox";
 import { parseExtra } from "../assist/parse";
-import { dateSeoul } from "@/lib/format";
+import { dateSeoul, eulReul } from "@/lib/format";
 import s from "./jobs.module.css";
 
 type Vat = "included" | "excluded" | "exempt";
@@ -79,7 +79,7 @@ export function ExtraForm({ job, taxKind }: { job: JobV3; taxKind: string }) {
     if (got.vat && !fixed) setVat(got.vat);
     setErr({});
     const said = [got.title ? `항목 '${got.title}'` : null, got.amount ? `금액 ${won(got.amount)}` : null, got.vat && !fixed ? `부가세 ${VAT_MODE_LABEL[got.vat]}` : null, got.reason ? "이유" : null].filter(Boolean);
-    return said.length ? `${said.join(" · ")}을 채웠어요. 사진을 붙이고 보내기는 직접 눌러 주세요.` : "못 읽었어요. 예: 곰팡이 방지 처리 12만 원, 부가세 포함, 벽 안쪽까지 곰팡이가 퍼져서";
+    return said.length ? `${eulReul(said.join(" · "))} 채웠어요. 사진을 붙이고 보내기는 직접 눌러 주세요.` : "못 읽었어요. 예: 곰팡이 방지 처리 12만 원, 부가세 포함, 벽 안쪽까지 곰팡이가 퍼져서";
   }
 
   return (

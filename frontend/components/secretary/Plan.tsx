@@ -1,7 +1,7 @@
 "use client";
 // 오른쪽 '내 도배 플랜' 8단계(시연 영상): 단계를 누르면 그 단계의 폼 · 할 일 체크 · 재재가 챙긴 일만 보여요.
 // 할 일 체크는 이 기기에만 둬요(서버 체크는 공사 전 준비 체크 · PUT /projects/{id}/checks가 따로 있어요).
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/Badge";
 import s from "./flow.module.css";
 
@@ -30,9 +30,11 @@ export function Plan({ now, scope, open, render, auto }: {
   auto?: Record<number, string[]>;
 }) {
   const [tab, setTab] = useState(Math.min(now, 7));
-  const [done, setDone] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(window.localStorage.getItem(KEY(scope)) ?? "{}"); } catch { return {}; }
-  });
+  const [done, setDone] = useState<Record<string, boolean>>({});
+  // 저장된 체크는 그린 뒤에 읽어요(서버 그림과 첫 화면을 같게 · hydration 어긋남 막기)
+  useEffect(() => {
+    try { setDone(JSON.parse(window.localStorage.getItem(KEY(scope)) ?? "{}")); } catch { /* 이 기기에 없으면 빈 체크 */ }
+  }, [scope]);
   const toggle = (k: string) => setDone((d) => {
     const n = { ...d, [k]: !d[k] };
     try { window.localStorage.setItem(KEY(scope), JSON.stringify(n)); } catch { /* 이 기기에 못 두면 이번 화면에서만 */ }

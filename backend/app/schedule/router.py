@@ -36,6 +36,7 @@ from app.schedule.schemas import (
     PlanOut,
     PlanRedo,
     PreviewOut,
+    ProgressIn,
     ScheduleOut,
     TradeExtrasOut,
 )
@@ -283,6 +284,26 @@ async def add_extra(
     s: AsyncSession = Session,
 ) -> JobOut:
     out, created = await service.add_extra(s, vendor, deal_id, data, today_seoul())
+    if not created:
+        response.status_code = 200
+    return out
+
+
+@router.post(
+    "/vendor/jobs/{deal_id}/progress",
+    status_code=201,
+    response_model=JobOut,
+    responses={200: {"model": JobOut, "description": "같은 client_key로 이미 올린 기록 (그대로)"}},
+    summary="공사 진행 사진 · 한 줄 올리기 (공사 첫날부터 공사하는 동안, 고객 알림)",
+)
+async def add_progress(
+    deal_id: uuid.UUID,
+    data: ProgressIn,
+    response: Response,
+    vendor: User = Depends(approved_vendor),
+    s: AsyncSession = Session,
+) -> JobOut:
+    out, created = await service.add_progress(s, vendor, deal_id, data, today_seoul())
     if not created:
         response.status_code = 200
     return out

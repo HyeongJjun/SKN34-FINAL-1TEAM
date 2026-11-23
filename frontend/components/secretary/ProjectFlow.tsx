@@ -10,7 +10,9 @@ import Link from "next/link";
 import { AiAnswer } from "@/components/ai/AiAnswer";
 import { PreWorkCheck } from "@/components/project/PreWorkCheck";
 import { SiteInfoCard } from "@/components/project/SiteInfoCard";
+import { donePhotoHref } from "@/components/schedule/v3text";
 import { Button } from "@/components/ui/Button";
+import { iGa as iga } from "@/components/vendors/text";
 import { askAi, newClientKey, type AiTurnOut } from "@/lib/api/chat";
 import type { ApiCompare, ApiOverview, ApiSchedule } from "@/lib/api/schedule";
 import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/lib/api/visit";
@@ -25,8 +27,6 @@ type Pick = Schemas["VisitPickOut"];
 type Half = "am" | "pm";
 const HALF: Record<Half, string> = { am: "오전", pm: "오후" };
 const enc = encodeURIComponent;
-/** 받침에 맞춰 이/가: "마루와벽" → "마루와벽이" */
-const iga = (w: string) => { const c = w.charCodeAt(w.length - 1); return c < 0xac00 || c > 0xd7a3 ? `${w}(이)가` : `${w}${(c - 0xac00) % 28 ? "이" : "가"}`; };
 
 export type FlowData = {
   p: VisitProject;
@@ -76,9 +76,10 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     try { await fn(); router.refresh(); } catch (e) { setErr(errorText(e)); } finally { setBusy(null); }
   }
 
+  const asking = asks.length > 0 && !asks[asks.length - 1].out && !asks[asks.length - 1].err;
   async function ask(q: string) {
     const t = q.trim().slice(0, 1000);
-    if (!t) return;
+    if (!t || asking) return; // 답을 기다리는 동안 새 질문을 막아요(답이 엇갈리지 않게 · 대화 하나로)
     setText("");
     setAsks((a) => [...a, { q: t }]);
     try {
@@ -178,6 +179,18 @@ export function ProjectFlow({ data }: { data: FlowData }) {
         ? <><p>공사는 <b>{d.start_date ? dateShort(d.start_date) : ""}</b>에 시작해요. 공사 전에 할 일을 챙겨 주세요. 체크한 건 업체도 봐요.</p>{ov.checks.length ? <PreWorkCheck projectId={p.id} checks={ov.checks} start={d.start_date} /> : null}</>
         : <p>공사 중이에요. 궁금한 건 아래에 물어보거나 업체 채팅으로 물어보세요.</p> });
     }
+    const last = d.progress?.[0];
+    if (last) {
+      cards.push({ key: `pg${last.id}`, node: (
+        <>
+          <p><b>{iga(d.vendor_name)} {dateShort(last.day)}에 진행 사진을 올렸어요.</b>{last.note ? ` "${last.note}"` : ""}</p>
+          <ul className={s.pics} aria-label="공사 진행 사진">
+            {last.photos.map((fid, i) => <li key={fid}><img src={donePhotoHref(p.id, d.id, fid)} alt={`진행 사진 ${i + 1}`} loading="lazy" /></li>)}
+          </ul>
+          {d.progress.slice(1, 4).map((x) => <p key={x.id} className={s.why}>{dateShort(x.day)} · 사진 {x.photos.length}장{x.note ? ` · ${x.note}` : ""}</p>)}
+        </>
+      ) });
+    }
     for (const x of deal.extras.items.filter((i) => i.answer === "pending")) {
       cards.push({ key: `x${x.id}`, alert: true, node: (
         <>
@@ -232,7 +245,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             {asks.map((a, i) => (
               <div key={`a${i}`} className={s.msgs} style={{ padding: 0 }}>
                 <p className={s.me}>{a.q}</p>
-                <div className={s.bot}><div className={s.face}><Jaejae mouth={a.out ? "smile" : "flat"} /></div><div className={s.bubble}><span className={s.who}>재재 · 자동 답변</span>
+                <div className={s.bot}><div className={s.face}><Jaejae mouth={a.out ? "smile" : "flat"} /></div><div className={s.bubble}><span className={s.who}>재재</span>
                   {a.out ? <AiAnswer answer={a.out.answer} projectId={p.id} onPick={(q) => void ask(q)} /> : a.err ? <p className="mj-error">{a.err}</p> : <p className={s.typing}>줄자로 재는 중…</p>}</div></div>
               </div>
             ))}
@@ -242,7 +255,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             <label className="mj-sr" htmlFor="pflow-in">재재에게 물을 말</label>
             <textarea id="pflow-in" rows={1} maxLength={1000} value={text} placeholder="궁금한 걸 물어보세요. 예: 가견적이 비싼데 줄일 방법 없을까요?" onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void ask(text); } }} />
-            <Button type="submit" disabled={!text.trim()}>보내기</Button>
+            <Button type="submit" disabled={!text.trim() || asking}>{asking ? "답 기다리는 중" : "보내기"}</Button>
           </form>
         </section>
         <Plan now={now} scope={p.id} open={open} auto={auto}
@@ -284,8 +297,9 @@ function VisitRequest({ pid, draft, today, busy, act }: { pid: string; draft: Vi
 
 function PickCard({ pid, visitId, name, proposal, busy, act }: { pid: string; visitId: string; name: string; proposal: boolean; busy: string | null; act: Act }) {
   const [pick, setPick] = useState<Pick | null>(null);
+  const [failed, setFailed] = useState(false);
   const [sel, setSel] = useState<{ day: string; half: Half } | null>(null);
-  useEffect(() => { void call<Pick>("GET", `/projects/${pid}/visits/${enc(visitId)}`).then(setPick).catch(() => setPick(null)); }, [pid, visitId]);
+  useEffect(() => { void call<Pick>("GET", `/projects/${pid}/visits/${enc(visitId)}`).then(setPick).catch(() => setFailed(true)); }, [pid, visitId]);
   const days = (pick?.days ?? []).filter((d) => d.am || d.pm).slice(0, 14);
   return (
     <>
@@ -298,6 +312,7 @@ function PickCard({ pid, visitId, name, proposal, busy, act }: { pid: string; vi
             ))}
           </div></div>
         ))}
+        {failed ? <p className={s.note}>고를 수 있는 날을 불러오지 못했어요. <Link href={`/projects/${pid}/visits/${enc(visitId)}`}>실측 화면</Link>에서 봐 주세요.</p> : null}
         {pick && !days.length ? <p className={s.note}>고를 수 있는 반나절이 없어요. <Link href={`/projects/${pid}/visits/${enc(visitId)}`}>실측 화면</Link>에서 다시 물어보세요.</p> : null}
       </div>
       <Button size="sm" disabled={!sel} busy={busy === `p${visitId}`} onClick={() => sel && act(`p${visitId}`, () => call("POST", `/projects/${pid}/visits/${enc(visitId)}/${proposal ? "proposal/pick" : "pick"}`, sel))}>
@@ -313,8 +328,8 @@ function ReviewCard({ pid, dealId, name, busy, act }: { pid: string; dealId: str
   return (
     <>
       <p><b>공사를 완료했어요.</b> 수고 많으셨어요. {name} 리뷰를 남기면 다음 고객이 업체를 고를 때 도움이 돼요.</p>
-      <div className={s.row}>{[5, 4, 3, 2, 1].map((n) => <Button key={n} size="sm" variant={rating === n ? "primary" : "weak"} onClick={() => { setRating(n); if (!body) setBody(n >= 4 ? "약속한 날에 깔끔하게 마무리해 주셨어요." : ""); }}>별 {n}개</Button>)}</div>
-      {rating ? <label className={s.field}>리뷰 글(고쳐도 돼요)<textarea rows={3} maxLength={500} value={body} onChange={(e) => setBody(e.target.value)} /></label> : null}
+      <div className={s.row}>{[5, 4, 3, 2, 1].map((n) => <Button key={n} size="sm" variant={rating === n ? "primary" : "weak"} onClick={() => setRating(n)}>별 {n}개</Button>)}</div>
+      {rating ? <label className={s.field}>리뷰 글(선택)<textarea rows={3} maxLength={500} value={body} placeholder="예: 약속한 날에 깔끔하게 마무리해 주셨어요." onChange={(e) => setBody(e.target.value)} /></label> : null}
       <Button size="sm" disabled={!rating} busy={busy === "review"} onClick={() => act("review", () => call("POST", `/projects/${pid}/deals/${enc(dealId)}/review`, { rating, tags: [], body: body.trim() || null, photo_file_ids: [] }))}>리뷰 등록</Button>
     </>
   );

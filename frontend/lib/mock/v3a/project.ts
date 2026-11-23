@@ -57,7 +57,7 @@ export function mockPlan(key: MockKey): S["PlanOut"] {
         quote: { id: "a3a80000-0000-4000-8000-000000000001", code: "MJQ-2612-0001", version: 1, total: 3267000, days: 2, valid_until: "2026-12-30", sent_at: "2026-12-16T18:00:00+09:00" },
         confirmed_at: "2026-12-16T20:00:00+09:00", dates_due_at: "2026-12-18T18:00:00+09:00", overdue: false, start_date: "2027-01-04", end_date: "2027-01-05",
         work_done_on: null, contact_until: null, fixing_note: null, work_days: ["2027-01-04", "2027-01-05"], review_open: false, thread_id: null,
-        done_photos: [], grand_total: 3267000,
+        done_photos: [], progress: [], grand_total: 3267000,
       }],
     };
   }

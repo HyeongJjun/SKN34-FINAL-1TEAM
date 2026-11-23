@@ -7,7 +7,13 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from app.project.schemas import ProjectCheckOut, ProjectListItem
 from app.quote.schemas import BudgetOut, QuoteBriefOut, QuoteFileOut
-from app.schedule.models import CREW_MAX, EXTRA_AMOUNT_MAX, EXTRA_PHOTOS_MAX, WISH_MAX
+from app.schedule.models import (
+    CREW_MAX,
+    EXTRA_AMOUNT_MAX,
+    EXTRA_PHOTOS_MAX,
+    PROGRESS_PHOTOS_MAX,
+    WISH_MAX,
+)
 from app.vendor.schemas import ContactOut
 from app.visit.schemas import (
     CompareOut,
@@ -85,6 +91,34 @@ class ConfirmIn(BaseModel):
     seen_ver: int = Field(ge=1, description="비교 화면을 연 때의 본 버전 (seen_ver 그대로)")
 
 
+class ProgressOut(BaseModel):
+    """공사 진행 기록 한 번 (사진: GET /projects/{id}/deals/{did}/photos/{file_id})"""
+
+    id: uuid.UUID
+    day: date
+    note: str | None
+    photos: list[uuid.UUID]
+    at: datetime
+
+
+class ProgressIn(BaseModel):
+    """업체가 공사하는 동안 진행 사진 올리기 (POST /files kind=work_photo). 금액 · 날짜는 바꾸지 않는다."""
+
+    note: Annotated[
+        str | None, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)
+    ] = Field(default=None, description="한 줄 (예: 거실 초배 끝, 내일 정배)")
+    file_ids: list[uuid.UUID] = Field(min_length=1, max_length=PROGRESS_PHOTOS_MAX)
+    client_key: uuid.UUID | None = Field(
+        default=None, description="같은 기록 두 번 막는 키 (같은 키면 200 그대로)"
+    )
+
+    @model_validator(mode="after")
+    def _distinct(self):
+        if len(set(self.file_ids)) != len(self.file_ids):
+            raise ValueError("같은 사진을 두 번 붙였어요.")
+        return self
+
+
 class DealOut(BaseModel):
     """업체 확정 한 건 (고객 쪽)"""
 
@@ -125,6 +159,7 @@ class DealOut(BaseModel):
         default=[],
         description="'공사 끝냈어요' 사진 (GET /projects/{id}/deals/{did}/photos/{file_id}, C38)",
     )
+    progress: list[ProgressOut] = Field(default=[], description="공사 진행 기록 (새것부터)")
     grand_total: int | None = Field(
         default=None,
         description="공사 금액: 확정 금액 + 승인한 추가 금액 (부가세 포함, 계산 엔진, C37 · C38)",
@@ -352,6 +387,7 @@ class JobOut(BaseModel):
     done_posted_at: datetime | None = None
     auto_done_at: datetime | None = Field(default=None, description="자동으로 끝나는 때 (D24)")
     done_photos: list[uuid.UUID] = Field(default=[], description="공사 끝 사진")
+    progress: list[ProgressOut] = Field(default=[], description="공사 진행 기록 (새것부터)")
     thread_id: uuid.UUID | None = Field(default=None, description="이 고객과의 채팅")
     # ---- v3 공사 화면 (B3) ----
     grand_total: int | None = Field(

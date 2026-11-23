@@ -95,6 +95,9 @@ KINDS: dict[str, Kind] = {
     "request_due": Kind("any", "/projects/{pid}/schedule", "다른 날짜 요청에 아직 답이 없어요"),
     "extra_added": Kind("customer", "/projects/{pid}/schedule", "마루와벽이 추가 금액을 알렸어요"),
     "extra_acked": Kind("vendor", "/vendor/jobs/{did}", "고객이 추가 금액에 답했어요"),
+    "work_progress": Kind(
+        "customer", "/projects/{pid}/assistant", "업체가 공사 진행 사진을 올렸어요"
+    ),
     "work_done": Kind("customer", "/projects/{pid}/schedule", "업체가 공사를 끝냈다고 알렸어요"),
     "done_remind": Kind("customer", "/projects/{pid}/schedule", "3일 뒤 자동으로 공사가 끝나요"),
     "work_checked": Kind("vendor", "/vendor/jobs/{did}", "고객이 공사 끝을 확인했어요"),

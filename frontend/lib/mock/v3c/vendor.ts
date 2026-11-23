@@ -195,7 +195,7 @@ const jobBase = {
   quote: quoteBrief, plan_version: 1, plan_start: null, plan_end: null,
   need: { man_day: "4.0", crew: 2, days: 2, steps: [{ name: "도배", half_days: 4 }] }, others: [], weekend_work: false,
   holidays: [{ day: "2027-01-01", name: "신정" }], requests_left: 2, request_options: [], accepted_crew: null,
-  work_done_on: null, contact_until: null, fixing_note: null, done_photos: [],
+  work_done_on: null, contact_until: null, fixing_note: null, done_photos: [], progress: [],
   checks: [{ key: "office_report", label: "관리사무소에 공사 신고를 했어요", done: true, done_at: null }, { key: "furniture_moved", label: "가구와 짐을 벽에서 떼어 놨어요", done: false, done_at: null }],
 };
 export const MOCK_JOBS: Record<string, JobV3> = {

@@ -392,3 +392,46 @@ class ExtraChargeFile(Base):
         ForeignKey("files.id", ondelete="CASCADE"), primary_key=True, unique=True
     )
     sort: Mapped[int] = mapped_column(SmallInteger)
+
+
+# 공사 진행 기록(시연 피드백 2026-11-23): 업체가 공사하는 동안 사진 · 한 줄을 올려 고객이 "어디까지 됐어요?"를 본다.
+# 금액 · 날짜 · 상태는 바꾸지 않는다.
+PROGRESS_PHOTOS_MAX = 5  # 한 번에 붙이는 사진
+PROGRESS_MAX = 30  # 한 공사의 진행 기록
+
+
+class DealProgress(Base):
+    """공사 진행 기록 한 번: 올린 날 · 한 줄 · 사진(DealProgressFile). 같은 client_key면 한 번만 쌓인다."""
+
+    __tablename__ = "deal_progress"
+    __table_args__ = (
+        CheckConstraint("note is null or length(btrim(note)) > 0", name="note"),
+        UniqueConstraint("deal_id", "client_key", name="uq_deal_progress_client_key"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid7)
+    deal_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("deals.id", ondelete="CASCADE"), index=True
+    )
+    day: Mapped[date] = mapped_column(Date)
+    note: Mapped[str | None] = mapped_column(String(100))
+    by_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    client_key: Mapped[uuid.UUID | None] = mapped_column()
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class DealProgressFile(Base):
+    """진행 기록에 붙인 공사 사진 (files.kind = work_photo). 사진 하나는 한 기록에만 붙는다."""
+
+    __tablename__ = "deal_progress_files"
+    __table_args__ = (
+        CheckConstraint(f"sort between 0 and {PROGRESS_PHOTOS_MAX - 1}", name="sort"),
+    )
+
+    progress_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("deal_progress.id", ondelete="CASCADE"), primary_key=True
+    )
+    file_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("files.id", ondelete="CASCADE"), primary_key=True, unique=True
+    )
+    sort: Mapped[int] = mapped_column(SmallInteger)

@@ -12,6 +12,7 @@ import { Notice } from "@/components/ui/Notice";
 import { Eyebrow, Group, Row, Rows, Small } from "../ui/parts";
 import { occ, siteLine, visitTitle } from "../visit/facts";
 import { daysText } from "./days";
+import { ProgressBox } from "./ProgressBox";
 import s from "./jobs.module.css";
 
 const ANSWER: Record<string, string> = { pending: "고객 답 기다림", approved: "승인", rejected: "거절", asked: "채팅으로 물어봐요" };
@@ -71,6 +72,7 @@ export function JobView({ job, log }: { job: JobV3; log: VendorJobLog }) {
             <Small>고객이 승인하기 전에는 합계에 넣지 않아요.</Small>
           </Group>
         ) : null}
+        <ProgressBox job={job} open={(working && (!!job.day_no || job.can_finish)) || (job.status === "fixing" && job.dates_state === "scheduled")} />
         {working || job.dates_state === "scheduled" ? (
           <Group flush>
             <Eyebrow>고객 준비</Eyebrow>
