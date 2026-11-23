@@ -28,9 +28,9 @@ import { dateSeoul, eulReul } from "@/lib/format";
 import s from "./jobs.module.css";
 
 type Vat = "included" | "excluded" | "exempt";
-// 서버 한도(EXTRA_AMOUNT_MAX)와 같아요. 10억은 10자리라 자르지 않고, 넘으면 막아요
+// 서버 한도(EXTRA_AMOUNT_MAX)와 같아요. 11자리까지 받아서, 넘는 값을 몰래 잘라 다른 금액으로 만들지 않고 막아요
 const AMOUNT_MAX = 1_000_000_000;
-const digits = (v: string) => v.replace(/\D/g, "").slice(0, 10);
+const digits = (v: string) => v.replace(/\D/g, "").slice(0, 11);
 
 export function ExtraForm({ job, taxKind }: { job: JobV3; taxKind: string }) {
   const router = useRouter();
@@ -97,7 +97,7 @@ export function ExtraForm({ job, taxKind }: { job: JobV3; taxKind: string }) {
           {/* CF-65: 칸 이름 '무엇' → '항목' */}
           <Field ref={refs.title} label="항목" maxLength={60} value={title} error={err.title} onChange={(e) => { setTitle(e.target.value); setErr((x) => ({ ...x, title: undefined })); }} />
           <Field ref={refs.reason} label="이유" maxLength={200} value={reason} error={err.reason} onChange={(e) => { setReason(e.target.value); setErr((x) => ({ ...x, reason: undefined })); }} />
-          <Field ref={refs.amount} label={taxKind === "simplified" ? "받을 금액" : "금액"} unit="원" num inputMode="numeric" value={amount ? Number(amount).toLocaleString("ko-KR") : ""} error={err.amount} onChange={(e) => { setAmount(digits(e.target.value)); setErr((x) => ({ ...x, amount: undefined })); }} />
+          <Field ref={refs.amount} label={taxKind === "simplified" ? "받을 금액" : "금액"} unit="원" num inputMode="numeric" value={amount ? Number(amount).toLocaleString("ko-KR") : ""} error={err.amount} onChange={(e) => { const n = digits(e.target.value); setAmount(n); setErr((x) => ({ ...x, amount: Number(n) > AMOUNT_MAX ? "10억 원까지 넣을 수 있어요." : undefined })); }} />
           {fixed ? (
             <Small>{fixed === "exempt" ? "면세 업체라 부가세가 없어요." : "간이과세라 부가세를 따로 붙이지 않아요. 적은 금액이 고객이 보는 금액이에요."}</Small>
           ) : (

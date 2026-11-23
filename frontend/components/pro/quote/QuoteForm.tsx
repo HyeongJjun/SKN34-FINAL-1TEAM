@@ -32,6 +32,10 @@ type Vat = "included" | "excluded" | "exempt";
 const DOC_OK = /\.(pdf|xlsx?|csv|jpe?g|png|heic|webp)$/i;
 const WARRANTY = [{ value: "6", label: "6개월" }, { value: "12", label: "1년" }, { value: "24", label: "2년" }];
 const digits = (v: string) => v.replace(/\D/g, "").slice(0, 10);
+// 서버 한도(quote AMOUNT_MAX)와 같아요. 금액 칸은 11자리까지 받아서, 넘는 값을 몰래 잘라 다른 금액으로 만들지 않고 막아요
+const AMOUNT_MAX = 1_000_000_000;
+const amountDigits = (v: string) => v.replace(/\D/g, "").slice(0, 11);
+const OVER = "10억 원까지 넣을 수 있어요.";
 const money = (v: string) => (v ? Number(v).toLocaleString("ko-KR") : "");
 
 export function QuoteForm({ v, board, now }: { v: VendorVisitV3; board: VendorQuoteBoard; now: string }) {
@@ -82,7 +86,7 @@ export function QuoteForm({ v, board, now }: { v: VendorVisitV3; board: VendorQu
   const first = useRef(true);
   useEffect(() => {
     if (first.current) { first.current = false; return; }
-    if (!amount || !vat) return;
+    if (!amount || !vat || Number(amount) > AMOUNT_MAX) return;
     const t = setTimeout(() => { save().catch(() => {}); }, 800);
     return () => clearTimeout(t);
   }, [amount, vat]);
@@ -113,6 +117,7 @@ export function QuoteForm({ v, board, now }: { v: VendorVisitV3; board: VendorQu
     const e: Record<string, string> = {};
     if (!files.length) e.files = "견적서 파일을 올려 주세요.";
     if (!amount || Number(amount) <= 0) e.amount = "견적 금액을 원 단위로 넣어 주세요.";
+    else if (Number(amount) > AMOUNT_MAX) e.amount = OVER;
     if (!vat) e.vat = "부가세를 어떻게 적었는지 골라 주세요.";
     if (!days || Number(days) < 1 || Number(days) > board.days_max) e.days = `공사 기간을 1~${board.days_max}일로 넣어 주세요.`;
     if (!valid) e.valid = "유효기간을 골라 주세요.";
@@ -147,12 +152,14 @@ export function QuoteForm({ v, board, now }: { v: VendorVisitV3; board: VendorQu
   function assist(text: string): string {
     const got = parseQuote(text, today);
     const done: string[] = [];
-    if (got.amount && got.amount > 0) { setAmount(digits(String(got.amount))); done.push(`금액 ${got.amount.toLocaleString("ko-KR")}원`); }
+    // 한도를 넘는 금액은 잘라 넣지 않고 비워 둬요
+    const over = !!got.amount && got.amount > AMOUNT_MAX;
+    if (got.amount && got.amount > 0 && !over) { setAmount(String(got.amount)); done.push(`금액 ${got.amount.toLocaleString("ko-KR")}원`); }
     if (got.vat && !fixedVat && (board.vat_modes as string[]).includes(got.vat)) { setVat(got.vat); done.push(`부가세 ${VAT_MODE_LABEL[got.vat]}`); }
     if (got.days && got.days >= 1 && got.days <= board.days_max) { setDays(String(got.days)); done.push(`공사 기간 ${got.days}일`); }
     if (got.valid && got.valid >= today) { setValid(got.valid); done.push(`유효기간 ${dateShort(got.valid)}`); }
-    if (!done.length) return "금액 · 부가세 · 공사 기간 · 유효기간을 말해 주세요. 예: 견적 455만 원, 부가세 포함, 공사 3일, 12/17까지 유효";
-    setErr({});
+    setErr(over ? { amount: OVER } : {});
+    if (!done.length) return over ? `금액이 커서 넣지 않았어요. ${OVER}` : "금액 · 부가세 · 공사 기간 · 유효기간을 말해 주세요. 예: 견적 455만 원, 부가세 포함, 공사 3일, 12/17까지 유효";
     return `칸을 채웠어요: ${done.join(", ")}. 금액은 말씀하신 숫자 그대로예요. 견적서 파일을 올리고 '고객에게 보내기'를 직접 눌러 주세요.`;
   }
 
@@ -179,7 +186,7 @@ export function QuoteForm({ v, board, now }: { v: VendorVisitV3; board: VendorQu
 
         <AssistBox hint="견적 내용을 말로 적으면 아래 칸을 채워요." examples={["견적 455만 원, 부가세 포함, 공사 3일, 12/17까지 유효"]} onText={assist} />
         <Group>
-          <Field ref={amountRef} label={simplified ? "받을 금액" : "견적 금액"} unit="원" num inputMode="numeric" value={money(amount)} error={err.amount} onChange={(e) => { setAmount(digits(e.target.value)); setErr((x) => ({ ...x, amount: undefined })); }} />
+          <Field ref={amountRef} label={simplified ? "받을 금액" : "견적 금액"} unit="원" num inputMode="numeric" value={money(amount)} error={err.amount} onChange={(e) => { const n = amountDigits(e.target.value); setAmount(n); setErr((x) => ({ ...x, amount: Number(n) > AMOUNT_MAX ? OVER : undefined })); }} />
           {fixedVat ? (
             <Small>{simplified ? "간이과세라 부가세를 따로 붙이지 않아요. 적은 금액이 고객이 보는 금액이에요." : `부가세 ${VAT_MODE_LABEL[fixedVat]}`}</Small>
           ) : (
