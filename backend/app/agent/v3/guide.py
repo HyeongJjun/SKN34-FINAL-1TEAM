@@ -20,7 +20,7 @@ def run(task: Task, kb: KB) -> Part:
     lines: list[str] = []
     if "price" in flags:
         if f and f.standard:
-            lines.append(templates.PRICE_DEEP)
+            lines.append(templates.PRICE_DEEP[f.standard.basis])
             box = calc_box("standard.total", f)
             if box:
                 part.calc.append(box)

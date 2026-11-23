@@ -83,6 +83,7 @@ def test_ai_standard_equals_screen_market_quote():
     assert facts.total == q.total == screen.total == 4_070_000
     assert (facts.supply, facts.vat) == (screen.supply, screen.vat)
     assert sum(ln.amount or 0 for ln in facts.lines) == facts.supply
+    assert facts.basis == "market"  # AI가 공공 기준이라고 말하지 않게
 
 
 def test_market_only_for_full_dobae():

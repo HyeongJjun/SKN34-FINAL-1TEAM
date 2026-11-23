@@ -161,7 +161,7 @@ def market_facts(q: market_quote.Quote) -> StandardFacts:
                 key="cut", name="단수 정리", state="included", amount=q.cut, trade=trade
             )
         )
-    return StandardFacts(total=q.total, supply=q.supply, vat=q.vat, lines=lines)
+    return StandardFacts(total=q.total, supply=q.supply, vat=q.vat, lines=lines, basis="market")
 
 
 async def _plan(
