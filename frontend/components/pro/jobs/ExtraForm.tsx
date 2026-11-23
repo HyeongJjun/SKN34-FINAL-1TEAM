@@ -28,7 +28,9 @@ import { dateSeoul, eulReul } from "@/lib/format";
 import s from "./jobs.module.css";
 
 type Vat = "included" | "excluded" | "exempt";
-const digits = (v: string) => v.replace(/\D/g, "").slice(0, 9);
+// 서버 한도(EXTRA_AMOUNT_MAX)와 같아요. 10억은 10자리라 자르지 않고, 넘으면 막아요
+const AMOUNT_MAX = 1_000_000_000;
+const digits = (v: string) => v.replace(/\D/g, "").slice(0, 10);
 
 export function ExtraForm({ job, taxKind }: { job: JobV3; taxKind: string }) {
   const router = useRouter();
@@ -54,6 +56,7 @@ export function ExtraForm({ job, taxKind }: { job: JobV3; taxKind: string }) {
     if (!title.trim()) e.title = "무엇에 드는 돈인지 적어 주세요. 예: 곰팡이 방지 처리";
     if (!reason.trim()) e.reason = "왜 더 드는지 한 줄로 적어 주세요.";
     if (!amount || Number(amount) <= 0) e.amount = "금액을 원 단위로 넣어 주세요.";
+    else if (Number(amount) > AMOUNT_MAX) e.amount = "10억 원까지 넣을 수 있어요.";
     if (!vat) e.vat = "부가세를 어떻게 적었는지 골라 주세요.";
     setErr(e);
     if (e.title) { refs.title.current?.focus(); return; }
@@ -75,10 +78,12 @@ export function ExtraForm({ job, taxKind }: { job: JobV3; taxKind: string }) {
     const got = parseExtra(text, dateSeoul(new Date().toISOString()));
     if (got.title) setTitle(got.title);
     if (got.reason) setReason(got.reason);
-    if (got.amount) setAmount(String(got.amount).slice(0, 9));
+    // 한도를 넘는 금액은 잘라 넣지 않고 비워 둬요(10억 → 1억처럼 다른 값이 되지 않게)
+    const amountOk = !!got.amount && got.amount <= AMOUNT_MAX;
+    if (amountOk) setAmount(String(got.amount));
     if (got.vat && !fixed) setVat(got.vat);
-    setErr({});
-    const said = [got.title ? `항목 '${got.title}'` : null, got.amount ? `금액 ${won(got.amount)}` : null, got.vat && !fixed ? `부가세 ${VAT_MODE_LABEL[got.vat]}` : null, got.reason ? "이유" : null].filter(Boolean);
+    setErr(got.amount && !amountOk ? { amount: "10억 원까지 넣을 수 있어요." } : {});
+    const said = [got.title ? `항목 '${got.title}'` : null, amountOk ? `금액 ${won(got.amount!)}` : null, got.vat && !fixed ? `부가세 ${VAT_MODE_LABEL[got.vat]}` : null, got.reason ? "이유" : null].filter(Boolean);
     return said.length ? `${eulReul(said.join(" · "))} 채웠어요. 사진을 붙이고 보내기는 직접 눌러 주세요.` : "못 읽었어요. 예: 곰팡이 방지 처리 12만 원, 부가세 포함, 벽 안쪽까지 곰팡이가 퍼져서";
   }
 
