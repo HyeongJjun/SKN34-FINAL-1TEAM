@@ -24,6 +24,13 @@ test("부가세: 부정한 말은 버리고 하나일 때만", () => {
   assert.equal(parseQuote("부가세 별도 아닙니다", T).vat, undefined);
   assert.equal(parseQuote("부가세 포함된 금액이 아닙니다", T).vat, undefined);
   assert.equal(parseQuote("면세는 아닙니다, 부가세 별도예요", T).vat, "excluded");
+  // 리뷰: '안 합니다 · 하지 않아요'도 부정
+  assert.equal(parseQuote("부가세 포함 안 합니다", T).vat, undefined);
+  assert.equal(parseQuote("부가세 별도 안 합니다", T).vat, undefined);
+  assert.equal(parseQuote("면세 안 합니다", T).vat, undefined);
+  assert.equal(parseQuote("부가세 포함 안 해요", T).vat, undefined);
+  assert.equal(parseQuote("부가세 포함하지 않아요", T).vat, undefined);
+  assert.equal(parseQuote("면세 안 합니다, 부가세 포함이에요", T).vat, "included");
 });
 
 test("정정: 고친 뒤 값을 쓰고 앞의 틀린 값은 넣지 않아요", () => {
