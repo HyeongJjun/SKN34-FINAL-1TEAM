@@ -6,7 +6,7 @@
 export type PeriodFill = { start: string; end: string; excluded: string[]; outside: string[] };
 export type QuoteFill = { amount?: number; vat?: "included" | "excluded" | "exempt"; days?: number; valid?: string };
 
-const NO = /안\s*돼|안\s*됨|안\s*되|못\s*가|불가|빼고|빼\s*주|빼요|어려|제외/;
+const NO = /안\s*(?:돼|됨|되|됩)|못\s*(?:가|해|하)|불가|빼고|빼\s*주|빼요|어려|어렵|제외/;
 // 토막 나누기: 쉼표 · 줄바꿈 · 이음말, 마침표는 숫자 사이(12.2)가 아닐 때만
 const PARTS = /,|\n|(?<!\d)\.|\.(?!\d)|그리고|하고|인데|는데|지만/;
 const DATE = String.raw`(?:\d{1,2}\s*(?:\/|\.|월)\s*)?\d{1,2}\s*일?`;
@@ -59,6 +59,7 @@ export function parsePeriod(text: string, today: string, baseMonth?: string | nu
 
 const num = (s: string) => Number(s.replace(/,/g, ""));
 /** 금액 앞에 붙으면 '전체 금액'으로 보는 말 */
+const CORRECTED = /^\s*원?\s*(?:이|가|은|는)?\s*(?:아니라|아니고|아닌|아니에요|아닙니다|아녜요|말고)/;
 const TOTAL = /(?:전체|총|합계|견적)\s*(?:금액|견적|은|는|이|가)?\s*$/;
 
 /** 금액: "455만 원" · "455.5만 원" · "455만 5천 원" · "455만 5,000원" · "4,550,000원". 만 뒤 숫자는 바로 '원'이 붙을 때만 더해요("455만 3일"의 3은 금액이 아니에요).
@@ -72,13 +73,16 @@ function amountIn(text: string): number | undefined {
   for (const m of text.matchAll(/(\d{1,3}(?:,\d{3})+|\d{6,})\s*원?/g)) {
     if (!hits.some((h) => m.index >= h.at && m.index < h.end)) hits.push({ at: m.index, end: m.index + m[0].length, won: num(m[1]) });
   }
+  // 정정한 금액은 버려요: "455만 원이 아니라 555만 원" · "455만 말고 555만"
+  const kept = hits.filter((h) => !CORRECTED.test(text.slice(h.end)));
+  if (kept.length !== hits.length) return kept.length === 1 ? kept[0].won : undefined;
   if (hits.length <= 1) return hits[0]?.won;
   const total = hits.filter((h) => TOTAL.test(text.slice(Math.max(0, h.at - 12), h.at)));
   return total.length === 1 ? total[0].won : undefined;
 }
 
 /** 바로 뒤에 붙으면 그 말을 버리는 부정("면세는 아니고") */
-const NOT = /^\s*(?:은|는|이|가)?\s*(?:아니|아님|없)/;
+const NOT = /^\s*(?:은|는|이|가)?\s*(?:아니|아닙|아님|아녜|아냐|없)/;
 
 /** 부가세: '부가세 · VAT' 바로 뒤 말만 봐요("부가세 포함, 철거는 별도"는 포함이에요).
  *  "면세는 아니고 부가세 포함"처럼 부정한 말은 버리고, 남은 방식이 하나일 때만 채워요 */

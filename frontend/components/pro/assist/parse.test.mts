@@ -34,3 +34,12 @@ test("공사 날짜 · 추가 금액", () => {
   const x = parseExtra("곰팡이 방지 처리 12만 원, 부가세 포함, 벽 안쪽까지 곰팡이가 퍼져서", T);
   assert.deepEqual(x, { amount: 120_000, vat: "included", title: "곰팡이 방지 처리", reason: "벽 안쪽까지 곰팡이가 퍼져서" });
 });
+
+test("리뷰 회귀: 부정 · 정정 표현", () => {
+  assert.equal(parseQuote("부가세 포함 아닙니다", T).vat, undefined);
+  assert.equal(parseQuote("부가세 포함 아닙니다, 부가세 별도예요", T).vat, "excluded");
+  assert.deepEqual(parsePeriod("12/2부터 12/5까지 됩니다, 12/4는 안 됩니다", T), { start: "2026-12-02", end: "2026-12-05", excluded: ["2026-12-04"], outside: [] });
+  assert.equal(parseQuote("견적 455만 원이 아니라 555만 원", T).amount, 5_550_000);
+  assert.equal(parseQuote("455만 말고 555만 원이요", T).amount, 5_550_000);
+  assert.equal(parseQuote("455만 원이 아니에요", T).amount, undefined); // 고친 값이 없으면 비워요
+});
