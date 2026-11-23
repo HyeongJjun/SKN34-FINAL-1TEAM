@@ -6,7 +6,16 @@
 export type PeriodFill = { start: string; end: string; excluded: string[]; outside: string[] };
 export type QuoteFill = { amount?: number; vat?: "included" | "excluded" | "exempt"; days?: number; valid?: string };
 
-const NO = /안\s*돼|안\s*됨|안\s*되|못\s*가|불가|빼고|빼\s*주|빼요|어려|제외/;
+// 안 되는 날: "안 돼요 · 안 됩니다 · 못 가요 · 불가 · 어렵습니다 · 힘들어요 · 쉬어요" 같은 말
+const NO = /안\s*(?:돼|됨|되|됩|됐)|못\s*(?:가|갑|와|오|옵|해|하|합|함)|불가|빼고|빼\s*주|빼요|어려|어렵|힘들|곤란|제외|휴무|쉬어|쉽니다|쉬는/;
+/** 이중 부정: "어렵지 않아요 · 안 되지는 않아요"는 되는 날이에요 */
+const NO_NOT = /(?:어렵|힘들|곤란|안\s*되|불가하)지\s*(?:는|도|만)?\s*않/;
+/** 값을 부정하는 말("455만 원이 아니라", "3일 아니고", "포함 아닙니다") */
+const NEG = String.raw`(?:아니|아닙|아냐|아녜|아님|말고)`;
+/** 값 바로 뒤에 부정이 붙었는지 */
+const NEG_AFTER = new RegExp(String.raw`^\s*원?\s*(?:은|는|이|가)?\s*${NEG}`);
+/** 값 바로 뒤에 붙어 "뒤 값으로 고친다"는 말 */
+const FIX = String.raw`\s*원?\s*(?:은|는|이|가)?\s*(?:아니라|아니고|아니구|아닌|말고)[\s,]*`;
 // 토막 나누기: 쉼표 · 줄바꿈 · 이음말, 마침표는 숫자 사이(12.2)가 아닐 때만
 const PARTS = /,|\n|(?<!\d)\.|\.(?!\d)|그리고|하고|인데|지만/;
 const DATE = String.raw`(?:\d{1,2}\s*(?:\/|\.|월)\s*)?\d{1,2}\s*일?`;
@@ -46,7 +55,7 @@ export function parsePeriod(text: string, today: string, baseMonth?: string | nu
   const no: string[] = [];
   for (const part of text.split(PARTS)) {
     if (!part.trim()) continue;
-    (NO.test(part) ? no : ok).push(...daysIn(part, today, month));
+    (NO.test(part) && !NO_NOT.test(part) ? no : ok).push(...daysIn(part, today, month));
   }
   if (!ok.length) return null;
   if (new Set(ok).size > 1 && !RANGE.test(text)) return null;
@@ -72,13 +81,23 @@ function amountIn(text: string): number | undefined {
   for (const m of text.matchAll(/(\d{1,3}(?:,\d{3})+|\d{6,})\s*원?/g)) {
     if (!hits.some((h) => m.index >= h.at && m.index < h.end)) hits.push({ at: m.index, end: m.index + m[0].length, won: num(m[1]) });
   }
+  hits.sort((a, b) => a.at - b.at);
+  // 정정: "견적 455만 원이 아니라 555만 원"은 앞 자리(견적)에 뒤 값을 써요. 뒤 값 없이 부정만 하면 그 값을 버려요
+  for (let i = hits.length - 1; i >= 0; i--) {
+    const next = hits[i + 1];
+    if (next && new RegExp(`^${FIX}$`).test(text.slice(hits[i].end, next.at))) {
+      hits[i].won = next.won;
+      hits.splice(i + 1, 1);
+    } else if (NEG_AFTER.test(text.slice(hits[i].end))) hits.splice(i, 1);
+  }
   if (hits.length <= 1) return hits[0]?.won;
   const total = hits.filter((h) => TOTAL.test(text.slice(Math.max(0, h.at - 12), h.at)));
   return total.length === 1 ? total[0].won : undefined;
 }
 
-/** 바로 뒤에 붙으면 그 말을 버리는 부정("면세는 아니고") */
-const NOT = /^\s*(?:은|는|이|가)?\s*(?:아니|아님|없)/;
+/** 뒤에 붙으면 그 말을 버리는 부정("면세는 아니고", "부가세 포함 아닙니다", "포함된 금액이 아닙니다").
+ *  쉼표 · 마침표나 다음 부가세 말을 넘어가서는 보지 않아요 */
+const NOT = new RegExp(String.raw`^(?:(?!면세|부가|VAT)[^,.\n]){0,8}?(?:${NEG}|없|안\s*(?:돼|됨|되|됩))`, "i");
 
 /** 부가세: '부가세 · VAT' 바로 뒤 말만 봐요("부가세 포함, 철거는 별도"는 포함이에요).
  *  "면세는 아니고 부가세 포함"처럼 부정한 말은 버리고, 남은 방식이 하나일 때만 채워요 */
@@ -97,7 +116,8 @@ function vatIn(text: string): QuoteFill["vat"] {
 function validIn(text: string, today: string): string | undefined {
   const at = text.search(/유효/);
   if (at < 0) return undefined;
-  const hits = [...text.matchAll(new RegExp(`(${DATE})\\s*까지`, "g"))];
+  // "12/17까지 아니고 12/20까지"처럼 부정한 날은 버려요
+  const hits = [...text.matchAll(new RegExp(`(${DATE})\\s*까지`, "g"))].filter((h) => !NEG_AFTER.test(text.slice((h.index ?? 0) + h[0].length)));
   if (!hits.length) return undefined;
   const near = hits.reduce((a, b) => (Math.abs((b.index ?? 0) - at) < Math.abs((a.index ?? 0) - at) ? b : a));
   const said = near[1];
@@ -109,10 +129,15 @@ function validIn(text: string, today: string): string | undefined {
   return d;
 }
 
-/** 공사 기간: "공사 3일" · "3일 걸려요" · "3일간"처럼 기간이라는 말이 붙을 때만 읽어요("9일부터"는 날짜예요) */
+/** 공사 기간: "공사 3일" · "3일 걸려요" · "3일간"처럼 기간이라는 말이 붙을 때만 읽어요("9일부터"는 날짜예요).
+ *  "공사 3일 아니고 5일"은 고친 5일, 뒤 값 없이 "공사 3일은 아니에요"면 비워요 */
 function daysOf(text: string): number | undefined {
   const m = text.match(/(?:공사|작업|시공)\s*(?:기간)?\s*(?:은|는|이|가)?\s*(\d{1,3})\s*일(?!\s*까지)/) ?? text.match(/(\d{1,3})\s*일\s*(?:간|동안|걸|소요|작업|정도)/);
-  return m ? Number(m[1]) : undefined;
+  if (!m) return undefined;
+  const rest = text.slice((m.index ?? 0) + m[0].length);
+  const fixed = rest.match(new RegExp(String.raw`^${FIX}(\d{1,3})\s*일(?!\s*까지)`));
+  if (fixed) return Number(fixed[1]);
+  return NEG_AFTER.test(rest) ? undefined : Number(m[1]);
 }
 
 /** "견적 455만 원, 부가세 포함, 공사 3일, 12/17까지 유효" → 견적서 칸 값. 읽은 칸만 돌려줘요 */
