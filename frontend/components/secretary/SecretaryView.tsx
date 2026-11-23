@@ -22,14 +22,14 @@ import s from "./secretary.module.css";
 
 type StepDef = { key: string; label: string; screen: AiScreen; ask: string[]; terms: string[] };
 const STEPS: StepDef[] = [
-  { key: "home", label: "집", screen: "start", ask: ["도배하려면 뭐부터 해요?"], terms: ["실크 벽지", "합지 벽지"] },
+  { key: "home", label: "집", screen: "start", ask: ["도배하려면 뭐부터 해요?"], terms: ["실크 벽지"] },
   { key: "standard", label: "견적", screen: "standard", ask: ["철거는 왜 합계에 안 들어가요?", "합지랑 실크는 뭐가 달라요?"], terms: ["퍼티", "초배"] },
   { key: "vendors", label: "업체", screen: "vendors", ask: ["가견적은 어떻게 나와요?", "업체 견적은 왜 달라요?"], terms: ["가견적"] },
-  { key: "visit", label: "실측", screen: "visits", ask: ["실측 날짜는 어떻게 정해요?", "실측 때 뭘 준비해요?"], terms: ["실측"] },
-  { key: "compare", label: "비교", screen: "quotes", ask: ["실측 견적서 두 곳은 어떻게 비교해요?"], terms: ["부가세", "하자 보수"] },
+  { key: "visit", label: "실측", screen: "visits", ask: ["실측 날짜는 어떻게 정해요?", "실측 때 뭘 준비해요?"], terms: ["실측 후"] },
+  { key: "compare", label: "비교", screen: "quotes", ask: ["실측 견적서 두 곳은 어떻게 비교해요?"], terms: ["실측 견적서", "부가세 별도", "하자담보책임기간"] },
   { key: "dates", label: "일정", screen: "plan", ask: ["공사 순서가 어떻게 돼요?", "며칠 걸려요?"], terms: ["보양"] },
   { key: "work", label: "공사", screen: "plan", ask: ["공사 중에 추가 금액이 나오면 어떻게 해요?"], terms: ["보양", "걸레받이"] },
-  { key: "done", label: "완료", screen: "plan", ask: ["도배가 끝나면 뭘 확인해요?"], terms: ["하자 보수"] },
+  { key: "done", label: "완료", screen: "plan", ask: ["도배가 끝나면 뭘 확인해요?"], terms: ["하자담보책임기간"] },
 ];
 
 const nowAt = (steps: { state: "done" | "now" | "todo" }[], fallback: number, n: number) => {
@@ -40,7 +40,8 @@ const nowAt = (steps: { state: "done" | "now" | "todo" }[], fallback: number, n:
 };
 /** 공사 6단계 + 실측 뒤 5단계(API 값) → 플랜 8칸의 지금 칸(0~7, 다 끝나면 8) */
 function planStep(ov: ApiOverview): number {
-  const t = ov.trades[0];
+  // 도배 플랜이라 도배 공정의 단계를 봐요(목공을 같이 하면 trades[0]은 목공이에요)
+  const t = ov.trades.find((x) => x.trade === "dobae") ?? ov.trades[0];
   const cur = nowAt(t?.steps ?? [], t?.current ?? 0, 6);
   if (cur <= 2) return cur;
   if (cur <= 4) return 3;
@@ -146,7 +147,7 @@ function StepBody({ k, p, ov, compare, base }: { k: string; p: VisitProject; ov:
         <Group list><Rows>
           {ov.vendors.length ? ov.vendors.map((v) => {
             const st = visitState(v.status, "customer");
-            return <Row key={v.visit_id} label={v.vendor_name} sub={k === "vendors" ? "가견적 · 실측 전 금액" : undefined} value={<Badge tone={v.status === "chosen" ? "ok" : v.status === "closed" ? "mute" : "wait"}>{st.label}</Badge>} />;
+            return <Row key={v.visit_id} label={v.vendor_name} value={<Badge tone={v.status === "chosen" ? "ok" : v.status === "closed" ? "mute" : "wait"}>{st.label}</Badge>} />;
           }) : <Row label="담은 업체가 없어요" sub="업체를 담으면 여기에 보여요" out />}
         </Rows></Group>
         {k === "vendors" ? (
@@ -165,7 +166,8 @@ function StepBody({ k, p, ov, compare, base }: { k: string; p: VisitProject; ov:
         <Group list><Rows>
           {rows.length ? rows.map((r) => {
             const chosen = deal?.visit_id === r.visit_id;
-            return <Row key={r.visit_id} label={ov.vendors.find((v) => v.visit_id === r.visit_id)?.vendor_name ?? "업체"} sub={chosen ? "확정 금액 · 고객이 확정한 견적서" : "실측 견적서 · 확정 전 금액"} value={won((chosen ? deal?.quote.total : null) ?? quoteOf(r.visit_id)?.total ?? 0)} />;
+            const total = (chosen ? deal?.quote.total : null) ?? quoteOf(r.visit_id)?.total ?? null;
+            return <Row key={r.visit_id} label={ov.vendors.find((v) => v.visit_id === r.visit_id)?.vendor_name ?? "업체"} sub={chosen ? "확정 금액 · 고객이 확정한 견적서" : "실측 견적서 · 확정 전 금액"} value={total != null ? won(total) : "—"} />;
           }) : <Row label="실측 견적서가 아직 없어요" sub="실측을 받으면 업체가 올려요" out />}
         </Rows></Group>
         <div className={s.btns}><Button size="sm" variant="secondary" href={`${base}/quotes`}>견적서 비교 화면</Button></div>
