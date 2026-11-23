@@ -22,6 +22,9 @@ import { Segmented } from "@/components/ui/Segmented";
 import { visitTitle } from "../visit/facts";
 import { daysText } from "./days";
 import { PhotoPick, type PickedPhoto } from "./PhotoPick";
+import { AssistBox } from "../assist/AssistBox";
+import { parseExtra } from "../assist/parse";
+import { dateSeoul } from "@/lib/format";
 import s from "./jobs.module.css";
 
 type Vat = "included" | "excluded" | "exempt";
@@ -68,11 +71,23 @@ export function ExtraForm({ job, taxKind }: { job: JobV3; taxKind: string }) {
     }
   }
 
+  function assist(text: string): string {
+    const got = parseExtra(text, dateSeoul(new Date().toISOString()));
+    if (got.title) setTitle(got.title);
+    if (got.reason) setReason(got.reason);
+    if (got.amount) setAmount(String(got.amount).slice(0, 9));
+    if (got.vat && !fixed) setVat(got.vat);
+    setErr({});
+    const said = [got.title ? `항목 '${got.title}'` : null, got.amount ? `금액 ${won(got.amount)}` : null, got.vat && !fixed ? `부가세 ${VAT_MODE_LABEL[got.vat]}` : null, got.reason ? "이유" : null].filter(Boolean);
+    return said.length ? `${said.join(" · ")}을 채웠어요. 사진을 붙이고 보내기는 직접 눌러 주세요.` : "못 읽었어요. 예: 곰팡이 방지 처리 12만 원, 부가세 포함, 벽 안쪽까지 곰팡이가 퍼져서";
+  }
+
   return (
     <>
       <Main narrow>
         <PageHead title="추가 금액 올리기" crumbs={[{ label: "작업함", href: "/vendor?tab=jobs" }, { label: visitTitle(v), href: back }, { label: "추가 금액" }]} />
         <Lead title={`${visitTitle(v)} · 공사 중`} sub={[job.work_days.length ? daysText(job.work_days, true) : null, `확정 ${won(job.quote.total)}`].join(" · ")} />
+        <AssistBox hint="항목 · 금액 · 부가세 · 이유를 말로 적으면 칸을 채워요." examples={["곰팡이 방지 처리 12만 원, 부가세 포함, 벽 안쪽까지 곰팡이가 퍼져서"]} onText={assist} />
         <Group>
           {/* CF-65: 칸 이름 '무엇' → '항목' */}
           <Field ref={refs.title} label="항목" maxLength={60} value={title} error={err.title} onChange={(e) => { setTitle(e.target.value); setErr((x) => ({ ...x, title: undefined })); }} />

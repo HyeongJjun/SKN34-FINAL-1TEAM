@@ -5,6 +5,9 @@ import { MarkSeen } from "@/components/pro/visit/MarkSeen";
 import { PeriodForm } from "@/components/pro/visit/PeriodForm";
 import { ProposeForm } from "@/components/pro/visit/ProposeForm";
 import { VisitStatus } from "@/components/pro/visit/VisitStatus";
+import { Desk } from "@/components/pro/desk/Desk";
+import { deskFeed } from "@/components/pro/desk/feed";
+import { visitTitle } from "@/components/pro/visit/facts";
 import { approvedVendorGate, getVendorVisit, vendorNow } from "@/lib/api/vendor";
 
 export const metadata = { title: "실측 요청" };
@@ -21,12 +24,16 @@ export default async function VendorRequestPage({ params, searchParams }: { para
   const v = await getVendorVisit(visitId);
   if (!v) notFound();
   const back = "/vendor";
+  const feed = await deskFeed(v.id, vendorNow("inbox"));
+  const title = visitTitle(v);
   if (v.status === "requested") {
     return (
       <>
         <ProHeader me={me} phone={{ title: "기간 답하기", back }} />
         {v.new ? <MarkSeen visitId={v.id} /> : null}
-        <PeriodForm v={v} now={vendorNow("period")} openDecline={one(sp.decline) === "1"} />
+        <Desk feed={feed} say={[`새 실측 요청이 왔어요. ${title}.`, "되는 기간을 말로 적으면 오른쪽 달력에 표시해 드릴게요. 보내기는 직접 눌러 주세요."]}>
+          <PeriodForm v={v} now={vendorNow("period")} openDecline={one(sp.decline) === "1"} />
+        </Desk>
       </>
     );
   }
@@ -34,7 +41,9 @@ export default async function VendorRequestPage({ params, searchParams }: { para
     return (
       <>
         <ProHeader me={me} phone={{ title: "다른 날 제안", back: `/vendor/requests/${encodeURIComponent(v.id)}` }} />
-        <ProposeForm v={v} />
+        <Desk feed={feed} say={["고객이 고른 날이 어려우면 다른 날을 제안해 주세요.", "고객이 다시 고르면 알려 드릴게요."]}>
+          <ProposeForm v={v} />
+        </Desk>
       </>
     );
   }
@@ -42,14 +51,18 @@ export default async function VendorRequestPage({ params, searchParams }: { para
     return (
       <>
         <ProHeader me={me} phone={{ title: "날짜 수락", back }} />
-        <AcceptForm v={v} now={vendorNow("accept")} />
+        <Desk feed={feed} say={[`${title} 고객이 실측 반나절을 골랐어요.`, "오른쪽에서 수락하거나 다른 날을 제안해 주세요. 수락하면 고객과 채팅이 열려요."]}>
+          <AcceptForm v={v} now={vendorNow("accept")} />
+        </Desk>
       </>
     );
   }
   return (
     <>
       <ProHeader me={me} phone={{ title: "실측 요청", back }} />
-      <VisitStatus v={v} now={vendorNow("inbox")} />
+      <Desk feed={feed} say={v.status === "booked" ? ["실측 날이 잡혔어요.", "다녀오시면 실측 견적서를 올려 주세요. 현장 정보(주차 · 출입)는 오른쪽에서 볼 수 있어요."] : [`${title} 요청의 지금 상태예요.`]}>
+        <VisitStatus v={v} now={vendorNow("inbox")} />
+      </Desk>
     </>
   );
 }

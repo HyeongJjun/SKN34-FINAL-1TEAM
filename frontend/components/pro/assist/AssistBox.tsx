@@ -1,8 +1,10 @@
 "use client";
 // 업체 도우미 칸: 말로 적으면 아래 폼 칸을 대신 채워요. 보내기 · 제출은 업체가 직접 눌러요.
 // 값 뽑기는 parse.ts의 규칙이고, 서버에 묻거나 저장하지 않아요.
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
+import { AssistSlot } from "./slot";
 import s from "./assist.module.css";
 
 export function AssistBox({ hint, examples, onText }: {
@@ -15,13 +17,14 @@ export function AssistBox({ hint, examples, onText }: {
 }) {
   const [text, setText] = useState("");
   const [log, setLog] = useState<{ me: string; bot: string } | null>(null);
+  const slot = useContext(AssistSlot);
   function go() {
     const t = text.trim();
     if (!t) return;
     setLog({ me: t, bot: onText(t) });
     setText("");
   }
-  return (
+  const box = (
     <section className={s.box} aria-label="업체 도우미">
       <p className={s.head}><b>재재 · 업체 도우미</b><span>{hint}</span></p>
       {log ? (
@@ -48,4 +51,5 @@ export function AssistBox({ hint, examples, onText }: {
       </div>
     </section>
   );
+  return slot ? createPortal(box, slot) : box;
 }

@@ -21,7 +21,7 @@ const FIX_GAP = String.raw`(?:${FIX}|\s*원?\s*,?\s*아니(?:요|오)?[\s,]+|\s*
 /** 바꾸는 말: 두 값 사이에 있는데 어느 값인지 못 고르면 비워요 */
 const CHANGE = /변경|바꾸|바꿔|바뀌|바꿨|바꿈|수정|정정|아니|→|->|=>|에서/;
 // 토막 나누기: 쉼표 · 줄바꿈 · 이음말, 마침표는 숫자 사이(12.2)가 아닐 때만
-const PARTS = /,|\n|(?<!\d)\.|\.(?!\d)|그리고|하고|인데|지만/;
+const PARTS = /,|\n|(?<!\d)\.|\.(?!\d)|그리고|하고|인데|는데|지만/;
 const DATE = String.raw`(?:\d{1,2}\s*(?:\/|\.|월)\s*)?\d{1,2}\s*일?`;
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -188,5 +188,49 @@ export function parseQuote(text: string, today: string): QuoteFill {
   if (days) out.days = days;
   const valid = validIn(text, today);
   if (valid) out.valid = valid;
+  return out;
+}
+
+export type DatesFill = { days: string[]; crew?: number };
+const RANGE = /부터|까지|~|∼/;
+
+/** 공사 날짜: "12/8부터 12/10까지, 2명" → 그 사이 날 모두(안 된다고 한 날 · 공휴일 빼고). "12/8, 12/9, 12/11"처럼 늘어놓으면 그 날만 */
+export function parseDates(text: string, today: string, baseMonth?: string | null, holidays: string[] = []): DatesFill | null {
+  const crewM = text.match(/(\d)\s*명/);
+  const crew = crewM ? Number(crewM[1]) : undefined;
+  const p = parsePeriod(text.replace(/\d\s*명/g, ""), today, baseMonth);
+  if (!p) return crew ? { days: [], crew } : null;
+  const skip = new Set([...p.excluded, ...holidays]);
+  let days: string[];
+  if (RANGE.test(text)) {
+    days = [];
+    for (let d = new Date(`${p.start}T00:00:00Z`); d.toISOString().slice(0, 10) <= p.end; d.setUTCDate(d.getUTCDate() + 1)) {
+      const k = d.toISOString().slice(0, 10);
+      if (!skip.has(k)) days.push(k);
+    }
+  } else {
+    const month = { m: Number((baseMonth ?? today).slice(5, 7)) };
+    days = [...new Set(text.split(PARTS).filter((x) => !NO.test(x)).flatMap((x) => daysIn(x, today, month)))].filter((d) => !skip.has(d)).sort();
+  }
+  return { days, crew };
+}
+
+export type ExtraFill = QuoteFill & { title?: string; reason?: string };
+const WHY = /(?<!견적|계약|문|청구|확인)서\s*요?\s*$|때문/;
+
+/** 추가 금액: "곰팡이 방지 처리 12만 원, 부가세 포함, 벽 안쪽까지 곰팡이가 퍼져서" → 항목 · 금액 · 부가세 · 이유 */
+export function parseExtra(text: string, today: string): ExtraFill {
+  const out: ExtraFill = parseQuote(text, today);
+  delete out.days;
+  delete out.valid;
+  for (const raw of text.split(/,|\n/)) {
+    const part = raw.trim();
+    if (!part) continue;
+    if (!out.reason && WHY.test(part)) { out.reason = part.replace(/[.。]\s*$/, ""); continue; }
+    if (!out.title && !/부가세|부가가치세|VAT|면세/i.test(part)) {
+      const t = part.replace(/\d[\d,]*\s*만?\s*(?:\d\s*천)?\s*(?:[\d,]*\s*원)?/g, "").replace(/\s*(?:추가요|추가돼요|더\s*들어요)\s*$/, "").trim();
+      if (t && !/^\d/.test(t)) out.title = t.slice(0, 60);
+    }
+  }
   return out;
 }
