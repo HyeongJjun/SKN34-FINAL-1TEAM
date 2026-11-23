@@ -51,5 +51,6 @@ export function AssistBox({ hint, examples, onText }: {
       </div>
     </section>
   );
-  return slot ? createPortal(box, slot) : box;
+  if (slot.inDesk && !slot.el) return null; // 자리가 생기면 그쪽에 그려요(폼 안에 먼저 그렸다 옮겨 가며 튀지 않게)
+  return slot.el ? createPortal(box, slot.el) : box;
 }

@@ -10,6 +10,6 @@ export async function deskFeed(current: string, now: string): Promise<DeskItem[]
     const key = r.deal_id ?? r.id;
     if (seen.has(key)) return [];
     seen.add(key);
-    return [{ href: rowHref(r), label: rowLabel(r), title: rowTitle(r), next: rowNext(r, now), on: key === current }];
+    return [{ href: rowHref(r), label: rowLabel(r), title: rowTitle(r), next: rowNext(r, now), on: r.id === current || r.deal_id === current }];
   });
 }

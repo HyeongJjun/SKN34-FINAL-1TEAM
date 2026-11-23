@@ -24,11 +24,17 @@ import { parseDates } from "../assist/parse";
 import s from "./jobs.module.css";
 
 /** 예시 글: 희망 시작일부터 공사 기간만큼 "12/8부터 12/10까지, 2명" */
-function example(start: string, n: number): string {
+/** 예시 글: 희망 시작일부터 공사 기간만큼(주말에 안 하는 집이면 평일로 세요) "12/8부터 12/10까지, 2명". 날짜 글만 만들어요 */
+function example(start: string, n: number, noWeekend: boolean): string {
   const d = new Date(`${start}T00:00:00Z`);
   const md = (x: Date) => `${x.getUTCMonth() + 1}/${x.getUTCDate()}`;
+  const off = (x: Date) => noWeekend && (x.getUTCDay() === 0 || x.getUTCDay() === 6);
+  while (off(d)) d.setUTCDate(d.getUTCDate() + 1);
   const a = md(d);
-  d.setUTCDate(d.getUTCDate() + Math.max(n, 1) - 1);
+  for (let left = Math.max(n, 1) - 1; left > 0; ) {
+    d.setUTCDate(d.getUTCDate() + 1);
+    if (!off(d)) left -= 1;
+  }
   return `${a}부터 ${md(d)}까지, 2명`;
 }
 
@@ -76,7 +82,7 @@ export function DatesForm({ job, now }: { job: JobV3; now: string }) {
     if (ok.length) { setDays(ok); setErr(null); }
     const said = [ok.length ? `${daysText(ok, true)}(${ok.length}일)` : null, got.crew ? `${got.crew}명` : null].filter(Boolean).join(" · ");
     const gap = need && ok.length && ok.length !== need ? ` 견적서 공사 기간은 ${need}일이라 달력에서 맞춰 주세요.` : "";
-    return said ? `${said}로 채웠어요.${gap} 보내기는 직접 눌러 주세요.` : "오늘 뒤 날짜로 말해 주세요.";
+    return said ? `${said}${said.endsWith("명") ? "으로" : "로"} 채웠어요.${gap} 보내기는 직접 눌러 주세요.` : "오늘 뒤 날짜로 말해 주세요.";
   }
 
   return (
@@ -87,7 +93,7 @@ export function DatesForm({ job, now }: { job: JobV3; now: string }) {
         {job.request ? (
           <Notice tone="info">고객이 다른 날짜를 요청했어요{job.request.reason ? ` · ${job.request.reason}` : ""} · 희망 {daysText(job.request.wish_dates)} · {dueText(job.request.due_at, { now })} 새 날짜를 보내요.</Notice>
         ) : job.dates_due_at ? <Small red>{dueText(job.dates_due_at, { now })} 올려요</Small> : null}
-        <AssistBox hint="공사할 날과 인원을 말로 적으면 달력에 표시해요." examples={[example(job.request?.wish_dates[0] ?? v.work_wish_on ?? today, need ?? 3)]} onText={assist} />
+        <AssistBox hint="공사할 날과 인원을 말로 적으면 달력에 표시해요." examples={[example(job.request?.wish_dates[0] ?? v.work_wish_on ?? today, need ?? 3, !job.weekend_work)]} onText={assist} />
         <Group>
           <Calendar
             mode="multiple"

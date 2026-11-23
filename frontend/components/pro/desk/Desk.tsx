@@ -3,7 +3,7 @@
 // 폼은 기존 화면을 그대로 써요. 폼 안의 업체 도우미 칸(AssistBox)은 AssistSlot으로 왼쪽 재재 칸에 옮겨 그려요.
 // 폰(<1024)은 재재 한마디 · 도우미 칸이 폼 위에 오고, 다른 받은 일 목록은 접어 둬요.
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Jaejae } from "@/components/secretary/Jaejae";
 import { AssistSlot } from "../assist/slot";
 import s from "./desk.module.css";
@@ -18,9 +18,14 @@ export function Desk({ say, feed, children }: {
   children: ReactNode;
 }) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
+  const feedRef = useRef<HTMLDetailsElement>(null);
+  // 다른 받은 일 목록은 웹(≥1024)에서만 펼쳐 둬요. 폰은 접어서 폼이 아래로 밀리지 않게
+  useEffect(() => {
+    if (feedRef.current && window.matchMedia("(min-width: 1024px)").matches) feedRef.current.open = true;
+  }, []);
   const others = feed.filter((x) => !x.on);
   return (
-    <AssistSlot.Provider value={slot}>
+    <AssistSlot.Provider value={{ inDesk: true, el: slot }}>
       <div className={s.desk}>
         <aside className={s.side} aria-label="재재 업체 비서">
           <div className={s.bot}>
@@ -29,7 +34,7 @@ export function Desk({ say, feed, children }: {
           </div>
           <div ref={setSlot} className={s.slot} />
           {others.length ? (
-            <details className={s.feed} open>
+            <details ref={feedRef} className={s.feed}>
               <summary>다른 받은 일 {others.length}개</summary>
               <ul>
                 {others.slice(0, 8).map((x) => (

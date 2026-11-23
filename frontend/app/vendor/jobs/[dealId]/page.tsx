@@ -25,7 +25,7 @@ export default async function VendorJobPage({ params, searchParams }: { params: 
   const href = `/vendor/jobs/${encodeURIComponent(job.deal_id)}`;
   const feed = await deskFeed(job.deal_id, vendorNow("inbox"));
   const title = visitTitle(job.visit);
-  const working = job.dates_state === "scheduled" && !job.done_posted_at && !job.work_done_on && job.status !== "done";
+  const working = job.status === "fixing" || (job.dates_state === "scheduled" && !job.done_posted_at && !job.work_done_on && job.status !== "done");
 
   if (step === "extra" && working) {
     const profile = await getMyProfile().catch(() => null);
@@ -63,7 +63,7 @@ export default async function VendorJobPage({ params, searchParams }: { params: 
     <>
       <ProHeader me={me} phone={{ title: "공사 한 건", back: "/vendor?tab=jobs" }} />
       <Desk feed={feed} say={working ? ["공사 중이에요.", "추가 금액이 생기면 '추가 금액 올리기', 다 끝나면 '공사 끝냈어요'를 눌러 주세요."] : [`${title} 공사 기록이에요.`]}>
-        <JobView job={job} log={log} />
+        <JobView job={job} log={log} now={vendorNow("inbox")} />
       </Desk>
     </>
   );
