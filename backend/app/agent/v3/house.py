@@ -134,8 +134,8 @@ def shape(ans: AgentAnswer, task: Task, trade: str | None = None) -> AgentAnswer
         trades & set(ON_TRADES) or task.route == "quote_explanation"
     ):
         return ans
-    if ans.failed or not ans.sections or not ans.sections[0].sentences:
-        return ans
+    if ans.failed or ans.ask is not None or not ans.sections or not ans.sections[0].sentences:
+        return ans  # 되묻는 턴은 결론 · 부탁 줄을 붙이지 않는다
     ln = None
     # 견적 설명 길이거나 금액 · 수량을 묻는 말이 있을 때만 이 집 견적서 줄을 붙여요(곰팡이 질문에 '벽지' 줄이 붙지 않게)
     if (
@@ -145,7 +145,8 @@ def shape(ans: AgentAnswer, task: Task, trade: str | None = None) -> AgentAnswer
     ):
         # 공종 이름(도배 · 목공)만으로는 줄을 고르지 않아요('도배 얼마예요?'에 벽 도배 줄 하나만 붙지 않게)
         ln = match_line(TRADE_WORD.sub(" ", task.text), task.facts.standard.lines)
-    vendor = _vendor(task.text, ln)
+    # 칸 답 턴('네' · '거실')은 되물은 원래 질문과 합쳐 부탁 줄을 고른다
+    vendor = _vendor(f"{task.asked} {task.text}" if task.slot else task.text, ln)
     card = _card(ln) if ln is not None else None
     if not vendor and card is None:
         return ans

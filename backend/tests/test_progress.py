@@ -4,7 +4,7 @@ import uuid
 
 from tests.conftest import query
 from tests.helpers import signup, use
-from tests.test_extras import notes, photo, scheduled
+from tests.test_extras import extra, notes, photo, ready_other, scheduled
 from tests.test_visit_inbox import login
 
 
@@ -72,3 +72,50 @@ def test_progress_rules(api):
     )
     r = post(api, did, [photo(api, "b.jpg")])
     assert r.status_code == 409 and r.json()["error"]["code"] == "invalid_state"  # 끝냈다고 올린 뒤
+
+
+def test_photo_not_shared_with_extra(api):
+    _, _, did = scheduled(api)
+    started(did)
+    a, b = photo(api, "a.jpg"), photo(api, "b.jpg")
+    assert post(api, did, [a]).status_code == 201
+    r = extra(api, did, 10_000, file_ids=[a])  # 진행 기록 사진 → 추가 금액
+    assert r.status_code == 409 and r.json()["error"]["code"] == "file_used", r.text
+    assert extra(api, did, 10_000, file_ids=[b]).status_code == 201
+    r = post(api, did, [b])  # 추가 금액 사진 → 진행 기록
+    assert r.status_code == 409 and r.json()["error"]["code"] == "already", r.text
+
+
+def test_progress_other_vendor_and_reselected(api):
+    _, _, did = scheduled(api)
+    started(did)
+    login(api, "gyeol@mitjip.test")
+    assert post(api, did, [photo(api)]).status_code == 404  # 남의 공사
+    login(api, "maru@mitjip.test")
+    query("update deals set status = 'reselected' where id = $1", uuid.UUID(did))
+    r = post(api, did, [photo(api)])
+    assert r.status_code == 409 and r.json()["error"]["code"] == "invalid_state"
+
+
+def test_progress_max(api):
+    _, _, did = scheduled(api)
+    started(did)
+    query(
+        "insert into deal_progress (id, deal_id, day)"
+        " select gen_random_uuid(), $1, current_date from generate_series(1, 30)",
+        uuid.UUID(did),
+    )
+    r = post(api, did, [photo(api)])
+    assert r.status_code == 422 and r.json()["error"]["fields"][0]["loc"][-1] == "file_ids", r.text
+
+
+def test_progress_photo_only_from_its_deal(api):
+    _, _, did = scheduled(api)
+    started(did)
+    f = photo(api)
+    assert post(api, did, [f]).status_code == 201
+    _, _, did2, _ = ready_other(api)  # 다른 업체(마루와벽둘)의 공사
+    login(api, "maru2@mitjip.test")
+    assert api.get(f"/vendor/jobs/{did2}/photos/{f}").status_code == 404
+    login(api, "maru@mitjip.test")
+    assert api.get(f"/vendor/jobs/{uuid.uuid4()}/photos/{f}").status_code == 404

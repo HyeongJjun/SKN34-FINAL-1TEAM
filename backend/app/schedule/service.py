@@ -2094,7 +2094,9 @@ async def add_extra(
     used = "다른 추가 금액에 붙인 사진이에요."
     if data.file_ids:
         q = select(ExtraChargeFile.file_id).where(ExtraChargeFile.file_id.in_(data.file_ids))
-        if (await s.execute(q)).first():
+        # 진행 기록에 붙인 사진도 다시 쓰지 않는다
+        p = select(DealProgressFile.file_id).where(DealProgressFile.file_id.in_(data.file_ids))
+        if (await s.execute(q)).first() or (await s.execute(p)).first():
             raise AppError(409, "file_used", used)
     owner = (await project_service.briefs(s, [d.project_id]))[d.project_id].owner_id
     now = now_utc()
@@ -2422,8 +2424,8 @@ async def add_progress(
     try:
         await s.commit()
     except IntegrityError as exc:  # 같은 사진 · 같은 키를 동시에 (file UQ · client_key UQ)
-        await s.rollback()
-        if data.client_key is not None and await _progress_by_key(s, d.id, data.client_key):
+        await s.rollback()  # d는 만료됐으니 deal_id 인자를 쓴다
+        if data.client_key is not None and await _progress_by_key(s, deal_id, data.client_key):
             return await job_for(s, vendor, deal_id, today), False
         raise app_error("already", "이미 다른 곳에 붙인 사진이에요.") from exc
     _push(s, [StatePush((owner, vendor.id), "deal", d.id, d.project_id)], [owner])
