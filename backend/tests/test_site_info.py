@@ -35,13 +35,15 @@ def test_site_rejects_bad_values_and_secrets(api):
         "010-1234-5678로 전화",
         "101동 203호 앞으로 오세요",
         "3동 앞",
+        "101동에서 기다려요",
+        "203호예요",
     )
     for bad in bads:
         r = api.put(url, json={"entry_note": bad})
         assert r.status_code == 422 and r.json()["error"]["fields"][0]["loc"] == ["entry_note"]
     assert api.get(url).json()["entry_note"] is None  # 아무것도 저장되지 않았다
     # 동 · 호가 아닌 말(동쪽 · 호출)은 받는다
-    ok = api.put(url, json={"entry_note": "2동쪽 문 말고 정문으로, 도착하면 경비실 호출"})
+    ok = api.put(url, json={"entry_note": "2동쪽 문 말고 정문으로, 1호기 엘리베이터, 도착하면 경비실 호출"})
     assert ok.status_code == 200, ok.text
     with pytest.raises(asyncpg.exceptions.CheckViolationError):
         query("update projects set parking = 'abc'")
