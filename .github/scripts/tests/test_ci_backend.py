@@ -37,7 +37,7 @@ def make_report(shard, shards=4, collected=None):
 
 class PartitionTests(unittest.TestCase):
     def test_partition_is_complete_disjoint_balanced_and_order_independent(self):
-        for count in (1, 2, 4, 9):
+        for count in (1, 2, 4, 8, 9):
             with self.subTest(count=count):
                 parts = [select_shard(NODES, i, count) for i in range(1, count + 1)]
                 flattened = [node for part in parts for node in part]
@@ -197,6 +197,32 @@ def integration_suite():
                 result, _ = self.execute(source, shard, 2)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertEqual(verify(self.path / "reports", 2), 4)
+
+        def test_random_values_require_stable_parameter_ids(self):
+            for stable in (False, True):
+                with self.subTest(stable=stable):
+                    ids = ", ids=lambda value: value.replace(X, '{id}')" if stable else ""
+                    source = (
+                        "import uuid\nimport pytest\nX = str(uuid.uuid4())\n"
+                        "@pytest.mark.parametrize('path', "
+                        "[f'/threads/{X}', f'/projects/{X}', '/stream', '/reports']"
+                        + ids
+                        + ")\ndef test_path(path):\n    assert path.startswith('/')\n"
+                    )
+                    reports = []
+                    for shard in (1, 2):
+                        result, report = self.execute(
+                            source, shard, 2, extra_env={"PYTHONHASHSEED": str(shard)}
+                        )
+                        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                        reports.append(json.loads(report.read_text(encoding="utf-8")))
+                    if stable:
+                        self.assertEqual(reports[0]["collected"], reports[1]["collected"])
+                        self.assertEqual(verify(self.path / "reports", 2), 4)
+                    else:
+                        self.assertNotEqual(reports[0]["collected"], reports[1]["collected"])
+                        with self.assertRaisesRegex(ValueError, "전체 테스트 목록"):
+                            verify(self.path / "reports", 2)
 
         def test_collection_error_replaces_previous_success(self):
             result, report = self.execute("def test_ok():\n    pass\n")

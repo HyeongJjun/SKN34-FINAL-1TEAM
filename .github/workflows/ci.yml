@@ -2,7 +2,7 @@ name: CI
 
 # PR과 통합 브랜치에 올라온 코드를 확인한다. 유료 API(LLM)는 부르지 않는다 (LLM_LIVE=false).
 # - repository-checks: 저장소 공통 점검 (JSON 문법, 충돌 표시, 줄 끝 공백, .env 추적)
-# - backend-tests: 독립 PostgreSQL · Redis로 전체 테스트를 4등분, ruff와 마이그레이션 검사 유지
+# - backend-tests: 독립 PostgreSQL · Redis로 전체 테스트를 8등분, ruff와 마이그레이션 검사 유지
 # - backend: 모든 분할 작업의 성공과 전체 테스트 누락·중복 여부를 확인하는 필수 검사
 # - frontend: 같은 커밋의 API 명세 생성·타입 비교, typecheck, lint, build
 # - containers: Compose 설정, 운영용 API · 웹 이미지 빌드, 컨테이너 실행 확인
@@ -50,13 +50,13 @@ jobs:
           python3 -m unittest discover -s .github/scripts/tests -v
 
   backend-tests:
-    name: Backend tests (${{ matrix.shard }}/4)
+    name: Backend tests (${{ matrix.shard }}/8)
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     services:
       postgres:
         image: pgvector/pgvector:0.8.7-pg17-bookworm
@@ -98,7 +98,7 @@ jobs:
       - name: pytest
         run: >-
           uv run python ../.github/scripts/ci_backend.py run
-          --shard ${{ matrix.shard }} --shards 4
+          --shard ${{ matrix.shard }} --shards 8
           --report ../backend-reports/shard-${{ matrix.shard }}.json
       - name: DB 모델과 마이그레이션 일치 검사
         env:
@@ -135,7 +135,7 @@ jobs:
           path: backend-reports
           merge-multiple: true
       - name: 전체 테스트 누락·중복 확인
-        run: python3 .github/scripts/ci_backend.py verify --shards 4 --reports backend-reports
+        run: python3 .github/scripts/ci_backend.py verify --shards 8 --reports backend-reports
 
   frontend:
     name: Frontend
