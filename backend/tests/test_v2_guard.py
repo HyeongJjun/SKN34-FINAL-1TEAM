@@ -148,3 +148,48 @@ def test_more_period_and_number_forms():
         "삼일절에는 쉬어요.",
     ):
         assert check(s, "", calc).dropped == [], s
+
+
+def test_period_basis_ignores_dates_and_people():
+    # 날짜 · 인원 숫자는 기간 근거가 아니다(QA: 시작일 12-03 · 인원 5명으로 3일 · 5일이 통과)
+    for calc in (
+        '{"start": "2026-12-03", "work_days": 1}',
+        "시작일 2026-12-03, 공사 기간 1일",
+        '{"crew": 5, "work_days": 1}',
+        "인원 5명, 공사 기간 1일",
+        "12/03 ~ 12/03",
+    ):
+        for s in ("3일 걸려요.", "5일 걸려요.", "12일 걸려요."):
+            assert check(s, calc, calc).dropped, (calc, s)
+    assert check("1일 걸려요.", "", '{"start": "2026-12-03", "work_days": 1}').dropped == []
+    # 기간 칸 이름: days · half_days(반나절 수) · weeks
+    assert check("3일 걸려요.", "", '{"days": 3}').dropped == []
+    assert check("2일 반 걸려요.", "", '{"half_days": 5}').dropped == []
+    assert check("2주 걸려요.", "", '{"weeks": 2}').dropped == []
+    assert check("4일 걸려요.", "", '{"man_days": 4, "days": 2}').dropped  # 품은 기간이 아님
+
+
+def test_numeric_half_day_period():
+    # 숫자 + 반도 실제 기간으로(QA: 계산 2일인데 '2일 반'이 통과)
+    calc = '{"work_days": 2}'
+    for s in ("2일 반 걸려요.", "2일 반이면 끝나요.", "1주 반 걸려요."):
+        assert check(s, "", calc).dropped, s
+    assert check("2일 걸려요.", "", calc).dropped == []
+    assert check("2일 반 걸려요.", "", "2.5일").dropped == []
+    assert check("2일 반 걸려요.", "", "공사 2일 반").dropped == []
+    assert check("2일 반 걸려요.", "2.5일").dropped == []  # calc 없이 자료만 줄 때도 2.5로
+
+
+def test_frequency_is_not_period():
+    # 빈도 표현은 '완료'가 뒤에 있어도 공사 기간이 아니다(QA 회귀)
+    calc = '{"work_days": 2}'
+    for s in (
+        "한 달에 한 번 점검하고 공사를 완료합니다.",
+        "하루에 한 공정씩 진행해 공사를 마쳐요.",
+        "일주일에 두 번 환기하고 마무리해요.",
+    ):
+        assert check(s, "", calc).dropped == [], s
+    assert check("1개월에 1회 점검하고 완료해요.", "1", calc).dropped == []
+    # 기간으로 쓴 '에'는 그대로 검사
+    assert check("사흘에 끝내요.", "", calc).dropped
+    assert check("한 달에 걸쳐 끝내요.", "", calc).dropped

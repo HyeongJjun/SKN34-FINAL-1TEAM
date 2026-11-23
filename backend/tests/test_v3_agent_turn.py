@@ -479,3 +479,17 @@ def test_market_standard_says_market_price_not_public(text, view):
 def test_public_standard_still_says_public():
     w = words(turn("도배 비용이 얼마나 나와요?", facts=FACTS).answer)
     assert "공공 기준" in w and "시장 단가" not in w
+
+
+def test_check_period_basis_half_and_frequency():
+    """v3 출력 검사도 v2 guard 기간 규칙을 그대로 쓴다(QA 세 건)."""
+
+    def dropped(text: str, calc: str) -> bool:
+        _, d = check.section(Section(sentences=[Sentence(text=text)]), calc, calc_text=calc)
+        return bool(d)
+
+    assert dropped("도배는 3일 걸려요.", "시작일 2026-12-03, 공사 기간 1일")
+    assert dropped("도배는 5일 걸려요.", "인원 5명, 공사 기간 1일")
+    assert dropped("도배는 2일 반 걸려요.", "공사 기간 2일")
+    assert not dropped("도배는 2일 걸려요.", "공사 기간 2일")
+    assert not dropped("한 달에 한 번 점검하고 공사를 완료합니다.", "공사 기간 2일")

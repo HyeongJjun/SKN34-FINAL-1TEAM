@@ -111,29 +111,66 @@ def _native_days(m: re.Match) -> float:
     return round(n * per, 4)
 
 
+# '에' 바로 뒤 횟수(한 번 · 2회 · 한 공정씩)면 뒤에 '완료'가 있어도 빈도다("한 달에 한 번 점검하고 공사를 완료합니다")
+FREQ = re.compile(r"^\s?에\s?(?:(?:한|두|세|네|몇|\d+)\s?(?:번|회|차례)|[^.,!?]{0,8}?씩)")
+# 숫자 기간 뒤 '반'(2일 반 = 2.5일)
+HALF = re.compile(r"^\s?반(?=\s|$|[.,!?~]|이면|정도|쯤|걸|만에|동안)")
+
+
 def _rate(sentence: str, m: re.Match) -> bool:
     """'하루에 한 공정씩' · '한 달에 한 번'처럼 '에'가 붙은 빈도 · 단위 표현이면 True."""
     rest = sentence[m.end() :]
+    if FREQ.match(rest):
+        return True
     return bool(re.match(r"\s?에", rest)) and not DONE.search(rest)
 
 
 DAYS_PER = {"일": 1.0, "주": 7.0, "개월": 30.0}
+# 계산 결과의 단위 없는 숫자는 기간 칸(work_days: 2 · weeks: 1)일 때만 기간으로 본다.
+# 날짜(2026-12-03) · 인원(crew: 5) · 품(man_days) 같은 숫자는 기간 근거가 아니다
+KEY_BEFORE = re.compile(r"\"?([A-Za-z_가-힣]+)\"?\s*[:=]\s*$")
+
+
+def _key_days(key: str) -> float | None:
+    """기간 칸 이름이면 그 칸 숫자 1의 일 수(half_days 0.5 · weeks 7), 아니면 None."""
+    k = key.lower()
+    if k.startswith("man_") or k.endswith("_off"):
+        return None
+    if k.endswith("half_days"):
+        return 0.5
+    if re.search(r"(?:^|_)days?$", k) or re.search(r"기간|일수|_일$", k):  # 기간_일 · 공사기간
+        return 1.0
+    if re.search(r"(?:^|_)weeks?$", k):
+        return 7.0
+    if re.search(r"(?:^|_)months?$", k):
+        return 30.0
+    return None
 
 
 def period_days(text: str) -> set[float]:
-    """계산 결과에 나온 기간을 일 수로. 단위 없는 숫자(work_days: 2)는 일로 본다.
+    """계산 결과에 나온 기간을 일 수로. 단위 없는 숫자는 기간 칸(work_days: 2)일 때만 본다.
 
     '1일'과 '1주' · '1개월'을 구분한다: 계산 결과가 1일이면 일주일 · 한 달은 통과하지 않는다.
+    날짜(2026-12-03의 3) · 인원(5명, crew: 5)은 기간 근거가 아니다.
     """
     text = unicodedata.normalize("NFKC", text or "")
     out: set[float] = set()
     for m in NUM.finditer(text):
         unit = m.group(2)
-        if unit is not None and unit not in DAYS_PER:
-            continue
         v = _val(m.group(1), unit)
-        if v is not None:
-            out.add(round(v * DAYS_PER.get(unit or "일", 1.0), 4))
+        if v is None:
+            continue
+        if unit is None:
+            key = KEY_BEFORE.search(text[max(0, m.start() - 40) : m.start()])
+            per = _key_days(key.group(1)) if key else None
+            if per is not None:
+                out.add(round(v * per, 4))
+            continue
+        if unit not in DAYS_PER or (unit == "일" and DATE_BEFORE.search(text[: m.start()])):
+            continue
+        if HALF.match(text[m.end() :]):
+            v += 0.5
+        out.add(round(v * DAYS_PER[unit], 4))
     out.update(_native_days(m) for m in NATIVE_PERIOD.finditer(text))
     return out
 
@@ -150,6 +187,8 @@ def numbers(text: str) -> set[float]:
         if v is None:
             continue
         out.add(round(v, 4))
+        if m.group(2) in PERIOD_UNITS and HALF.match(text[m.end() :]):
+            out.add(round(v + 0.5, 4))  # 자료의 '2일 반'은 2.5
         if v >= 100_000:
             out.add(round(v / 1e4) * 1e4)
             out.add((v // 1e4) * 1e4)
@@ -186,7 +225,11 @@ def _bad_number(
         v = _val(m.group(1), m.group(2))
         if v is None:
             continue
-        unit = _period_unit(sentence, m) if periods is not None else None
+        rest = sentence[m.end() :]
+        if m.group(2) in PERIOD_UNITS and HALF.match(rest):
+            v += 0.5  # 2일 반 = 2.5일
+        # '1개월에 1회'처럼 빈도로 쓴 기간 숫자는 기간이 아니라 일반 숫자로 본다
+        unit = _period_unit(sentence, m) if periods is not None and not FREQ.match(rest) else None
         if periods is not None and unit:
             if round(v * DAYS_PER[unit], 4) not in periods:
                 return m.group(0).strip()  # 기간은 계산 결과에 있는 기간만(단위까지)
