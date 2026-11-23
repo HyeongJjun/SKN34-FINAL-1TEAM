@@ -11,7 +11,7 @@ import re
 from app.agent.v3.answer import Task
 from app.agent.v3.quote_explain import match_line
 from app.agent.v3.schemas import AgentAnswer, CompareTable, StandardLineFact, TableRow, UiCard
-from app.agent.v3.templates import josa
+from app.agent.v3.templates import EXTRACT_SUMMARY_LEAD, josa
 
 ON_ROUTES = ("trade", "quote_explanation")
 ON_TRADES = ("dobae", "mokgong")
@@ -22,9 +22,12 @@ PROBLEM = re.compile(
 WORK = re.compile(
     r"(퍼티\s*작업|빠데\s*작업|퍼티|빠데|핸디코트|초배지?|정배|부분\s*도배|천장\s*도배|철거|몰딩|걸레받이|문선|석고\s*보드|평탄화|단열\s*벽지|곰팡이\s*방지\s*처리|합지|실크\s*벽지|실크)"
 )
+TRADE_WORD = re.compile(r"도배|목공")
 MONEY = re.compile(
-    r"견적|얼마|금액|비용|단가|수량|합계|비싸|싸요|왜\s*\d|몇\s*(?:평|㎡|품)|\d\s*품|평이|㎡"
+    r"견적|얼마(?!나\s*(?:가|걸|버텨|써|오래|지나|갈))|금액|비용|단가|수량|합계|비싸|싸요|왜\s*\d|몇\s*(?:평|㎡|품)|\d\s*품|평이|㎡"
 )
+# 기간 · 보증을 묻는 말(문제 낱말이 있어도 원인 확인 부탁을 쓰지 않음)
+PERIOD = re.compile(r"기간|언제|며칠|몇\s*(?:년|개월|달)|보증|얼마나\s*(?:가|돼|걸려|버텨|써)")
 # 문제 낱말 → 업체에 말할 이름
 PROBLEM_NAME = {
     "곰팡": "곰팡이",
@@ -106,7 +109,9 @@ def _vendor(q: str, ln: StandardLineFact | None) -> tuple[str, ...]:
         return (first, f"정해진 작업 범위와 금액을 {name} 줄에 나눠 견적서에 적어 주세요.")
     work = WORK.search(q)
     bad = PROBLEM.search(q)
-    if bad:
+    if bad and not PERIOD.search(
+        q
+    ):  # '보수 기간은 언제까지?'처럼 기간을 물으면 원인 확인 부탁이 아니에요
         stem = next((v for k, v in PROBLEM_NAME.items() if k in bad.group(0)), "")
         what = stem or (work.group(1) if work else "이 부분")
         return (
@@ -138,14 +143,22 @@ def shape(ans: AgentAnswer, task: Task, trade: str | None = None) -> AgentAnswer
         and task.facts.standard
         and (task.route == "quote_explanation" or MONEY.search(task.text))
     ):
-        ln = match_line(task.text, task.facts.standard.lines)
+        # 공종 이름(도배 · 목공)만으로는 줄을 고르지 않아요('도배 얼마예요?'에 벽 도배 줄 하나만 붙지 않게)
+        ln = match_line(TRADE_WORD.sub(" ", task.text), task.facts.standard.lines)
     vendor = _vendor(task.text, ln)
     card = _card(ln) if ln is not None else None
     if not vendor and card is None:
         return ans
     first, *rest = ans.sections
-    lead = first.sentences[0].text
-    sections = [first.model_copy(update={"sentences": first.sentences[1:]}), *rest]
+    said = list(first.sentences)
+    if (
+        said[0].text == EXTRACT_SUMMARY_LEAD
+    ):  # 채움 글('믿집 자료를 보면 이래요.')은 결론이 아니에요
+        said = said[1:]
+    if not said:
+        return ans
+    lead = said[0].text
+    sections = [first.model_copy(update={"sentences": said[1:]}), *rest]
     cards = list(ans.cards)
     if card is not None:
         cards.insert(0, card)

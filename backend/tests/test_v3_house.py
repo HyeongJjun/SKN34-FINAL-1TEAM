@@ -48,3 +48,29 @@ def test_problem_question_asks_cause_first_without_verdict():
 def test_guide_question_keeps_old_shape():
     a = turn("계약서는 언제 써요?", facts=FACTS).answer
     assert a.lead == "" and a.vendor == []
+
+
+def test_shape_skips_filler_and_misreads():
+    # 자료에서 뽑은 답의 채움 글은 결론이 아니에요
+    a = turn("도배 전에 곰팡이 어떻게 없애요?", facts=FACTS).answer
+    assert a.lead and a.lead != "믿집 자료를 보면 이래요."
+    # '얼마나'(수명 · 기간)는 금액 질문이 아니에요: 견적서 카드 · 견적 부탁을 붙이지 않아요
+    a = turn("합지 벽지 수명은 얼마나 가요?", facts=FACTS).answer
+    assert not [c for c in a.cards if c.kind == "house"]
+    assert not any("견적서에는" in v for v in a.vendor)
+    # 문제 낱말이 있어도 기간을 물으면 원인 확인 부탁을 쓰지 않아요
+    a = turn("도배 들뜸 보수 기간은 언제까지예요?", facts=FACTS).answer
+    assert not any("원인부터" in v for v in a.vendor)
+    # 공종 이름만 있는 금액 질문에 줄 하나짜리 카드를 붙이지 않아요
+    a = turn("도배 얼마예요?", facts=FACTS).answer
+    assert not [c for c in a.cards if c.kind == "house"]
+
+
+def test_choice_button_route_goes_to_trade():
+    """리뷰 회귀: '공사 방법과 자재가 궁금해요' 선택지는 단추의 길(route)로 공정 상담에 가요.
+    화면이 단추 정보를 빼고 글만 보내면 다시 고르라는 답(ask_back)이 돼요."""
+    from app.agent.v3.schemas import Button
+
+    q = "공사 방법과 자재가 궁금해요"
+    assert turn(q, facts=FACTS).answer.trace.route == "ask_back"
+    assert turn(q, facts=FACTS, button=Button(route="trade")).answer.trace.route == "trade"
