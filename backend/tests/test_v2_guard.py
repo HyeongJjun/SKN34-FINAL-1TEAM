@@ -95,3 +95,56 @@ def test_native_periods_only_from_calc():
     ):
         assert check(s, "", calc).dropped, s
     assert check("하루 작업량으로 정해요.", "", calc).dropped == []
+
+
+def test_period_with_words_between_and_units():
+    # 기간과 완료 표현 사이에 다른 말이 있어도 공사 기간으로 본다 (#163 재검토 1)
+    calc = '{"work_days": 2}'
+    for s in (
+        "사흘에 도배를 끝낼 수 있어요.",
+        "하루에 도배 끝낼 수 있어요.",
+        "일주일에 거실까지 마무리해요.",
+    ):
+        assert check(s, "", calc).dropped, s
+    for s in ("하루에 바르는 양이 정해져 있어요.", "한 달에 한 번 환기 상태를 봐요."):
+        assert check(s, "", calc).dropped == [], s
+    # 기간은 단위까지 맞아야 통과한다: 계산 결과 1일이면 일주일 · 한 달 · 1주는 안 된다 (#163 재검토 2)
+    for c in ('{"work_days": 1}', "도배 1일"):
+        for s in (
+            "일주일 걸려요.",
+            "한 달 걸려요.",
+            "1주 걸려요.",
+            "1개월 걸려요.",
+            "3~5주 걸려요.",
+        ):
+            assert check(s, "", c).dropped, (c, s)
+        for s in ("하루 걸려요.", "1일 걸려요."):
+            assert check(s, "", c).dropped == [], (c, s)
+    assert check("2주 걸려요.", "", "공사 14일").dropped == []
+    assert check("일주일 걸려요.", "", "공사 1주").dropped == []
+
+
+def test_more_period_and_number_forms():
+    calc = '{"work_days": 2}'
+    # 한자어 · 반 · 반나절 · 전각 숫자도 기간 · 숫자로 본다
+    for s in (
+        "삼일이면 끝나요.",
+        "사 일 걸려요.",
+        "육 개월 걸려요.",
+        "이틀 반 걸려요.",
+        "반나절이면 끝나요.",
+        "３일 걸려요.",
+        "３０만 원이에요.",
+    ):
+        assert check(s, "", calc).dropped, s
+    assert check("이틀 반 걸려요.", "", "2.5일").dropped == []
+    # 기간이 아닌 말은 둔다
+    for s in (
+        "하루라도 빨리 연락하세요.",
+        "하루하루 환기하세요.",
+        "가장 이른 반나절을 골라요.",
+        "이 일이 먼저예요.",
+        "오일 스테인을 발라요.",
+        "삼일절에는 쉬어요.",
+    ):
+        assert check(s, "", calc).dropped == [], s
