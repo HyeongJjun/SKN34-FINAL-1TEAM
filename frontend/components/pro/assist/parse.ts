@@ -6,20 +6,7 @@
 export type PeriodFill = { start: string; end: string; excluded: string[]; outside: string[] };
 export type QuoteFill = { amount?: number; vat?: "included" | "excluded" | "exempt"; days?: number; valid?: string };
 
-// 안 되는 날: "안 돼요 · 안 됩니다 · 못 가요 · 불가 · 어렵습니다 · 힘들어요 · 쉬어요" 같은 말
-const NO = /안\s*(?:돼|됨|되|됩|됐)|못\s*(?:가|갑|와|오|옵|해|하|합|함)|불가|빼고|빼\s*주|빼요|어려|어렵|힘들|곤란|제외|휴무|쉬어|쉽니다|쉬는/;
-/** 이중 부정: "어렵지 않아요 · 안 되지는 않아요"는 되는 날이에요 */
-const NO_NOT = /(?:어렵|힘들|곤란|안\s*되|불가하)지\s*(?:는|도|만)?\s*않/;
-/** 값을 부정하는 말("455만 원이 아니라", "3일 아니고", "포함 아닙니다") */
-const NEG = String.raw`(?:아니|아닙|아냐|아녜|아님|말고)`;
-/** 값 바로 뒤에 부정이 붙었는지 */
-const NEG_AFTER = new RegExp(String.raw`^\s*원?\s*(?:은|는|이|가)?\s*${NEG}`);
-/** 값 바로 뒤에 붙어 "뒤 값으로 고친다"는 말 */
-const FIX = String.raw`\s*원?\s*(?:은|는|이|가)?\s*(?:아니라|아니고|아니구|아닌|말고)[\s,]*`;
-/** 앞 값을 뒤 값으로 고치는 사이 말: 위 FIX + "455만 원, 아니 555만 원" · "3일 → 5일" */
-const FIX_GAP = String.raw`(?:${FIX}|\s*원?\s*,?\s*아니(?:요|오)?[\s,]+|\s*원?\s*(?:→|->|=>)\s*)`;
-/** 바꾸는 말: 두 값 사이에 있는데 어느 값인지 못 고르면 비워요 */
-const CHANGE = /변경|바꾸|바꿔|바뀌|바꿨|바꿈|수정|정정|아니|→|->|=>|에서/;
+const NO = /안\s*돼|안\s*됨|안\s*되|못\s*가|불가|빼고|빼\s*주|빼요|어려|제외/;
 // 토막 나누기: 쉼표 · 줄바꿈 · 이음말, 마침표는 숫자 사이(12.2)가 아닐 때만
 const PARTS = /,|\n|(?<!\d)\.|\.(?!\d)|그리고|하고|인데|는데|지만/;
 const DATE = String.raw`(?:\d{1,2}\s*(?:\/|\.|월)\s*)?\d{1,2}\s*일?`;
@@ -57,42 +44,17 @@ export function parsePeriod(text: string, today: string, baseMonth?: string | nu
   const month = { m: Number((baseMonth ?? today).slice(5, 7)) };
   const ok: string[] = [];
   const no: string[] = [];
-  // "12/4, 12/3은 안 돼요"의 12/4처럼 날짜만 있는 토막은 뒤 토막의 말(되는지 · 안 되는지)을 따라요
-  let wait: string[] = [];
   for (const part of text.split(PARTS)) {
     if (!part.trim()) continue;
-    const days = daysIn(part, today, month);
-    if (days.length && BARE.test(part.replace(DATE_ALL, ""))) {
-      wait.push(...days);
-      continue;
-    }
-    (NO.test(part) && !NO_NOT.test(part) ? no : ok).push(...wait, ...days);
-    wait = [];
+    (NO.test(part) ? no : ok).push(...daysIn(part, today, month));
   }
-  ok.push(...wait);
-  const nos = new Set(no);
   if (!ok.length) return null;
   if (new Set(ok).size > 1 && !RANGE.test(text)) return null;
   ok.sort();
-  // 안 된다고 한 날은 첫날 · 끝날이어도 가능한 날로 넣지 않아요(12/2~12/5에 12/2가 안 되면 12/3부터)
-  let start = ok[0];
-  let end = ok[ok.length - 1];
-  while (start <= end && nos.has(start)) start = shift(start, 1);
-  while (end >= start && nos.has(end)) end = shift(end, -1);
-  if (start > end) return null;
-  const sorted = [...nos].sort();
-  return { start, end, excluded: sorted.filter((d) => d > start && d < end), outside: sorted.filter((d) => d < ok[0] || d > ok[ok.length - 1]) };
-}
-
-/** 날짜만 지운 토막에 남은 게 조사 · 이음말뿐이면 날짜만 늘어놓은 토막이에요 */
-const DATE_ALL = /(?:\d{1,2}\s*(?:\/|\.|월)\s*)?\d{1,2}\s*일?|[~\-–∼]/g;
-const BARE = /^[\s과와랑및도은는이가]*$/;
-
-/** "2026-12-02"에서 며칠 앞뒤 */
-function shift(day: string, by: number): string {
-  const d = new Date(`${day}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + by);
-  return d.toISOString().slice(0, 10);
+  const start = ok[0];
+  const end = ok[ok.length - 1];
+  const nos = [...new Set(no)].sort();
+  return { start, end, excluded: nos.filter((d) => d > start && d < end), outside: nos.filter((d) => d < start || d > end) };
 }
 
 const num = (s: string) => Number(s.replace(/,/g, ""));
@@ -110,27 +72,13 @@ function amountIn(text: string): number | undefined {
   for (const m of text.matchAll(/(\d{1,3}(?:,\d{3})+|\d{6,})\s*원?/g)) {
     if (!hits.some((h) => m.index >= h.at && m.index < h.end)) hits.push({ at: m.index, end: m.index + m[0].length, won: num(m[1]) });
   }
-  hits.sort((a, b) => a.at - b.at);
-  // 정정: "견적 455만 원이 아니라 555만 원" · "455만 원, 아니 555만 원" · "455만 원에서 555만 원으로"는 앞 자리(견적)에 뒤 값을 써요.
-  // 두 금액 사이에 바꾸는 말이 있는데 어느 쪽인지 모르면 비워요. 뒤 값 없이 부정만 하면 그 값을 버려요
-  for (let i = hits.length - 1; i >= 0; i--) {
-    const next = hits[i + 1];
-    const gap = next ? text.slice(hits[i].end, next.at) : "";
-    const to = next ? /^\s*원?\s*(?:으로|로)/.test(text.slice(next.end)) : false;
-    if (next && (new RegExp(`^${FIX_GAP}$`).test(gap) || (to && /^\s*원?\s*에서\s*$/.test(gap)))) {
-      hits[i].won = next.won;
-      hits.splice(i + 1, 1);
-    } else if (next && CHANGE.test(gap)) return undefined;
-    else if (NEG_AFTER.test(text.slice(hits[i].end))) hits.splice(i, 1);
-  }
   if (hits.length <= 1) return hits[0]?.won;
   const total = hits.filter((h) => TOTAL.test(text.slice(Math.max(0, h.at - 12), h.at)));
   return total.length === 1 ? total[0].won : undefined;
 }
 
-/** 뒤에 붙으면 그 말을 버리는 부정("면세는 아니고", "부가세 포함 아닙니다", "포함된 금액이 아닙니다").
- *  쉼표 · 마침표나 다음 부가세 말을 넘어가서는 보지 않아요 */
-const NOT = new RegExp(String.raw`^(?:(?!면세|부가|VAT)[^,.\n]){0,8}?(?:${NEG}|없|않|안\s*(?:돼|됨|되|됩|해|하|함|합|했))`, "i");
+/** 바로 뒤에 붙으면 그 말을 버리는 부정("면세는 아니고") */
+const NOT = /^\s*(?:은|는|이|가)?\s*(?:아니|아님|없)/;
 
 /** 부가세: '부가세 · VAT' 바로 뒤 말만 봐요("부가세 포함, 철거는 별도"는 포함이에요).
  *  "면세는 아니고 부가세 포함"처럼 부정한 말은 버리고, 남은 방식이 하나일 때만 채워요 */
@@ -149,8 +97,7 @@ function vatIn(text: string): QuoteFill["vat"] {
 function validIn(text: string, today: string): string | undefined {
   const at = text.search(/유효/);
   if (at < 0) return undefined;
-  // "12/17까지 아니고 12/20까지"처럼 부정한 날은 버려요
-  const hits = [...text.matchAll(new RegExp(`(${DATE})\\s*까지`, "g"))].filter((h) => !NEG_AFTER.test(text.slice((h.index ?? 0) + h[0].length)));
+  const hits = [...text.matchAll(new RegExp(`(${DATE})\\s*까지`, "g"))];
   if (!hits.length) return undefined;
   const near = hits.reduce((a, b) => (Math.abs((b.index ?? 0) - at) < Math.abs((a.index ?? 0) - at) ? b : a));
   const said = near[1];
@@ -162,19 +109,10 @@ function validIn(text: string, today: string): string | undefined {
   return d;
 }
 
-/** 공사 기간: "공사 3일" · "3일 걸려요" · "3일간"처럼 기간이라는 말이 붙을 때만 읽어요("9일부터"는 날짜예요).
- *  "공사 3일 아니고 5일"은 고친 5일, 뒤 값 없이 "공사 3일은 아니에요"면 비워요 */
+/** 공사 기간: "공사 3일" · "3일 걸려요" · "3일간"처럼 기간이라는 말이 붙을 때만 읽어요("9일부터"는 날짜예요) */
 function daysOf(text: string): number | undefined {
   const m = text.match(/(?:공사|작업|시공)\s*(?:기간)?\s*(?:은|는|이|가)?\s*(\d{1,3})\s*일(?!\s*까지)/) ?? text.match(/(\d{1,3})\s*일\s*(?:간|동안|걸|소요|작업|정도)/);
-  if (!m) return undefined;
-  const rest = text.slice((m.index ?? 0) + m[0].length);
-  // "3일 아니고 5일" · "3일, 아니 5일" · "3일 → 5일" · "3일에서 5일로"는 뒤 값
-  const fixed = rest.match(new RegExp(String.raw`^(?:${FIX_GAP}|\s*에서\s*(?=\d{1,3}\s*일\s*(?:으로|로)))(\d{1,3})\s*일(?!\s*까지)`));
-  if (fixed) return Number(fixed[1]);
-  if (NEG_AFTER.test(rest)) return undefined;
-  // 뒤에 다른 기간과 바꾸는 말이 있는데 정정으로 못 읽었으면 비워요
-  if (CHANGE.test(rest) && /\d{1,3}\s*일/.test(rest)) return undefined;
-  return Number(m[1]);
+  return m ? Number(m[1]) : undefined;
 }
 
 /** "견적 455만 원, 부가세 포함, 공사 3일, 12/17까지 유효" → 견적서 칸 값. 읽은 칸만 돌려줘요 */
@@ -192,26 +130,27 @@ export function parseQuote(text: string, today: string): QuoteFill {
 }
 
 export type DatesFill = { days: string[]; crew?: number };
-const RANGE = /부터|까지|~|∼/;
 
-/** 공사 날짜: "12/8부터 12/10까지, 2명" → 그 사이 날 모두(안 된다고 한 날 · 공휴일 빼고). "12/8, 12/9, 12/11"처럼 늘어놓으면 그 날만 */
-export function parseDates(text: string, today: string, baseMonth?: string | null, holidays: string[] = []): DatesFill | null {
+/** 공사 날짜: "12/8부터 12/10까지, 2명" → 그 사이 날 모두(안 된다고 한 날 · 공휴일 빼고, noWeekend면 토 · 일도 빼고).
+ *  "12/8, 12/9, 12/11"처럼 늘어놓으면 그 날만(말한 날은 주말이어도 그대로 두고 서버가 다시 봐요) */
+export function parseDates(text: string, today: string, baseMonth?: string | null, holidays: string[] = [], noWeekend = false): DatesFill | null {
   const crewM = text.match(/(\d)\s*명/);
   const crew = crewM ? Number(crewM[1]) : undefined;
-  const p = parsePeriod(text.replace(/\d\s*명/g, ""), today, baseMonth);
-  if (!p) return crew ? { days: [], crew } : null;
-  const skip = new Set([...p.excluded, ...holidays]);
-  let days: string[];
-  if (RANGE.test(text)) {
-    days = [];
-    for (let d = new Date(`${p.start}T00:00:00Z`); d.toISOString().slice(0, 10) <= p.end; d.setUTCDate(d.getUTCDate() + 1)) {
+  const said = text.replace(/\d\s*명/g, "");
+  const days: string[] = [];
+  if (RANGE.test(said)) {
+    const p = parsePeriod(said, today, baseMonth);
+    const skip = new Set([...(p?.excluded ?? []), ...holidays]);
+    for (let d = new Date(`${p?.start}T00:00:00Z`); p && d.toISOString().slice(0, 10) <= p.end; d.setUTCDate(d.getUTCDate() + 1)) {
       const k = d.toISOString().slice(0, 10);
-      if (!skip.has(k)) days.push(k);
+      if (!skip.has(k) && !(noWeekend && (d.getUTCDay() === 0 || d.getUTCDay() === 6))) days.push(k);
     }
   } else {
     const month = { m: Number((baseMonth ?? today).slice(5, 7)) };
-    days = [...new Set(text.split(PARTS).filter((x) => !NO.test(x)).flatMap((x) => daysIn(x, today, month)))].filter((d) => !skip.has(d)).sort();
+    const skip = new Set(holidays);
+    days.push(...[...new Set(said.split(PARTS).filter((x) => !NO.test(x)).flatMap((x) => daysIn(x, today, month)))].filter((d) => !skip.has(d)).sort());
   }
+  if (!days.length && !crew) return null;
   return { days, crew };
 }
 

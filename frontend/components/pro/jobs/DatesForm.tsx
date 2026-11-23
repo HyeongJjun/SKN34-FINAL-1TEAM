@@ -69,7 +69,7 @@ export function DatesForm({ job, now }: { job: JobV3; now: string }) {
   }
 
   function assist(text: string): string {
-    const got = parseDates(text, today, job.request?.wish_dates[0] ?? v.work_wish_on, job.holidays.map((h) => h.day));
+    const got = parseDates(text, today, job.request?.wish_dates[0] ?? v.work_wish_on, job.holidays.map((h) => h.day), !job.weekend_work);
     if (!got) return "날짜를 못 읽었어요. 예: 12/8부터 12/10까지, 2명";
     if (got.crew && got.crew <= 6) setCrew(String(got.crew));
     const ok = got.days.filter((d) => d > today);
