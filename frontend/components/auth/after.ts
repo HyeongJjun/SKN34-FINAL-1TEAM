@@ -12,10 +12,10 @@ export type After =
 export const hasGuestAnswers = () => guestBody() !== null;
 
 /** 손님 답을 새 공사로 옮기고 그 공사 업체 보기로 */
-export async function moveAndGo(mock: boolean): Promise<After> {
+export async function moveAndGo(mock: boolean, to: "vendors" | "assistant" = "vendors"): Promise<After> {
   try {
     const p = await moveGuest(mock);
-    return { kind: "go", href: p ? `/projects/${p.id}/vendors` : "/" };
+    return { kind: "go", href: p ? `/projects/${p.id}/${to}` : "/" };
   } catch (e) {
     return { kind: "error", message: e instanceof Error && e.message ? e.message : "잠시 문제가 생겼어요. 다시 해 주세요." };
   }
@@ -24,6 +24,8 @@ export async function moveAndGo(mock: boolean): Promise<After> {
 export async function afterAuth(role: string, next: string | null | undefined, mock: boolean, opts: { fresh?: boolean } = {}): Promise<After> {
   const n = safeNext(next);
   if (role === "customer" && hasGuestAnswers()) {
+    // 재재 대화에서 가입 · 로그인하면 옮긴 공사의 재재 화면으로 돌아가요(새로 시작한 집이라 진행 중 공사를 묻지 않아요)
+    if (n === "/assistant") return moveAndGo(mock, "assistant");
     if (!opts.fresh) {
       const ongoing = await myOngoing();
       if (ongoing.length) return { kind: "go", href: "/?resume=1" };

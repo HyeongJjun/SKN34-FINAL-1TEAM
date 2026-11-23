@@ -26,6 +26,9 @@ type Msg = { id: number; who: "bot" | "me"; node: ReactNode };
 const PY = ["18", "24", "32", "40"];
 const toPy = (m2: string) => (m2 ? `${Math.round(Number(m2) / 3.3058)}평` : "");
 
+/** 면적 글: 공급은 평(㎡), 전용은 ㎡만(공급 평으로 바꾸지 않아요) */
+const areaText = (x: Partial<InfoDraft>) => (x.basis === "exclusive" ? `전용 ${x.area}㎡` : `${toPy(x.area ?? "")}(공급 ${x.area}㎡)`);
+
 export function StartFlow({ regions, today, member, mock }: { regions: Region[]; today: string; member: boolean; mock: boolean }) {
   const router = useRouter();
   const [d, setD] = useState<InfoDraft>(EMPTY_DRAFT);
@@ -70,7 +73,7 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
   function filled(p: Partial<InfoDraft>): string {
     const out: string[] = [];
     if (p.sgg) out.push(placeText(regions, { sido: p.sido ?? "", sgg: p.sgg }));
-    if (p.area) out.push(`${toPy(p.area)}(${p.area}㎡)`);
+    if (p.area) out.push(areaText(p));
     if (p.occupied != null) out.push(p.occupied ? "살면서 공사" : "빈 집");
     if (p.grade) out.push(p.grade === "basic" ? "실크 벽지" : "합지 벽지");
     if (p.scope === "partial") out.push("부분 도배");
@@ -101,7 +104,7 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
     await say(<><p>{lead}이 조건이 맞나요?</p>
       <div className={s.card}>
         <div className={s.kv}><span>집</span><b>아파트 · {placeText(regions, x)}</b></div>
-        <div className={s.kv}><span>평형</span><b>{toPy(x.area)} (공급 {x.area}㎡)</b></div>
+        <div className={s.kv}><span>평형</span><b>{areaText(x)}</b></div>
         <div className={s.kv}><span>공정</span><b>도배 {x.scope === "partial" ? "부분" : "전체"}</b></div>
         <div className={s.kv}><span>거주</span><b>{x.occupied ? "살면서 공사" : "빈 집"}</b></div>
         <div className={s.kv}><span>도배 유형</span><b>{x.grade === "economy" ? "저가형 (합지)" : "기본형 (실크)"}</b></div>
@@ -119,11 +122,10 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
       const base = stdRef.current;
       if (!compare) { setStd(got); stdRef.current = got; }
       if (compare && base) {
-        const diff = base.total - got.total;
         await say(<><div className={s.two}>
           <div className={s.card}><h4>{x.grade === "economy" ? "기본형 (실크)" : "저가형 (합지)"}</h4><b className="mj-num">{won(base.total)}</b></div>
           <div className={s.card}><h4>{x.grade === "economy" ? "저가형 (합지)" : "기본형 (실크)"}</h4><b className="mj-num">{won(got.total)}</b></div></div>
-          <p>차이는 <b className="mj-num">{won(Math.abs(diff))}</b>이에요. 차이는 대부분 벽지값에서 나요.</p>
+          <p>두 금액의 차이는 대부분 벽지값에서 나요.</p>
           <div className={s.row}><Button size="sm" onClick={() => { add("me", "업체 볼게요"); void vendors(); }}>그대로 업체 볼게요</Button></div></>);
         return;
       }
@@ -147,12 +149,14 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
   }
 
   async function vendors() {
+    if (busyRef.current) return; // 두 번 눌러 공사가 둘 생기지 않게
     writeGuest(dRef.current);
     if (!member) {
       await say(<><p>업체 가견적과 실측 요청은 <b>가입 · 로그인</b>한 뒤에 이어져요. 지금까지 적은 내용은 그대로 가져가요.</p>
         <div className={s.row}><Button size="sm" href="/signup?next=/assistant">가입하고 이어가기</Button><Button size="sm" variant="secondary" href="/login?next=/assistant">로그인</Button></div></>);
       return;
     }
+    busyRef.current = true;
     setBusy(true);
     try {
       const p = await moveGuest(mock);
@@ -161,6 +165,7 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
       router.push(`/projects/${encodeURIComponent(p.id)}/assistant`);
     } catch (e) {
       await say(<p>공사를 만들지 못했어요. {errorText(e)}</p>);
+      busyRef.current = false;
       setBusy(false);
     }
   }
@@ -176,7 +181,7 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
     const p = readLine(t, regions, today);
     add("me", t);
     if (!Object.keys(p).length) {
-      if (/다\s*고쳤|됐어|확인/.test(t)) { void confirm(base); return; }
+      if (/다\s*고쳤|됐어|확인/.test(t)) { void next(base); return; } // 빈 칸이 남았으면 그것부터 다시 물어요
       void say(<p>제가 읽을 수 있는 값이 없었어요. &quot;노원구 24평 아파트, 살고 있어요&quot;처럼 적거나 위 칩을 눌러 고쳐 주세요.</p>);
       return;
     }
@@ -196,7 +201,7 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
   const chips: [string, string][] = [
     ["집", "아파트"],
     ["지역", d.sgg ? placeText(regions, d) : ""],
-    ["평형", d.area ? toPy(d.area) : ""],
+    ["평형", d.area ? areaText(d) : ""],
     ["공정", `도배 ${d.scope === "partial" ? "부분" : "전체"}`],
     ["거주", d.occupied == null ? "" : d.occupied ? "살고 있어요" : "빈 집"],
     ["도배 유형", d.grade ? (d.grade === "basic" ? "기본형" : "저가형") : ""],

@@ -4,7 +4,7 @@
 // - 견적서 확정 POST …/quotes/{vid}/confirm · 공사 날짜 수락 POST …/deals/{did}/dates/{pid}/accept · 추가 금액 POST …/extras/{eid}/answer
 // - 공사 끝 확인 POST …/deals/{did}/check · 리뷰 POST …/deals/{did}/review · 준비 체크 PUT /projects/{id}/checks/{key}
 // - 질문은 POST /ai/turns(로그인한 고객 AI). 금액 · 날짜는 API 값 그대로이고, 저장 · 확정 · 승인은 사람이 카드 단추를 눌러요.
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AiAnswer } from "@/components/ai/AiAnswer";
@@ -24,6 +24,7 @@ import { Plan } from "./Plan";
 import s from "./flow.module.css";
 
 type Pick = Schemas["VisitPickOut"];
+const CLOSED = ["declined", "expired", "cancelled", "no_show", "closed"];
 type Half = "am" | "pm";
 const HALF: Record<Half, string> = { am: "오전", pm: "오후" };
 const enc = encodeURIComponent;
@@ -61,7 +62,11 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const pid = enc(p.id);
   const now = stepOf(data);
   const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState<string | null>(null);
+  const [busyKey, setBusy] = useState<string | null>(null);
+  const [refreshing, startRefresh] = useTransition();
+  // 새 화면 값이 올 때까지 단추를 막아요(같은 요청을 두 번 보내 409가 나지 않게)
+  const busy = busyKey ?? (refreshing ? "refresh" : null);
+  const [note, setNote] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [asks, setAsks] = useState<{ q: string; out?: AiTurnOut; err?: string }[]>([]);
   const [chatId, setChatId] = useState<string | null>(null);
@@ -73,7 +78,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     if (busy) return;
     setBusy(key);
     setErr(null);
-    try { await fn(); router.refresh(); } catch (e) { setErr(errorText(e)); } finally { setBusy(null); }
+    setNote(null);
+    try { await fn(); startRefresh(() => router.refresh()); } catch (e) { setErr(errorText(e)); } finally { setBusy(null); }
   }
 
   const asking = asks.length > 0 && !asks[asks.length - 1].out && !asks[asks.length - 1].err;
@@ -92,7 +98,10 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   }
 
   const deal = schedule?.trades.find((t) => t.deal.trade === "dobae") ?? null;
-  const vs = (visits?.visits ?? []).filter((v) => v.trade === "dobae");
+  const all = (visits?.visits ?? []).filter((v) => v.trade === "dobae");
+  // 닫힌 요청(거절 · 기한 지남 · 취소 · 안 옴 · 다시 고름)은 진행 중이 아니에요
+  const vs = all.filter((v) => !CLOSED.includes(v.status));
+  const closed = all.filter((v) => CLOSED.includes(v.status));
   const cards: { key: string; alert?: boolean; node: ReactNode }[] = [];
 
   // 지난 단계 요약
@@ -101,6 +110,9 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   // 재재가 먼저 알림(서버가 정한 지금 할 일)
   if (ov.todo?.text) cards.push({ key: "todo", alert: true, node: <p><b>{ov.todo.text}</b></p> });
 
+  if (!vs.length && !deal && closed.length) {
+    cards.push({ key: "closed", alert: true, node: <p>{closed.map((v) => v.vendor_name).join(" · ")} 실측 요청은 닫혔어요(거절 · 기한 지남 등). 다른 업체를 담아 다시 물어봐 주세요.</p> });
+  }
   if (!vs.length && !deal) {
     const cardsOf = [...(vendors?.local ?? []), ...(vendors?.nearby ?? [])].filter((v) => v.state === "ok");
     const picked = cardsOf.filter((v) => v.shortlisted);
@@ -124,7 +136,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
         </div>
         {/* 피드백: 재재가 고른 업체만 보이지 않게 전체 목록 길을 늘 둬요 */}
         <div className={s.row}><Button size="sm" variant="secondary" href={`/projects/${pid}/vendors`}>전체 업체에서 직접 고르기</Button></div>
-        {picked.length ? <VisitRequest pid={pid} draft={draft} today={today} busy={busy} act={act} /> : null}
+        {picked.length ? <VisitRequest pid={pid} draft={draft} today={today} busy={busy} act={act} onFailed={setNote} /> : null}
       </>
     ) });
   }
@@ -191,7 +203,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
         </>
       ) });
     }
-    for (const x of deal.extras.items.filter((i) => i.answer === "pending")) {
+    // 최신 판만 · 물어본 것(asked)도 아직 답할 수 있어요
+    for (const x of deal.extras.items.filter((i) => (i.answer === "pending" || i.answer === "asked") && !i.superseded)) {
       cards.push({ key: `x${x.id}`, alert: true, node: (
         <>
           <p><b>{iga(d.vendor_name)} 추가 금액을 요청했어요.</b> {x.title} · <b className="mj-num">{won(x.total)}</b></p>
@@ -199,7 +212,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
           <div className={s.row}>
             <Button size="sm" busy={busy === `xa${x.id}`} onClick={() => act(`xa${x.id}`, () => call("POST", `/projects/${pid}/deals/${enc(d.id)}/extras/${enc(x.id)}/answer`, { answer: "approve" }))}>승인</Button>
             <Button size="sm" variant="secondary" busy={busy === `xr${x.id}`} onClick={() => act(`xr${x.id}`, () => call("POST", `/projects/${pid}/deals/${enc(d.id)}/extras/${enc(x.id)}/answer`, { answer: "reject" }))}>거절</Button>
-            <Button size="sm" variant="weak" busy={busy === `xq${x.id}`} onClick={() => act(`xq${x.id}`, () => call("POST", `/projects/${pid}/deals/${enc(d.id)}/extras/${enc(x.id)}/answer`, { answer: "ask" }))}>물어볼래요</Button>
+            {x.answer === "asked" ? <span className={s.note}>채팅으로 물어봤어요</span> : <Button size="sm" variant="weak" busy={busy === `xq${x.id}`} onClick={() => act(`xq${x.id}`, () => call("POST", `/projects/${pid}/deals/${enc(d.id)}/extras/${enc(x.id)}/answer`, { answer: "ask" }))}>물어볼래요</Button>}
           </div>
         </>
       ) });
@@ -242,6 +255,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
               </div>
             ))}
             {err ? <p className="mj-error" role="alert">{err}</p> : null}
+            {note ? <p className="mj-error" role="status">{note}</p> : null}
             {asks.map((a, i) => (
               <div key={`a${i}`} className={s.msgs} style={{ padding: 0 }}>
                 <p className={s.me}>{a.q}</p>
@@ -277,20 +291,32 @@ export function ProjectFlow({ data }: { data: FlowData }) {
 
 type Act = (key: string, fn: () => Promise<unknown>) => Promise<void>;
 
-function VisitRequest({ pid, draft, today, busy, act }: { pid: string; draft: VisitDraft | null; today: string; busy: string | null; act: Act }) {
+/** 내일(서버가 준 오늘 + 1일, 날짜 문자열만 바꿔요). 서버도 오늘은 받지 않아요 */
+function nextDay(day: string): string {
+  const d = new Date(`${day}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function VisitRequest({ pid, draft, today, busy, act, onFailed }: { pid: string; draft: VisitDraft | null; today: string; busy: string | null; act: Act; onFailed: (t: string | null) => void }) {
+  const min = nextDay(today);
   const [from, setFrom] = useState(draft?.wish_start ?? "");
   const [to, setTo] = useState(draft?.wish_end ?? "");
   const ids = (draft?.vendors ?? []).map((v) => v.vendor_id);
-  const ok = from && to && to >= from && ids.length > 0;
+  const ok = from && to && from >= min && to >= from && ids.length > 0;
   return (
     <div className={s.card}>
       <h4>실측 날짜 물어보기</h4>
       <p className={s.note}>집에 계실 수 있는 기간을 고르면 담은 업체 {ids.length}곳에 물어봐요. 업체가 되는 날을 보내면 그중에서 반나절을 골라요.</p>
       <div className={s.dates}>
-        <label className={s.field}>언제부터<input type="date" min={today} value={from} onChange={(e) => setFrom(e.target.value)} /></label>
-        <label className={s.field}>언제까지<input type="date" min={from || today} value={to} onChange={(e) => setTo(e.target.value)} /></label>
+        <label className={s.field}>언제부터<input type="date" min={min} value={from} onChange={(e) => setFrom(e.target.value)} /></label>
+        <label className={s.field}>언제까지<input type="date" min={from || min} value={to} onChange={(e) => setTo(e.target.value)} /></label>
       </div>
-      <Button size="sm" disabled={!ok} busy={busy === "req"} onClick={() => act("req", () => call("POST", `/projects/${pid}/visits`, { trade: "dobae", vendor_ids: ids, wish_start: from, wish_end: to }))}>{ids.length}곳에 실측 날짜 물어보기</Button>
+      <Button size="sm" disabled={!ok} busy={busy === "req"} onClick={() => act("req", async () => {
+        const out = await call<Schemas["VisitCreateOut"]>("POST", `/projects/${pid}/visits`, { trade: "dobae", vendor_ids: ids, wish_start: from, wish_end: to });
+        // 일부 업체만 못 보낸 경우(서버는 전부 실패일 때만 409)도 알려요
+        if (out?.failed?.length) onFailed(`${out.failed.length}곳에는 요청을 보내지 못했어요. 업체 목록에서 다시 확인해 주세요.`);
+      })}>{ids.length}곳에 실측 날짜 물어보기</Button>
     </div>
   );
 }
@@ -308,7 +334,7 @@ function PickCard({ pid, visitId, name, proposal, busy, act }: { pid: string; vi
         {days.map((d) => (
           <div key={d.day} className={s.vrow}><b>{dateShort(d.day)}</b><div className={s.row}>
             {(["am", "pm"] as Half[]).filter((h) => d[h]).map((h) => (
-              <Button key={h} size="sm" variant={sel?.day === d.day && sel.half === h ? "primary" : "weak"} onClick={() => setSel({ day: d.day, half: h })}>{HALF[h]}</Button>
+              <Button key={h} size="sm" aria-pressed={sel?.day === d.day && sel.half === h} variant={sel?.day === d.day && sel.half === h ? "primary" : "weak"} onClick={() => setSel({ day: d.day, half: h })}>{HALF[h]}</Button>
             ))}
           </div></div>
         ))}
@@ -328,7 +354,7 @@ function ReviewCard({ pid, dealId, name, busy, act }: { pid: string; dealId: str
   return (
     <>
       <p><b>공사를 완료했어요.</b> 수고 많으셨어요. {name} 리뷰를 남기면 다음 고객이 업체를 고를 때 도움이 돼요.</p>
-      <div className={s.row}>{[5, 4, 3, 2, 1].map((n) => <Button key={n} size="sm" variant={rating === n ? "primary" : "weak"} onClick={() => setRating(n)}>별 {n}개</Button>)}</div>
+      <div className={s.row}>{[5, 4, 3, 2, 1].map((n) => <Button key={n} size="sm" aria-pressed={rating === n} variant={rating === n ? "primary" : "weak"} onClick={() => setRating(n)}>별 {n}개</Button>)}</div>
       {rating ? <label className={s.field}>리뷰 글(선택)<textarea rows={3} maxLength={500} value={body} placeholder="예: 약속한 날에 깔끔하게 마무리해 주셨어요." onChange={(e) => setBody(e.target.value)} /></label> : null}
       <Button size="sm" disabled={!rating} busy={busy === "review"} onClick={() => act("review", () => call("POST", `/projects/${pid}/deals/${enc(dealId)}/review`, { rating, tags: [], body: body.trim() || null, photo_file_ids: [] }))}>리뷰 등록</Button>
     </>
