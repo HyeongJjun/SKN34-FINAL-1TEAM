@@ -8,12 +8,12 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { ChoiceChips } from "@/components/ui/ChoiceChip";
 import { QuoteLines } from "@/components/ui/QuoteLines";
 import { START_SAY_KEY, readLine } from "@/components/start/StartChat";
 import type { Region } from "@/lib/api/project";
 import { errorText } from "@/lib/backend/client";
 import { calcGuest, moveGuest, type GuestStandard } from "@/lib/guest/api";
-import { ChoiceChips } from "@/components/ui/ChoiceChip";
 import { EMPTY_DRAFT, FACES, SPACES, checkDraft, placeText, pyeongToM2, scopeText, toHomeInfo, type Face, type InfoDraft, type SpaceKind } from "@/lib/guest/info";
 import { toQuoteLines } from "@/lib/guest/standard";
 import { draftOf, readGuest, writeGuest } from "@/lib/guest/store";
@@ -136,7 +136,7 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
       }
       await say(<><p><b>표준견적서</b>가 나왔어요. 공공 기준 단가로 믿집이 계산한 참고 금액이에요. 업체 견적이 아니에요.</p>
         <div className={s.card}>
-          <h4>표준견적서 · {toPy(x.area)} {x.grade === "economy" ? "합지" : "실크"}</h4>
+          <h4>표준견적서 · {toPy(x.area)} {x.grade === "economy" ? "합지" : "실크"}{x.scope === "partial" ? ` · ${scopeText(x)}` : ""}</h4>
           <div className={`${s.big} mj-num`}>{won(got.total)}</div>
           <QuoteLines caption="표준견적서 줄" lines={toQuoteLines(got.lines, got.scope)} totals={{ supply: got.supply, vat: got.vat, total: got.total }} vatSplit />
         </div>
@@ -249,6 +249,14 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
                   <option value="">골라 주세요</option><option value="y">살고 있어요</option><option value="n">비어 있어요</option>
                 </select>
               </label>
+              <ChoiceChips legend="공사 범위" value={d.scope} onChange={(v) => set(v === "partial" ? { scope: "partial" } : { scope: "full", spaces: [], faces: ["wall", "ceiling"] })}
+                options={[{ value: "full", label: "전체" }, { value: "partial", label: "부분" }]} />
+              {d.scope === "partial" ? (
+                <>
+                  <ChoiceChips multiple legend="공간" value={d.spaces} onChange={(v) => set({ spaces: v as SpaceKind[] })} options={SPACES.map((x) => ({ value: x.key, label: x.label }))} />
+                  <ChoiceChips multiple legend="면" value={d.faces} onChange={(v) => set({ faces: v as Face[] })} options={FACES.map((x) => ({ value: x.key, label: x.label }))} />
+                </>
+              ) : null}
               <label className={s.field}>도배 유형
                 <select value={d.grade ?? ""} onChange={(e) => set({ grade: (e.target.value || null) as InfoDraft["grade"] })}>
                   <option value="">골라 주세요</option><option value="basic">기본형 (실크)</option><option value="economy">저가형 (합지)</option>
@@ -272,8 +280,8 @@ function SpacePick({ start, onDone }: { start: InfoDraft; onDone: (p: Partial<In
   const finish = (p: Partial<InfoDraft>) => { if (done) return; setDone(true); onDone(p); };
   return (
     <div className={s.card}>
-      <ChoiceChips multiple legend="공간" value={spaces} onChange={(v) => setSpaces(v as SpaceKind[])} options={SPACES.map((x) => ({ value: x.key, label: x.label }))} />
-      <ChoiceChips multiple legend="면" value={faces} onChange={(v) => setFaces(v as Face[])} options={FACES.map((x) => ({ value: x.key, label: x.label }))} />
+      <ChoiceChips multiple legend="공간" value={spaces} onChange={(v) => setSpaces(v as SpaceKind[])} options={SPACES.map((x) => ({ value: x.key, label: x.label, disabled: done }))} />
+      <ChoiceChips multiple legend="면" value={faces} onChange={(v) => setFaces(v as Face[])} options={FACES.map((x) => ({ value: x.key, label: x.label, disabled: done }))} />
       <div className={s.row}>
         <Button size="sm" disabled={done || !spaces.length || !faces.length} onClick={() => finish({ scope: "partial", spaces, faces })}>골랐어요</Button>
         <Button size="sm" variant="secondary" disabled={done} onClick={() => finish({ scope: "full", spaces: [], faces: ["wall", "ceiling"] })}>전체로 할래요</Button>
