@@ -58,6 +58,7 @@ class AiSection(BaseModel):
 
 class AiAnswer(BaseModel):
     notice: str = NOTICE
+    lead: str = ""  # 결론 한 줄(굵게)
     sections: list[AiSection] = []
     calc: list[CalcBox] = []
     cards: list[UiCard] = []
@@ -65,6 +66,7 @@ class AiAnswer(BaseModel):
     unknown: list[str] = []
     suggest: list[str] = []
     failed: bool = False
+    vendor: list[str] = []  # 업체에 이렇게 요청해 보세요(정해 둔 부탁 문장)
 
 
 class AiTurnOut(BaseModel):

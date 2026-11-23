@@ -31,3 +31,5 @@
 .guestHead { display: flex; flex-direction: column; gap: 4px; }
 .guestTitle { font-weight: 700; font-size: var(--fs-lg); }
 .embed { display: flex; flex-direction: column; gap: 8px; }
+.lead { font-size: var(--fs-lg); font-weight: 700; line-height: 1.45; }
+.vendor { border: 1px solid var(--mj-primary); border-radius: var(--radius); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; background: var(--surface); }

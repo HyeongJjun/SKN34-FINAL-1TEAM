@@ -34,6 +34,7 @@ SCHEDULE_MINE = re.compile(
     r"실측\s*(?:날|일정|요청|와|오|받)|희망\s*기간|반나절|"
     r"언제.{0,8}(?:오|와|들어)"
 )
+MEANING = re.compile(r"뭐야|뭐예요|뭔가요|뭐에요|무슨\s*뜻|뭘\s*하는|이란\s*게|란\s*게")
 GUIDE_WORDS = re.compile(
     r"처음|순서|뭐부터|어떻게\s*진행|믿집|가입|뜻이|뭐예요|뭔가요|뭐에요|무슨\s*뜻|계약|관리사무소|"
     r"하자|업체\s*(?:고르|선택)|고르는|준비|체크|확인할\s*것|안녕|반갑|영수증|세금계산서"  # 영수증 · 세금계산서: 계약 · 비용(공통)
@@ -193,6 +194,10 @@ def gate(
             and (sig["quote_explanation"] or "price" in flags)
         ):
             route = "multi"  # '날짜랑 비용' · '견적서랑 일정'처럼 두 담당을 이어 물음
+        elif route == "schedule" and found and not sig["schedule"] and MEANING.search(plain):
+            route = (
+                "trade"  # '퍼티 작업이 뭐야?'처럼 공종 낱말 뜻을 묻는데 날짜 말이 없으면 공정 상담
+            )
         elif route == "out_of_scope" and COMMON_TOPIC.search(plain):
             route = "guide"  # v1 분류기는 계약 · 결제 · 청소 문장을 범위 밖으로 배웠다. v3는 공통 지식으로 답한다
         return done(route, "model")

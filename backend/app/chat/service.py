@@ -135,6 +135,7 @@ async def _set_json(key: str, value: dict | None, ttl: int) -> None:
 
 def _public(ans) -> AiAnswer:
     return AiAnswer(
+        lead=ans.lead,
         sections=[section_out(x) for x in ans.sections],
         calc=ans.calc,
         cards=ans.cards,
@@ -142,6 +143,7 @@ def _public(ans) -> AiAnswer:
         unknown=ans.unknown,
         suggest=ans.suggest,
         failed=ans.failed,
+        vendor=ans.vendor,
     )
 
 

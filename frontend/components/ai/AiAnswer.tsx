@@ -2,6 +2,7 @@
 // 숫자는 계산 엔진 값(calc)만 상자로 보이고, 이 조각은 계산하지 않아요. 링크는 믿집 화면 주소만 만들어요.
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { CalcBox, type CalcLine } from "@/components/ui/CalcBox";
 import { md } from "@/lib/format";
@@ -73,8 +74,23 @@ function Compare({ title, table }: { title: string; table: AiTable }) {
   );
 }
 
+// 업체에 이렇게 요청해 보세요: 고객이 업체 채팅에 그대로 붙여 넣는 부탁 문장(정해 둔 글, 숫자는 계산 값만)
+function VendorAsk({ lines }: { lines: string[] }) {
+  const [done, setDone] = useState(false);
+  async function copy() {
+    try { await navigator.clipboard.writeText(lines.join("\n")); setDone(true); } catch { setDone(false); }
+  }
+  return (
+    <section className={s.vendor} aria-label="업체에 이렇게 요청해 보세요">
+      <p className={s.draftTitle}>업체에 이렇게 요청해 보세요</p>
+      {lines.map((t) => <p key={t}>&ldquo;{t}&rdquo;</p>)}
+      <div className={s.choices}><Button variant="weak" size="sm" onClick={() => void copy()}>{done ? "복사했어요" : "문장 복사"}</Button></div>
+    </section>
+  );
+}
+
 function UiCard({ card, projectId, onPick }: { card: AiCard; projectId?: string; onPick?: (text: string, b?: AiButton) => void }) {
-  if (card.kind === "compare" && card.table) return <Compare title={card.title} table={card.table} />;
+  if ((card.kind === "compare" || card.kind === "house") && card.table) return <Compare title={card.title} table={card.table} />;
   if (card.kind === "visit_draft" && card.draft) {
     const d = card.draft;
     return (
@@ -99,6 +115,7 @@ export function AiAnswer({ answer, projectId, onPick }: { answer: Answer; projec
   return (
     <div className={s.answer}>
       <p className={s.notice}>{answer.notice}</p>
+      {answer.lead ? <p className={s.lead}>{answer.lead}</p> : null}
       {answer.sections.map((sec, i) => (
         <div key={i} className={s.section}>
           {many && sec.title ? <p className={s.secTitle}>{sec.title}</p> : null}
@@ -111,6 +128,7 @@ export function AiAnswer({ answer, projectId, onPick }: { answer: Answer; projec
         </div>
       ))}
       {answer.unknown.map((t, i) => <p key={`u${i}`} className={s.unknown}>{t}</p>)}
+      {answer.cards.filter((c) => c.kind === "house").map((c, i) => <UiCard key={`h${i}`} card={c} projectId={projectId} onPick={onPick} />)}
       {lines.length ? <CalcBox lines={lines} /> : null}
       {notes.map((c, i) => (
         <p key={`n${i}`} className={`${s.calcNote} mj-num`}>믿집 계산 · {c.label} {c.qty != null ? `${c.qty}${c.unit} · ` : ""}{c.note}</p>
@@ -125,7 +143,8 @@ export function AiAnswer({ answer, projectId, onPick }: { answer: Answer; projec
           </div>
         </div>
       ) : null}
-      {answer.cards.map((c, i) => <UiCard key={`c${i}`} card={c} projectId={projectId} onPick={onPick} />)}
+      {answer.vendor?.length ? <VendorAsk lines={answer.vendor} /> : null}
+      {answer.cards.filter((c) => c.kind !== "house").map((c, i) => <UiCard key={`c${i}`} card={c} projectId={projectId} onPick={onPick} />)}
       {answer.suggest.length ? (
         <div className={s.choices} aria-label="이어 물을 질문">
           {answer.suggest.map((q) => <Button key={q} variant="text" size="sm" onClick={() => onPick?.(q)}>{q}</Button>)}
