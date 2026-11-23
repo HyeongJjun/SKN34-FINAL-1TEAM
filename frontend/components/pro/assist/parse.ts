@@ -16,6 +16,10 @@ const NEG = String.raw`(?:아니|아닙|아냐|아녜|아님|말고)`;
 const NEG_AFTER = new RegExp(String.raw`^\s*원?\s*(?:은|는|이|가)?\s*${NEG}`);
 /** 값 바로 뒤에 붙어 "뒤 값으로 고친다"는 말 */
 const FIX = String.raw`\s*원?\s*(?:은|는|이|가)?\s*(?:아니라|아니고|아니구|아닌|말고)[\s,]*`;
+/** 앞 값을 뒤 값으로 고치는 사이 말: 위 FIX + "455만 원, 아니 555만 원" · "3일 → 5일" */
+const FIX_GAP = String.raw`(?:${FIX}|\s*원?\s*,?\s*아니(?:요|오)?[\s,]+|\s*원?\s*(?:→|->|=>)\s*)`;
+/** 바꾸는 말: 두 값 사이에 있는데 어느 값인지 못 고르면 비워요 */
+const CHANGE = /변경|바꾸|바꿔|바뀌|바꿨|바꿈|수정|정정|아니|→|->|=>|에서/;
 // 토막 나누기: 쉼표 · 줄바꿈 · 이음말, 마침표는 숫자 사이(12.2)가 아닐 때만
 const PARTS = /,|\n|(?<!\d)\.|\.(?!\d)|그리고|하고|인데|지만/;
 const DATE = String.raw`(?:\d{1,2}\s*(?:\/|\.|월)\s*)?\d{1,2}\s*일?`;
@@ -53,17 +57,42 @@ export function parsePeriod(text: string, today: string, baseMonth?: string | nu
   const month = { m: Number((baseMonth ?? today).slice(5, 7)) };
   const ok: string[] = [];
   const no: string[] = [];
+  // "12/4, 12/3은 안 돼요"의 12/4처럼 날짜만 있는 토막은 뒤 토막의 말(되는지 · 안 되는지)을 따라요
+  let wait: string[] = [];
   for (const part of text.split(PARTS)) {
     if (!part.trim()) continue;
-    (NO.test(part) && !NO_NOT.test(part) ? no : ok).push(...daysIn(part, today, month));
+    const days = daysIn(part, today, month);
+    if (days.length && BARE.test(part.replace(DATE_ALL, ""))) {
+      wait.push(...days);
+      continue;
+    }
+    (NO.test(part) && !NO_NOT.test(part) ? no : ok).push(...wait, ...days);
+    wait = [];
   }
+  ok.push(...wait);
+  const nos = new Set(no);
   if (!ok.length) return null;
   if (new Set(ok).size > 1 && !RANGE.test(text)) return null;
   ok.sort();
-  const start = ok[0];
-  const end = ok[ok.length - 1];
-  const nos = [...new Set(no)].sort();
-  return { start, end, excluded: nos.filter((d) => d > start && d < end), outside: nos.filter((d) => d < start || d > end) };
+  // 안 된다고 한 날은 첫날 · 끝날이어도 가능한 날로 넣지 않아요(12/2~12/5에 12/2가 안 되면 12/3부터)
+  let start = ok[0];
+  let end = ok[ok.length - 1];
+  while (start <= end && nos.has(start)) start = shift(start, 1);
+  while (end >= start && nos.has(end)) end = shift(end, -1);
+  if (start > end) return null;
+  const sorted = [...nos].sort();
+  return { start, end, excluded: sorted.filter((d) => d > start && d < end), outside: sorted.filter((d) => d < ok[0] || d > ok[ok.length - 1]) };
+}
+
+/** 날짜만 지운 토막에 남은 게 조사 · 이음말뿐이면 날짜만 늘어놓은 토막이에요 */
+const DATE_ALL = /(?:\d{1,2}\s*(?:\/|\.|월)\s*)?\d{1,2}\s*일?|[~\-–∼]/g;
+const BARE = /^[\s과와랑및도은는이가]*$/;
+
+/** "2026-12-02"에서 며칠 앞뒤 */
+function shift(day: string, by: number): string {
+  const d = new Date(`${day}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + by);
+  return d.toISOString().slice(0, 10);
 }
 
 const num = (s: string) => Number(s.replace(/,/g, ""));
@@ -82,13 +111,17 @@ function amountIn(text: string): number | undefined {
     if (!hits.some((h) => m.index >= h.at && m.index < h.end)) hits.push({ at: m.index, end: m.index + m[0].length, won: num(m[1]) });
   }
   hits.sort((a, b) => a.at - b.at);
-  // 정정: "견적 455만 원이 아니라 555만 원"은 앞 자리(견적)에 뒤 값을 써요. 뒤 값 없이 부정만 하면 그 값을 버려요
+  // 정정: "견적 455만 원이 아니라 555만 원" · "455만 원, 아니 555만 원" · "455만 원에서 555만 원으로"는 앞 자리(견적)에 뒤 값을 써요.
+  // 두 금액 사이에 바꾸는 말이 있는데 어느 쪽인지 모르면 비워요. 뒤 값 없이 부정만 하면 그 값을 버려요
   for (let i = hits.length - 1; i >= 0; i--) {
     const next = hits[i + 1];
-    if (next && new RegExp(`^${FIX}$`).test(text.slice(hits[i].end, next.at))) {
+    const gap = next ? text.slice(hits[i].end, next.at) : "";
+    const to = next ? /^\s*원?\s*(?:으로|로)/.test(text.slice(next.end)) : false;
+    if (next && (new RegExp(`^${FIX_GAP}$`).test(gap) || (to && /^\s*원?\s*에서\s*$/.test(gap)))) {
       hits[i].won = next.won;
       hits.splice(i + 1, 1);
-    } else if (NEG_AFTER.test(text.slice(hits[i].end))) hits.splice(i, 1);
+    } else if (next && CHANGE.test(gap)) return undefined;
+    else if (NEG_AFTER.test(text.slice(hits[i].end))) hits.splice(i, 1);
   }
   if (hits.length <= 1) return hits[0]?.won;
   const total = hits.filter((h) => TOTAL.test(text.slice(Math.max(0, h.at - 12), h.at)));
@@ -135,9 +168,13 @@ function daysOf(text: string): number | undefined {
   const m = text.match(/(?:공사|작업|시공)\s*(?:기간)?\s*(?:은|는|이|가)?\s*(\d{1,3})\s*일(?!\s*까지)/) ?? text.match(/(\d{1,3})\s*일\s*(?:간|동안|걸|소요|작업|정도)/);
   if (!m) return undefined;
   const rest = text.slice((m.index ?? 0) + m[0].length);
-  const fixed = rest.match(new RegExp(String.raw`^${FIX}(\d{1,3})\s*일(?!\s*까지)`));
+  // "3일 아니고 5일" · "3일, 아니 5일" · "3일 → 5일" · "3일에서 5일로"는 뒤 값
+  const fixed = rest.match(new RegExp(String.raw`^(?:${FIX_GAP}|\s*에서\s*(?=\d{1,3}\s*일\s*(?:으로|로)))(\d{1,3})\s*일(?!\s*까지)`));
   if (fixed) return Number(fixed[1]);
-  return NEG_AFTER.test(rest) ? undefined : Number(m[1]);
+  if (NEG_AFTER.test(rest)) return undefined;
+  // 뒤에 다른 기간과 바꾸는 말이 있는데 정정으로 못 읽었으면 비워요
+  if (CHANGE.test(rest) && /\d{1,3}\s*일/.test(rest)) return undefined;
+  return Number(m[1]);
 }
 
 /** "견적 455만 원, 부가세 포함, 공사 3일, 12/17까지 유효" → 견적서 칸 값. 읽은 칸만 돌려줘요 */
