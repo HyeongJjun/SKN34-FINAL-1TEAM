@@ -13,7 +13,7 @@ import { SiteInfoCard } from "@/components/project/SiteInfoCard";
 import { donePhotoHref } from "@/components/schedule/v3text";
 import { Button } from "@/components/ui/Button";
 import { iGa as iga } from "@/components/vendors/text";
-import { askAi, newClientKey, type AiTurnOut } from "@/lib/api/chat";
+import { askAi, newClientKey, type AiButton, type AiTurnOut } from "@/lib/api/chat";
 import type { ApiCompare, ApiOverview, ApiSchedule } from "@/lib/api/schedule";
 import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/lib/api/visit";
 import { call, errorText, type Schemas } from "@/lib/backend/client";
@@ -77,13 +77,13 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   }
 
   const asking = asks.length > 0 && !asks[asks.length - 1].out && !asks[asks.length - 1].err;
-  async function ask(q: string) {
+  async function ask(q: string, button: AiButton | null = null) {
     const t = q.trim().slice(0, 1000);
     if (!t || asking) return; // 답을 기다리는 동안 새 질문을 막아요(답이 엇갈리지 않게 · 대화 하나로)
     setText("");
     setAsks((a) => [...a, { q: t }]);
     try {
-      const out = await askAi({ client_key: newClientKey(), text: t, chat_id: chatId, context: { screen: now <= 2 ? "vendors" : now <= 4 ? "quotes" : "plan", project_id: p.id, ids: [] }, button: null });
+      const out = await askAi({ client_key: newClientKey(), text: t, chat_id: chatId, context: { screen: now <= 2 ? "vendors" : now <= 4 ? "quotes" : "plan", project_id: p.id, ids: [] }, button }); // 선택지의 길(route) · 칸 정보를 그대로 넘겨요
       if (out.chat_id) setChatId(out.chat_id);
       setAsks((a) => a.map((x, i) => (i === a.length - 1 ? { ...x, out } : x)));
     } catch (e) {
@@ -246,7 +246,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
               <div key={`a${i}`} className={s.msgs} style={{ padding: 0 }}>
                 <p className={s.me}>{a.q}</p>
                 <div className={s.bot}><div className={s.face}><Jaejae mouth={a.out ? "smile" : "flat"} /></div><div className={s.bubble}><span className={s.who}>재재</span>
-                  {a.out ? <AiAnswer answer={a.out.answer} projectId={p.id} onPick={(q) => void ask(q)} /> : a.err ? <p className="mj-error">{a.err}</p> : <p className={s.typing}>줄자로 재는 중…</p>}</div></div>
+                  {a.out ? <AiAnswer answer={a.out.answer} projectId={p.id} onPick={(q, b) => void ask(q, b ?? null)} /> : a.err ? <p className="mj-error">{a.err}</p> : <p className={s.typing}>줄자로 재는 중…</p>}</div></div>
               </div>
             ))}
             <div ref={end} />

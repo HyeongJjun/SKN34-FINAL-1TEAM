@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import type { Region } from "@/lib/api/project";
 import { placeText, pyeongToM2, type InfoDraft } from "@/lib/guest/info";
+import { readLine as readLineRule } from "./readLine";
 import s from "./chat.module.css";
 
 type Msg = { who: "bot" | "me"; text: string; pick?: Pick };
@@ -20,34 +21,9 @@ const AREA_CHIPS = ["18", "24", "32", "40"];
 export const START_SAY_KEY = "mj_start_say";
 
 /** 글에서 폼 값만 읽어요. 못 읽은 칸은 비워 둬요(틀린 값을 넣지 않아요) */
+/** 한 줄 읽기(규칙은 readLine.ts). 평 → ㎡는 여기서 넘겨요 */
 export function readLine(text: string, regions: Region[], today: string): Partial<InfoDraft> {
-  const out: Partial<InfoDraft> = {};
-  for (const r of regions) {
-    for (const g of r.groups) {
-      const hit = g.items.find((sgg) => sgg.length >= 2 && text.includes(sgg));
-      if (hit) { out.sido = r.id; out.sgg = hit; break; }
-    }
-    if (out.sgg) break;
-  }
-  const py = text.match(/(\d{1,3}(?:\.\d)?)\s*평/);
-  const m2 = text.match(/(\d{1,3}(?:\.\d)?)\s*(?:㎡|m2|제곱)/i);
-  if (py) { const v = pyeongToM2(py[1]); if (v) { out.area = v; out.basis = "supply"; } }
-  else if (m2) { out.area = m2[1]; out.basis = /전용/.test(text) ? "exclusive" : "supply"; }
-  if (/살고|사는\s*중|거주/.test(text)) out.occupied = true;
-  else if (/비어|빈\s*집|이사\s*(?:전|하기\s*전)|입주\s*전/.test(text)) out.occupied = false;
-  if (/실크/.test(text)) out.grade = "basic";
-  else if (/합지/.test(text)) out.grade = "economy";
-  if (/부분|방\s*하나|일부/.test(text)) out.scope = "partial";
-  const won = text.match(/예산\D{0,6}(\d{2,5})\s*만/);
-  if (won) out.budget = won[1];
-  const day = text.match(/(\d{1,2})\s*(?:월|\/)\s*(\d{1,2})\s*일?/);
-  if (day) {
-    const y = Number(today.slice(0, 4)), m = Number(day[1]), dd = Number(day[2]);
-    const year = m < Number(today.slice(5, 7)) ? y + 1 : y;
-    const iso = `${year}-${String(m).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
-    if (m >= 1 && m <= 12 && dd >= 1 && dd <= 31 && iso >= today) out.start = iso;
-  }
-  return out;
+  return readLineRule(text, regions, today, pyeongToM2);
 }
 
 function said(p: Partial<InfoDraft>, regions: Region[]): string[] {
