@@ -38,7 +38,7 @@ function seenNotice(): boolean {
   }
 }
 
-export function AiPanel({ screen, projectId, ids, embed = false }: {
+export function AiPanel({ screen, projectId, ids, embed = false, draft }: {
   screen: AiScreen;
   projectId?: string;
   /** 보던 것(실측 · 업체 id 등, 5개까지). 서버가 본인 것인지 다시 봐요 */
@@ -47,6 +47,8 @@ export function AiPanel({ screen, projectId, ids, embed = false }: {
   context?: string;
   /** 다른 옆 칸 안에 끼울 때(예: 확정 공정표 '공사 전 할 일' 칸 아래). 칸 틀(AsidePanel) 없이 대화 · 입력만 그려요 */
   embed?: boolean;
+  /** 밖에서 넣어 주는 물을 말(백과 '이 글 물어보기' · 비서 화면 플랜의 질문 단추). key가 바뀔 때마다 입력 칸에 넣어요. 보내기는 사람이 눌러요 */
+  draft?: { text: string; key: number };
 }) {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [chatId, setChatId] = useState<string | null>(null);
@@ -57,6 +59,12 @@ export function AiPanel({ screen, projectId, ids, embed = false }: {
   useEffect(() => {
     if (!seenNotice()) setNotice(true);
   }, []);
+  const draftKey = draft?.key;
+  useEffect(() => {
+    if (draft) setText(draft.text.slice(0, MAX));
+    // key가 같으면 같은 초안이라 다시 넣지 않아요
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftKey]);
 
   function closeNotice() {
     setNotice(false);

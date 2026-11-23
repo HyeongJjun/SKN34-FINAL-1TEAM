@@ -249,8 +249,6 @@ CHECK_LABELS = {
     "fragile_away": "깨지기 쉬운 물건을 치웠어요",
     "neighbors_told": "이웃에 공사를 알렸어요",
 }
-SITE_YN = ("yes", "no")
-ENTRY_NOTE_MAX = 100
 
 
 class ProjectCheck(Base):

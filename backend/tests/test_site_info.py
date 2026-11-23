@@ -29,10 +29,20 @@ def test_site_rejects_bad_values_and_secrets(api):
     assert api.put(url, json={"parking": "maybe"}).status_code == 422
     assert api.put(url, json={"entry_note": "가" * 101}).status_code == 422
     # 비밀번호 · 전화번호 · 긴 숫자는 받지 않는다(채팅으로 알리게)
-    for bad in ("공동현관 비밀번호 눌러요", "현관 1234 누르고 와요", "010-1234-5678로 전화"):
+    bads = (
+        "공동현관 비밀번호 눌러요",
+        "현관 1234 누르고 와요",
+        "010-1234-5678로 전화",
+        "101동 203호 앞으로 오세요",
+        "3동 앞",
+    )
+    for bad in bads:
         r = api.put(url, json={"entry_note": bad})
         assert r.status_code == 422 and r.json()["error"]["fields"][0]["loc"] == ["entry_note"]
     assert api.get(url).json()["entry_note"] is None  # 아무것도 저장되지 않았다
+    # 동 · 호가 아닌 말(동쪽 · 호출)은 받는다
+    ok = api.put(url, json={"entry_note": "2동쪽 문 말고 정문으로, 도착하면 경비실 호출"})
+    assert ok.status_code == 200, ok.text
     with pytest.raises(asyncpg.exceptions.CheckViolationError):
         query("update projects set parking = 'abc'")
 

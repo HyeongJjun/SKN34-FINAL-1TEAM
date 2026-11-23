@@ -42,6 +42,7 @@ export function Summary({ p, ov, compare }: { p: VisitProject; ov: ApiOverview; 
 
   return (
     <>
+      <Strip label="재재와 진행하기" sub="대화하면서 단계마다 할 일을 챙겨요" href={`${base}/assistant`} />
       {todo ? (
         <Group hi>
           <div className={s.todo}>
