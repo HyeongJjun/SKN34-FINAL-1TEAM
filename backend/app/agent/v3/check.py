@@ -101,7 +101,7 @@ def section(
 ) -> tuple[Section | None, list[str]]:
     """묶음 하나를 검사한다. 남은 문장이 없으면 None(그 몫 실패)."""
     allowed = guard.numbers(allowed_text)
-    periods = None if calc_text is None else guard.numbers(calc_text)
+    periods = None if calc_text is None else guard.period_days(calc_text)
     dropped: list[str] = []
     kept: list[Sentence] = []
     for x in sec.sentences:
