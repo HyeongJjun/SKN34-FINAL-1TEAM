@@ -86,3 +86,12 @@ def test_native_periods_only_from_calc():
         "철거는 하루 중 언제 해도 돼요.",
     ):
         assert check(s, "", calc).dropped == [], s
+    # '에' · '작업'이 붙어도 공사 기간이면 검사한다 (#163 리뷰)
+    for s in (
+        "도배를 사흘에 끝낼 수 있어요.",
+        "하루에 다 끝나요.",
+        "나흘에 걸쳐 해요.",
+        "사흘 작업이면 돼요.",
+    ):
+        assert check(s, "", calc).dropped, s
+    assert check("하루 작업량으로 정해요.", "", calc).dropped == []
