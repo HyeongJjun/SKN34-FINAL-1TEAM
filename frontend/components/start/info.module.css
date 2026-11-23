@@ -1,5 +1,8 @@
 /* 도배 기본 정보(C02 · C03 · D11 · C50) */
 .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+/* 폼 칸: 대화가 없으면 grid에 그대로 녹아요(display: contents), 대화가 있으면 오른쪽 한 칸 안에 폼 + 넣은 내용 */
+.formCol { display: contents; }
+.withChat .formCol { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .form { display: flex; flex-direction: column; gap: var(--mj-gap-group); min-width: 0; }
 .group { display: flex; flex-direction: column; gap: 16px; padding: var(--mj-pad-group); border-radius: var(--mj-radius-group); background: var(--mj-surface); box-shadow: var(--mj-group-edge); min-width: 0; }
 .grp { font-size: var(--mj-type-caption); font-weight: var(--mj-weight-bold); color: var(--mj-text-mute); }
@@ -51,6 +54,8 @@
 }
 @media (min-width: 1024px) {
   .layout { grid-template-columns: minmax(0, 1fr) var(--mj-aside-w); }
+  .withChat { grid-template-columns: minmax(340px, 440px) minmax(0, 1fr); }
+  .withChat .aside { position: static; }
   .aside {
     display: flex; flex-direction: column; gap: 12px; position: sticky; top: calc(var(--mj-sticky-top) + 16px);
     padding: 18px; border-radius: var(--mj-radius-group); background: var(--mj-surface); box-shadow: var(--mj-group-edge);

@@ -1,0 +1,15 @@
+/* 표준견적서 받기 왼쪽 '재재와 대화'. 웹 ≥1024는 왼쪽 칸에 붙어 있고, 폰은 폼 위에 놓여요 */
+.chat { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: var(--mj-radius-group); background: var(--mj-surface); box-shadow: var(--mj-group-edge); min-width: 0; }
+.head { display: flex; flex-direction: column; gap: 2px; }
+.head b { font-size: var(--mj-type-title-s); }
+.head span { color: var(--mj-text-mute); font-size: var(--mj-type-label); }
+.log { display: flex; flex-direction: column; gap: 8px; max-height: 52vh; overflow-y: auto; }
+.bot { margin: 0; align-self: flex-start; max-width: 92%; padding: 8px 12px; border-radius: 12px; background: var(--mj-surface-sub); }
+.me { margin: 0; align-self: flex-end; max-width: 85%; padding: 8px 12px; border-radius: 12px; background: var(--mj-primary-weak); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.row { display: flex; gap: 8px; align-items: stretch; }
+.input { flex: 1 1 0; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid var(--mj-line-control); border-radius: 10px; background: var(--mj-surface); font: inherit; resize: none; }
+@media (min-width: 1024px) {
+  .chat { position: sticky; top: calc(var(--mj-sticky-top) + 16px); }
+  .log { max-height: calc(100vh - 300px); }
+}

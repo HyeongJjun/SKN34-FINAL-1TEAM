@@ -8,6 +8,7 @@ import { TabBar } from "@/components/site/TabBar";
 import { HomeLinks, HowItWorks, ResumeStrip } from "@/components/home/HomeParts";
 import { SampleMarket, SampleQuote } from "@/components/home/SampleQuote";
 import { StartCta } from "@/components/home/StartCta";
+import { HomeAsk } from "@/components/home/HomeAsk";
 import { getSampleMarket, getSampleStandard } from "@/lib/api/guest";
 import type { Ongoing } from "@/lib/guest/api";
 import { listMyProjects, type ApiProjectItem } from "@/lib/api/project";
@@ -47,10 +48,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
         {ongoing ? <ResumeStrip name={ongoing.name} status={ongoing.status} href={ongoing.href} /> : null}
         <div className={s.hero}>
           <section className={`${s.group} ${s.heroText}`} aria-labelledby="hero-t">
-            <p className={s.eb}>업체를 만나기 전에</p>
-            <h1 id="hero-t" className={s.h}>표준견적서부터<br />받아 보세요</h1>
+            <p className={s.eb}>인테리어가 처음이어도</p>
+            <h1 id="hero-t" className={s.h}>말 한 줄이면<br />재재가 끝까지 챙겨요</h1>
+            {ongoing ? null : <HomeAsk />}
             <div className={s.cta}>
-              <StartCta ongoing={ongoing} autoOpen={resume === "1"} />
+              {ongoing ? <StartCta ongoing={ongoing} autoOpen={resume === "1"} /> : null}
               <p className={s.note}>{member || preview ? "1분이면 나와요" : "1분 · 가입 없이 바로 봐요"}</p>
             </div>
           </section>
