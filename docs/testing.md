@@ -104,7 +104,7 @@ v3 `POST /ai/turns`는 답·저장 완료 후 `token`(완성된 문장)·`card`�
 
 필수 `Backend`는 항상 실행하여 먼저 8개 작업의 성공을 확인한다. 실패·취소·건너뜀은 실패로 처리한다. 이어 현재 workflow run·커밋의 결과를 검증하여 collection 불일치, 잘못된 분배, 실행 누락·중복, 0개 테스트, skip·xfail을 차단한다. 결과 파일이 없으면 업로드도 실패한다. 실패한 작업만 재실행하면 해당 결과를 교체하며, 작업 상태가 실패하면 이전 결과로 통과할 수 없다.
 
-`Frontend`는 같은 checkout과 `backend/uv.lock`으로 OpenAPI를 직접 생성하고 기존 타입 비교·typecheck·lint·build를 병렬 실행한다. 명세 생성 실패는 필수 Frontend 실패로 이어진다. 기존 필수 검사 이름, 보안 검사와 main 배포 조건을 유지한다.
+`Frontend`는 같은 checkout과 `backend/uv.lock`으로 OpenAPI를 직접 생성하고 기존 타입 비교·typecheck·lint·build를 병렬 실행한다. 명세 생성 실패는 필수 Frontend 실패로 이어진다. 기존 필수 검사 이름, 보안 검사와 main 배포 조건을 유지한다. 백엔드와 OpenAPI 생성은 uv `0.13.9`와 전용 캐시 키를 함께 쓴다. 캐시는 의존성 다운로드만 줄이며 `uv sync --locked`와 모든 검사는 항상 실행한다.
 
 로컬 전체 검사 명령은 기존 `uv run pytest -q`다. CI 분배 재현은 격리된 테스트 서비스를 준비한 뒤 backend에서 `uv run python ../.github/scripts/ci_backend.py run --shard 1 --shards 8 --report ../backend-reports/shard-1.json`을 실행한다. shard는 1부터 8까지다. 여덟 결과를 모은 뒤 루트에서 `python3 .github/scripts/ci_backend.py verify --shards 8 --reports backend-reports`로 검증한다. 속도는 가장 느린 작업과 runner 대기 시간에 좌우되므로 실제 CI 시간으로 비교한다.
 
