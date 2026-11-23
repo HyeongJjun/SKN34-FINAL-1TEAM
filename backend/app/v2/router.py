@@ -63,6 +63,31 @@ async def v2_quote(body: v2.V2QuoteIn, _: User = Depends(current_user)) -> v2.V2
     return service.quote(body, today_seoul())
 
 
+@router.post("/quote-sheet", response_model=v2.V2SheetOut, summary="v2 표준견적서 총괄표")
+async def v2_quote_sheet(body: v2.V2QuoteIn, _: User = Depends(current_user)) -> v2.V2SheetOut:
+    return service.sheet(body, today_seoul())
+
+
+@router.post("/market-quote", response_model=v2.V2MqOut, summary="도배 · 목공 표준견적서")
+async def v2_market_quote(body: v2.V2MqIn) -> v2.V2MqOut:
+    """로그인 없이 쓴다: 평형(또는 면적)만 넣으면 계산한다. 저장하지 않는다."""
+    return service.market(body)
+
+
+@router.get(
+    "/projects/{project_id}/market-quote",
+    response_model=v2.V2MqOut | None,
+    summary="내 공사 시장 단가 표준견적서 (전체 도배, 아니면 null)",
+)
+async def v2_project_market_quote(
+    project_id: uuid.UUID,
+    user: User = Depends(current_user),
+    s: AsyncSession = Depends(get_session),
+) -> v2.V2MqOut | None:
+    """화면(/projects/{id}/standard)과 AI 칸이 같은 계산(quote.service.market_for)을 읽는다."""
+    return await service.market_for(s, user, project_id)
+
+
 @router.get(
     "/market-extras",
     response_model=list[v2.V2MarketExtraOut],

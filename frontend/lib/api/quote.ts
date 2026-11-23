@@ -15,6 +15,11 @@ export async function getStandard(projectId: string) {
   return isUuid(projectId) ? serverGet<ApiStandard>(`/projects/${seg(projectId)}/standard`) : null;
 }
 
+/** 내 공사 시장 단가 표준견적서(전체 도배). 부분 공사 · 도배 없는 공사는 null. AI 칸도 같은 계산을 읽어요 */
+export async function getMyMarketQuote(projectId: string) {
+  return isUuid(projectId) ? serverGet<Schemas["V2MqOut"]>(`/v2/projects/${seg(projectId)}/market-quote`) : null;
+}
+
 export type VendorQuoteBoard = Schemas["QuoteBoardOut"];
 /** 업체: 이 요청의 실측 견적서(임시 저장본 · 보낸 버전 · 칸 한도). 내 요청이 아니면 null */
 export async function getMyQuoteBoard(visitId: string) {

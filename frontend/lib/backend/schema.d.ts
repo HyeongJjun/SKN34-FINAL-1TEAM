@@ -1380,6 +1380,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v2/quote-sheet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** v2 표준견적서 총괄표 */
+        post: operations["v2_quote_sheet_v2_quote_sheet_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/market-quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 도배 · 목공 표준견적서
+         * @description 로그인 없이 쓴다: 평형(또는 면적)만 넣으면 계산한다. 저장하지 않는다.
+         */
+        post: operations["v2_market_quote_v2_market_quote_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/projects/{project_id}/market-quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 내 공사 시장 단가 표준견적서 (전체 도배, 아니면 null)
+         * @description 화면(/projects/{id}/standard)과 AI 칸이 같은 계산(quote.service.market_for)을 읽는다.
+         */
+        get: operations["v2_project_market_quote_v2_projects__project_id__market_quote_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v2/market-extras": {
         parameters: {
             query?: never;
@@ -8811,6 +8868,195 @@ export interface components {
             /** Start */
             start: string;
         };
+        /**
+         * V2MqIn
+         * @description 평형이나 면적 중 하나만 넣어도 된다. 방 · 욕실은 비우면 평형으로 어림한다.
+         */
+        V2MqIn: {
+            /** Pyeong */
+            pyeong?: number | string | null;
+            /** Area M2 */
+            area_m2?: number | string | null;
+            /**
+             * Area Basis
+             * @default exclusive
+             * @enum {string}
+             */
+            area_basis: "supply" | "exclusive";
+            /** Rooms */
+            rooms?: number | null;
+            /** Baths */
+            baths?: number | null;
+            /**
+             * Dobae
+             * @default true
+             */
+            dobae: boolean;
+            /**
+             * Mokgong
+             * @default true
+             */
+            mokgong: boolean;
+            /**
+             * Wallpaper
+             * @default silk
+             * @enum {string}
+             */
+            wallpaper: "hapji" | "silk";
+            /**
+             * Door
+             * @default abs
+             * @enum {string}
+             */
+            door: "abs" | "emboss";
+            /**
+             * Jungmun
+             * @default slim3
+             * @enum {string}
+             */
+            jungmun: "slim3" | "slide" | "swing";
+            /** Options */
+            options?: ("doors" | "jungmun" | "entry_hw" | "board" | "insulation" | "bath_board")[] | null;
+        };
+        /** V2MqLineOut */
+        V2MqLineOut: {
+            /** Item */
+            item: string;
+            /** Group */
+            group: string;
+            /** Name */
+            name: string;
+            /** Spec */
+            spec: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "material" | "labor" | "expense";
+            /** Qty */
+            qty: number;
+            /** Unit */
+            unit: string;
+            /** Unit Price */
+            unit_price: number;
+            /** Amount */
+            amount: number;
+            /** Qty Why */
+            qty_why: string;
+            /** Price Why */
+            price_why: string;
+            /** Note */
+            note: string;
+        };
+        /** V2MqOptionOut */
+        V2MqOptionOut: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "doors" | "jungmun" | "entry_hw" | "board" | "insulation" | "bath_board";
+            /** Name */
+            name: string;
+            /** Desc */
+            desc: string;
+            /** On */
+            on: boolean;
+            /** Common */
+            common: boolean;
+            /** Seen */
+            seen: number;
+            /** Amount */
+            amount: number;
+            /** Delta */
+            delta: number;
+        };
+        /** V2MqOut */
+        V2MqOut: {
+            /** Pyeong */
+            pyeong: number;
+            /** Area Note */
+            area_note: string;
+            /** Rooms */
+            rooms: number;
+            /** Baths */
+            baths: number;
+            /** Rooms Auto */
+            rooms_auto: boolean;
+            /** Doors */
+            doors: number;
+            /** Trades */
+            trades: components["schemas"]["V2MqTradeOut"][];
+            /** Options */
+            options: components["schemas"]["V2MqOptionOut"][];
+            /** Material */
+            material: number;
+            /** Labor */
+            labor: number;
+            /** Expense */
+            expense: number;
+            /** Net */
+            net: number;
+            /** Overheads */
+            overheads: components["schemas"]["V2MqOverheadOut"][];
+            /** Cut */
+            cut: number;
+            /** Supply */
+            supply: number;
+            /** Vat */
+            vat: number;
+            /** Total */
+            total: number;
+            /** Per Pyeong */
+            per_pyeong: number;
+            /** Quotes */
+            quotes: number;
+            /** Version */
+            version: string;
+        };
+        /** V2MqOverheadOut */
+        V2MqOverheadOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Rate */
+            rate: number;
+            /** Amount */
+            amount: number;
+        };
+        /** V2MqTradeOut */
+        V2MqTradeOut: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "dobae" | "mokgong";
+            /** Name */
+            name: string;
+            /** Material */
+            material: number;
+            /** Labor */
+            labor: number;
+            /** Expense */
+            expense: number;
+            /** Total */
+            total: number;
+            /** Share */
+            share: number;
+            /** Lines */
+            lines: components["schemas"]["V2MqLineOut"][];
+        };
+        /** V2OverheadOut */
+        V2OverheadOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Rate */
+            rate: number;
+            /** Amount */
+            amount: number;
+        };
         /** V2PaintOut */
         V2PaintOut: {
             /** Area M2 */
@@ -9509,6 +9755,99 @@ export interface components {
             per_roll: number;
             /** Rolls */
             rolls: number;
+        };
+        /** V2SheetLineOut */
+        V2SheetLineOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Qty */
+            qty: number | null;
+            /** Unit */
+            unit: string;
+            /** Amount */
+            amount: number | null;
+            /** State */
+            state: string;
+            /**
+             * Bucket
+             * @enum {string}
+             */
+            bucket: "material" | "labor" | "expense";
+            /** Counted */
+            counted: boolean;
+        };
+        /** V2SheetMixOut */
+        V2SheetMixOut: {
+            /** Material */
+            material: number;
+            /** Labor */
+            labor: number;
+            /** Expense */
+            expense: number;
+        };
+        /** V2SheetOut */
+        V2SheetOut: {
+            /** Trades */
+            trades: components["schemas"]["V2SheetTradeOut"][];
+            /** Material */
+            material: number;
+            /** Labor */
+            labor: number;
+            /** Expense */
+            expense: number;
+            /** Net */
+            net: number;
+            mix: components["schemas"]["V2SheetMixOut"];
+            /** Overheads */
+            overheads: components["schemas"]["V2OverheadOut"][];
+            /** Cut */
+            cut: number;
+            /** Supply */
+            supply: number;
+            /** Vat */
+            vat: number;
+            /** Total */
+            total: number;
+            /** Per Pyeong */
+            per_pyeong: number;
+            /** Pyeong */
+            pyeong: number;
+            /** Rates Version */
+            rates_version: string;
+            /** Code */
+            code: string;
+            /** At */
+            at: string;
+            /** Missing */
+            missing: string[];
+        };
+        /** V2SheetTradeOut */
+        V2SheetTradeOut: {
+            /**
+             * Trade
+             * @enum {string}
+             */
+            trade: "dobae" | "mokgong";
+            /** Ko */
+            ko: string;
+            /** Material */
+            material: number;
+            /** Labor */
+            labor: number;
+            /** Expense */
+            expense: number;
+            /** Total */
+            total: number;
+            /** Share */
+            share: number;
+            /** Bar */
+            bar: number;
+            /** Days */
+            days: number;
+            /** Lines */
+            lines: components["schemas"]["V2SheetLineOut"][];
         };
         /** V2StepOut */
         V2StepOut: {
@@ -13811,6 +14150,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["V2QuoteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_quote_sheet_v2_quote_sheet_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2QuoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2SheetOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_market_quote_v2_market_quote_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["V2MqIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2MqOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_project_market_quote_v2_projects__project_id__market_quote_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2MqOut"] | null;
                 };
             };
             /** @description Validation Error */

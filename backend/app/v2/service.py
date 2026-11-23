@@ -4,13 +4,27 @@
 AI는 agent.llm.chat_tools 한 번 부르기만 한다(도구는 화면이 실행한다).
 """
 
+import uuid
+from dataclasses import asdict
 from datetime import date, timedelta
 from decimal import Decimal
 
-from app.calc import market_band, precise_mokgong, quick_budget, v2_check, v2_plan, v2_tools
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.models import User
+from app.calc import (
+    market_band,
+    precise_mokgong,
+    quick_budget,
+    quote_sheet,
+    v2_check,
+    v2_plan,
+    v2_tools,
+)
 from app.calc.common import FORMULA_VERSION, from_entered, pyeong_to_m2
 from app.calc.plan_qty import PlanOptions, from_plan
 from app.calc.v2_quote import V2Books, V2Plan, V2QuoteInput, build, inputs, market_input
+from app.quote import service as quote_service
 from app.refprice import v2_ref
 from app.refprice.book import DOBAE_2026H2, MOKGONG_2026H2, SILK_2026, SILK_DEFAULT
 from app.refprice.floor_plans import plans
@@ -122,6 +136,47 @@ def _build(q: v2.V2QuoteIn, today: date) -> tuple[V2QuoteInput, dict]:
 def quote(q: v2.V2QuoteIn, today: date) -> v2.V2QuoteOut:
     _, r = _build(q, today)
     return v2.V2QuoteOut(**r, formula_version=FORMULA_VERSION, price_ver=DOBAE_2026H2.version)
+
+
+def sheet(q: v2.V2QuoteIn, today: date) -> v2.V2SheetOut:
+    """표준견적서 총괄표: 정밀 공정(도배 · 목공)만 금액에 넣고, 그 밖 공정은 이름만 돌려준다."""
+    _, r = _build(q, today)
+    if not r["precise"]:
+        raise AppError(422, "invalid", "도배나 목공을 골라야 표준견적서를 만들 수 있어요.")
+    s = quote_sheet.build(r["precise"], Decimal(str(r["inp"]["py"])))
+    ko = books().cat_ko
+    others = [t["ko"] for t in r["ref"]] + [ko.get(c, c) for c in r["missing"]]
+    return v2.V2SheetOut.model_validate(
+        {**asdict(s), "code": r["code"], "at": r["at"], "missing": others}
+    )
+
+
+def market(b: v2.V2MqIn) -> v2.V2MqOut:
+    """도배 · 목공 표준견적서 (업체 견적 235건 시장 단가). 평형(또는 면적)만 있어도 계산한다. DB를 쓰지 않는다."""
+    q, note = quote_service.market_calc(
+        pyeong=b.pyeong,
+        area_m2=b.area_m2,
+        area_basis=b.area_basis,
+        rooms=b.rooms,
+        baths=b.baths,
+        dobae=b.dobae,
+        mokgong=b.mokgong,
+        wallpaper=b.wallpaper,
+        door=b.door,
+        jungmun=b.jungmun,
+        options=None if b.options is None else frozenset(b.options),
+    )
+    auto = b.rooms is None or b.baths is None
+    return v2.V2MqOut.model_validate(asdict(q) | {"area_note": note, "rooms_auto": auto})
+
+
+async def market_for(s: AsyncSession, user: User, project_id: uuid.UUID) -> v2.V2MqOut | None:
+    """내 공사 시장 단가 견적(전체 도배). AI 칸(chat.tools)도 같은 quote.service.market_for를 읽는다."""
+    r = await quote_service.market_for(s, user, project_id)
+    if r is None:
+        return None
+    q, note = r
+    return v2.V2MqOut.model_validate(asdict(q) | {"area_note": note, "rooms_auto": True})
 
 
 def market_extras() -> list[v2.V2MarketExtraOut]:

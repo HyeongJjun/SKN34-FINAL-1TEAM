@@ -330,7 +330,10 @@ def calc_box(ref: str, facts: ProjectFacts | None, label: str = "") -> CalcBox |
     if ref == "standard.total" and facts.standard:
         st = facts.standard
         return CalcBox(
-            label=label or "표준견적서 합계", ref=ref, amount=st.total, note="부가세 포함"
+            label=label or "표준견적서 합계",
+            ref=ref,
+            amount=st.total,
+            note="부가세 포함 · 시장 단가 기준" if st.basis == "market" else "부가세 포함",
         )
     if ref.startswith("standard.lines.") and facts.standard:
         key = ref.rsplit(".", 1)[1]

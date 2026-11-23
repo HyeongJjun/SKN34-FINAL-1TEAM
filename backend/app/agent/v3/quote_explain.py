@@ -123,7 +123,7 @@ def run(task: Task, kb: KB) -> Part:
             trade = trade or ln.trade
             allowed.append(ln.name)
         else:
-            lines.append(templates.STANDARD_IS)
+            lines.append(templates.STANDARD_IS[st.basis])
             box = calc_box("standard.total", f)
             if box:
                 part.calc.append(box)

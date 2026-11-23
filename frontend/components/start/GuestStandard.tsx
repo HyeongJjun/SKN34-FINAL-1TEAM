@@ -10,16 +10,20 @@ import { Main, PageHead, WithAside } from "@/components/site/Frame";
 import { BottomBar } from "@/components/ui/BottomBar";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { errorText } from "@/lib/backend/client";
+import { MarketSheet, MarketTotal, MarketTrust } from "@/components/v2/market/MarketQuote";
+import { call, errorText } from "@/lib/backend/client";
 import { calcGuest } from "@/lib/guest/api";
 import { checkDraft, conditionText, toHomeInfo } from "@/lib/guest/info";
+import { toMarketIn, type MqOut } from "@/lib/guest/market";
 import { budgetText, toQuoteLines, type StdView } from "@/lib/guest/standard";
 import { draftOf, readGuest } from "@/lib/guest/store";
 import { GUEST_ASK_EVENT, GuestAskSheet } from "./GuestAside";
 import { StandardSheet, StandardSkeleton } from "./StandardSheet";
 import s from "./standard.module.css";
 
-type State = { kind: "loading" } | { kind: "none" } | { kind: "error"; msg: string } | { kind: "ok"; view: StdView };
+// 전체 도배는 시장 단가 표준견적서(업체 견적서 235건 중앙값, /estimate와 같은 계산)로 보여요.
+// 부분 공사는 고른 공간만 어림하는 계산이라 기존 표준견적서 계산 그대로예요.
+type State = { kind: "loading" } | { kind: "none" } | { kind: "error"; msg: string } | { kind: "ok"; view: StdView } | { kind: "market"; q: MqOut };
 
 export function GuestStandard({ mock }: { mock: boolean }) {
   const [st, setSt] = useState<State>({ kind: "loading" });
@@ -33,6 +37,10 @@ export function GuestStandard({ mock }: { mock: boolean }) {
     setSt({ kind: "loading" });
     const info = toHomeInfo(d);
     try {
+      if (info.scope === "full" && !mock) {
+        setSt({ kind: "market", q: await call<MqOut>("POST", "/v2/market-quote", toMarketIn(info)) });
+        return;
+      }
       const r = await calcGuest(info, mock);
       setSt({
         kind: "ok",
@@ -57,6 +65,7 @@ export function GuestStandard({ mock }: { mock: boolean }) {
   // 시트 위에 창을 겹치지 않아요: 시트를 닫고 가입 카드를 열어요
   const openJoin = () => { setAsk(false); setJoin(true); };
   const ok = st.kind === "ok" ? st.view : null;
+  const shown = ok != null || st.kind === "market";
 
   return (
     <>
@@ -80,11 +89,18 @@ export function GuestStandard({ mock }: { mock: boolean }) {
             </div>
           ) : null}
           {ok ? <StandardSheet view={ok} changeHref="/start" /> : null}
+          {st.kind === "market" ? (
+            <>
+              <MarketTotal q={st.q} changeHref="/start" />
+              <MarketSheet q={st.q} />
+              <MarketTrust q={st.q} />
+            </>
+          ) : null}
         </WithAside>
       </Main>
-      {ok ? (
+      {shown ? (
         <BottomBar>
-          {ok.scope === "partial" ? null : <Button variant="secondary" size="lg" onClick={() => setJoin(true)}>예상 공정표</Button>}
+          {ok?.scope === "partial" ? null : <Button variant="secondary" size="lg" onClick={() => setJoin(true)}>예상 공정표</Button>}
           <Button size="lg" onClick={() => setJoin(true)}>업체 보기</Button>
         </BottomBar>
       ) : null}

@@ -1,0 +1,64 @@
+/* 시장 단가 표준견적서(/estimate). 틀은 내 공사 표준견적서(start/standard.module.css)와 같다 */
+.group { display: flex; flex-direction: column; gap: 12px; padding: var(--mj-pad-group); border-radius: var(--mj-radius-group); background: var(--mj-surface); box-shadow: var(--mj-group-edge); min-width: 0; word-break: keep-all; }
+.h2 { margin: 0; font-size: var(--mj-type-title-s); font-weight: var(--mj-weight-bold); line-height: var(--mj-lh-title); color: var(--mj-text); }
+
+/* 큰 합계 + 조건 바꾸기 */
+.totalRow { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px 12px; min-width: 0; }
+.totalRow > :first-child { min-width: 0; }
+.totalRow > :last-child { flex: none; margin: -6px -4px 0 0; }
+
+/* 우리 집 조건 */
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.checks { display: flex; flex-wrap: wrap; gap: 4px 24px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.lab { width: 100%; margin-bottom: 4px; padding: 0; font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); color: var(--mj-text); }
+.status { margin: 0; min-height: 20px; font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+.err { color: var(--mj-danger); font-weight: var(--mj-weight-semibold); }
+
+/* 공종 줄 표 */
+.trade { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.trade + .trade { padding-top: 12px; border-top: 1px solid var(--mj-line-soft); }
+.tradeHead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; margin: 0; font-size: var(--mj-type-body); font-weight: var(--mj-weight-bold); color: var(--mj-text); }
+.tradeHead small { display: block; margin-top: 2px; font-size: var(--mj-type-caption); font-weight: var(--mj-weight-regular); color: var(--mj-text-mute); }
+.tradeHead b { white-space: nowrap; }
+.why summary { display: inline-flex; align-items: center; min-height: var(--mj-hit-min); cursor: pointer; color: var(--mj-link); font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); }
+.why summary:hover { color: var(--mj-link-hover); }
+.why ul { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 0; padding: 12px 14px; list-style: none; border-radius: var(--mj-radius-card); background: var(--mj-surface-sub); }
+.why li { display: flex; flex-direction: column; gap: 2px; font-size: var(--mj-type-caption); color: var(--mj-text-sub); line-height: var(--mj-lh-body); }
+.why li b { font-size: var(--mj-type-label); color: var(--mj-text); }
+.ver { margin: 0; font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+
+/* 목공에서 할 것 고르기 */
+.optHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.guide { margin: 0; font-size: var(--mj-type-label); color: var(--mj-text-sub); line-height: var(--mj-lh-body); }
+.guide b { color: var(--mj-text); }
+.optGroupT { margin: 8px 0 6px; font-size: var(--mj-type-label); font-weight: var(--mj-weight-bold); color: var(--mj-text); }
+.optGroupT span { margin-left: 6px; font-weight: var(--mj-weight-regular); color: var(--mj-text-mute); font-size: var(--mj-type-caption); }
+.optList { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.optRow { border: 1px solid var(--mj-line); border-radius: var(--mj-radius-card); background: var(--mj-surface); }
+.optOn { border-color: var(--mj-primary); background: var(--mj-primary-weak); }
+.optMain { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: start; padding: 14px 16px; cursor: pointer; }
+.optBox { width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--mj-primary); }
+.optText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.optText b { font-size: var(--mj-type-body); color: var(--mj-text); }
+.optText span { font-size: var(--mj-type-label); color: var(--mj-text-sub); }
+.optText small { font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+.optPrice { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; white-space: nowrap; }
+.optPrice small { font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+.optPrice b { font-size: var(--mj-type-body); color: var(--mj-text); }
+.optSub { padding: 0 16px 14px 50px; }
+
+/* 믿어도 될까요 · 용어 */
+.checkList { display: flex; flex-direction: column; gap: 10px; margin: 0; padding-left: 20px; font-size: var(--mj-type-label); color: var(--mj-text-sub); line-height: var(--mj-lh-body); }
+.glossary { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; margin: 0; }
+.glossary div { display: grid; grid-template-columns: 120px 1fr; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--mj-line-soft); font-size: var(--mj-type-label); }
+.glossary dt { font-weight: var(--mj-weight-semibold); color: var(--mj-text); }
+.glossary dd { margin: 0; color: var(--mj-text-sub); }
+
+@media (max-width: 599px) {
+  .row2 { grid-template-columns: 1fr; }
+  .glossary { grid-template-columns: 1fr; }
+  .glossary div { grid-template-columns: 100px 1fr; }
+  .optMain { grid-template-columns: auto 1fr; }
+  .optPrice { grid-column: 2; align-items: flex-start; }
+  .optSub { padding-left: 16px; }
+}

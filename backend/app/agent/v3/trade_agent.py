@@ -37,7 +37,7 @@ def run(task: Task, kb: KB) -> Part:
 
     if "price" in flags:
         if spec.calc and facts and facts.standard:
-            lines.append(templates.PRICE_DEEP)
+            lines.append(templates.PRICE_DEEP[facts.standard.basis])
             box = calc_box("standard.total", facts)
             if box:
                 part.calc.append(box)

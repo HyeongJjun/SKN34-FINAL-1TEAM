@@ -441,3 +441,41 @@ def test_molding_types_card_explains_the_seam_in_plain_words():
     cells = [x for r in c.compare.rows for x in r.cells]
     assert not any("이음매" in x for x in cells)  # 표 칸은 쉬운 말만
     assert "일반 몰딩은 이음매를" not in " ".join(s.text for s in c.answer)
+
+
+# ---- 표준견적서 계산 기준 안내 (PR #164 리뷰): 시장 단가로 계산했으면 공공 기준이라고 말하지 않는다 ----
+MARKET = FACTS.model_copy(
+    update={
+        "standard": StandardFacts(
+            total=4070000,
+            supply=3700000,
+            vat=370000,
+            basis="market",
+            lines=[
+                StandardLineFact(
+                    key="dobae-701-0", name="실크 벽지", state="included", qty=22.0,
+                    unit="평", unit_price=30000, amount=660000,
+                ),
+            ],
+        )
+    }
+)  # fmt: skip
+
+
+@pytest.mark.parametrize(
+    ("text", "view"),
+    [
+        ("도배 비용이 얼마나 나와요?", None),
+        ("이 표준견적서 금액은 어떻게 나온 거예요?", "standard"),
+    ],
+)
+def test_market_standard_says_market_price_not_public(text, view):
+    a = turn(text, facts=MARKET, view=view).answer
+    w = words(a)
+    assert "시장 단가" in w and "공공" not in w
+    assert [c.amount for c in a.calc if c.ref == "standard.total"] == [4070000]
+
+
+def test_public_standard_still_says_public():
+    w = words(turn("도배 비용이 얼마나 나와요?", facts=FACTS).answer)
+    assert "공공 기준" in w and "시장 단가" not in w

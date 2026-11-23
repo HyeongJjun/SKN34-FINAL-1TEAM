@@ -286,6 +286,64 @@ class V2QuoteOut(BaseModel):
     price_ver: str  # 공공 단가 버전 (v10 CALC.PRICE_VER)
 
 
+# ---- 출력: 표준견적서 총괄표 (calc.quote_sheet) ----
+class V2SheetLineOut(BaseModel):
+    key: str
+    name: str
+    qty: float | None
+    unit: str
+    amount: int | None
+    state: str
+    bucket: Literal["material", "labor", "expense"]
+    counted: bool
+
+
+class V2SheetTradeOut(BaseModel):
+    trade: Literal["dobae", "mokgong"]
+    ko: str
+    material: int
+    labor: int
+    expense: int
+    total: int
+    share: float  # 순공사비 중 비중 %
+    bar: int  # 가장 큰 공정 = 100
+    days: float
+    lines: list[V2SheetLineOut]
+
+
+class V2OverheadOut(BaseModel):
+    key: str
+    name: str
+    rate: float  # 0.05 = 5%
+    amount: int
+
+
+class V2SheetMixOut(BaseModel):
+    material: float
+    labor: float
+    expense: float
+
+
+class V2SheetOut(BaseModel):
+    trades: list[V2SheetTradeOut]
+    material: int
+    labor: int
+    expense: int
+    net: int  # 순공사비
+    mix: V2SheetMixOut  # 순공사비 구성비 %
+    overheads: list[V2OverheadOut]
+    cut: int  # 단수 (0 이하)
+    supply: int  # 합계 (부가세 별도)
+    vat: int
+    total: int  # 총 금액 (부가세 포함)
+    per_pyeong: int  # 평당 (부가세 포함)
+    pyeong: float
+    rates_version: str
+    code: str
+    at: str
+    missing: list[str]  # 견적에 넣지 못한 공정 (참고 공정 · 범위 밖)
+
+
 class V2MarketExtraOut(BaseModel):
     key: str
     name: str
@@ -725,3 +783,98 @@ class V2AskOut(BaseModel):
 class V2AskHealthOut(BaseModel):
     ok: bool
     live: bool
+
+
+# ---- 도배 · 목공 표준견적서 (calc.market_quote, 업체 견적 235건 시장 단가) ----
+MqOption = Literal["doors", "jungmun", "entry_hw", "board", "insulation", "bath_board"]
+
+
+class V2MqIn(BaseModel):
+    """평형이나 면적 중 하나만 넣어도 된다. 방 · 욕실은 비우면 평형으로 어림한다."""
+
+    pyeong: Decimal | None = Field(default=None, gt=0, le=150)
+    area_m2: Decimal | None = Field(default=None, gt=0, le=500)
+    area_basis: Literal["supply", "exclusive"] = "exclusive"
+    rooms: int | None = Field(default=None, ge=1, le=8)
+    baths: int | None = Field(default=None, ge=1, le=5)
+    dobae: StrictBool = True
+    mokgong: StrictBool = True
+    wallpaper: Literal["hapji", "silk"] = "silk"
+    door: Literal["abs", "emboss"] = "abs"
+    jungmun: Literal["slim3", "slide", "swing"] = "slim3"
+    options: list[MqOption] | None = Field(default=None, max_length=6)  # 비우면 235건에서 흔한 것
+
+    @model_validator(mode="after")
+    def _size(self):
+        if self.pyeong is None and self.area_m2 is None:
+            raise ValueError("평형이나 면적을 넣어 주세요")
+        if not (self.dobae or self.mokgong):
+            raise ValueError("도배나 목공 중 하나는 골라 주세요")
+        return self
+
+
+class V2MqLineOut(BaseModel):
+    item: str
+    group: str  # base 또는 선택 항목 키
+    name: str
+    spec: str
+    kind: Literal["material", "labor", "expense"]
+    qty: float
+    unit: str
+    unit_price: int
+    amount: int
+    qty_why: str
+    price_why: str
+    note: str
+
+
+class V2MqTradeOut(BaseModel):
+    key: Literal["dobae", "mokgong"]
+    name: str
+    material: int
+    labor: int
+    expense: int
+    total: int
+    share: float
+    lines: list[V2MqLineOut]
+
+
+class V2MqOptionOut(BaseModel):
+    key: MqOption
+    name: str
+    desc: str
+    on: bool
+    common: bool  # 235건 중 80% 이상 (처음에 켠다)
+    seen: int  # 235건 중 들어간 건수
+    amount: int  # 이 항목 줄 합
+    delta: int  # 켜고 끌 때 총액(부가세 포함) 변화
+
+
+class V2MqOverheadOut(BaseModel):
+    key: str
+    name: str
+    rate: float
+    amount: int
+
+
+class V2MqOut(BaseModel):
+    pyeong: float
+    area_note: str
+    rooms: int
+    baths: int
+    rooms_auto: bool
+    doors: int
+    trades: list[V2MqTradeOut]
+    options: list[V2MqOptionOut]
+    material: int
+    labor: int
+    expense: int
+    net: int  # 순공사비
+    overheads: list[V2MqOverheadOut]
+    cut: int
+    supply: int
+    vat: int
+    total: int  # 부가세 포함
+    per_pyeong: int  # 평당 (부가세 포함)
+    quotes: int
+    version: str

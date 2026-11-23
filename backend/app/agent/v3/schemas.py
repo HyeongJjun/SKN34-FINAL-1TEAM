@@ -65,6 +65,8 @@ class StandardFacts(BaseModel):
     vat: int
     lines: list[StandardLineFact] = []
     days: int | None = None  # 계산 엔진 공정 일수(있을 때만)
+    # 계산 기준: market = 업체 견적서 중앙값(시장 단가, 전체 도배), public = 공공 기준 단가(그 밖)
+    basis: Literal["market", "public"] = "public"
 
 
 class PlanBlockFact(BaseModel):
