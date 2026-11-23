@@ -1,13 +1,17 @@
 """현장 정보(주차 · 엘리베이터 · 출입 방법)와 공사 전 준비 체크를 업체가 보는 것: 권한, 입력 한도, 출입 방법이 보이는 때."""
 
+import uuid
+
 import asyncpg
 import pytest
 
 from tests.conftest import query
 from tests.helpers import signup, use
 from tests.test_final_plan import two
+from tests.test_quote_compare import quote
 from tests.test_v3_visit_kit import booked, requested
-from tests.test_visit_inbox import login
+from tests.test_visit_inbox import login, visit_of
+from tests.test_visit_request import home, listed, send
 
 SITE = {"parking": "yes", "elevator": "no", "entry_note": "정문 경비실에 말하고 들어와요"}
 
@@ -76,6 +80,20 @@ def test_vendor_sees_note_only_after_booked(api):
     assert api.put(f"/projects/{f['pid']}/site", json=SITE).status_code == 200
     login(api, f["email"])
     site = api.get(f"/vendor/visits/{f['visit']}").json()["site"]
+    assert site == {"parking": "yes", "elevator": "no", "entry_note": None}
+
+
+def test_v2_quote_without_booking_hides_note(api):
+    # v2는 실측 확정 없이 견적서를 보내 '견적서 옴'이 될 수 있다. 확정이 없었으니 출입 방법은 안 보인다
+    a = listed(api, "maru@mitjip.test", "마루와벽")
+    _, p = home(api)
+    assert send(api, p["id"], [a]).status_code == 201
+    va = visit_of(a)
+    assert api.put(f"/projects/{p['id']}/site", json=SITE).status_code == 200
+    login(api, "maru@mitjip.test")
+    quote(api, va, 3_080_000)
+    assert query("select status from visits where id = $1", uuid.UUID(va))[0]["status"] == "quoted"
+    site = api.get(f"/vendor/visits/{va}").json()["site"]
     assert site == {"parking": "yes", "elevator": "no", "entry_note": None}
 
 
