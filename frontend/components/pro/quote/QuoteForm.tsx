@@ -16,6 +16,8 @@ import { useToast } from "@/components/ui/Toast";
 import type { VendorQuoteBoard, VendorVisitV3 } from "@/lib/api/vendor";
 import { errorText, type Schemas } from "@/lib/backend/client";
 import { dateSeoul, dateShort, dueText, halfDayText, won } from "@/lib/format";
+import { AssistBox } from "../assist/AssistBox";
+import { parseQuote } from "../assist/parse";
 import { enc, newKey, send, upload } from "../send";
 import { VAT_MODE_LABEL } from "../text";
 import { FileRow } from "@/components/ui/FileRow";
@@ -141,6 +143,19 @@ export function QuoteForm({ v, board, now }: { v: VendorVisitV3; board: VendorQu
     }
   }
 
+  // 업체 도우미: 말로 적은 견적 내용을 칸에 옮겨요. 금액은 적은 숫자 그대로이고, 합계는 임시 저장 뒤 계산 엔진이 만들어요
+  function assist(text: string): string {
+    const got = parseQuote(text, today);
+    const done: string[] = [];
+    if (got.amount && got.amount > 0) { setAmount(digits(String(got.amount))); done.push(`금액 ${got.amount.toLocaleString("ko-KR")}원`); }
+    if (got.vat && !fixedVat && (board.vat_modes as string[]).includes(got.vat)) { setVat(got.vat); done.push(`부가세 ${VAT_MODE_LABEL[got.vat]}`); }
+    if (got.days && got.days >= 1 && got.days <= board.days_max) { setDays(String(got.days)); done.push(`공사 기간 ${got.days}일`); }
+    if (got.valid && got.valid >= today) { setValid(got.valid); done.push(`유효기간 ${dateShort(got.valid)}`); }
+    if (!done.length) return "금액 · 부가세 · 공사 기간 · 유효기간을 말해 주세요. 예: 견적 455만 원, 부가세 포함, 공사 3일, 12/17까지 유효";
+    setErr({});
+    return `칸을 채웠어요: ${done.join(", ")}. 금액은 말씀하신 숫자 그대로예요. 견적서 파일을 올리고 '고객에게 보내기'를 직접 눌러 주세요.`;
+  }
+
   const due = v.next?.due_at;
   return (
     <>
@@ -162,6 +177,7 @@ export function QuoteForm({ v, board, now }: { v: VendorVisitV3; board: VendorQu
           <FileDrop kind="doc" label="견적서 파일 올리기" types="PDF · 엑셀 · 사진" busy={uploading} error={err.files} onFiles={pick} />
         </Group>
 
+        <AssistBox hint="견적 내용을 말로 적으면 아래 칸을 채워요." examples={["견적 455만 원, 부가세 포함, 공사 3일, 12/17까지 유효"]} onText={assist} />
         <Group>
           <Field ref={amountRef} label={simplified ? "받을 금액" : "견적 금액"} unit="원" num inputMode="numeric" value={money(amount)} error={err.amount} onChange={(e) => { setAmount(digits(e.target.value)); setErr((x) => ({ ...x, amount: undefined })); }} />
           {fixedVat ? (

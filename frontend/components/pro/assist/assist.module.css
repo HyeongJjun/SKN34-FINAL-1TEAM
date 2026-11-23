@@ -1,0 +1,11 @@
+/* 업체 도우미 칸(기간 답하기 · 실측 견적서 올리기 위) */
+.box { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--mj-line); border-radius: 12px; background: var(--mj-surface-sub); }
+.head { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; font-size: var(--mj-type-label); }
+.head span { color: var(--mj-text-sub); }
+.log { display: flex; flex-direction: column; gap: 6px; font-size: var(--mj-type-body); }
+.me { align-self: flex-end; max-width: 90%; padding: 6px 10px; border-radius: 10px; background: var(--mj-primary-weak); }
+.bot { max-width: 100%; }
+.row { display: flex; gap: 8px; align-items: stretch; }
+.input { flex: 1 1 0; min-width: 0; min-height: 40px; padding: 8px 12px; border: 1px solid var(--mj-line); border-radius: 10px; background: var(--mj-surface); font: inherit; resize: none; }
+.ex { display: flex; flex-wrap: wrap; gap: 6px; }
+.exBtn { min-height: 40px; padding: 0 12px; border: 1px solid var(--mj-line); border-radius: 999px; background: var(--mj-surface); font-size: var(--mj-type-label); color: var(--mj-text-sub); text-align: left; }
