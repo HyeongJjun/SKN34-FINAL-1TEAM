@@ -19,6 +19,8 @@ import { dateSeoul, dueText, halfDayText, rangeText } from "@/lib/format";
 import { DECLINE_LABEL } from "@/lib/labels";
 import { MOCK } from "@/lib/mock/v3c/mode";
 import { enc, newKey, send } from "../send";
+import { AssistBox } from "../assist/AssistBox";
+import { parsePeriod } from "../assist/parse";
 import { LOC_NOTE } from "../text";
 import { Eyebrow, Group, PhoneOnly, Row, Rows, Small, TwoCol, WebOnly } from "../ui/parts";
 import { Switch } from "@/components/ui/Switch";
@@ -61,6 +63,20 @@ export function PeriodForm({ v, now, openDecline }: { v: VendorVisitV3; now: str
     }
   }
 
+  // 업체 도우미: 말로 적은 기간을 달력에 표시만 해요. 보내기는 아래 단추로 직접 눌러요
+  function assist(text: string): string {
+    const today = dateSeoul(now);
+    const got = parsePeriod(text, today, v.wish_start);
+    if (!got) return "되는 기간을 날짜로 말해 주세요. 예: 12/2부터 12/5까지 돼요, 12/4는 안 돼요";
+    if (got.start < today) return "지난 날은 고를 수 없어요. 오늘 뒤 날짜로 말해 주세요.";
+    setErr(null);
+    const day = (d: string) => `${Number(d.slice(8, 10))}일`;
+    const ex = got.excluded.length ? `, ${got.excluded.map(day).join(" · ")} 빼고` : "";
+    const out = got.outside.length ? ` ${got.outside.map(day).join(" · ")}은 기간 밖이라 넣지 않았어요.` : "";
+    setP({ start: got.start, end: got.end, excluded: got.excluded });
+    return `달력에 ${rangeText(got.start, got.end, { weekday: true })}${ex}로 표시했어요.${out} 맞으면 '보내기'를 직접 눌러 주세요. 달력을 눌러 고칠 수도 있어요.`;
+  }
+
   const sendBtn = (size: "lg" | "sm") => <Button size={size} onClick={sendWindow} busy={busy} aria-describedby={err ? "period-err" : undefined}>{busy ? "보내는 중" : sendLabel}</Button>;
   const declineBtn = (size: "lg" | "sm") => <Button size={size} variant="secondary" onClick={() => setDecline(true)} disabled={busy}>못 받아요</Button>;
 
@@ -90,6 +106,7 @@ export function PeriodForm({ v, now, openDecline }: { v: VendorVisitV3; now: str
                   <Eyebrow>{factLine(v)}</Eyebrow>
                   <Small>{LOC_NOTE}</Small>
                 </PhoneOnly>
+                <AssistBox hint="되는 기간과 안 되는 날을 말로 적으면 달력에 표시해요." examples={["12/2부터 12/5까지 돼요, 12/4는 안 돼요"]} onText={assist} />
                 <h2 className={s.calT}>갈 수 있는 기간</h2>
                 <PeriodLegend />
                 <PeriodCalendar
