@@ -13,7 +13,8 @@ import { START_SAY_KEY, readLine } from "@/components/start/StartChat";
 import type { Region } from "@/lib/api/project";
 import { errorText } from "@/lib/backend/client";
 import { calcGuest, moveGuest, type GuestStandard } from "@/lib/guest/api";
-import { EMPTY_DRAFT, checkDraft, placeText, pyeongToM2, toHomeInfo, type InfoDraft } from "@/lib/guest/info";
+import { ChoiceChips } from "@/components/ui/ChoiceChip";
+import { EMPTY_DRAFT, FACES, SPACES, checkDraft, placeText, pyeongToM2, scopeText, toHomeInfo, type Face, type InfoDraft, type SpaceKind } from "@/lib/guest/info";
 import { toQuoteLines } from "@/lib/guest/standard";
 import { draftOf, readGuest, writeGuest } from "@/lib/guest/store";
 import { won } from "@/lib/format";
@@ -21,7 +22,7 @@ import { Jaejae } from "./Jaejae";
 import { Plan } from "./Plan";
 import s from "./flow.module.css";
 
-type Pick = "region" | "area" | "occupied" | "grade";
+type Pick = "region" | "area" | "occupied" | "grade" | "spaces";
 type Msg = { id: number; who: "bot" | "me"; node: ReactNode };
 const PY = ["18", "24", "32", "40"];
 const toPy = (m2: string) => (m2 ? `${Math.round(Number(m2) / 3.3058)}평` : "");
@@ -83,7 +84,9 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
   }
 
   function missing(x: InfoDraft): Pick | null {
-    return !x.sgg ? "region" : !x.area ? "area" : x.occupied == null ? "occupied" : !x.grade ? "grade" : null;
+    // 부분 공사는 고른 공간만 계산해서, 공간 · 면이 없으면 서버가 받지 않아요
+    const part = x.scope === "partial" && (!x.spaces.length || !x.faces.length);
+    return !x.sgg ? "region" : !x.area ? "area" : x.occupied == null ? "occupied" : !x.grade ? "grade" : part ? "spaces" : null;
   }
 
   async function next(x: InfoDraft, lead = "") {
@@ -96,6 +99,8 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
     if (m === "grade") return say(<><p>{lead}도배 유형을 골라 주세요. 벽지 종류에 따라 금액이 가장 크게 달라져요.</p>
       <p className={s.why}>실크: 겉에 비닐 막이 있어 물걸레질이 되고 이음매가 덜 보여요. 합지: 종이라 값이 싸고 이음매가 보일 수 있어요.</p>
       <div className={s.row}><Button size="sm" variant="weak" onClick={() => pick("기본형 (실크)", { grade: "basic" })}>기본형 (실크)</Button><Button size="sm" variant="weak" onClick={() => pick("저가형 (합지)", { grade: "economy" })}>저가형 (합지)</Button><Button size="sm" variant="secondary" onClick={() => pick("잘 모르겠어요", { grade: "basic" })}>잘 모르겠어요</Button></div></>);
+    if (m === "spaces") return say(<><p>{lead}부분 도배는 고른 공간만 계산해요. 어느 공간의 어느 면을 할지 골라 주세요.</p>
+      <SpacePick start={x} onDone={(p) => pick(p.scope === "full" ? "전체로 할래요" : scopeText({ scope: "partial", spaces: p.spaces ?? [], faces: p.faces ?? [] }), p)} /></>);
     return confirm(x, lead);
   }
 
@@ -105,12 +110,12 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
       <div className={s.card}>
         <div className={s.kv}><span>집</span><b>아파트 · {placeText(regions, x)}</b></div>
         <div className={s.kv}><span>평형</span><b>{areaText(x)}</b></div>
-        <div className={s.kv}><span>공정</span><b>도배 {x.scope === "partial" ? "부분" : "전체"}</b></div>
+        <div className={s.kv}><span>공정</span><b>도배 {x.scope === "partial" ? scopeText(x) : "전체"}</b></div>
         <div className={s.kv}><span>거주</span><b>{x.occupied ? "살면서 공사" : "빈 집"}</b></div>
         <div className={s.kv}><span>도배 유형</span><b>{x.grade === "economy" ? "저가형 (합지)" : "기본형 (실크)"}</b></div>
         {bad.length ? <p className={s.note}>{bad.join(" · ")}</p> : null}
       </div>
-      <div className={s.row}><Button size="sm" onClick={() => { add("me", "맞아요"); void quote(dRef.current); }}>맞아요, 견적 볼게요</Button><Button size="sm" variant="secondary" onClick={() => { add("me", "고칠래요"); setOpen(true); void say(<p>위 칩이나 오른쪽 플랜 1단계에서 고쳐 주세요. 고친 뒤 &quot;다 고쳤어요&quot;라고 말해 주세요.</p>); }}>고칠래요</Button></div></>);
+      <div className={s.row}><Button size="sm" onClick={() => { add("me", "맞아요"); const cur = dRef.current; if (missing(cur)) { void next(cur, "아직 비어 있는 칸이 있어요. "); return; } void quote(cur); }}>맞아요, 견적 볼게요</Button><Button size="sm" variant="secondary" onClick={() => { add("me", "고칠래요"); setOpen(true); void say(<p>위 칩이나 오른쪽 플랜 1단계에서 고쳐 주세요. 고친 뒤 &quot;다 고쳤어요&quot;라고 말해 주세요.</p>); }}>고칠래요</Button></div></>);
   }
 
   async function quote(x: InfoDraft, compare = false) {
@@ -254,6 +259,24 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
           ) : step === 1 && std ? (
             <div className={s.card}><h4>표준견적서</h4><b className="mj-num">{won(std.total)}</b><span className={s.note}>부가세 포함 · 업체 견적이 아니에요</span></div>
           ) : null} />
+      </div>
+    </div>
+  );
+}
+
+/** 부분 도배 공간 · 면 고르기(대화 안 카드). 둘 다 하나 이상 골라야 넘어가요. 한 번 고르면 이 카드는 잠가요 */
+function SpacePick({ start, onDone }: { start: InfoDraft; onDone: (p: Partial<InfoDraft>) => void }) {
+  const [spaces, setSpaces] = useState<SpaceKind[]>(start.spaces);
+  const [faces, setFaces] = useState<Face[]>(start.faces.length ? start.faces : ["wall", "ceiling"]);
+  const [done, setDone] = useState(false);
+  const finish = (p: Partial<InfoDraft>) => { if (done) return; setDone(true); onDone(p); };
+  return (
+    <div className={s.card}>
+      <ChoiceChips multiple legend="공간" value={spaces} onChange={(v) => setSpaces(v as SpaceKind[])} options={SPACES.map((x) => ({ value: x.key, label: x.label }))} />
+      <ChoiceChips multiple legend="면" value={faces} onChange={(v) => setFaces(v as Face[])} options={FACES.map((x) => ({ value: x.key, label: x.label }))} />
+      <div className={s.row}>
+        <Button size="sm" disabled={done || !spaces.length || !faces.length} onClick={() => finish({ scope: "partial", spaces, faces })}>골랐어요</Button>
+        <Button size="sm" variant="secondary" disabled={done} onClick={() => finish({ scope: "full", spaces: [], faces: ["wall", "ceiling"] })}>전체로 할래요</Button>
       </div>
     </div>
   );
