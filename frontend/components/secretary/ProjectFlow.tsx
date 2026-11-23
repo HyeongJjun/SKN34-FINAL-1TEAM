@@ -15,7 +15,7 @@ import { askAi, newClientKey, type AiTurnOut } from "@/lib/api/chat";
 import type { ApiCompare, ApiOverview, ApiSchedule } from "@/lib/api/schedule";
 import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/lib/api/visit";
 import { call, errorText, type Schemas } from "@/lib/backend/client";
-import { dateShort, won } from "@/lib/format";
+import { dateShort, euro, won } from "@/lib/format";
 import { termByName, termHref } from "@/lib/guide";
 import { Jaejae } from "./Jaejae";
 import { Plan } from "./Plan";
@@ -25,6 +25,8 @@ type Pick = Schemas["VisitPickOut"];
 type Half = "am" | "pm";
 const HALF: Record<Half, string> = { am: "오전", pm: "오후" };
 const enc = encodeURIComponent;
+/** 받침에 맞춰 이/가: "마루와벽" → "마루와벽이" */
+const iga = (w: string) => { const c = w.charCodeAt(w.length - 1); return c < 0xac00 || c > 0xd7a3 ? `${w}(이)가` : `${w}${(c - 0xac00) % 28 ? "이" : "가"}`; };
 
 export type FlowData = {
   p: VisitProject;
@@ -144,10 +146,10 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             <div key={r.visit_id} className={s.card}>
               <h4>{r.vendor_name}</h4>
               <b className="mj-num">{r.latest!.total != null ? won(r.latest!.total) : "—"}</b>
-              <span className={s.note}>실측 견적서 · 확정 전 금액{r.vs_standard ? ` · 표준견적서보다 ${r.vs_standard}` : ""}</span>
+              <span className={s.note}>실측 견적서 · 확정 전 금액{r.vs_standard && r.vs_direction && r.vs_direction !== "same" ? ` · 표준견적서보다 ${r.vs_standard}% ${r.vs_direction === "more" ? "높아요" : "낮아요"}` : ""}</span>
               {r.estimate_total != null ? <span className={s.note}>가견적(실측 전) {won(r.estimate_total)}</span> : null}
               <Button size="sm" busy={busy === `c${r.visit_id}`} disabled={r.seen_ver == null}
-                onClick={() => act(`c${r.visit_id}`, () => call("POST", `/projects/${pid}/quotes/${enc(r.visit_id)}/confirm`, { seen_ver: r.seen_ver }))}>{r.vendor_name}로 확정</Button>
+                onClick={() => act(`c${r.visit_id}`, () => call("POST", `/projects/${pid}/quotes/${enc(r.visit_id)}/confirm`, { seen_ver: r.seen_ver }))}>{euro(r.vendor_name)} 확정</Button>
             </div>
           ))}
         </div>
@@ -158,13 +160,13 @@ export function ProjectFlow({ data }: { data: FlowData }) {
 
   if (deal) {
     const d = deal.deal;
-    cards.push({ key: "deal", node: <p><b>{d.vendor_name}</b>로 확정했어요. 확정 금액 <b className="mj-num">{won(d.quote.total)}</b>.</p> });
-    if (deal.dates_state === "waiting") cards.push({ key: "dates-wait", node: <p>{d.vendor_name}가 공사 날짜를 올리면 알려 드릴게요.</p> });
+    cards.push({ key: "deal", node: <p><b>{euro(d.vendor_name)}</b> 확정했어요. 확정 금액 <b className="mj-num">{won(d.quote.total)}</b>.</p> });
+    if (deal.dates_state === "waiting") cards.push({ key: "dates-wait", node: <p>{iga(d.vendor_name)} 공사 날짜를 올리면 알려 드릴게요.</p> });
     if ((deal.dates_state === "proposed" || deal.dates_state === "change_proposed") && deal.proposal) {
       const x = deal.proposal;
       cards.push({ key: "dates", alert: true, node: (
         <>
-          <p><b>{d.vendor_name}가 공사 날짜를 올렸어요.</b> {dateShort(x.start)} ~ {dateShort(x.end)} · {x.workdays}일 · {x.crew}명</p>
+          <p><b>{iga(d.vendor_name)} 공사 날짜를 올렸어요.</b> {dateShort(x.start)} ~ {dateShort(x.end)} · {x.workdays}일 · {x.crew}명</p>
           <div className={s.row}><Button size="sm" busy={busy === "accept"} onClick={() => act("accept", () => call("POST", `/projects/${pid}/deals/${enc(d.id)}/dates/${enc(x.id)}/accept`, { seen_version: schedule!.final_version }))}>이 날짜로 수락</Button>
             <Button size="sm" variant="secondary" href={`/projects/${pid}/schedule`}>다른 날짜 요청</Button></div>
         </>
@@ -179,8 +181,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     for (const x of deal.extras.items.filter((i) => i.answer === "pending")) {
       cards.push({ key: `x${x.id}`, alert: true, node: (
         <>
-          <p><b>{d.vendor_name}가 추가 금액을 요청했어요.</b> {x.title} · <b className="mj-num">{won(x.total)}</b></p>
-          <p className={s.why}>이유: {x.reason}. 승인해야 금액에 더해져요. 설명이 더 필요하면 &quot;물어볼래요&quot;로 채팅에서 물어보세요.</p>
+          <p><b>{iga(d.vendor_name)} 추가 금액을 요청했어요.</b> {x.title} · <b className="mj-num">{won(x.total)}</b></p>
+          <p className={s.why}>이유: {x.reason.replace(/[.。]\s*$/, "")}. 승인해야 금액에 더해져요. 설명이 더 필요하면 &quot;물어볼래요&quot;로 채팅에서 물어보세요.</p>
           <div className={s.row}>
             <Button size="sm" busy={busy === `xa${x.id}`} onClick={() => act(`xa${x.id}`, () => call("POST", `/projects/${pid}/deals/${enc(d.id)}/extras/${enc(x.id)}/answer`, { answer: "approve" }))}>승인</Button>
             <Button size="sm" variant="secondary" busy={busy === `xr${x.id}`} onClick={() => act(`xr${x.id}`, () => call("POST", `/projects/${pid}/deals/${enc(d.id)}/extras/${enc(x.id)}/answer`, { answer: "reject" }))}>거절</Button>
@@ -192,7 +194,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     if (d.status === "checking") {
       cards.push({ key: "check", alert: true, node: (
         <>
-          <p><b>{d.vendor_name}가 공사를 마쳤다고 올렸어요.</b> 완료를 누르기 전에 같이 확인해요.</p>
+          <p><b>{iga(d.vendor_name)} 공사를 마쳤다고 올렸어요.</b> 완료를 누르기 전에 같이 확인해요.</p>
           <ul className={s.auto}><li>벽지가 들뜨거나 운 곳이 없는지</li><li>이음매가 벌어지지 않았는지</li><li>모서리 · 콘센트 둘레가 깔끔한지</li><li>몰딩 · 걸레받이와 벽지 사이가 뜨지 않았는지</li></ul>
           <div className={s.row}>
             <Button size="sm" busy={busy === "done"} onClick={() => act("done", () => call("POST", `/projects/${pid}/deals/${enc(d.id)}/check`, { result: "done" }))}>확인했어요, 완료</Button>
@@ -201,7 +203,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
         </>
       ) });
     }
-    if (d.status === "done") cards.push({ key: "review", node: <ReviewCard pid={pid} dealId={d.id} name={d.vendor_name} busy={busy} act={act} /> });
+    if (d.status === "done") cards.push({ key: "review", node: d.review_open ? <ReviewCard pid={pid} dealId={d.id} name={d.vendor_name} busy={busy} act={act} /> : <p>리뷰까지 마쳤어요. 하자가 보이면 {d.vendor_name}에 채팅으로 알려 주세요. 수고 많으셨어요.</p> });
   }
 
   const auto: Record<number, string[]> = { 0: ["집 정보 정리"], 1: ["표준견적서 계산"], 2: vs.length ? ["업체에 실측 날짜 물어보기"] : [], 4: quoted.length ? ["견적서를 표준견적서와 비교"] : [], 5: deal ? ["확정 공정표 만들기"] : [] };
@@ -287,7 +289,7 @@ function PickCard({ pid, visitId, name, proposal, busy, act }: { pid: string; vi
   const days = (pick?.days ?? []).filter((d) => d.am || d.pm).slice(0, 14);
   return (
     <>
-      <p><b>{name}가 실측 되는 날을 보냈어요.</b> 집에 계실 반나절을 골라 주세요.</p>
+      <p><b>{iga(name)} 실측 되는 날을 보냈어요.</b> 집에 계실 반나절을 골라 주세요.</p>
       <div className={s.vlist}>
         {days.map((d) => (
           <div key={d.day} className={s.vrow}><b>{dateShort(d.day)}</b><div className={s.row}>
@@ -299,7 +301,7 @@ function PickCard({ pid, visitId, name, proposal, busy, act }: { pid: string; vi
         {pick && !days.length ? <p className={s.note}>고를 수 있는 반나절이 없어요. <Link href={`/projects/${pid}/visits/${enc(visitId)}`}>실측 화면</Link>에서 다시 물어보세요.</p> : null}
       </div>
       <Button size="sm" disabled={!sel} busy={busy === `p${visitId}`} onClick={() => sel && act(`p${visitId}`, () => call("POST", `/projects/${pid}/visits/${enc(visitId)}/${proposal ? "proposal/pick" : "pick"}`, sel))}>
-        {sel ? `${dateShort(sel.day)} ${HALF[sel.half]}로 보내기` : "반나절을 골라 주세요"}
+        {sel ? `${dateShort(sel.day)} ${euro(HALF[sel.half])} 보내기` : "반나절을 골라 주세요"}
       </Button>
     </>
   );

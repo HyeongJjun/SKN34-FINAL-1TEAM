@@ -33,6 +33,9 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [std, setStd] = useState<GuestStandard | null>(null);
+  // 대화에 들어간 단추는 만든 때의 값을 붙잡아요. 지금 표준견적서는 ref로 읽어요
+  const stdRef = useRef<GuestStandard | null>(null);
+  const busyRef = useRef(false);
   const [open, setOpen] = useState(false);
   const seq = useRef(0);
   const dRef = useRef(d);
@@ -108,15 +111,17 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
   }
 
   async function quote(x: InfoDraft, compare = false) {
-    if (busy) return;
+    if (busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       const got = await calcGuest(toHomeInfo(x), mock);
-      if (!compare) setStd(got);
-      if (compare && std) {
-        const diff = std.total - got.total;
+      const base = stdRef.current;
+      if (!compare) { setStd(got); stdRef.current = got; }
+      if (compare && base) {
+        const diff = base.total - got.total;
         await say(<><div className={s.two}>
-          <div className={s.card}><h4>{x.grade === "economy" ? "기본형 (실크)" : "저가형 (합지)"}</h4><b className="mj-num">{won(std.total)}</b></div>
+          <div className={s.card}><h4>{x.grade === "economy" ? "기본형 (실크)" : "저가형 (합지)"}</h4><b className="mj-num">{won(base.total)}</b></div>
           <div className={s.card}><h4>{x.grade === "economy" ? "저가형 (합지)" : "기본형 (실크)"}</h4><b className="mj-num">{won(got.total)}</b></div></div>
           <p>차이는 <b className="mj-num">{won(Math.abs(diff))}</b>이에요. 차이는 대부분 벽지값에서 나요.</p>
           <div className={s.row}><Button size="sm" onClick={() => { add("me", "업체 볼게요"); void vendors(); }}>그대로 업체 볼게요</Button></div></>);
@@ -136,6 +141,7 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
     } catch (e) {
       await say(<p>표준견적서를 계산하지 못했어요. {errorText(e)}</p>);
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
