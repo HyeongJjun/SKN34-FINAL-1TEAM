@@ -87,7 +87,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   async function ask(q: string, button: AiButton | null = null) {
     const t = q.trim().slice(0, 1000);
     if (!t || asking) return; // 답을 기다리는 동안 새 질문을 막아요(답이 엇갈리지 않게 · 대화 하나로)
-    setText("");
+    if (t === text.trim().slice(0, 1000)) setText(""); // 입력칸 글을 보낼 때만 비워요(질문 버튼을 눌러도 쓰던 글은 남겨요)
     setAsks((a) => [...a, { q: t }]);
     try {
       const out = await askAi({ client_key: newClientKey(), text: t, chat_id: chatId, context: { screen: now <= 2 ? "vendors" : now <= 4 ? "quotes" : "plan", project_id: p.id, ids: [] }, button }); // 선택지의 길(route) · 칸 정보를 그대로 넘겨요
@@ -236,7 +236,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const auto: Record<number, string[]> = { 0: ["집 정보 정리"], 1: ["표준견적서 계산"], 2: vs.length ? ["업체에 실측 날짜 물어보기"] : [], 4: quoted.length ? ["견적서를 표준견적서와 비교"] : [], 5: deal ? ["확정 공정표 만들기"] : [] };
   const terms = ["실크 벽지", "가견적", "실측 견적서", "보양", "하자담보책임기간"].map((n) => termByName(n)).filter((t) => t !== undefined);
   // 입력칸 위 질문 버튼(#180): 지금 칸의 시작 질문 중 아직 안 물은 것. 답마다의 추천 질문은 답 아래(AiAnswer)에 그대로 보여요
-  const quick = starterChips(now, asks.map((a) => a.q));
+  const quick = starterChips(now, asks.filter((a) => !a.err).map((a) => a.q)); // 오류로 끝난 질문은 다시 누를 수 있게 남겨요
 
   return (
     <div className={s.page}>
@@ -270,7 +270,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
           </div>
           <div className={s.dock}>
             {quick.length ? (
-              <div className={s.quick} aria-label="이런 걸 물어보세요">
+              <div className={s.quick} role="group" aria-label="이런 걸 물어보세요">
                 {quick.map((q) => <button key={q} type="button" className={s.chip} disabled={asking} onClick={() => void ask(q)}>{q}</button>)}
               </div>
             ) : null}

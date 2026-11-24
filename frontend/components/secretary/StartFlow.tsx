@@ -247,7 +247,7 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
           </div>
           <div className={s.dock}>
             {quick.length ? (
-              <div className={s.quick} aria-label="이렇게 답해도 돼요">
+              <div className={s.quick} role="group" aria-label="이렇게 답해도 돼요">
                 {quick.map((q) => <button key={q} type="button" className={s.chip} disabled={busy} onClick={() => take(q, dRef.current)}>{q}</button>)}
               </div>
             ) : null}
