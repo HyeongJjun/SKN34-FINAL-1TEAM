@@ -26,6 +26,12 @@ backend/
 │   │   │   │   └── trade_v1.md
 │   │   │   └── specialists/         [추가]
 │   │   │       ├── __init__.py       공종 폴더 자동 등록
+│   │   │       ├── _template/        새 공종 복사용 템플릿
+│   │   │       │   ├── README.md          복사와 설정 방법
+│   │   │       │   ├── agent.py           공종 답변 처리 시작점
+│   │   │       │   ├── spec.py            공종 기본 설정 예시
+│   │   │       │   ├── retrieval.py       기본 키워드 검색
+│   │   │       │   └── prompt_v1.md       공종별 답변 지침 예시
 │   │   │       └── dobae/
 │   │   │           ├── agent.py           도배 에이전트 실행 시작점
 │   │   │           ├── spec.py            도배 기본 설정
@@ -71,7 +77,7 @@ evaluation/
 
 ## 공종 에이전트 추가 방법
 
-1. `backend/app/agent/v3/specialists/<공종 코드>/`를 만든다. 기존 공종은 기존 코드를 사용한다. 새 공종은 [도배 spec.py](../../backend/app/agent/v3/specialists/dobae/spec.py)를 참고해 `spec.py`의 `build(TradeSpec, Slot)`에서 공종 코드, 분류 단어, 지식 태그를 반환한다. 코드와 폴더 이름은 같아야 한다. 같은 위치에서 다른 공종의 분류 단어와 겹치면 `route_priority`로 우선순위를 정할 수 있다.
+1. [공종 템플릿 사용법](../../backend/app/agent/v3/specialists/_template/README.md)에 따라 `_template/`을 복사하고 폴더명을 공종 코드로 바꾼다. 기존 공종은 기존 코드를 사용한다. 새 공종은 [도배 spec.py](../../backend/app/agent/v3/specialists/dobae/spec.py)를 참고해 `spec.py`의 `build(TradeSpec, Slot)`에서 공종 코드, 분류 단어, 지식 태그를 반환한다. 코드와 폴더 이름은 같아야 한다. 같은 위치에서 다른 공종의 분류 단어와 겹치면 `route_priority`로 우선순위를 정할 수 있다.
 2. 필요한 파일만 넣는다. 검색을 바꾸려면 `retrieval.py`에 `retrieve(kb, question)`를, 답변 지침을 더하려면 `prompt_v1.md`를, 상담 흐름을 바꾸려면 `agent.py`에 `run(task, kb, run_common)`을 둔다. 등록 파일은 이 이름을 기준으로 자동 연결하고, 생략한 항목에는 공통 동작을 적용한다.
 3. 벡터 검색을 쓸 공종은 같은 `retrieval.py`에 `vector_query(question)`를 둔다. 이 함수가 반환한 검색어를 공통 백엔드가 조회한다. `None`을 반환하면 조회를 건너뛴다. `retrieve()`에서 `kb.vector_rids[(공종 코드, 질문)]`의 후보를 사용해 자료 범위와 순위를 정한다.
 4. 서버를 새로 시작해 반영한다. [도배 평가 데이터](../../evaluation/v3/trades/dobae/questions.jsonl)와 [연결 테스트](../../backend/tests/test_v3_trade_specialists.py)를 참고해 새 공종의 검색·프롬프트와 기존 공통 동작을 검증한다.
