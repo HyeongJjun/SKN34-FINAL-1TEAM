@@ -5,12 +5,13 @@ import uuid
 from dataclasses import replace
 from datetime import date
 
+from v3_kb import repo_kb
+
 from app.agent import llm
 from app.agent.v3 import answer, llm_mode, orchestrator
 from app.agent.v3.schemas import Section, Sentence, TurnContext
 from app.agent.v3.specialists import SPECIALISTS
 from app.agent.v3.turn import run_turn
-from v3_kb import repo_kb
 
 
 def test_tile_surface_search_only_expands_dobae_query(monkeypatch):
