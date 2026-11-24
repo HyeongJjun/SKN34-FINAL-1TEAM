@@ -2,11 +2,13 @@
 
 import asyncio
 import uuid
+from dataclasses import replace
 from datetime import date
 
 from app.agent import llm
 from app.agent.v3 import answer, llm_mode, orchestrator
 from app.agent.v3.schemas import Section, Sentence, TurnContext
+from app.agent.v3.specialists import SPECIALISTS
 from app.agent.v3.turn import run_turn
 from v3_kb import repo_kb
 
@@ -53,3 +55,38 @@ def test_dobae_turn_uses_specialist_prompt(monkeypatch):
     assert result.answer.sections[0].source == "llm"
     assert "도배 전용" in calls[0][0][1]
     assert llm_mode.prompt("trade", "mokgong") == llm_mode.prompt("trade")
+
+
+def test_dobae_turn_dispatches_to_specialist_and_mokgong_keeps_common_flow(monkeypatch):
+    kb = repo_kb()
+    ctx = TurnContext(user_id=uuid.UUID(int=0), today=date(2026, 11, 19))
+    specialist = SPECIALISTS["dobae"]
+    run_dobae = specialist.run
+    assert run_dobae is not None
+    calls = []
+
+    def run(task, kb, run_common):
+        calls.append(task.trades[0])
+        return run_dobae(task, kb, run_common)
+
+    monkeypatch.setitem(SPECIALISTS, "dobae", replace(specialist, run=run))
+    dobae = asyncio.run(run_turn("합지랑 실크 중에 뭐로 해야 해요?", ctx, kb=kb))
+    mokgong = asyncio.run(run_turn("목공 몰딩은 어떤 종류가 있어요?", ctx, kb=kb))
+
+    assert calls == ["dobae"]
+    assert dobae.answer.ask is not None and dobae.answer.ask.slot == "dobae.grade"
+    assert mokgong.answer.trace.trades == ["mokgong"]
+    assert mokgong.answer.sections
+
+
+def test_dobae_search_returns_specialist_results(monkeypatch):
+    kb = repo_kb()
+    result = answer.bm25.Result([], False, [])
+
+    def retrieve(current_kb, question):
+        assert current_kb is kb
+        assert question == "타일 벽에 도배할 수 있어요?"
+        return result
+
+    monkeypatch.setitem(SPECIALISTS, "dobae", replace(SPECIALISTS["dobae"], retrieve=retrieve))
+    assert answer.search(kb, "타일 벽에 도배할 수 있어요?", "dobae") is result

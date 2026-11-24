@@ -19,6 +19,7 @@ from app.agent.v3.answer import (
     use_card,
 )
 from app.agent.v3.schemas import AskSlot, Choice, UiCard
+from app.agent.v3.specialists import SPECIALISTS
 from app.agent.v3.trades import BY_CODE
 
 
@@ -27,6 +28,13 @@ def primary(task: Task) -> str:
 
 
 def run(task: Task, kb: KB) -> Part:
+    specialist = SPECIALISTS.get(primary(task))
+    if specialist is not None and specialist.run is not None:
+        return specialist.run(task, kb, _run_common)
+    return _run_common(task, kb)
+
+
+def _run_common(task: Task, kb: KB) -> Part:
     code = primary(task)
     spec = BY_CODE[code]
     part = Part(route="trade", trade=code)  # type: ignore[arg-type]

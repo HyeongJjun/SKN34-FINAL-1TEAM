@@ -1,12 +1,15 @@
-"""도배 질문에 쓰는 검색어."""
+"""도배 상담에 필요한 자료를 키워드로 찾는다."""
 
-import re
+from __future__ import annotations
 
-_TILE_SURFACE = re.compile(r"타일(?:을 붙인|로 마감한)?\s*(?:벽|바탕|위)")
+from typing import TYPE_CHECKING
+
+from app.agent.v3.specialists.dobae import keyword_search
+
+if TYPE_CHECKING:
+    from app.agent.v3.answer import KB
+    from app.knowledge.bm25 import Result
 
 
-def search_query(question: str) -> str:
-    # 기존 검색은 앞 80자만 쓰므로 시공 대상 바탕을 앞에 보탠다.
-    if _TILE_SURFACE.search(question):
-        return f"타일 바탕면 {question}"
-    return question
+def retrieve(kb: KB, question: str) -> Result:
+    return keyword_search.search(kb, question)
