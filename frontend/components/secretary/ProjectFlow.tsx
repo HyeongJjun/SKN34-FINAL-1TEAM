@@ -266,7 +266,6 @@ export function ProjectFlow({ data }: { data: FlowData }) {
                   {a.out ? <AiAnswer answer={a.out.answer} projectId={p.id} onPick={(q, b) => void ask(q, b ?? null)} /> : a.err ? <p className="mj-error">{a.err}</p> : <p className={s.typing}>줄자로 재는 중…</p>}</div></div>
               </div>
             ))}
-            <div ref={end} />
           </div>
           <div className={s.dock}>
             {quick.length ? (
@@ -281,6 +280,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
               <Button type="submit" disabled={!text.trim() || asking}>{asking ? "답 기다리는 중" : "보내기"}</Button>
             </form>
           </div>
+          {/* 새 말이 오면 여기까지 내려요. 입력칸(dock) 뒤에 두어 마지막 말풍선이 입력칸에 가려지지 않아요 */}
+          <div ref={end} />
         </section>
         <Plan now={now} scope={p.id} open={open} auto={auto}
           render={(step) => step === 0 ? <><Link href={`/start?edit=${pid}`}>기본 정보 고치기{p.locked ? " (요청 뒤라 잠겼어요)" : ""}</Link><SiteInfoCard projectId={p.id} /></>

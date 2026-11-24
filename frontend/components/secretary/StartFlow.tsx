@@ -243,7 +243,6 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
             {msgs.map((m) => m.who === "me"
               ? <p key={m.id} className={s.me}>{m.node}</p>
               : <div key={m.id} className={s.bot}><div className={s.face}><Jaejae /></div><div className={s.bubble}><span className={s.who}>재재 · 믿집 비서</span>{m.node}</div></div>)}
-            <div ref={end} />
           </div>
           <div className={s.dock}>
             {quick.length ? (
@@ -258,6 +257,8 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
               <Button type="submit" disabled={!text.trim() || busy}>보내기</Button>
             </form>
           </div>
+          {/* 새 말이 오면 여기까지 내려요. 입력칸(dock) 뒤에 두어 마지막 말풍선이 입력칸에 가려지지 않아요 */}
+          <div ref={end} />
         </section>
         <Plan now={now} scope="guest" open={open}
           auto={{ 0: [d.sgg ? "지역 정리" : "", d.area ? "평형 정리" : ""].filter(Boolean), 1: std ? ["표준견적서 계산"] : [] }}
