@@ -16,10 +16,10 @@ export type AiCard = { kind: "calc" | "visit_draft" | "open_calendar" | "grade_p
 export type AiSource = { ref: string; title: string; kind: string };
 export type AiSection = { title: string; sentences: string[]; caution: string; tip: string; source: "card" | "extract" | "llm" | "template" | "calc"; route: AiRoute; trade?: string | null; sources: AiSource[] };
 export type AiAsk = { trade: string; slot: string; question: string; options: string[] };
-export type AiAnswer = { notice: string; /** 결론 한 줄(굵게) */ lead?: string; /** 업체에 이렇게 요청해 보세요 */ vendor?: string[]; sections: AiSection[]; calc: AiCalc[]; cards: AiCard[]; ask?: AiAsk | null; unknown: string[]; suggest: string[]; failed: boolean };
+export type AiAnswer = { notice: string; /** 결론 한 줄(굵게) */ lead?: string; /** 업체에 이렇게 요청해 보세요 */ vendor?: string[]; /** 사진에서 본 것(붙인 사진이 있을 때) */ photo?: string[]; sections: AiSection[]; calc: AiCalc[]; cards: AiCard[]; ask?: AiAsk | null; unknown: string[]; suggest: string[]; failed: boolean };
 export type AiTurnOut = { chat_id: string | null; rev: number | null; mode: "free" | "llm"; route: AiRoute; answer: AiAnswer };
 export type AiButton = { route: AiRoute; trade?: string | null; slot?: string | null; value?: string | null };
-export type AiTurnIn = { client_key: string; text: string; chat_id?: string | null; context: { screen?: AiScreen | null; project_id?: string | null; ids?: string[] }; button?: AiButton | null };
+export type AiTurnIn = { client_key: string; text: string; chat_id?: string | null; context: { screen?: AiScreen | null; project_id?: string | null; ids?: string[] }; button?: AiButton | null; /** 붙인 사진(POST /files kind=photo로 올린 id, 3장까지) */ file_ids?: string[] };
 export type AiFaq = { id: string; question: string; sentences: string[]; tip: string; sources: AiSource[]; actions: string[] };
 export type AiThread = { chat_id: string; updated_at: string; preview: string };
 export type AiThreadDetail = { chat_id: string; rev: number; messages: { role: "user" | "assistant"; text: string; turn: number }[] };

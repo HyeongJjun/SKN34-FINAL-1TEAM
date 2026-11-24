@@ -33,3 +33,5 @@
 .embed { display: flex; flex-direction: column; gap: 8px; }
 .lead { font-size: var(--fs-lg); font-weight: 700; line-height: 1.45; }
 .vendor { border: 1px solid var(--mj-primary); border-radius: var(--radius); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; background: var(--surface); }
+/* 사진에서 본 것(#181 2단계): 답 위에 따로 보여요 */
+.photo { background: var(--surface-2); border-radius: var(--radius); padding: 10px 12px; font-size: var(--fs-sm); color: var(--ink-sub); display: flex; flex-direction: column; gap: 4px; }

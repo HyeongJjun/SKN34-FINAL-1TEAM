@@ -2779,6 +2779,11 @@ export interface components {
              */
             context: components["schemas"]["AiContext"];
             button?: components["schemas"]["Button"] | null;
+            /**
+             * File Ids
+             * @default []
+             */
+            file_ids: string[];
         };
         /**
          * AnswerIn

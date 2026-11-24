@@ -115,6 +115,7 @@ export function AiAnswer({ answer, projectId, onPick }: { answer: Answer; projec
   return (
     <div className={s.answer}>
       <p className={s.notice}>{answer.notice}</p>
+      {answer.photo?.length ? <div className={s.photo}>{answer.photo.map((t, i) => <p key={i}>{t}</p>)}</div> : null}
       {answer.lead ? <p className={s.lead}>{answer.lead}</p> : null}
       {answer.sections.map((sec, i) => (
         <div key={i} className={s.section}>

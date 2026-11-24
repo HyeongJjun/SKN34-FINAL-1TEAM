@@ -17,6 +17,7 @@ import { askAi, newClientKey, type AiButton, type AiTurnOut } from "@/lib/api/ch
 import type { ApiCompare, ApiOverview, ApiSchedule } from "@/lib/api/schedule";
 import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/lib/api/visit";
 import { call, errorText, type Schemas } from "@/lib/backend/client";
+import { upload } from "@/lib/mock/v3b/client";
 import { dateShort, euro, won } from "@/lib/format";
 import { termByName, termHref } from "@/lib/guide";
 import { attachTargets } from "./attach";
@@ -30,6 +31,8 @@ const CLOSED = ["declined", "expired", "cancelled", "no_show", "closed"];
 type Half = "am" | "pm";
 const HALF: Record<Half, string> = { am: "오전", pm: "오후" };
 const enc = encodeURIComponent;
+const PHOTO_MAX = 3; // 서버 agent/v3/photo.py MAX_PHOTOS와 같아요
+const PHOTO_ASK = "이 사진 좀 봐 주세요"; // 사진만 붙이고 글을 안 쓰면 보내는 말
 
 export type FlowData = {
   p: VisitProject;
@@ -70,12 +73,17 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const busy = busyKey ?? (refreshing ? "refresh" : null);
   const [note, setNote] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [asks, setAsks] = useState<{ q: string; out?: AiTurnOut; err?: string }[]>([]);
+  const [asks, setAsks] = useState<{ q: string; pics?: string[]; out?: AiTurnOut; err?: string }[]>([]);
   const [chatId, setChatId] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [attach, setAttach] = useState(false);
+  // 재재에게 물어볼 사진(#181 2단계): 먼저 올리고(POST /files kind=photo, 서버가 위치 정보를 지워요) 질문과 함께 id만 보내요
+  const [pics, setPics] = useState<{ id: string; src: string; name: string }[]>([]);
+  const [picBusy, setPicBusy] = useState(false);
+  const [picErr, setPicErr] = useState<string | null>(null);
+  const picIn = useRef<HTMLInputElement>(null);
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [asks.length, now, attach]); // 사진 칸을 열면 입력칸이 높아져서 다시 내려요
+  useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [asks.length, now, attach, pics.length]); // 사진 칸을 열면 입력칸이 높아져서 다시 내려요
 
   async function act(key: string, fn: () => Promise<unknown>) {
     if (busy) return;
@@ -85,14 +93,37 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     try { await fn(); startRefresh(() => router.refresh()); } catch (e) { setErr(errorText(e)); } finally { setBusy(null); }
   }
 
-  const asking = asks.length > 0 && !asks[asks.length - 1].out && !asks[asks.length - 1].err;
-  async function ask(q: string, button: AiButton | null = null) {
-    const t = q.trim().slice(0, 1000);
-    if (!t || asking) return; // 답을 기다리는 동안 새 질문을 막아요(답이 엇갈리지 않게 · 대화 하나로)
-    if (t === text.trim().slice(0, 1000)) setText(""); // 입력칸 글을 보낼 때만 비워요(질문 버튼을 눌러도 쓰던 글은 남겨요)
-    setAsks((a) => [...a, { q: t }]);
+  async function addPics(list: File[]) {
+    if (picBusy) return;
+    setPicErr(null);
+    const room = PHOTO_MAX - pics.length;
+    if (list.length > room) setPicErr(`사진은 한 번에 ${PHOTO_MAX}장까지 붙일 수 있어요.`);
+    const take = list.slice(0, Math.max(room, 0));
+    const bad = take.find((f) => !f.type.startsWith("image/") || f.size > 10 * 1024 * 1024);
+    if (bad) { setPicErr("사진 파일(10MB까지)만 붙일 수 있어요."); return; }
+    setPicBusy(true);
     try {
-      const out = await askAi({ client_key: newClientKey(), text: t, chat_id: chatId, context: { screen: now <= 2 ? "vendors" : now <= 4 ? "quotes" : "plan", project_id: p.id, ids: [] }, button }); // 선택지의 길(route) · 칸 정보를 그대로 넘겨요
+      for (const f of take) {
+        const up = await upload(f, "photo");
+        setPics((x) => [...x, { id: up.id, src: URL.createObjectURL(f), name: f.name }]);
+      }
+    } catch (e) {
+      setPicErr(errorText(e));
+    } finally {
+      setPicBusy(false);
+    }
+  }
+
+  const asking = asks.length > 0 && !asks[asks.length - 1].out && !asks[asks.length - 1].err;
+  /** typed: 입력칸 글을 보낸 것(붙인 사진을 같이 보내고 입력칸을 비워요). 질문 버튼 · 답 안 선택지는 false */
+  async function ask(q: string, button: AiButton | null = null, typed = false) {
+    const sent = typed ? pics : [];
+    const t = (q.trim() || (sent.length ? PHOTO_ASK : "")).slice(0, 1000);
+    if (!t || asking || picBusy) return; // 답을 기다리는 동안 새 질문을 막아요(답이 엇갈리지 않게 · 대화 하나로)
+    if (typed) { setText(""); setPics([]); setPicErr(null); if (sent.length) setAttach(false); } // 입력칸 글을 보낼 때만 비워요(질문 버튼을 눌러도 쓰던 글은 남겨요). 사진을 보냈으면 사진 칸을 접어 답이 보이게 해요
+    setAsks((a) => [...a, { q: t, pics: sent.map((x) => x.src) }]);
+    try {
+      const out = await askAi({ client_key: newClientKey(), text: t, file_ids: sent.map((x) => x.id), chat_id: chatId, context: { screen: now <= 2 ? "vendors" : now <= 4 ? "quotes" : "plan", project_id: p.id, ids: [] }, button }); // 선택지의 길(route) · 칸 정보를 그대로 넘겨요
       if (out.chat_id) setChatId(out.chat_id);
       setAsks((a) => a.map((x, i) => (i === a.length - 1 ? { ...x, out } : x)));
     } catch (e) {
@@ -268,6 +299,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             {asks.map((a, i) => (
               <div key={`a${i}`} className={s.msgs} style={{ padding: 0 }}>
                 <p className={s.me}>{a.q}</p>
+                {a.pics?.length ? <ul className={s.sentPics} aria-label={`보낸 사진 ${a.pics.length}장`}>{a.pics.map((src) => <li key={src}><img src={src} alt="" /></li>)}</ul> : null}
                 <div className={s.bot}><div className={s.face}><Jaejae mouth={a.out ? "smile" : "flat"} /></div><div className={s.bubble}><span className={s.who}>재재</span>
                   {a.out ? <AiAnswer answer={a.out.answer} projectId={p.id} onPick={(q, b) => void ask(q, b ?? null)} /> : a.err ? <p className="mj-error">{a.err}</p> : <p className={s.typing}>줄자로 재는 중…</p>}</div></div>
               </div>
@@ -282,14 +314,27 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             <div id="pflow-attach" className={s.attach} role="group" aria-label="사진 보내기" hidden={!attach}>
               {targets.length ? targets.map((t) => <Button key={t.href} size="sm" variant="weak" href={t.href}>{t.label}</Button>)
                 : <p className={s.note}>{vs.length ? "업체와 실측 날짜가 확정되면 그 업체 채팅에서 사진을 보낼 수 있어요." : "업체에 실측을 요청할 때 집 사진을 붙여 보낼 수 있어요. 실측 날짜가 확정되면 그 업체 채팅에서도 보낼 수 있어요."}</p>}
-              <p className={s.note}>재재는 아직 사진을 보고 답하지 못해요. 사진 속 동 · 호수 · 얼굴은 가리고 보내 주세요.</p>
+              <div className={s.row}>
+                <Button size="sm" variant="weak" disabled={picBusy || asking || pics.length >= PHOTO_MAX} onClick={() => picIn.current?.click()}>{picBusy ? "올리는 중" : "재재에게 사진으로 물어보기"}</Button>
+                <input ref={picIn} type="file" accept="image/*" multiple hidden aria-label="재재에게 보낼 사진 고르기"
+                  onChange={(e) => { const f = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (f.length) void addPics(f); }} />
+              </div>
+              {pics.length ? (
+                <ul className={s.picks} aria-label="붙인 사진">
+                  {pics.map((x) => (
+                    <li key={x.id}><img src={x.src} alt={x.name} /><button type="button" aria-label={`${x.name} 빼기`} disabled={asking} onClick={() => setPics((l) => l.filter((y) => y.id !== x.id))}>빼기</button></li>
+                  ))}
+                </ul>
+              ) : null}
+              {picErr ? <p className="mj-error" role="alert">{picErr}</p> : null}
+              <p className={s.note}>얼굴 · 동 · 호수 · 택배 송장은 가리고 올려 주세요. 사진만으로는 정확하지 않아서, 재재는 보이는 것만 알려 드려요. 사진은 한 번에 {PHOTO_MAX}장까지예요.</p>
             </div>
-            <form className={s.input} onSubmit={(e) => { e.preventDefault(); void ask(text); }}>
+            <form className={s.input} onSubmit={(e) => { e.preventDefault(); void ask(text, null, true); }}>
               <button type="button" className={s.clip} aria-expanded={attach} aria-controls="pflow-attach" onClick={() => setAttach((v) => !v)}>사진</button>
               <label className="mj-sr" htmlFor="pflow-in">재재에게 물을 말</label>
               <textarea id="pflow-in" rows={1} maxLength={1000} value={text} placeholder="궁금한 걸 물어보세요. 예: 가견적이 비싼데 줄일 방법 없을까요?" onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void ask(text); } }} />
-              <Button type="submit" disabled={!text.trim() || asking}>{asking ? "답 기다리는 중" : "보내기"}</Button>
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void ask(text, null, true); } }} />
+              <Button type="submit" disabled={(!text.trim() && !pics.length) || asking || picBusy}>{asking ? "답 기다리는 중" : "보내기"}</Button>
             </form>
           </div>
           {/* 새 말이 오면 여기까지 내려요. 입력칸(dock) 뒤에 두어 마지막 말풍선이 입력칸에 가려지지 않아요 */}
