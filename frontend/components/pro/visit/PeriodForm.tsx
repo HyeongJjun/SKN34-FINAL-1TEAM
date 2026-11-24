@@ -29,6 +29,7 @@ import { PeriodCalendar, PeriodLegend, type Period } from "./PeriodCalendar";
 import s from "./visit.module.css";
 
 const INSTANT_DESC = "켜면 고객이 고른 반나절은 열어 둔 다른 요청 기간에서 바로 빠져요. 끄면 한 번 더 수락해요.";
+const HOLD = "말씀하신 기간을 넣지 못했어요. 달력에서 기간을 다시 눌러 주세요.";
 const PICK_NOTE = "고객이 7일 안에 고르지 않으면 이 기간이 풀려 다른 요청에 다시 열려요.";
 
 export function PeriodForm({ v, now, openDecline }: { v: VendorVisitV3; now: string; openDecline?: boolean }) {
@@ -40,6 +41,8 @@ export function PeriodForm({ v, now, openDecline }: { v: VendorVisitV3; now: str
   const [busy, setBusy] = useState(false);
   const [idem] = useState(newKey);
   const [decline, setDecline] = useState(false);
+  // 도우미가 말한 기간을 넣지 못함. 달력에 남은 옛 기간으로 보내지 않게, 달력을 다시 누르기 전까지 보내기를 막아요
+  const [hold, setHold] = useState<string | null>(null);
   // ?decline=1(알림 · 작업함에서 바로 '못 받아요')은 그린 뒤에 열어요(처음 그릴 때 연 창은 개발 모드 두 번 그리기에서 바로 닫혀요)
   useEffect(() => { if (openDecline) setDecline(true); }, [openDecline]);
   const ready = !!(p.start && p.end);
@@ -50,6 +53,7 @@ export function PeriodForm({ v, now, openDecline }: { v: VendorVisitV3; now: str
 
   async function sendWindow() {
     if (busy) return;
+    if (hold) { setErr(hold); return; } // 기간 오류 칸 하나에만 보여요
     if (!ready) { setErr(p.start ? "끝나는 날을 눌러 주세요." : "갈 수 있는 기간의 시작 · 끝을 눌러 주세요."); return; }
     setErr(null);
     setBusy(true);
@@ -67,8 +71,13 @@ export function PeriodForm({ v, now, openDecline }: { v: VendorVisitV3; now: str
   function assist(text: string): string {
     const today = dateSeoul(now);
     const got = parsePeriod(text, today, v.wish_start);
-    if (!got) return "되는 기간을 날짜로 말해 주세요. 예: 12/2부터 12/5까지 돼요, 12/4는 안 돼요";
-    if (got.start < today) return "지난 날은 고를 수 없어요. 오늘 뒤 날짜로 말해 주세요.";
+    // 날짜를 말했는데 못 넣었으면, 달력에 남은 옛 기간으로 보내지 않게 달력을 다시 누를 때까지 보내기를 막아요
+    const saidDay = /\d\s*(?:일|월|\/)|오늘|내일|모레|이번\s*주|다음\s*주|요일/.test(text);
+    if (!got || got.start < today) {
+      if (saidDay) { setHold(HOLD); setErr(HOLD); }
+      return !got ? `되는 기간을 날짜로 말해 주세요. 예: 12/2부터 12/5까지 돼요, 12/4는 안 돼요${saidDay ? ` ${HOLD}` : ""}` : `지난 날은 고를 수 없어요. 오늘 뒤 날짜로 말해 주세요. ${HOLD}`;
+    }
+    setHold(null);
     setErr(null);
     const day = (d: string) => `${Number(d.slice(8, 10))}일`;
     const ex = got.excluded.length ? `, ${got.excluded.map(day).join(" · ")} 빼고` : "";
@@ -112,7 +121,7 @@ export function PeriodForm({ v, now, openDecline }: { v: VendorVisitV3; now: str
                 <PeriodCalendar
                   label="갈 수 있는 기간 고르기"
                   value={p}
-                  onChange={(x) => { setP(x); setErr(null); }}
+                  onChange={(x) => { setP(x); setHold(null); setErr(null); }}
                   today={dateSeoul(now)}
                   wish={v.wish_start && v.wish_end ? { from: v.wish_start, to: v.wish_end } : null}
                   taken={v.taken}
