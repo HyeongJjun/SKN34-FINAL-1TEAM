@@ -83,13 +83,15 @@ export function QuoteForm({ v, board, now }: { v: VendorVisitV3; board: VendorQu
   }
 
   // 금액 · 부가세가 바뀌면 잠시 뒤 임시 저장 → 계산 엔진 값으로 '믿집 계산'을 바꿔요
+  // 한도 초과 오류가 떠 있으면 저장하지 않아요(도우미가 금액은 비우고 부가세만 바꿔도 옛 금액으로 저장되지 않게)
+  const over = Number(amount) > AMOUNT_MAX || err.amount === OVER;
   const first = useRef(true);
   useEffect(() => {
     if (first.current) { first.current = false; return; }
-    if (!amount || !vat || Number(amount) > AMOUNT_MAX) return;
+    if (!amount || !vat || over) return;
     const t = setTimeout(() => { save().catch(() => {}); }, 800);
     return () => clearTimeout(t);
-  }, [amount, vat]);
+  }, [amount, vat, over]);
   const calcFresh = calc.amount != null && String(calc.amount) === amount && calc.vat === vat && calc.total != null;
 
   async function pick(list: File[]) {
@@ -131,6 +133,7 @@ export function QuoteForm({ v, board, now }: { v: VendorVisitV3; board: VendorQu
 
   async function onSave() {
     if (busy) return;
+    if (over) { setErr((x) => ({ ...x, amount: OVER })); amountRef.current?.focus(); return; }
     setBusy("save");
     try { await save(); toast.show("임시 저장했어요."); } catch (e) { setErr((x) => ({ ...x, form: errorText(e) })); } finally { setBusy(null); }
   }
