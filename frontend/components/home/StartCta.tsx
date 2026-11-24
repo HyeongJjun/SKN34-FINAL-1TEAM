@@ -18,7 +18,7 @@ export function StartCta({ ongoing, autoOpen = false, className }: { ongoing: On
       <ResumeDialog
         open={open}
         onClose={() => setOpen(false)}
-        newHref="/assistant"
+        newHref="/assistant?new=1"
         project={{ name: ongoing.name, short: shortName(ongoing.name), stepLabel: ongoing.step, href: ongoing.href ?? `/projects/${encodeURIComponent(ongoing.id)}/assistant` }}
       />
     </>
