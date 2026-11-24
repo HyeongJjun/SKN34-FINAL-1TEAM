@@ -23,12 +23,12 @@ Where = Literal["wall", "ceiling", "window", "corner", "floor_edge", "unknown"]
 
 SYMPTOM_KO: dict[str, str] = {
     "mold": "곰팡이",
-    "condensation": "결로(물방울 · 물기)",
+    "condensation": "결로",
     "lifting": "벽지 들뜸",
     "seam_gap": "벽지 이음매 벌어짐",
-    "peeling": "벽지 벗겨짐 · 찢어짐",
-    "hole_crack": "벽의 구멍 · 금",
-    "stain": "얼룩 · 물자국",
+    "peeling": "벽지 벗겨짐",
+    "hole_crack": "구멍이나 금",
+    "stain": "얼룩",
 }
 WHERE_KO: dict[str, str] = {
     "wall": "벽",
@@ -88,7 +88,7 @@ def lines(seen: PhotoSeen | None, *, read: bool) -> list[str]:
     if names:
         place = WHERE_KO[seen.where]
         out.append(
-            f"사진에서 {place + '에 ' if place else ''}{' · '.join(names)}처럼 보이는 곳이 있어요."
+            f"사진에서 {place + '에 ' if place else ''}{', '.join(names)}처럼 보이는 곳이 있어요."
         )
         out.append(ONLY_SEEN)
         out.append(ASK_VENDOR)

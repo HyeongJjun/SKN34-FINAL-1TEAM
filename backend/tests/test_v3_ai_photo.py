@@ -47,7 +47,7 @@ def test_lines_and_question_are_fixed_words_only():
         indoor_surface=True, symptoms=["mold", "mold", "stain"], where="ceiling", private=True
     )
     got = photo.lines(seen, read=True)
-    assert got[0] == "사진에서 천장에 곰팡이 · 얼룩 · 물자국처럼 보이는 곳이 있어요."
+    assert got[0] == "사진에서 천장에 곰팡이, 얼룩처럼 보이는 곳이 있어요."
     assert got[1:] == [photo.ONLY_SEEN, photo.ASK_VENDOR, photo.PERSON]
     assert photo.lines(None, read=False) == [photo.NOT_READ]
     assert photo.lines(None, read=True) == [photo.FAILED]
@@ -177,7 +177,7 @@ def test_symptom_without_material_only_says_what_it_saw(api, llm_mode):
     )
     a = done(ask(api, text=LOOK, file_ids=[photo_id(api)]))["answer"]
     assert a["photo"] == [
-        "사진에서 창 둘레에 결로(물방울 · 물기)처럼 보이는 곳이 있어요.",
+        "사진에서 창 둘레에 결로처럼 보이는 곳이 있어요.",
         photo.ONLY_SEEN,
         photo.ASK_VENDOR,
     ]
