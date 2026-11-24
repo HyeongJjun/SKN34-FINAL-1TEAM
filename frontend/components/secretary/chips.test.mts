@@ -6,8 +6,8 @@ import { readLine } from "../start/readLine.ts";
 
 test("고객 공사: 칸마다 시작 질문, 물은 건 빼고 3개까지", () => {
   assert.equal(starterChips(2, []).length, 3);
-  assert.ok(starterChips(5, []).includes("공사 전에 뭘 준비해요?"));
-  assert.deepEqual(starterChips(5, ["공사 전에 뭘 준비해요?"]).includes("공사 전에 뭘 준비해요?"), false);
+  assert.ok(starterChips(5, []).includes("도배 전에 뭘 준비해요?"));
+  assert.equal(starterChips(5, ["도배 전에 뭘 준비해요?"]).includes("도배 전에 뭘 준비해요?"), false);
   assert.equal(starterChips(0, []).join(), starterChips(2, []).join()); // 범위 밖 칸은 가장 가까운 칸
   assert.equal(starterChips(9, []).join(), starterChips(8, []).join());
   const all = [2, 3, 4, 5, 6, 7, 8].flatMap((s) => starterChips(s, []));
