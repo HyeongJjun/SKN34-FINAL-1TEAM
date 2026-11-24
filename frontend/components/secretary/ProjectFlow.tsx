@@ -19,6 +19,7 @@ import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { dateShort, euro, won } from "@/lib/format";
 import { termByName, termHref } from "@/lib/guide";
+import { starterChips } from "./chips";
 import { Jaejae } from "./Jaejae";
 import { Plan } from "./Plan";
 import s from "./flow.module.css";
@@ -234,6 +235,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
 
   const auto: Record<number, string[]> = { 0: ["집 정보 정리"], 1: ["표준견적서 계산"], 2: vs.length ? ["업체에 실측 날짜 물어보기"] : [], 4: quoted.length ? ["견적서를 표준견적서와 비교"] : [], 5: deal ? ["확정 공정표 만들기"] : [] };
   const terms = ["실크 벽지", "가견적", "실측 견적서", "보양", "하자담보책임기간"].map((n) => termByName(n)).filter((t) => t !== undefined);
+  // 입력칸 위 질문 버튼(#180): 지금 칸의 시작 질문 중 아직 안 물은 것. 답마다의 추천 질문은 답 아래(AiAnswer)에 그대로 보여요
+  const quick = starterChips(now, asks.map((a) => a.q));
 
   return (
     <div className={s.page}>
@@ -265,12 +268,19 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             ))}
             <div ref={end} />
           </div>
-          <form className={s.input} onSubmit={(e) => { e.preventDefault(); void ask(text); }}>
-            <label className="mj-sr" htmlFor="pflow-in">재재에게 물을 말</label>
-            <textarea id="pflow-in" rows={1} maxLength={1000} value={text} placeholder="궁금한 걸 물어보세요. 예: 가견적이 비싼데 줄일 방법 없을까요?" onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void ask(text); } }} />
-            <Button type="submit" disabled={!text.trim() || asking}>{asking ? "답 기다리는 중" : "보내기"}</Button>
-          </form>
+          <div className={s.dock}>
+            {quick.length ? (
+              <div className={s.quick} aria-label="이런 걸 물어보세요">
+                {quick.map((q) => <button key={q} type="button" className={s.chip} disabled={asking} onClick={() => void ask(q)}>{q}</button>)}
+              </div>
+            ) : null}
+            <form className={s.input} onSubmit={(e) => { e.preventDefault(); void ask(text); }}>
+              <label className="mj-sr" htmlFor="pflow-in">재재에게 물을 말</label>
+              <textarea id="pflow-in" rows={1} maxLength={1000} value={text} placeholder="궁금한 걸 물어보세요. 예: 가견적이 비싼데 줄일 방법 없을까요?" onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void ask(text); } }} />
+              <Button type="submit" disabled={!text.trim() || asking}>{asking ? "답 기다리는 중" : "보내기"}</Button>
+            </form>
+          </div>
         </section>
         <Plan now={now} scope={p.id} open={open} auto={auto}
           render={(step) => step === 0 ? <><Link href={`/start?edit=${pid}`}>기본 정보 고치기{p.locked ? " (요청 뒤라 잠겼어요)" : ""}</Link><SiteInfoCard projectId={p.id} /></>

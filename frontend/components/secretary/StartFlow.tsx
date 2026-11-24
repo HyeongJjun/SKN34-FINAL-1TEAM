@@ -18,6 +18,7 @@ import { EMPTY_DRAFT, FACES, SPACES, checkDraft, placeText, pyeongToM2, scopeTex
 import { toQuoteLines } from "@/lib/guest/standard";
 import { draftOf, readGuest, writeGuest } from "@/lib/guest/store";
 import { won } from "@/lib/format";
+import { guestChips } from "./chips";
 import { Jaejae } from "./Jaejae";
 import { Plan } from "./Plan";
 import s from "./flow.module.css";
@@ -227,6 +228,8 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
     ["도배 유형", d.grade ? (d.grade === "basic" ? "기본형" : "저가형") : ""],
   ];
   const now = std ? 2 : 1 - (missing(d) ? 1 : 0);
+  // 입력칸 위 답 버튼(#180): 아직 빈 칸만, 표준견적서가 나오기 전까지. 누르면 한 줄 읽기와 같은 길(take)
+  const quick = std ? [] : guestChips(d);
 
   return (
     <div className={s.page}>
@@ -242,12 +245,19 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
               : <div key={m.id} className={s.bot}><div className={s.face}><Jaejae /></div><div className={s.bubble}><span className={s.who}>재재 · 믿집 비서</span>{m.node}</div></div>)}
             <div ref={end} />
           </div>
-          <form className={s.input} onSubmit={(e) => { e.preventDefault(); send(); }}>
-            <label className="mj-sr" htmlFor="flow-in">재재에게 보낼 말</label>
-            <textarea id="flow-in" rows={1} maxLength={300} value={text} placeholder="재재에게 말해 보세요" onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
-            <Button type="submit" disabled={!text.trim() || busy}>보내기</Button>
-          </form>
+          <div className={s.dock}>
+            {quick.length ? (
+              <div className={s.quick} aria-label="이렇게 답해도 돼요">
+                {quick.map((q) => <button key={q} type="button" className={s.chip} disabled={busy} onClick={() => take(q, dRef.current)}>{q}</button>)}
+              </div>
+            ) : null}
+            <form className={s.input} onSubmit={(e) => { e.preventDefault(); send(); }}>
+              <label className="mj-sr" htmlFor="flow-in">재재에게 보낼 말</label>
+              <textarea id="flow-in" rows={1} maxLength={300} value={text} placeholder="재재에게 말해 보세요" onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
+              <Button type="submit" disabled={!text.trim() || busy}>보내기</Button>
+            </form>
+          </div>
         </section>
         <Plan now={now} scope="guest" open={open}
           auto={{ 0: [d.sgg ? "지역 정리" : "", d.area ? "평형 정리" : ""].filter(Boolean), 1: std ? ["표준견적서 계산"] : [] }}

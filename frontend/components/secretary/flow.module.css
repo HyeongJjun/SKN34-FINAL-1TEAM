@@ -30,6 +30,13 @@
 @media (max-width: 479px) { .two { grid-template-columns: minmax(0, 1fr); } }
 .typing { color: var(--mj-text-mute); }
 .input { position: sticky; bottom: 0; display: flex; gap: 8px; padding: 10px 16px 14px; border-top: 1px solid var(--mj-line); background: var(--mj-surface); }
+/* 입력칸 + 위 질문 버튼 줄을 함께 아래에 붙여요(#180) */
+.dock { position: sticky; bottom: 0; border-top: 1px solid var(--mj-line); background: var(--mj-surface); }
+.dock .input { position: static; border-top: 0; padding-top: 6px; }
+.quick { display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto; padding: 8px 16px 0; scrollbar-width: none; }
+.quick::-webkit-scrollbar { display: none; }
+.quick .chip { color: var(--mj-text); }
+.chip:disabled { opacity: 0.5; cursor: default; }
 .input textarea { flex: 1 1 0; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid var(--mj-line-control); border-radius: 10px; font: inherit; resize: none; background: var(--mj-surface); }
 
 .plan { display: none; flex-direction: column; gap: 12px; padding: 16px; min-width: 0; background: var(--mj-surface); }
