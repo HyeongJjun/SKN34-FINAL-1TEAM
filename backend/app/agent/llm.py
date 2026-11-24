@@ -156,7 +156,7 @@ async def see[T: BaseModel](schema: type[T], system: str, images: list[tuple[str
         api_key=settings.openai_api_key,
         reasoning_effort=effort,
         timeout=30,
-        max_retries=1,
+        max_retries=0,  # 답 앞에 붙는 호출이라 다시 시도하지 않는다(최악 30초)
     ).with_structured_output(schema, method="json_schema", strict=True)
     content = [
         {

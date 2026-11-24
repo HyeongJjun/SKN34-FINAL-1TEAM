@@ -43,23 +43,46 @@ def photo_id(api, kind="photo") -> str:
 
 
 def test_lines_and_question_are_fixed_words_only():
-    seen = PhotoSeen(symptoms=["mold", "mold", "stain"], where="ceiling", private=True)
+    seen = PhotoSeen(
+        indoor_surface=True, symptoms=["mold", "mold", "stain"], where="ceiling", private=True
+    )
     got = photo.lines(seen, read=True)
-    assert got[0] == "사진에서 천장에 곰팡이 · 얼룩 · 물자국로 보이는 곳이 있어요."
+    assert got[0] == "사진에서 천장에 곰팡이 · 얼룩 · 물자국처럼 보이는 곳이 있어요."
     assert got[1:] == [photo.ONLY_SEEN, photo.ASK_VENDOR, photo.PERSON]
     assert photo.lines(None, read=False) == [photo.NOT_READ]
     assert photo.lines(None, read=True) == [photo.FAILED]
-    assert photo.lines(PhotoSeen(indoor_surface=False), read=True) == [photo.NOT_HOME]
-    assert photo.lines(PhotoSeen(), read=True) == [photo.NOTHING]
+    assert photo.lines(
+        PhotoSeen(indoor_surface=False, symptoms=[], where="unknown", private=False), read=True
+    ) == [photo.NOT_HOME]
+    assert photo.lines(
+        PhotoSeen(indoor_surface=True, symptoms=[], where="unknown", private=False), read=True
+    ) == [photo.NOTHING]
     # 사진만 올렸으면 증상에 맞는 질문, 따로 물었으면 그 말 그대로, 자료 없는 증상은 바꾸지 않는다
     assert photo.question_for(LOOK, seen) == photo.QUESTION["mold"]
     assert (
         photo.question_for("합지랑 실크 중에 뭐로 해야 해요?", seen)
         == "합지랑 실크 중에 뭐로 해야 해요?"
     )
-    assert photo.question_for(LOOK, PhotoSeen(symptoms=["condensation"])) == LOOK
-    assert photo.question_for(LOOK, PhotoSeen(indoor_surface=False, symptoms=["mold"])) == LOOK
+    assert (
+        photo.question_for(
+            LOOK,
+            PhotoSeen(
+                indoor_surface=True, symptoms=["condensation"], where="unknown", private=False
+            ),
+        )
+        == LOOK
+    )
+    assert (
+        photo.question_for(
+            LOOK, PhotoSeen(indoor_surface=False, symptoms=["mold"], where="unknown", private=False)
+        )
+        == LOOK
+    )
     assert photo.question_for(LOOK, None) == LOOK
+    # 공종 낱말이 든 짧은 말은 진짜 질문이다(사진 전용 말로 보지 않는다)
+    for real in ["실크 벽지로 하면 어때요?", "이거 합지로 해도 괜찮아요?"]:
+        assert not photo.is_generic(real) and photo.question_for(real, seen) == real
+    assert photo.is_generic(LOOK) and photo.is_generic("이거 뭐예요?")
     for line in [*photo.SYMPTOM_KO.values(), *photo.QUESTION.values()]:
         assert not any(ch.isdigit() for ch in line), line  # 숫자를 말하지 않는다
 
@@ -99,10 +122,12 @@ def test_only_my_room_photos_up_to_three(api):
 
 def test_llm_mode_turns_what_it_saw_into_an_answerable_question(api, llm_mode):
     use(api, signup(api))
-    llm.set_stub("photo", PhotoSeen(symptoms=["mold"], where="ceiling"))
+    llm.set_stub(
+        "photo", PhotoSeen(indoor_surface=True, symptoms=["mold"], where="ceiling", private=False)
+    )
     out = done(ask(api, text=LOOK, file_ids=[photo_id(api)]))
     a = out["answer"]
-    assert a["photo"][0] == "사진에서 천장에 곰팡이로 보이는 곳이 있어요."
+    assert a["photo"][0] == "사진에서 천장에 곰팡이처럼 보이는 곳이 있어요."
     assert a["photo"][1] == photo.ONLY_SEEN
     assert a["sections"] and not a["unknown"]  # 곰팡이 질문으로 바꿔 자료로 답했다
     saved = query("select role, text from chat_messages order by created_at")
@@ -112,9 +137,11 @@ def test_llm_mode_turns_what_it_saw_into_an_answerable_question(api, llm_mode):
 
 def test_llm_mode_keeps_the_customers_own_question(api, llm_mode):
     use(api, signup(api))
-    llm.set_stub("photo", PhotoSeen(symptoms=["lifting"], where="wall", private=True))
+    llm.set_stub(
+        "photo", PhotoSeen(indoor_surface=True, symptoms=["lifting"], where="wall", private=True)
+    )
     a = done(ask(api, file_ids=[photo_id(api)]))["answer"]  # 글 질문: 합지 · 실크
-    assert a["photo"][0] == "사진에서 벽에 벽지 들뜸로 보이는 곳이 있어요."
+    assert a["photo"][0] == "사진에서 벽에 벽지 들뜸처럼 보이는 곳이 있어요."
     assert a["photo"][-1] == photo.PERSON
     assert any("합지" in s or "실크" in s for sec in a["sections"] for s in sec["sentences"])
 
@@ -130,8 +157,11 @@ def test_llm_failure_says_so_and_still_answers_the_text(api, llm_mode, monkeypat
     assert a["photo"] == [photo.FAILED] and a["sections"]
 
 
-def test_photos_per_day_are_limited(api, monkeypatch):
+def test_photos_per_day_are_limited(api, monkeypatch, llm_mode):
     use(api, signup(api))
+    llm.set_stub(
+        "photo", PhotoSeen(indoor_surface=True, symptoms=[], where="unknown", private=False)
+    )
     monkeypatch.setattr(photo, "PER_DAY", 2)
     ids = [photo_id(api) for _ in range(3)]
     assert ask(api, text=LOOK, file_ids=ids[:2]).status_code == 200
@@ -141,11 +171,22 @@ def test_photos_per_day_are_limited(api, monkeypatch):
 
 def test_symptom_without_material_only_says_what_it_saw(api, llm_mode):
     use(api, signup(api))
-    llm.set_stub("photo", PhotoSeen(symptoms=["condensation"], where="window"))
+    llm.set_stub(
+        "photo",
+        PhotoSeen(indoor_surface=True, symptoms=["condensation"], where="window", private=False),
+    )
     a = done(ask(api, text=LOOK, file_ids=[photo_id(api)]))["answer"]
     assert a["photo"] == [
-        "사진에서 창 둘레에 결로(물방울 · 물기)로 보이는 곳이 있어요.",
+        "사진에서 창 둘레에 결로(물방울 · 물기)처럼 보이는 곳이 있어요.",
         photo.ONLY_SEEN,
         photo.ASK_VENDOR,
     ]
     assert a["sections"] == [] and a["calc"] == []
+
+
+def test_free_mode_does_not_count_photos_and_answers_a_real_question(api, monkeypatch):
+    use(api, signup(api))
+    monkeypatch.setattr(photo, "PER_DAY", 1)
+    for _ in range(2):  # 읽지 않는 무료 모드는 하루 한도를 깎지 않는다
+        a = done(ask(api, file_ids=[photo_id(api)]))["answer"]  # 글 질문: 합지 · 실크
+    assert a["photo"] == [photo.NOT_READ] and a["sections"]  # 사진은 못 읽어도 글 질문에는 답한다

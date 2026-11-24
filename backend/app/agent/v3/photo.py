@@ -12,6 +12,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.agent.v3.trades import trades_in
+
 PROMPT_VERSION = "photo_v1"
 MAX_PHOTOS = 3  # 한 번에 붙일 수 있는 사진 수
 PER_DAY = 20  # 사용자별 하루 사진 수
@@ -54,14 +56,13 @@ PERSON = "사진에 사람이나 글자(주소 · 번호)가 보여요. 다음�
 
 
 class PhotoSeen(BaseModel):
-    """사진을 읽는 모델이 채우는 칸. 문장 칸이 없다."""
+    """사진을 읽는 모델이 채우는 칸. 문장 칸이 없다.
+    모두 필수다: 엄격한 구조화 출력(strict json_schema)은 기본값 · 길이 제한을 받지 않는다."""
 
-    indoor_surface: bool = Field(default=True, description="집 안 벽 · 천장 · 창 둘레 사진인지")
-    symptoms: list[Symptom] = Field(default=[], max_length=4)
-    where: Where = "unknown"
-    private: bool = Field(
-        default=False, description="사람 얼굴 · 주소 · 번호 · 송장 글자가 보이는지"
-    )
+    indoor_surface: bool = Field(description="집 안 벽 · 천장 · 창 둘레 사진인지")
+    symptoms: list[Symptom] = Field(description="보이는 증상만, 없으면 빈 목록")
+    where: Where
+    private: bool = Field(description="사람 얼굴 · 주소 · 번호 · 송장 글자가 보이는지")
 
 
 # 사진만 올리고 따로 묻지 않은 말("이 사진 좀 봐 주세요")인지: 짧고 공종 낱말이 없다
@@ -69,8 +70,9 @@ _GENERIC = re.compile(r"사진|봐\s*주|봐줘|이거|이게|어때|뭐예요|�
 
 
 def is_generic(text: str) -> bool:
+    """고객이 따로 물은 게 없는 말인지. 공종 낱말(벽지 · 합지 · 몰딩 …)이 있으면 진짜 질문으로 본다."""
     t = text.strip()
-    return len(t) <= 30 and bool(_GENERIC.search(t))
+    return len(t) <= 20 and bool(_GENERIC.search(t)) and not trades_in(t)
 
 
 def lines(seen: PhotoSeen | None, *, read: bool) -> list[str]:
@@ -82,11 +84,11 @@ def lines(seen: PhotoSeen | None, *, read: bool) -> list[str]:
     if not seen.indoor_surface:
         return [NOT_HOME]
     out: list[str] = []
-    names = [SYMPTOM_KO[x] for x in dict.fromkeys(seen.symptoms)]
+    names = [SYMPTOM_KO[x] for x in dict.fromkeys(seen.symptoms)][:4]
     if names:
         place = WHERE_KO[seen.where]
         out.append(
-            f"사진에서 {place + '에 ' if place else ''}{' · '.join(names)}로 보이는 곳이 있어요."
+            f"사진에서 {place + '에 ' if place else ''}{' · '.join(names)}처럼 보이는 곳이 있어요."
         )
         out.append(ONLY_SEEN)
         out.append(ASK_VENDOR)

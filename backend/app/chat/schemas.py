@@ -10,6 +10,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.agent.v3.photo import MAX_PHOTOS
 from app.agent.v3.schemas import (
     TEXT_MAX,
     AskSlot,
@@ -38,7 +39,7 @@ class AiTurnIn(BaseModel):
     context: AiContext = AiContext()
     button: Button | None = None
     # 붙인 사진(POST /files kind=photo로 먼저 올린 내 파일). 한 번에 3장까지(agent/v3/photo.py MAX_PHOTOS)
-    file_ids: list[uuid.UUID] = Field(default=[], max_length=3)
+    file_ids: list[uuid.UUID] = Field(default=[], max_length=MAX_PHOTOS)
 
 
 class AiSource(BaseModel):

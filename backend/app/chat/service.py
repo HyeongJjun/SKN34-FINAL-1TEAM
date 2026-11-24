@@ -153,19 +153,12 @@ PHOTO_NOT_FOUND = "붙인 사진을 찾을 수 없어요. 다시 올려 주세�
 
 async def _photos(s: AsyncSession, user, ids: list[uuid.UUID]) -> list:
     """붙인 사진 행. 내가 올린 공간 사진(kind=photo)만 받는다: 남의 파일 · 다른 종류 · 없는 파일은 똑같이 404."""
-    from app.agent.v3 import photo
-    from app.config import settings
     from app.files import service as files
-    from app.shared import ratelimit
 
     want = list(dict.fromkeys(ids))
     rows = await files.owned(s, user.id, want)
     if len(rows) != len(want) or any(r.kind != "photo" for r in rows.values()):
         raise AppError(404, "not_found", PHOTO_NOT_FOUND)
-    if settings.app_env != "local":
-        key = ratelimit.key("ai-photo", str(user.id))
-        for _ in want:  # 사진 한 장에 한 번씩 센다
-            await ratelimit.hit(key, photo.PER_DAY, 86400, PHOTO_TOO_MANY)
     return [rows[i] for i in want]
 
 
@@ -187,6 +180,12 @@ async def _see(rows: list):
         return await llm.see(photo.PhotoSeen, system, [(m, b) for b, m in small])
     except (llm.LLMError, images.BadImage, OSError, ValueError):
         return None
+    except (
+        Exception
+    ) as e:  # S3 연결 · 권한 오류(botocore)도 500 대신 '읽지 못했어요'로. 내용은 남기지 않는다
+        if type(e).__module__.startswith(("botocore", "boto3")):
+            return None
+        raise
 
 
 async def ai_turn(user, body: AiTurnIn, today: date) -> AiTurnOut:
@@ -238,6 +237,12 @@ async def ai_turn(user, body: AiTurnIn, today: date) -> AiTurnOut:
     seen_lines: list[str] = []
     question = body.text
     if photos:
+        if ctx.mode == "llm" and settings.app_env != "local":
+            # 읽는 사진만 센다(유료 호출). 권한 · 대화 · 공사 확인을 지난 뒤, DB 세션 밖에서
+            for _ in photos:
+                await ratelimit.hit(
+                    ratelimit.key("ai-photo", str(user.id)), photo.PER_DAY, 86400, PHOTO_TOO_MANY
+                )
         seen = await _see(photos) if ctx.mode == "llm" else None
         seen_lines = photo.lines(seen, read=ctx.mode == "llm")
         question = photo.question_for(body.text, seen)
@@ -248,9 +253,19 @@ async def ai_turn(user, body: AiTurnIn, today: date) -> AiTurnOut:
         from app.agent.v3.turn import TurnResult
 
         blank = AgentAnswer(trace=Trace(route="guide", source="rule", mode=ctx.mode))
-        res = TurnResult(blank, None, None, 0.0, "rule")
+        res = TurnResult(blank, waiting, None, 0.0, "rule")  # 되물어 둔 칸은 그대로 둔다
     else:
-        res = await run_turn(question, ctx, kb=kb, facts=facts, waiting=waiting, button=body.button)
+        swapped = (
+            question != body.text
+        )  # 사진 증상으로 바꾼 질문은 되물은 칸의 답 · 단추 답으로 읽지 않는다
+        res = await run_turn(
+            question,
+            ctx,
+            kb=kb,
+            facts=facts,
+            waiting=None if swapped else waiting,
+            button=None if swapped else body.button,
+        )
     ans = res.answer
     chat_id, new_rev = body.chat_id, None
     if not ans.failed:
@@ -273,7 +288,7 @@ async def ai_turn(user, body: AiTurnIn, today: date) -> AiTurnOut:
                 await s.rollback()
                 raise AppError(409, "conflict", CONFLICT)
             asked = mask(body.text) + (f" (사진 {len(photos)}장)" if photos else "")
-            said = "\n".join([*seen_lines, ans.plain()])
+            said = "\n".join(x for x in [*seen_lines, ans.plain()] if x)
             repository.add_turn(s, chat_id, rev, asked, said, intent)
             await s.commit()
         new_rev = rev + 1

@@ -99,7 +99,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     const room = PHOTO_MAX - pics.length;
     if (list.length > room) setPicErr(`사진은 한 번에 ${PHOTO_MAX}장까지 붙일 수 있어요.`);
     const take = list.slice(0, Math.max(room, 0));
-    const bad = take.find((f) => !f.type.startsWith("image/") || f.size > 10 * 1024 * 1024);
+    const bad = take.find((f) => !(f.type.startsWith("image/") || /\.(heic|heif)$/i.test(f.name)) || f.size > 10 * 1024 * 1024); // 일부 브라우저는 HEIC 형식을 비워 보내요
     if (bad) { setPicErr("사진 파일(10MB까지)만 붙일 수 있어요."); return; }
     setPicBusy(true);
     try {
@@ -128,6 +128,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
       setAsks((a) => a.map((x, i) => (i === a.length - 1 ? { ...x, out } : x)));
     } catch (e) {
       setAsks((a) => a.map((x, i) => (i === a.length - 1 ? { ...x, err: errorText(e) } : x)));
+      if (sent.length) { setPics(sent); setAttach(true); } // 보내지 못했으면 붙인 사진을 되돌려요(다시 올리지 않게)
     }
   }
 
@@ -322,7 +323,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
               {pics.length ? (
                 <ul className={s.picks} aria-label="붙인 사진">
                   {pics.map((x) => (
-                    <li key={x.id}><img src={x.src} alt={x.name} /><button type="button" aria-label={`${x.name} 빼기`} disabled={asking} onClick={() => setPics((l) => l.filter((y) => y.id !== x.id))}>빼기</button></li>
+                    <li key={x.id}><img src={x.src} alt={x.name} /><button type="button" aria-label={`${x.name} 빼기`} disabled={asking} onClick={() => { URL.revokeObjectURL(x.src); setPics((l) => l.filter((y) => y.id !== x.id)); }}>빼기</button></li>
                   ))}
                 </ul>
               ) : null}
