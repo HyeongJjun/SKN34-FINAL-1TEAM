@@ -55,7 +55,7 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
   const say = (node: ReactNode, ms = 450) => new Promise<void>((r) => setTimeout(() => { add("bot", node); r(); }, ms));
   const set = (p: Partial<InfoDraft>) => setD((x) => { const n = { ...x, ...p }; writeGuest(n); return n; });
 
-  useEffect(() => { end.current?.scrollIntoView({ block: "end", behavior: "smooth" }); }, [msgs]);
+  useEffect(() => { end.current?.scrollIntoView({ block: "end", behavior: "smooth" }); }, [msgs, attach]); // 사진 칸을 열면 입력칸이 높아져서 다시 내려요
 
   // 처음: 인사 → 홈 한 줄(있으면) 또는 이 기기에 둔 답으로 이어가기
   const started = useRef(false);
@@ -252,11 +252,10 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
               </div>
             ) : null}
             <div id="flow-attach" className={s.attach} role="group" aria-label="사진 보내기" hidden={!attach}>
-              <p className={s.note}>{member ? "사진은 공사를 만든 뒤 업체와 채팅에서 보낼 수 있어요. 표준견적서를 보고 '업체 보러 가기'를 눌러 주세요." : "사진은 가입 · 로그인한 뒤 업체와 채팅에서 보낼 수 있어요. 지금까지 적은 내용은 그대로 가져가요."}</p>
-              {member ? null : <div className={s.row}><Button size="sm" href="/signup?next=/assistant">가입하기</Button><Button size="sm" variant="secondary" href="/login?next=/assistant">로그인</Button></div>}
+              <p className={s.note}>사진은 공사를 만든 뒤 업체와 채팅에서 보낼 수 있어요. 표준견적서를 보고 &apos;업체 보러 가기&apos;를 누르면 {member ? "공사를 만들어요" : "가입 · 로그인으로 이어져요"}.</p>
             </div>
             <form className={s.input} onSubmit={(e) => { e.preventDefault(); send(); }}>
-              <button type="button" className={s.clip} aria-expanded={attach} aria-controls="flow-attach" onClick={() => { writeGuest(dRef.current); setAttach((v) => !v); }}>사진</button>
+              <button type="button" className={s.clip} aria-expanded={attach} aria-controls="flow-attach" onClick={() => setAttach((v) => !v)}>사진</button>
               <label className="mj-sr" htmlFor="flow-in">재재에게 보낼 말</label>
               <textarea id="flow-in" rows={1} maxLength={300} value={text} placeholder="재재에게 말해 보세요" onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />

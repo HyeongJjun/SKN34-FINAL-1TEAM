@@ -75,7 +75,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const [text, setText] = useState("");
   const [attach, setAttach] = useState(false);
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [asks.length, now]);
+  useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [asks.length, now, attach]); // 사진 칸을 열면 입력칸이 높아져서 다시 내려요
 
   async function act(key: string, fn: () => Promise<unknown>) {
     if (busy) return;
@@ -281,7 +281,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             ) : null}
             <div id="pflow-attach" className={s.attach} role="group" aria-label="사진 보내기" hidden={!attach}>
               {targets.length ? targets.map((t) => <Button key={t.href} size="sm" variant="weak" href={t.href}>{t.label}</Button>)
-                : <p className={s.note}>업체와 실측 날짜가 정해지면 그 업체 채팅에서 사진을 보낼 수 있어요. 지금은 실측을 요청할 때 집 사진을 붙여 보내요.</p>}
+                : <p className={s.note}>{vs.length ? "업체와 실측 날짜가 확정되면 그 업체 채팅에서 사진을 보낼 수 있어요." : "업체에 실측을 요청할 때 집 사진을 붙여 보낼 수 있어요. 실측 날짜가 확정되면 그 업체 채팅에서도 보낼 수 있어요."}</p>}
               <p className={s.note}>재재는 아직 사진을 보고 답하지 못해요. 사진 속 동 · 호수 · 얼굴은 가리고 보내 주세요.</p>
             </div>
             <form className={s.input} onSubmit={(e) => { e.preventDefault(); void ask(text); }}>
