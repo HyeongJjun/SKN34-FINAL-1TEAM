@@ -240,7 +240,9 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   // 입력칸 위 질문 버튼(#180): 지금 칸의 시작 질문 중 아직 안 물은 것. 답마다의 추천 질문은 답 아래(AiAnswer)에 그대로 보여요
   const quick = starterChips(now, asks.filter((a) => !a.err).map((a) => a.q)); // 오류로 끝난 질문은 다시 누를 수 있게 남겨요
   // 사진 · 문서 버튼(#181 1단계): 재재는 아직 사진을 보지 않아서, 사진을 받는 업체 채팅으로 이어 줘요
-  const targets = attachTargets(deal ? { vendor_name: deal.deal.vendor_name, thread_id: deal.deal.thread_id } : null, vs);
+  // 채팅 id는 요청 목록(visits)이 아니라 요청판(board) 줄에 있어요. 닫힌 요청은 빼요
+  const boardOpen = (visits?.board ?? []).filter((r) => !CLOSED.includes(r.status)).map((r) => ({ vendor_name: r.vendor_name, thread_id: r.thread_id ?? null }));
+  const targets = attachTargets(deal ? { vendor_name: deal.deal.vendor_name, thread_id: deal.deal.thread_id ?? null } : null, boardOpen);
 
   return (
     <div className={s.page}>

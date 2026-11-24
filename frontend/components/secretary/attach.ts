@@ -2,7 +2,8 @@
 // 서버를 부르지 않고 고르기만 해요(시험: attach.test.mts).
 
 export type AttachTarget = { label: string; href: string };
-type Thread = { vendor_name: string; thread_id?: string | null };
+// thread_id를 꼭 받아요(없는 칸을 넘기면 타입 검사에서 걸리게: 실측 요청 목록 visits에는 없고 board 줄에 있어요)
+type Thread = { vendor_name: string; thread_id: string | null };
 
 /** 업체와 연 채팅마다 한 줄. 확정 업체 채팅이 먼저, 같은 채팅은 한 번만 */
 export function attachTargets(deal: Thread | null, visits: readonly Thread[]): AttachTarget[] {
