@@ -207,8 +207,16 @@ function daysOf(text: string): number | undefined {
   return Number(m[1]);
 }
 
+/** "1천만" · "3백만" · "1천5백만" · "2천3백5십만"처럼 천 · 백 · 십을 섞어 쓴 만 단위를 "1000만" · "300만" · "1500만"으로 바꿔요.
+ *  만이 뒤에 붙을 때만 바꿔요("5천 원"은 그대로) */
+export function manOf(text: string): string {
+  return text.replace(/(\d+)\s*천\s*(?:(\d)\s*백\s*)?(?:(\d)\s*십\s*)?만/g, (_, a: string, b?: string, c?: string) => `${Number(a) * 1000 + Number(b ?? 0) * 100 + Number(c ?? 0) * 10}만`)
+    .replace(/(\d+)\s*백\s*(?:(\d)\s*십\s*)?만/g, (_, a: string, c?: string) => `${Number(a) * 100 + Number(c ?? 0) * 10}만`);
+}
+
 /** "견적 455만 원, 부가세 포함, 공사 3일, 12/17까지 유효" → 견적서 칸 값. 읽은 칸만 돌려줘요 */
-export function parseQuote(text: string, today: string): QuoteFill {
+export function parseQuote(raw: string, today: string): QuoteFill {
+  const text = manOf(raw);
   const out: QuoteFill = {};
   const amount = amountIn(text);
   if (amount) out.amount = amount;
@@ -251,12 +259,14 @@ export function parseDates(text: string, today: string, baseMonth?: string | nul
 export type ExtraFill = QuoteFill & { title?: string; reason?: string };
 const WHY = /(?<!견적|계약|문|청구|확인)서\s*요?\s*$|때문/;
 /** 항목 이름에서 지울 금액: 만 · 원이 붙은 숫자만("2평 · 3장"은 둬요) */
-const AMOUNT_WORD = /\d[\d,]*(?:\.\d+)?\s*억\s*(?:[\d,]*\s*만)?\s*(?:[\d,]*\s*원)?(?:이|가|은|는)?|\d[\d,]*(?:\.\d+)?\s*만\s*(?:\d\s*천)?\s*(?:[\d,]*\s*원)?(?:이|가|은|는)?|\d[\d,]*\s*원(?:이|가|은|는)?/g;
+const AMOUNT_WORD = /[일이삼사오육칠팔구십백천만억]{1,8}\s*만?\s*원(?:이|가|은|는)?|\d[\d,]*(?:\.\d+)?\s*억\s*(?:[\d,]*\s*만)?\s*(?:[\d,]*\s*원)?(?:이|가|은|는)?|\d[\d,]*(?:\.\d+)?\s*만\s*(?:\d\s*천)?\s*(?:[\d,]*\s*원)?(?:이|가|은|는)?|\d[\d,]*\s*원(?:이|가|은|는)?/g;
 /** 글에 금액처럼 보이는 말이 있는지("2억 원" · "12만" · "30,000원"). 읽지 못했으면 업체에게 알려요 */
-export const SAID_AMOUNT = /\d\s*(?:억|만|천\s*원|원)/;
+// 숫자 뒤 억 · 천 · 백 · 만 · 원("1천만 원" · "2억" · "30,000원"), 한글 숫자 금액("천만 원" · "삼백만원")
+export const SAID_AMOUNT = /\d\s*(?:억|천|백|만|원)|[일이삼사오육칠팔구십백천만억]{1,8}\s*만?\s*원/;
 
 /** 추가 금액: "곰팡이 방지 처리 12만 원, 부가세 포함, 벽 안쪽까지 곰팡이가 퍼져서" → 항목 · 금액 · 부가세 · 이유 */
-export function parseExtra(text: string, today: string): ExtraFill {
+export function parseExtra(raw: string, today: string): ExtraFill {
+  const text = manOf(raw);
   const out: ExtraFill = parseQuote(text, today);
   delete out.days;
   delete out.valid;
