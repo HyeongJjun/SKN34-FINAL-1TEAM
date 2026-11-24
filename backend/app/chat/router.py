@@ -30,10 +30,12 @@ def _event(name: str, data: dict) -> str:
 
 
 async def _stream(out: AiTurnOut) -> AsyncIterator[str]:
+    if out.answer.lead:  # 결론 한 줄이 먼저
+        yield _event("token", {"section": None, "text": out.answer.lead})
     for i, sec in enumerate(out.answer.sections):
         for text in sec.sentences:
             yield _event("token", {"section": i, "text": text})
-    for text in out.answer.unknown:
+    for text in [*out.answer.unknown, *out.answer.vendor]:  # 모르는 것 · 업체에 요청할 말
         yield _event("token", {"section": None, "text": text})
     for i, card in enumerate(out.answer.cards):
         yield _event("card", {"index": i, **card.model_dump(mode="json")})

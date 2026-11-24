@@ -79,3 +79,9 @@
 @media (max-width: 1023px) {
   .flowList { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 16px; }
 }
+
+/* 홈 한 줄 입력(HomeAsk): 말하고 '인테리어 시작하기' → /start 재재 대화 */
+.ask { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--mj-line-control); border-radius: var(--mj-radius-group); background: var(--mj-surface); }
+.askLabel { font-weight: var(--mj-weight-semibold); }
+.askInput { width: 100%; min-height: 64px; padding: 10px 12px; border: 1px solid var(--mj-line); border-radius: 10px; background: var(--mj-surface); font: inherit; resize: vertical; }
+.askRow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }

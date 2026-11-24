@@ -5,26 +5,28 @@ import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { BottomBar } from "@/components/ui/BottomBar";
 import { Button } from "@/components/ui/Button";
 import type { JobV3, VendorJobLog } from "@/lib/api/vendor";
-import { dateShort, listStamp, won } from "@/lib/format";
+import { dateSeoul, dateShort, listStamp, won } from "@/lib/format";
 import { enc } from "../send";
 import { logText } from "../text";
 import { Notice } from "@/components/ui/Notice";
 import { Eyebrow, Group, Row, Rows, Small } from "../ui/parts";
-import { occ, visitTitle } from "../visit/facts";
+import { occ, siteLine, visitTitle } from "../visit/facts";
 import { daysText } from "./days";
+import { ProgressBox } from "./ProgressBox";
 import s from "./jobs.module.css";
 
 const ANSWER: Record<string, string> = { pending: "고객 답 기다림", approved: "승인", rejected: "거절", asked: "채팅으로 물어봐요" };
 
 function jobState(j: JobV3): { tone: BadgeTone; label: string } {
   if (j.status === "done" || j.status === "closed") return { tone: "mute", label: "공사 끝" };
+  if (j.status === "fixing") return { tone: "now", label: "남은 일 하기" }; // 고객이 '남은 일이 있어요'로 답함
   if (j.done_posted_at || j.work_done_on) return { tone: "wait", label: "고객 확인 기다림" };
   if (j.dates_state === "proposed" || j.dates_state === "change_proposed") return { tone: "wait", label: "날짜 수락 기다림" };
   if (j.dates_state === "scheduled") return { tone: "ok", label: "공사 중" };
   return { tone: "now", label: "공사 날짜 올리기" };
 }
 
-export function JobView({ job, log }: { job: JobV3; log: VendorJobLog }) {
+export function JobView({ job, log, now }: { job: JobV3; log: VendorJobLog; now: string }) {
   const v = job.visit;
   const st = jobState(job);
   const days = job.work_days.length ? job.work_days : job.proposal?.days ?? [];
@@ -32,7 +34,10 @@ export function JobView({ job, log }: { job: JobV3; log: VendorJobLog }) {
   const items = job.extras.items.filter((x) => !x.superseded);
   const okN = items.filter((x) => x.answer === "approved").length;
   const waitN = items.filter((x) => x.answer === "pending").length;
-  const working = job.dates_state === "scheduled" && !job.done_posted_at && !job.work_done_on && job.status !== "done";
+  // 남은 일(fixing)도 공사 중이에요: 끝낸 날은 남아 있지만 추가 금액 · 다시 끝 알리기를 할 수 있어요(서버 EXTRA_OPEN · FINISHABLE)
+  const working = job.status === "fixing" || (job.dates_state === "scheduled" && !job.done_posted_at && !job.work_done_on && job.status !== "done");
+  // 진행 사진은 서버와 같은 조건: 공사 중 · 남은 일이고 첫 공사일부터(쉬는 날 · 날짜 바꾸는 중에도)
+  const canProgress = (job.status === "scheduled" || job.status === "fixing") && !!job.start_date && dateSeoul(now) >= job.start_date && !(job.status === "scheduled" && job.done_posted_at);
   const href = `/vendor/jobs/${enc(job.deal_id)}`;
   return (
     <>
@@ -42,6 +47,7 @@ export function JobView({ job, log }: { job: JobV3; log: VendorJobLog }) {
           <Badge tone={st.tone}>{st.label}</Badge>
           <h2 className={s.jt}>{visitTitle(v)} · {occ(v)}</h2>
           <p className={`${s.js} mj-num`}>{["도배 전체", days.length ? daysText(days, true) : null, job.quote.days ? `${job.quote.days}일` : null, crew ? `${crew}명` : null].filter(Boolean).join(" · ")}</p>
+          {siteLine(v) ? <Small>현장 정보 · {siteLine(v)}</Small> : null}
         </Group>
         <Group flush>
           <Rows label="공사 한 건">
@@ -70,7 +76,18 @@ export function JobView({ job, log }: { job: JobV3; log: VendorJobLog }) {
             <Small>고객이 승인하기 전에는 합계에 넣지 않아요.</Small>
           </Group>
         ) : null}
-        {job.done_posted_at || job.work_done_on ? (
+        {job.status === "fixing" ? <Notice tone="info">고객이 남은 일이 있다고 했어요{job.fixing_note ? ` · ${job.fixing_note}` : ""}. 마치면 &apos;공사 끝 알리기&apos;를 다시 눌러 주세요.</Notice> : null}
+        <ProgressBox job={job} open={canProgress} />
+        {working || job.dates_state === "scheduled" ? (
+          <Group flush>
+            <Eyebrow>고객 준비</Eyebrow>
+            <Rows label="고객 준비">
+              {(job.checks ?? []).map((c) => <Row key={c.key} label={c.label} value={c.done ? "했어요" : "아직"} />)}
+            </Rows>
+            <Small>고객이 체크한 그대로예요. 안 된 것은 채팅으로 물어봐 주세요.</Small>
+          </Group>
+        ) : null}
+        {job.status !== "fixing" && (job.done_posted_at || job.work_done_on) ? (
           <Notice tone="info">공사 끝을 알렸어요. 고객이 확인하면 공사가 끝나요{job.auto_done_at ? ` · 확인이 없으면 ${dateShort(job.auto_done_at)}에 저절로 끝나요` : ""}.</Notice>
         ) : null}
         {log.length ? (

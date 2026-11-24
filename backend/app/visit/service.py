@@ -982,6 +982,16 @@ async def inbox_summary(s: AsyncSession, vendor: User) -> InboxSummaryOut:
     )
 
 
+# 출입 방법(고객이 적은 한 줄)을 업체에 보이는 때: 실측이 확정된 뒤부터
+SITE_NOTE_FROM = ("booked", "visited", "quoted", "chosen")
+
+
+def site_note_open(v: Visit) -> bool:
+    """출입 방법을 업체에 보여도 되는지. v2는 실측 확정 없이 '견적서 옴'이 될 수 있어 v3 요청만 연다
+    (v3는 booked · visited를 거쳐야 quoted가 된다)."""
+    return is_v3(v) and v.status in SITE_NOTE_FROM
+
+
 async def vendor_visit(
     s: AsyncSession,
     vendor: User,
@@ -1017,6 +1027,7 @@ async def vendor_visit(
         message=v.message,
         photos=[ph.file_id for ph in photos],
         photo_labels=[ph.label for ph in photos],
+        site=await project_service.site_for(s, v.project_id, with_note=site_note_open(v)),
         **extra,
     )
 

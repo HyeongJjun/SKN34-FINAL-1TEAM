@@ -23,6 +23,7 @@ import {
   type Face, type InfoDraft, type InfoErrors, type SpaceKind,
 } from "@/lib/guest/info";
 import { clearGuest, draftOf, readGuest, writeGuest } from "@/lib/guest/store";
+import { StartChat } from "./StartChat";
 import { DateSheet } from "./DateSheet";
 import { PyeongSheet } from "./PyeongSheet";
 import { RegionSheet } from "./RegionSheet";
@@ -34,7 +35,7 @@ const FIELD_ID: Record<keyof InfoErrors, string> = {
   spaces: "inf-spaces", faces: "inf-faces", region: "inf-region", area: "inf-area", occupied: "inf-occupied", grade: "inf-grade", budget: "inf-budget",
 };
 
-export function InfoForm({ regions, today, mode, projectId, initial, mock, crumbs }: {
+export function InfoForm({ regions, today, mode, projectId, initial, mock, crumbs, chat = false }: {
   regions: Region[];
   /** 웹 이동 경로(마지막 줄은 이 화면) */
   crumbs: Crumb[];
@@ -46,6 +47,8 @@ export function InfoForm({ regions, today, mode, projectId, initial, mock, crumb
   initial?: InfoDraft;
   /** 개발 예시(NEXT_PUBLIC_MJ_MOCK) */
   mock: boolean;
+  /** 왼쪽에 재재와 대화(말하면 칸을 채움). 새로 받기(/start)에서만 켜요 */
+  chat?: boolean;
 }) {
   const router = useRouter();
   const [d, setD] = useState<InfoDraft>(initial ?? EMPTY_DRAFT);
@@ -127,7 +130,9 @@ export function InfoForm({ regions, today, mode, projectId, initial, mock, crumb
     <>
       <Main>
       <PageHead title="도배 기본 정보" crumbs={crumbs} />
-      <div className={s.layout}>
+      <div className={chat ? `${s.layout} ${s.withChat}` : s.layout}>
+        {chat && ready ? <StartChat d={d} set={set} regions={regions} today={today} /> : null}
+        <div className={s.formCol}>
         <form id="info-form" className={s.form} onSubmit={submit} noValidate aria-label="도배 기본 정보">
           {tried && errKeys.length ? (
             <div ref={sumRef} className={s.summary} role="alert">
@@ -233,6 +238,7 @@ export function InfoForm({ regions, today, mode, projectId, initial, mock, crumb
           </dl>
           <Button type="submit" form="info-form" size="lg" block busy={busy}>{ctaLabel}</Button>
         </aside>
+        </div>
       </div>
       </Main>
 

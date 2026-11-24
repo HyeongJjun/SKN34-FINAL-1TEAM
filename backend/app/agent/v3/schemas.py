@@ -230,7 +230,7 @@ class CompareTable(BaseModel):
 class UiCard(BaseModel):
     kind: Literal[
         "calc", "visit_draft", "open_calendar", "grade_preview", "faq", "choices", "next_step",
-        "compare",
+        "compare", "house",
     ]  # fmt: skip
     title: str = ""
     text: str = ""
@@ -266,6 +266,7 @@ class Trace(BaseModel):
 
 
 class AgentAnswer(BaseModel):
+    lead: str = ""  # 결론 한 줄(굵게, 담당이 만든 첫 문장을 올림 · house.shape)
     sections: list[Section] = []
     calc: list[CalcBox] = []
     cards: list[UiCard] = []
@@ -273,11 +274,12 @@ class AgentAnswer(BaseModel):
     unknown: list[str] = []
     suggest: list[str] = []
     failed: bool = False
+    vendor: list[str] = []  # 업체에 이렇게 요청해 보세요(정해 둔 부탁 2줄 · house.shape)
     trace: Trace = Trace()
 
     def plain(self) -> str:
         """대화 표에 남길 글: 묶음 제목 · 문장만 잇는다(카드 · 상자는 뺀다)."""
-        out: list[str] = []
+        out: list[str] = [self.lead] if self.lead else []
         for s in self.sections:
             if s.title:
                 out.append(s.title)
@@ -285,4 +287,5 @@ class AgentAnswer(BaseModel):
             if s.caution:
                 out.append(s.caution.text)
         out.extend(self.unknown)
+        out.extend(f"업체에: {v}" for v in self.vendor)
         return "\n".join(x for x in out if x)

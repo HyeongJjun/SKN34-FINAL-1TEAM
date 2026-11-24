@@ -52,7 +52,8 @@ def turn(text, *, facts=None, view=None, waiting=None, button=None, mode="free")
 
 
 def words(ans: AgentAnswer) -> str:
-    return "\n".join(x.text for s in ans.sections for x in s.sentences)
+    """답 글 전체: 결론 한 줄(lead, house.shape) + 묶음 문장"""
+    return "\n".join([ans.lead, *(x.text for s in ans.sections for x in s.sentences)])
 
 
 def test_trade_question_gets_verified_card_with_cites_and_one_ask():

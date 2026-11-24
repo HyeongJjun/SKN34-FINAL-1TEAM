@@ -90,6 +90,9 @@ class Project(Base):
             name="budget_won",
         ),
         CheckConstraint("source in ('v2', 'guest', 'member')", name="source"),
+        CheckConstraint("parking is null or parking in ('yes', 'no')", name="parking"),
+        CheckConstraint("elevator is null or elevator in ('yes', 'no')", name="elevator"),
+        CheckConstraint("entry_note is null or length(btrim(entry_note)) > 0", name="entry_note"),
         # 손님 답 옮기기 멱등 키: 같은 키로 두 번 오면 만든 공사를 돌려준다 (NULL끼리는 겹치지 않는다)
         UniqueConstraint("owner_id", "client_key", name="uq_projects_client_key"),
     )
@@ -127,6 +130,12 @@ class Project(Base):
     budget_won: Mapped[int | None] = mapped_column(BigInteger)  # 비면 '아직 몰라요'
     source: Mapped[str] = mapped_column(String(8), default="v2", server_default="v2")
     client_key: Mapped[uuid.UUID | None] = mapped_column()
+    # 현장 정보(0036): 업체가 방문을 준비할 때 본다. 주소가 아니다. 비면 '아직 안 적음'
+    parking: Mapped[str | None] = mapped_column(String(3))
+    elevator: Mapped[str | None] = mapped_column(String(3))
+    entry_note: Mapped[str | None] = mapped_column(
+        String(100)
+    )  # 실측이 확정된 뒤에만 업체에 보인다
 
 
 class ProjectSpace(Base):
@@ -233,15 +242,25 @@ class ProjectFile(Base):
 
 
 # 공사 전에 할 일 (판 WSchedule · WPlanDone). 항목을 더하면 CHECK · migration도 같이 바꾼다
-CHECK_KEYS = ("office_report",)
-CHECK_LABELS = {"office_report": "관리사무소에 공사 신고를 했어요"}
+CHECK_KEYS = ("office_report", "furniture_moved", "fragile_away", "neighbors_told")
+CHECK_LABELS = {
+    "office_report": "관리사무소에 공사 신고를 했어요",
+    "furniture_moved": "가구와 짐을 벽에서 떼어 놨어요",
+    "fragile_away": "깨지기 쉬운 물건을 치웠어요",
+    "neighbors_told": "이웃에 공사를 알렸어요",
+}
 
 
 class ProjectCheck(Base):
     """고객이 켠 공사 전 체크 한 줄 (끄면 행을 지운다)"""
 
     __tablename__ = "project_checks"
-    __table_args__ = (CheckConstraint("key in ('office_report')", name="key"),)
+    __table_args__ = (
+        CheckConstraint(
+            "key in ('office_report', 'furniture_moved', 'fragile_away', 'neighbors_told')",
+            name="key",
+        ),
+    )
 
     project_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True

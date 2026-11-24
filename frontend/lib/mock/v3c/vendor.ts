@@ -137,7 +137,7 @@ const TAKEN_DEC = [
 ];
 export const MOCK_VISITS: Record<string, VendorVisitV3> = {
   [VID.sanggye]: visit(R.sanggye, {
-    photos: [id("p001"), id("p002")], photo_labels: ["거실", "작은방"], taken: TAKEN_DEC, reply_due_at: "2026-11-19T21:40:00+09:00",
+    photos: [id("p001"), id("p002")], photo_labels: ["거실", "작은방"], site: { parking: "yes", elevator: "no", entry_note: null }, taken: TAKEN_DEC, reply_due_at: "2026-11-19T21:40:00+09:00",
   }),
   [VID.wolgye]: visit(R.wolgye, {
     area_m2: "82.6", occupied: true, photos: [id("p003")], photo_labels: ["안방"], instant_default: false,
@@ -195,7 +195,8 @@ const jobBase = {
   quote: quoteBrief, plan_version: 1, plan_start: null, plan_end: null,
   need: { man_day: "4.0", crew: 2, days: 2, steps: [{ name: "도배", half_days: 4 }] }, others: [], weekend_work: false,
   holidays: [{ day: "2027-01-01", name: "신정" }], requests_left: 2, request_options: [], accepted_crew: null,
-  work_done_on: null, contact_until: null, fixing_note: null, done_photos: [],
+  work_done_on: null, contact_until: null, fixing_note: null, done_photos: [], progress: [],
+  checks: [{ key: "office_report", label: "관리사무소에 공사 신고를 했어요", done: true, done_at: null }, { key: "furniture_moved", label: "가구와 짐을 벽에서 떼어 놨어요", done: false, done_at: null }],
 };
 export const MOCK_JOBS: Record<string, JobV3> = {
   [DID.dates]: {

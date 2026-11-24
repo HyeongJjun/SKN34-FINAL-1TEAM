@@ -5,6 +5,7 @@ v3: 몸통은 지금 화면(ProjectCreate)과 v3 기본 정보(HomeInfoIn, 손�
 손님 답 옮기기는 Idempotency-Key(= projects.client_key)로 한 번만 만든다(dev-03).
 """
 
+import re
 import uuid
 from datetime import date
 
@@ -40,6 +41,8 @@ from app.project.schemas import (
     ProjectCreate,
     ProjectListItem,
     ProjectOut,
+    SiteIn,
+    SiteOut,
     SizeIn,
     SpaceOut,
     TradesOut,
@@ -479,3 +482,59 @@ async def set_check(
         )
     await s.commit()
     return await checks(s, p.id)
+
+
+# ---- 현장 정보 (주차 · 엘리베이터 · 출입 방법) ----
+
+# 출입 방법 칸에 적으면 안 되는 것: 비밀번호 · 네 자리 넘는 숫자(공동현관 번호 · 전화번호) · 동호수. 채팅으로 알리게 한다
+# 동 · 호 바로 뒤 말은 '동쪽' · '1호기' · '3호선'만 받는다("101동 쪽문" · "203호 기다릴게요"는 막는다)
+# "101-203"처럼 줄표로 쓴 동호수도 막는다
+# 네 자리 넘는 숫자는 앞에서 잡으므로 동 · 호 앞 숫자는 1~3자리로 묶는다(긴 숫자열에서 느려지지 않게, CodeQL)
+SITE_SECRET = re.compile(
+    r"비밀\s*번호|비번|\d{4,}"
+    r"|(?<!\d)\d{1,3}\s*동(?!쪽)|(?<!\d)\d{1,3}\s*호(?![기선])"
+    r"|(?<!\d)\d{2,4}\s*-\s*\d{3,4}(?!\d)"
+)
+SITE_SECRET_MSG = (
+    "비밀번호 · 연락처 · 동호수는 여기에 적지 말고, 실측이 잡힌 뒤 채팅으로 알려 주세요."
+)
+
+
+def _site(p, *, with_note: bool = True) -> SiteOut:
+    return SiteOut(
+        parking=p.parking, elevator=p.elevator, entry_note=p.entry_note if with_note else None
+    )
+
+
+async def site(s: AsyncSession, user: User, project_id: uuid.UUID) -> SiteOut:
+    """GET /projects/{id}/site (만든 고객만, 남의 것은 404)"""
+    p = await repo.get(s, project_id)
+    if p is None or p.owner_id != user.id:
+        raise AppError(404, "not_found", "프로젝트를 찾을 수 없어요.")
+    return _site(p)
+
+
+async def set_site(s: AsyncSession, user: User, project_id: uuid.UUID, data: SiteIn) -> SiteOut:
+    """PUT /projects/{id}/site: 통째로 바꾼다(비운 칸은 지움). 집 정보 잠금(실측 요청 뒤)과 상관없이 고칠 수 있다:
+    견적 · 공정표 계산에 쓰지 않는 칸이다."""
+    p = await repo.get(s, project_id)
+    if p is None or p.owner_id != user.id:
+        raise AppError(404, "not_found", "프로젝트를 찾을 수 없어요.")
+    note = (data.entry_note or "").strip() or None
+    if note and SITE_SECRET.search(note):
+        raise app_error(
+            "invalid", SITE_SECRET_MSG, fields=[{"loc": ["entry_note"], "msg": SITE_SECRET_MSG}]
+        )
+    p.parking, p.elevator, p.entry_note = data.parking, data.elevator, note
+    await s.commit()
+    return _site(p)
+
+
+async def site_for(s: AsyncSession, project_id: uuid.UUID, *, with_note: bool) -> SiteOut | None:
+    """업체가 보는 현장 정보. 권한은 부르는 쪽이 먼저 확인한다. 출입 방법은 with_note일 때만(실측 확정 뒤).
+    아무것도 안 적었으면 None"""
+    p = await repo.get(s, project_id)
+    if p is None:
+        return None
+    out = _site(p, with_note=with_note)
+    return out if (out.parking or out.elevator or out.entry_note) else None

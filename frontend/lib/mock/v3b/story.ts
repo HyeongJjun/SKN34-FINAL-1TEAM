@@ -394,6 +394,7 @@ function mockDeal(c: Ctx): S["DealOut"] | null {
     review_id: c.past("reviewed") ? I.review : null,
     thread_id: I.thread.maru,
     done_photos: [],
+    progress: [],
     grand_total: c.past("extra_ok") ? 3322000 : 3267000,
   };
 }

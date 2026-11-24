@@ -17,7 +17,7 @@ import type { VendorQuoteBoard, VendorVisitV3 } from "@/lib/api/vendor";
 import { errorText, type Schemas } from "@/lib/backend/client";
 import { dateSeoul, dateShort, dueText, halfDayText, won } from "@/lib/format";
 import { AssistBox } from "../assist/AssistBox";
-import { parseQuote } from "../assist/parse";
+import { SAID_AMOUNT, parseQuote } from "../assist/parse";
 import { enc, newKey, send, upload } from "../send";
 import { VAT_MODE_LABEL } from "../text";
 import { FileRow } from "@/components/ui/FileRow";
@@ -32,6 +32,11 @@ type Vat = "included" | "excluded" | "exempt";
 const DOC_OK = /\.(pdf|xlsx?|csv|jpe?g|png|heic|webp)$/i;
 const WARRANTY = [{ value: "6", label: "6개월" }, { value: "12", label: "1년" }, { value: "24", label: "2년" }];
 const digits = (v: string) => v.replace(/\D/g, "").slice(0, 10);
+// 서버 한도(quote AMOUNT_MAX)와 같아요. 금액 칸은 11자리까지 받아서, 넘는 값을 몰래 잘라 다른 금액으로 만들지 않고 막아요
+const AMOUNT_MAX = 1_000_000_000;
+const amountDigits = (v: string) => v.replace(/\D/g, "").slice(0, 11);
+const OVER = "10억 원까지 넣을 수 있어요.";
+const UNREAD = "말씀하신 금액을 읽지 못했어요. 금액을 직접 적어 주세요.";
 const money = (v: string) => (v ? Number(v).toLocaleString("ko-KR") : "");
 
 export function QuoteForm({ v, board, now }: { v: VendorVisitV3; board: VendorQuoteBoard; now: string }) {
@@ -79,13 +84,17 @@ export function QuoteForm({ v, board, now }: { v: VendorVisitV3; board: VendorQu
   }
 
   // 금액 · 부가세가 바뀌면 잠시 뒤 임시 저장 → 계산 엔진 값으로 '믿집 계산'을 바꿔요
+  // hold: 도우미가 말한 금액을 넣지 못한 까닭(한도 초과 · 못 읽음). 칸에는 옛 금액이 남아 있어서,
+  // 업체가 금액 칸을 직접 고치거나 도우미가 맞는 금액을 넣기 전까지 저장 · 보내기를 모두 막아요(다른 칸을 고치거나 보내기에 실패해도 풀리지 않아요)
+  const [hold, setHold] = useState<string | null>(null);
+  const over = Number(amount) > AMOUNT_MAX || hold !== null;
   const first = useRef(true);
   useEffect(() => {
     if (first.current) { first.current = false; return; }
-    if (!amount || !vat) return;
+    if (!amount || !vat || over) return;
     const t = setTimeout(() => { save().catch(() => {}); }, 800);
     return () => clearTimeout(t);
-  }, [amount, vat]);
+  }, [amount, vat, over]);
   const calcFresh = calc.amount != null && String(calc.amount) === amount && calc.vat === vat && calc.total != null;
 
   async function pick(list: File[]) {
@@ -112,7 +121,9 @@ export function QuoteForm({ v, board, now }: { v: VendorVisitV3; board: VendorQu
   function check(): boolean {
     const e: Record<string, string> = {};
     if (!files.length) e.files = "견적서 파일을 올려 주세요.";
-    if (!amount || Number(amount) <= 0) e.amount = "견적 금액을 원 단위로 넣어 주세요.";
+    if (hold) e.amount = hold;
+    else if (!amount || Number(amount) <= 0) e.amount = "견적 금액을 원 단위로 넣어 주세요.";
+    else if (Number(amount) > AMOUNT_MAX) e.amount = OVER;
     if (!vat) e.vat = "부가세를 어떻게 적었는지 골라 주세요.";
     if (!days || Number(days) < 1 || Number(days) > board.days_max) e.days = `공사 기간을 1~${board.days_max}일로 넣어 주세요.`;
     if (!valid) e.valid = "유효기간을 골라 주세요.";
@@ -126,6 +137,7 @@ export function QuoteForm({ v, board, now }: { v: VendorVisitV3; board: VendorQu
 
   async function onSave() {
     if (busy) return;
+    if (over) { setErr((x) => ({ ...x, amount: hold ?? OVER })); amountRef.current?.focus(); return; }
     setBusy("save");
     try { await save(); toast.show("임시 저장했어요."); } catch (e) { setErr((x) => ({ ...x, form: errorText(e) })); } finally { setBusy(null); }
   }
@@ -147,13 +159,20 @@ export function QuoteForm({ v, board, now }: { v: VendorVisitV3; board: VendorQu
   function assist(text: string): string {
     const got = parseQuote(text, today);
     const done: string[] = [];
-    if (got.amount && got.amount > 0) { setAmount(digits(String(got.amount))); done.push(`금액 ${got.amount.toLocaleString("ko-KR")}원`); }
+    // 한도를 넘는 금액은 잘라 넣지 않고 비워 둬요
+    const over = !!got.amount && got.amount > AMOUNT_MAX;
+    if (got.amount && got.amount > 0 && !over) { setAmount(String(got.amount)); setHold(null); done.push(`금액 ${got.amount.toLocaleString("ko-KR")}원`); }
     if (got.vat && !fixedVat && (board.vat_modes as string[]).includes(got.vat)) { setVat(got.vat); done.push(`부가세 ${VAT_MODE_LABEL[got.vat]}`); }
     if (got.days && got.days >= 1 && got.days <= board.days_max) { setDays(String(got.days)); done.push(`공사 기간 ${got.days}일`); }
     if (got.valid && got.valid >= today) { setValid(got.valid); done.push(`유효기간 ${dateShort(got.valid)}`); }
-    if (!done.length) return "금액 · 부가세 · 공사 기간 · 유효기간을 말해 주세요. 예: 견적 455만 원, 부가세 포함, 공사 3일, 12/17까지 유효";
+    // 금액을 말했는데 못 넣었으면 알리고, 칸을 고칠 때까지 저장을 멈춰요(칸에 있던 옛 금액으로 저장 · 보내지 않게)
+    const unread = !got.amount && SAID_AMOUNT.test(text);
+    if (over || unread) setHold(over ? OVER : UNREAD);
     setErr({});
-    return `칸을 채웠어요: ${done.join(", ")}. 금액은 말씀하신 숫자 그대로예요. 견적서 파일을 올리고 '고객에게 보내기'를 직접 눌러 주세요.`;
+    const miss = over ? `금액은 10억 원을 넘어 넣지 않았어요.` : unread ? "금액은 읽지 못했어요. 금액 칸에 직접 적어 주세요." : "";
+    if (!done.length) return miss || "금액 · 부가세 · 공사 기간 · 유효기간을 말해 주세요. 예: 견적 455만 원, 부가세 포함, 공사 3일, 12/17까지 유효";
+    const filled = done.some((x) => x.startsWith("금액"));
+    return `칸을 채웠어요: ${done.join(", ")}.${filled ? " 금액은 말씀하신 숫자 그대로예요." : ""}${miss ? ` ${miss}` : ""} 견적서 파일을 올리고 '고객에게 보내기'를 직접 눌러 주세요.`;
   }
 
   const due = v.next?.due_at;
@@ -179,7 +198,7 @@ export function QuoteForm({ v, board, now }: { v: VendorVisitV3; board: VendorQu
 
         <AssistBox hint="견적 내용을 말로 적으면 아래 칸을 채워요." examples={["견적 455만 원, 부가세 포함, 공사 3일, 12/17까지 유효"]} onText={assist} />
         <Group>
-          <Field ref={amountRef} label={simplified ? "받을 금액" : "견적 금액"} unit="원" num inputMode="numeric" value={money(amount)} error={err.amount} onChange={(e) => { setAmount(digits(e.target.value)); setErr((x) => ({ ...x, amount: undefined })); }} />
+          <Field ref={amountRef} label={simplified ? "받을 금액" : "견적 금액"} unit="원" num inputMode="numeric" value={money(amount)} error={hold ?? err.amount} onChange={(e) => { const n = amountDigits(e.target.value); setAmount(n); setHold(null); setErr((x) => ({ ...x, amount: Number(n) > AMOUNT_MAX ? OVER : undefined })); }} />
           {fixedVat ? (
             <Small>{simplified ? "간이과세라 부가세를 따로 붙이지 않아요. 적은 금액이 고객이 보는 금액이에요." : `부가세 ${VAT_MODE_LABEL[fixedVat]}`}</Small>
           ) : (

@@ -14,6 +14,8 @@ from app.project.schemas import (
     ProjectCheckIn,
     ProjectCheckOut,
     ProjectOut,
+    SiteIn,
+    SiteOut,
 )
 from app.shared import ratelimit
 from app.shared.clock import today_seoul
@@ -121,9 +123,36 @@ async def update_project(
 )
 async def set_check(
     project_id: uuid.UUID,
-    key: Literal["office_report"],
+    key: Literal["office_report", "furniture_moved", "fragile_away", "neighbors_told"],
     data: ProjectCheckIn,
     user: User = Depends(require_role("customer")),
     s: AsyncSession = Depends(get_session),
 ) -> list[ProjectCheckOut]:
     return await service.set_check(s, user, project_id, key, data.done)
+
+
+@router.get(
+    "/projects/{project_id}/site",
+    response_model=SiteOut,
+    summary="현장 정보 보기: 주차 · 엘리베이터 · 출입 방법 (만든 고객만)",
+)
+async def get_site(
+    project_id: uuid.UUID,
+    user: User = Depends(require_role("customer")),
+    s: AsyncSession = Depends(get_session),
+) -> SiteOut:
+    return await service.site(s, user, project_id)
+
+
+@router.put(
+    "/projects/{project_id}/site",
+    response_model=SiteOut,
+    summary="현장 정보 적기 (만든 고객만). 주차 · 엘리베이터는 업체 요청 화면에, 출입 방법은 실측 확정 뒤에 보인다",
+)
+async def set_site(
+    project_id: uuid.UUID,
+    data: SiteIn,
+    user: User = Depends(require_role("customer")),
+    s: AsyncSession = Depends(get_session),
+) -> SiteOut:
+    return await service.set_site(s, user, project_id, data)

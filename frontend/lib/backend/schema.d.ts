@@ -373,6 +373,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{project_id}/site": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 현장 정보 보기: 주차 · 엘리베이터 · 출입 방법 (만든 고객만) */
+        get: operations["get_site_projects__project_id__site_get"];
+        /** 현장 정보 적기 (만든 고객만). 주차 · 엘리베이터는 업체 요청 화면에, 출입 방법은 실측 확정 뒤에 보인다 */
+        put: operations["set_site_projects__project_id__site_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projects/{project_id}/standard": {
         parameters: {
             query?: never;
@@ -947,6 +965,23 @@ export interface paths {
         put?: never;
         /** 추가 금액 알리기 · 고친 판 올리기 (공사 날짜 수락 뒤 공사하는 동안, D23) */
         post: operations["add_extra_vendor_jobs__deal_id__extras_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendor/jobs/{deal_id}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 공사 진행 사진 · 한 줄 올리기 (공사 첫날부터 공사하는 동안, 고객 알림) */
+        post: operations["add_progress_vendor_jobs__deal_id__progress_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3462,6 +3497,12 @@ export interface components {
              */
             done_photos: string[];
             /**
+             * Progress
+             * @description 공사 진행 기록 (새것부터)
+             * @default []
+             */
+            progress: components["schemas"]["ProgressOut"][];
+            /**
              * Grand Total
              * @description 공사 금액: 확정 금액 + 승인한 추가 금액 (부가세 포함, 계산 엔진, C37 · C38)
              */
@@ -4522,6 +4563,12 @@ export interface components {
              */
             can_finish: boolean;
             /**
+             * Checks
+             * @description 고객이 켠 공사 전 준비 체크 (업체는 보기만)
+             * @default []
+             */
+            checks: components["schemas"]["ProjectCheckOut"][];
+            /**
              * Work Days
              * @description 수락한 공사 날 (하나씩)
              * @default []
@@ -4542,6 +4589,12 @@ export interface components {
              * @default []
              */
             done_photos: string[];
+            /**
+             * Progress
+             * @description 공사 진행 기록 (새것부터)
+             * @default []
+             */
+            progress: components["schemas"]["ProgressOut"][];
             /**
              * Thread Id
              * @description 이 고객과의 채팅
@@ -5883,6 +5936,49 @@ export interface components {
              */
             intro?: string | null;
         };
+        /**
+         * ProgressIn
+         * @description 업체가 공사하는 동안 진행 사진 올리기 (POST /files kind=work_photo). 금액 · 날짜는 바꾸지 않는다.
+         */
+        ProgressIn: {
+            /**
+             * Note
+             * @description 한 줄 (예: 거실 초배 끝, 내일 정배)
+             */
+            note?: string | null;
+            /** File Ids */
+            file_ids: string[];
+            /**
+             * Client Key
+             * @description 같은 기록 두 번 막는 키 (같은 키면 200 그대로)
+             */
+            client_key?: string | null;
+        };
+        /**
+         * ProgressOut
+         * @description 공사 진행 기록 한 번 (사진: GET /projects/{id}/deals/{did}/photos/{file_id})
+         */
+        ProgressOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Note */
+            note: string | null;
+            /** Photos */
+            photos: string[];
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
         /** ProjectCheckIn */
         ProjectCheckIn: {
             /** Done */
@@ -7111,6 +7207,45 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /**
+         * SiteIn
+         * @description 현장 정보: 업체가 방문을 준비할 때 보는 것. 주소 · 연락처 · 비밀번호는 적지 않는다.
+         */
+        SiteIn: {
+            /**
+             * Parking
+             * @description 주차할 수 있는지
+             */
+            parking?: ("yes" | "no") | null;
+            /**
+             * Elevator
+             * @description 엘리베이터가 있는지
+             */
+            elevator?: ("yes" | "no") | null;
+            /**
+             * Entry Note
+             * @description 출입 방법 한 줄 (실측이 확정된 뒤에만 업체에 보인다)
+             */
+            entry_note?: string | null;
+        };
+        /** SiteOut */
+        SiteOut: {
+            /**
+             * Parking
+             * @description 주차할 수 있는지
+             */
+            parking?: ("yes" | "no") | null;
+            /**
+             * Elevator
+             * @description 엘리베이터가 있는지
+             */
+            elevator?: ("yes" | "no") | null;
+            /**
+             * Entry Note
+             * @description 출입 방법 한 줄 (실측이 확정된 뒤에만 업체에 보인다)
+             */
+            entry_note?: string | null;
         };
         /**
          * SizeIn
@@ -10822,6 +10957,8 @@ export interface components {
             reply_due_at?: string | null;
             /** Thread Id */
             thread_id?: string | null;
+            /** @description 고객이 적은 현장 정보(주차 · 엘리베이터). 출입 방법은 실측이 확정된 뒤에만 든다 */
+            site?: components["schemas"]["SiteOut"] | null;
         };
         /** VendorVisitStateOut */
         VendorVisitStateOut: {
@@ -12049,7 +12186,7 @@ export interface operations {
             header?: never;
             path: {
                 project_id: string;
-                key: "office_report";
+                key: "office_report" | "furniture_moved" | "fragile_away" | "neighbors_told";
             };
             cookie?: never;
         };
@@ -12066,6 +12203,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProjectCheckOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_site_projects__project_id__site_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_site_projects__project_id__site_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SiteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteOut"];
                 };
             };
             /** @description Validation Error */
@@ -13268,6 +13471,50 @@ export interface operations {
         };
         responses: {
             /** @description 같은 client_key로 이미 올린 줄 (그대로) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_progress_vendor_jobs__deal_id__progress_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgressIn"];
+            };
+        };
+        responses: {
+            /** @description 같은 client_key로 이미 올린 기록 (그대로) */
             200: {
                 headers: {
                     [name: string]: unknown;

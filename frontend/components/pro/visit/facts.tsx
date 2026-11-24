@@ -11,6 +11,7 @@ import { Pics } from "../ui/parts";
 const title = (v: VendorVisitV3) => v.area_label ?? `${v.region} ${v.area_name}`;
 export const visitTitle = title;
 const occ = (v: VendorVisitV3) => (v.occupied ? "사는 중" : "빈 집");
+const YN: Record<string, string> = { yes: "있어요", no: "없어요" };
 
 /** 폰 한 줄(9판 V04 k-eb): '노원구 상계동 · 69.4㎡ · 아파트 · 전체 · 빈 집 · 고객 희망 12.7~12.21 · 공사 시작 희망 1.4(월) · 예산 300만 원' */
 export function factLine(v: VendorVisitV3): string {
@@ -24,6 +25,18 @@ export function factLine(v: VendorVisitV3): string {
   ].filter(Boolean).join(" · ");
 }
 
+/** 고객이 적은 현장 정보 한 줄: '주차 있어요 · 엘리베이터 없어요 · 출입: 정문 경비실…'. 없으면 null.
+ *  출입 방법은 실측이 확정된 뒤에만 서버가 줘요 */
+export function siteLine(v: VendorVisitV3): string | null {
+  const s = v.site;
+  if (!s) return null;
+  return [
+    s.parking ? `주차 ${YN[s.parking]}` : null,
+    s.elevator ? `엘리베이터 ${YN[s.elevator]}` : null,
+    s.entry_note ? `출입: ${s.entry_note}` : null,
+  ].filter(Boolean).join(" · ") || null;
+}
+
 /** 웹 요약 칸(D14 k-kv) */
 export function FactsKV({ v }: { v: VendorVisitV3 }) {
   const items: [string, string][] = [["집", v.home || v.home_text || "—"]];
@@ -32,6 +45,10 @@ export function FactsKV({ v }: { v: VendorVisitV3 }) {
   if (v.estimate_total != null) items.push(["가견적", won(v.estimate_total)]);
   if (v.grade) items.push(["벽지", gradeLabel(v.grade)]);
   if (v.budget_won != null) items.push(["예산", won(v.budget_won)]);
+  // 고객이 적은 현장 정보(없으면 줄을 두지 않아요). 출입 방법은 실측이 확정된 뒤에만 서버가 줘요
+  if (v.site?.parking) items.push(["주차", YN[v.site.parking]]);
+  if (v.site?.elevator) items.push(["엘리베이터", YN[v.site.elevator]]);
+  if (v.site?.entry_note) items.push(["출입 방법", v.site.entry_note]);
   items.push(["받은 때", `${dateShort(v.received_at)} ${timeSeoul(v.received_at)}`]);
   return <KeyValue cols={3} items={items.map(([label, value]) => ({ key: label, label, value, num: true }))} />;
 }

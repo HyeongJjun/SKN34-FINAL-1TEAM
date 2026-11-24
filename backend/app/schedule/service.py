@@ -56,11 +56,14 @@ from app.schedule import history, inbox
 from app.schedule.models import (
     DEAL_FILES_MAX,
     OPEN_DEALS,
+    PROGRESS_MAX,
     DateProposal,
     DateRequest,
     Deal,
     DealEvent,
     DealFile,
+    DealProgress,
+    DealProgressFile,
     ExtraCharge,
     ExtraChargeFile,
     Plan,
@@ -107,6 +110,8 @@ from app.schedule.schemas import (
     PlanOut,
     PlanRedo,
     PreviewOut,
+    ProgressIn,
+    ProgressOut,
     ProposalOut,
     QuoteDocOut,
     QuoteVersionDocOut,
@@ -462,6 +467,7 @@ async def _deal_out(
     pend, reqs = await _pending(s, ids), await _open_requests(s, ids)
     notes = await _fixing_notes(s, [d.id for d in deals if d.status == "fixing"])
     photos = await _done_photos(s, ids)
+    prog = await _progress(s, ids)
     reviews = await _review_ids(s, [d.id for d in deals if d.status == "done"])
     threads = await _threads(s, deals)
     approved = await _approved_extras(s, ids)
@@ -492,6 +498,7 @@ async def _deal_out(
             review_id=reviews.get(d.id),
             thread_id=threads.get(d.id),
             done_photos=photos.get(d.id, []),
+            progress=prog.get(d.id, []),
             grand_total=work_view.grand_total(quotes[d.quote_id].total, approved.get(d.id, [])),
         )
         for d in deals
@@ -519,6 +526,36 @@ async def _done_photos(s: AsyncSession, deal_ids: list[uuid.UUID]) -> dict[uuid.
     out: dict[uuid.UUID, list] = {}
     for f in (await s.execute(q)).scalars():
         out.setdefault(f.deal_id, []).append(f.file_id)
+    return out
+
+
+async def _progress(s: AsyncSession, deal_ids: list[uuid.UUID]) -> dict[uuid.UUID, list]:
+    """공사마다 진행 기록 (새것부터) · 기록마다 사진"""
+    if not deal_ids:
+        return {}
+    q = (
+        select(DealProgress)
+        .where(DealProgress.deal_id.in_(deal_ids))
+        .order_by(DealProgress.created_at.desc())
+    )
+    rows = (await s.execute(q)).scalars().all()
+    if not rows:
+        return {}
+    fq = (
+        select(DealProgressFile)
+        .where(DealProgressFile.progress_id.in_([r.id for r in rows]))
+        .order_by(DealProgressFile.sort)
+    )
+    photos: dict[uuid.UUID, list[uuid.UUID]] = {}
+    for f in (await s.execute(fq)).scalars():
+        photos.setdefault(f.progress_id, []).append(f.file_id)
+    out: dict[uuid.UUID, list] = {}
+    for r in rows:
+        out.setdefault(r.deal_id, []).append(
+            ProgressOut(
+                id=r.id, day=r.day, note=r.note, photos=photos.get(r.id, []), at=r.created_at
+            )
+        )
     return out
 
 
@@ -1700,11 +1737,13 @@ async def job_for(s: AsyncSession, vendor: User, deal_id: uuid.UUID, today: date
         contact_until=out.contact_until,
         fixing_note=out.fixing_note,
         can_finish=d.status in FINISHABLE and d.end_date is not None and today >= d.end_date,
+        checks=await project_service.checks(s, d.project_id),
         work_days=out.work_days,
         done_note=out.done_note,
         done_posted_at=out.done_posted_at,
         auto_done_at=out.auto_done_at,
         done_photos=out.done_photos,
+        progress=out.progress,
         thread_id=out.thread_id,
         grand_total=extras.grand_total,
         day_no=work_view.day_no(d.work_days or [], today),
@@ -2055,7 +2094,9 @@ async def add_extra(
     used = "다른 추가 금액에 붙인 사진이에요."
     if data.file_ids:
         q = select(ExtraChargeFile.file_id).where(ExtraChargeFile.file_id.in_(data.file_ids))
-        if (await s.execute(q)).first():
+        # 진행 기록에 붙인 사진도 다시 쓰지 않는다
+        p = select(DealProgressFile.file_id).where(DealProgressFile.file_id.in_(data.file_ids))
+        if (await s.execute(q)).first() or (await s.execute(p)).first():
             raise AppError(409, "file_used", used)
     owner = (await project_service.briefs(s, [d.project_id]))[d.project_id].owner_id
     now = now_utc()
@@ -2276,13 +2317,21 @@ async def vendor_extra_photo(
 
 
 async def _done_photo(s: AsyncSession, deal: Deal, file_id: uuid.UUID) -> Response:
-    """'공사 끝냈어요' 사진은 그 공사의 고객 · 업체만 (architecture 7장). 다른 공사 사진은 404."""
+    """'공사 끝냈어요' · 진행 사진은 그 공사의 고객 · 업체만 (architecture 7장). 다른 공사 사진은 404."""
     q = (
         select(File)
         .join(DealFile, DealFile.file_id == File.id)
         .where(DealFile.deal_id == deal.id, DealFile.file_id == file_id)
     )
     f = (await s.execute(q)).scalar_one_or_none()
+    if f is None:  # 공사 진행 사진도 같은 주소로 본다
+        q = (
+            select(File)
+            .join(DealProgressFile, DealProgressFile.file_id == File.id)
+            .join(DealProgress, DealProgress.id == DealProgressFile.progress_id)
+            .where(DealProgress.deal_id == deal.id, DealProgressFile.file_id == file_id)
+        )
+        f = (await s.execute(q)).scalar_one_or_none()
     if f is None:
         raise AppError(404, "not_found", "사진을 찾을 수 없어요.")
     return await files_service.respond(f)
@@ -2302,6 +2351,85 @@ async def vendor_done_photo(
     s: AsyncSession, vendor: User, deal_id: uuid.UUID, file_id: uuid.UUID
 ) -> Response:
     return await _done_photo(s, await _vendor_deal(s, vendor, deal_id), file_id)
+
+
+# ---- 공사 진행 사진 (시연 피드백 2026-11-23) ----
+
+
+async def _progress_by_key(s: AsyncSession, deal_id: uuid.UUID, key: uuid.UUID) -> bool:
+    q = select(DealProgress.id).where(
+        DealProgress.deal_id == deal_id, DealProgress.client_key == key
+    )
+    return (await s.execute(q)).first() is not None
+
+
+async def add_progress(
+    s: AsyncSession, vendor: User, deal_id: uuid.UUID, data: ProgressIn, today: date
+) -> tuple[JobOut, bool]:
+    """업체가 공사하는 동안 진행 사진 · 한 줄 올리기 (한 트랜잭션). 잠금 순서: 프로젝트 → 확정 → 사진.
+    공사 첫날부터 · 공사 중 · 남은 일일 때만. 금액 · 날짜 · 상태는 바꾸지 않는다. 고객 알림(기록마다 한 번).
+    돌려주는 값: (공사 한 건 화면, 새로 만들었는지)."""
+    d = await _vendor_deal(s, vendor, deal_id)
+    if data.client_key is not None and await _progress_by_key(s, d.id, data.client_key):
+        return await job_for(s, vendor, deal_id, today), False
+    await project_service.lock(s, d.project_id)
+    d = await _lock_deal(s, d.id)
+    if d is None or d.vendor_id != vendor.id:
+        raise AppError(404, "not_found", NO_DEAL)
+    if data.client_key is not None and await _progress_by_key(s, d.id, data.client_key):
+        return await job_for(s, vendor, deal_id, today), False  # 잠금을 기다리는 동안 먼저 저장됨
+    if d.status not in FINISHABLE:
+        raise AppError(
+            409, "invalid_state", "공사 날짜를 수락한 뒤 공사하는 동안에만 올릴 수 있어요."
+        )
+    if d.start_date is None or today < d.start_date:
+        raise AppError(409, "too_early", "공사 첫날부터 올릴 수 있어요.")
+    count = select(func.count()).select_from(DealProgress).where(DealProgress.deal_id == d.id)
+    if (await s.execute(count)).scalar_one() >= PROGRESS_MAX:
+        raise _field("file_ids", f"진행 기록은 한 공사에 {PROGRESS_MAX}번까지 올릴 수 있어요.")
+    files = await files_service.owned(s, vendor.id, data.file_ids, lock=True)
+    if any(i not in files or files[i].kind != "work_photo" for i in data.file_ids):
+        raise _field("file_ids", "올린 공사 사진을 다시 확인해 주세요.")
+    used = select(DealProgressFile.file_id).where(DealProgressFile.file_id.in_(data.file_ids))
+    extra = select(ExtraChargeFile.file_id).where(ExtraChargeFile.file_id.in_(data.file_ids))
+    if (await s.execute(used)).first() or (await s.execute(extra)).first():
+        raise app_error("already", "이미 다른 곳에 붙인 사진이에요.")
+    rec = DealProgress(
+        id=uuid7(),
+        deal_id=d.id,
+        day=today,
+        note=data.note,
+        by_id=vendor.id,
+        client_key=data.client_key,
+    )
+    s.add(rec)
+    await s.flush()
+    s.add_all(
+        [
+            DealProgressFile(progress_id=rec.id, file_id=f, sort=n)
+            for n, f in enumerate(data.file_ids)
+        ]
+    )
+    owner = (await project_service.briefs(s, [d.project_id]))[d.project_id].owner_id
+    note = f" · {data.note}" if data.note else ""
+    await notify_service.add(
+        s,
+        user_id=owner,
+        kind="work_progress",
+        body=f"{i_ga(d.vendor_name)} 공사 진행 사진을 올렸어요{note}",
+        link=f"/projects/{d.project_id}/assistant",
+        dedup_key=f"progress:{rec.id}",
+        project_id=d.project_id,
+    )
+    try:
+        await s.commit()
+    except IntegrityError as exc:  # 같은 사진 · 같은 키를 동시에 (file UQ · client_key UQ)
+        await s.rollback()  # d는 만료됐으니 deal_id 인자를 쓴다
+        if data.client_key is not None and await _progress_by_key(s, deal_id, data.client_key):
+            return await job_for(s, vendor, deal_id, today), False
+        raise app_error("already", "이미 다른 곳에 붙인 사진이에요.") from exc
+    _push(s, [StatePush((owner, vendor.id), "deal", d.id, d.project_id)], [owner])
+    return await job_for(s, vendor, deal_id, today), True
 
 
 # ---- 공사 끝냈어요 · 고객 확인 · 남은 일: 연락처는 업체가 마지막으로 끝냈다고 올린 날부터 1년 ----

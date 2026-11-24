@@ -13,7 +13,7 @@ import { Icon } from "@/components/ui/Icon";
 import { useToast } from "@/components/ui/Toast";
 import type { JobV3 } from "@/lib/api/vendor";
 import { call, errorText, type Schemas } from "@/lib/backend/client";
-import { won } from "@/lib/format";
+import { won, wonFull } from "@/lib/format";
 import { MOCK } from "@/lib/mock/v3c/mode";
 import { enc, newKey, send } from "../send";
 import { VAT_MODE_LABEL } from "../text";
@@ -22,10 +22,17 @@ import { Segmented } from "@/components/ui/Segmented";
 import { visitTitle } from "../visit/facts";
 import { daysText } from "./days";
 import { PhotoPick, type PickedPhoto } from "./PhotoPick";
+import { AssistBox } from "../assist/AssistBox";
+import { SAID_AMOUNT, parseExtra } from "../assist/parse";
+import { dateSeoul, eulReul } from "@/lib/format";
 import s from "./jobs.module.css";
 
 type Vat = "included" | "excluded" | "exempt";
-const digits = (v: string) => v.replace(/\D/g, "").slice(0, 9);
+// 서버 한도(EXTRA_AMOUNT_MAX)와 같아요. 11자리까지 받아서, 넘는 값을 몰래 잘라 다른 금액으로 만들지 않고 막아요
+const AMOUNT_MAX = 1_000_000_000;
+const OVER = "10억 원까지 넣을 수 있어요.";
+const UNREAD = "말씀하신 금액을 읽지 못했어요. 금액을 직접 적어 주세요.";
+const digits = (v: string) => v.replace(/\D/g, "").slice(0, 11);
 
 export function ExtraForm({ job, taxKind }: { job: JobV3; taxKind: string }) {
   const router = useRouter();
@@ -40,6 +47,9 @@ export function ExtraForm({ job, taxKind }: { job: JobV3; taxKind: string }) {
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState<Record<string, string | undefined>>({});
   const [busy, setBusy] = useState(false);
+  // hold: 도우미가 말한 금액을 넣지 못한 까닭(한도 초과 · 못 읽음). 칸에는 옛 금액이 남아 있어서,
+  // 업체가 금액 칸을 직접 고치거나 도우미가 맞는 금액을 넣기 전까지 보내기를 막아요
+  const [hold, setHold] = useState<string | null>(null);
   const [key] = useState(newKey);
   const refs = { title: useRef<HTMLInputElement>(null), reason: useRef<HTMLInputElement>(null), amount: useRef<HTMLInputElement>(null) };
   const back = `/vendor/jobs/${enc(job.deal_id)}`;
@@ -50,7 +60,9 @@ export function ExtraForm({ job, taxKind }: { job: JobV3; taxKind: string }) {
     const e: Record<string, string> = {};
     if (!title.trim()) e.title = "무엇에 드는 돈인지 적어 주세요. 예: 곰팡이 방지 처리";
     if (!reason.trim()) e.reason = "왜 더 드는지 한 줄로 적어 주세요.";
-    if (!amount || Number(amount) <= 0) e.amount = "금액을 원 단위로 넣어 주세요.";
+    if (hold) e.amount = hold;
+    else if (!amount || Number(amount) <= 0) e.amount = "금액을 원 단위로 넣어 주세요.";
+    else if (Number(amount) > AMOUNT_MAX) e.amount = OVER;
     if (!vat) e.vat = "부가세를 어떻게 적었는지 골라 주세요.";
     setErr(e);
     if (e.title) { refs.title.current?.focus(); return; }
@@ -68,16 +80,34 @@ export function ExtraForm({ job, taxKind }: { job: JobV3; taxKind: string }) {
     }
   }
 
+  function assist(text: string): string {
+    const got = parseExtra(text, dateSeoul(new Date().toISOString()));
+    if (got.title) setTitle(got.title);
+    if (got.reason) setReason(got.reason);
+    // 한도를 넘는 금액은 잘라 넣지 않고 비워 둬요(10억 → 1억처럼 다른 값이 되지 않게)
+    const amountOk = !!got.amount && got.amount <= AMOUNT_MAX;
+    if (amountOk) { setAmount(String(got.amount)); setHold(null); }
+    if (got.vat && !fixed) setVat(got.vat);
+    if (got.amount && !amountOk) setHold(OVER);
+    else if (!got.amount && SAID_AMOUNT.test(text)) setHold(UNREAD);
+    setErr({});
+    const said = [got.title ? `항목 '${got.title}'` : null, amountOk ? `금액 ${wonFull(got.amount!)}` : null, got.vat && !fixed ? `부가세 ${VAT_MODE_LABEL[got.vat]}` : null, got.reason ? "이유" : null].filter(Boolean);
+    // 금액을 말했는데 못 넣었으면 알려요(칸에 있던 금액은 그대로라 그 값으로 보내지 않게)
+    const miss = got.amount && !amountOk ? " 금액은 10억 원을 넘어 넣지 않았어요." : !got.amount && SAID_AMOUNT.test(text) ? " 금액은 읽지 못했어요. 금액 칸에 직접 적어 주세요." : "";
+    return said.length ? `${eulReul(said.join(" · "))} 채웠어요.${miss} 사진을 붙이고 보내기는 직접 눌러 주세요.` : miss ? miss.trim() : "못 읽었어요. 예: 곰팡이 방지 처리 12만 원, 부가세 포함, 벽 안쪽까지 곰팡이가 퍼져서";
+  }
+
   return (
     <>
       <Main narrow>
         <PageHead title="추가 금액 올리기" crumbs={[{ label: "작업함", href: "/vendor?tab=jobs" }, { label: visitTitle(v), href: back }, { label: "추가 금액" }]} />
         <Lead title={`${visitTitle(v)} · 공사 중`} sub={[job.work_days.length ? daysText(job.work_days, true) : null, `확정 ${won(job.quote.total)}`].join(" · ")} />
+        <AssistBox hint="항목 · 금액 · 부가세 · 이유를 말로 적으면 칸을 채워요." examples={["곰팡이 방지 처리 12만 원, 부가세 포함, 벽 안쪽까지 곰팡이가 퍼져서"]} onText={assist} />
         <Group>
           {/* CF-65: 칸 이름 '무엇' → '항목' */}
           <Field ref={refs.title} label="항목" maxLength={60} value={title} error={err.title} onChange={(e) => { setTitle(e.target.value); setErr((x) => ({ ...x, title: undefined })); }} />
           <Field ref={refs.reason} label="이유" maxLength={200} value={reason} error={err.reason} onChange={(e) => { setReason(e.target.value); setErr((x) => ({ ...x, reason: undefined })); }} />
-          <Field ref={refs.amount} label={taxKind === "simplified" ? "받을 금액" : "금액"} unit="원" num inputMode="numeric" value={amount ? Number(amount).toLocaleString("ko-KR") : ""} error={err.amount} onChange={(e) => { setAmount(digits(e.target.value)); setErr((x) => ({ ...x, amount: undefined })); }} />
+          <Field ref={refs.amount} label={taxKind === "simplified" ? "받을 금액" : "금액"} unit="원" num inputMode="numeric" value={amount ? Number(amount).toLocaleString("ko-KR") : ""} error={hold ?? err.amount} onChange={(e) => { const n = digits(e.target.value); setAmount(n); setHold(null); setErr((x) => ({ ...x, amount: Number(n) > AMOUNT_MAX ? OVER : undefined })); }} />
           {fixed ? (
             <Small>{fixed === "exempt" ? "면세 업체라 부가세가 없어요." : "간이과세라 부가세를 따로 붙이지 않아요. 적은 금액이 고객이 보는 금액이에요."}</Small>
           ) : (

@@ -5,6 +5,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
+from app.project.schemas import SiteOut
 from app.quote.schemas import QuoteBriefOut, VendorQuoteOut
 from app.vendor.schemas import (
     AreaOut,
@@ -694,6 +695,10 @@ class VendorVisitDetailOut(VendorVisitRow):
     )
     reply_due_at: datetime | None = None
     thread_id: uuid.UUID | None = None
+    site: SiteOut | None = Field(
+        default=None,
+        description="고객이 적은 현장 정보(주차 · 엘리베이터). 출입 방법은 실측이 확정된 뒤에만 든다",
+    )
 
 
 class VendorSlotOut(BaseModel):

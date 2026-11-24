@@ -68,9 +68,28 @@ def test_turn_streams_sentences_then_done_and_saves_masked_question(api):
     assert sec and sec[0]["source"] == "card"
     assert all("url" not in s for x in sec for s in x["sources"])  # 출처는 이름 · 종류만
     assert "trace" not in out["answer"]
+    # 문장 순서: 결론 한 줄 → 묶음 문장 → 모르는 것 → 업체에 요청할 말
+    a = out["answer"]
+    said = [d["text"] for e, d in ev if e == "token"]
+    assert said == [
+        *([a["lead"]] if a["lead"] else []),
+        *(t for x in sec for t in x["sentences"]),
+        *a["unknown"],
+        *a["vendor"],
+    ]
     rows = query("select role, text from chat_messages order by role desc")
     assert [r["role"] for r in rows] == ["user", "assistant"]
     assert "010-1234-5678" not in rows[0]["text"]
+
+
+def test_turn_streams_lead_first_and_vendor_lines_last(api):
+    use(api, signup(api))
+    ev = events(ask(api, text="퍼티 작업이 뭐야?").text)
+    a = ev[-1][1]["answer"]
+    assert a["lead"] and len(a["vendor"]) == 2
+    said = [d for e, d in ev if e == "token"]
+    assert said[0] == {"section": None, "text": a["lead"]}
+    assert said[-2:] == [{"section": None, "text": t} for t in a["vendor"]]
 
 
 def test_account_with_four_spaces_is_masked_in_saved_ai_thread(api):

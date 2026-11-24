@@ -361,3 +361,19 @@ class ProjectCheckOut(BaseModel):
 
 class ProjectCheckIn(BaseModel):
     done: bool
+
+
+class SiteIn(BaseModel):
+    """현장 정보: 업체가 방문을 준비할 때 보는 것. 주소 · 연락처 · 비밀번호는 적지 않는다."""
+
+    parking: Literal["yes", "no"] | None = Field(default=None, description="주차할 수 있는지")
+    elevator: Literal["yes", "no"] | None = Field(default=None, description="엘리베이터가 있는지")
+    entry_note: str | None = Field(
+        default=None,
+        max_length=100,
+        description="출입 방법 한 줄 (실측이 확정된 뒤에만 업체에 보인다)",
+    )
+
+
+class SiteOut(SiteIn):
+    pass

@@ -19,9 +19,28 @@ import { Notice } from "@/components/ui/Notice";
 import { Group, Lead, Row, Rows, Small } from "../ui/parts";
 import { visitTitle } from "../visit/facts";
 import { daysText } from "./days";
+import { AssistBox } from "../assist/AssistBox";
+import { parseDates } from "../assist/parse";
 import s from "./jobs.module.css";
 
+/** 예시 글: 희망 시작일부터 공사 기간만큼 "12/8부터 12/10까지, 2명" */
+/** 예시 글: 희망 시작일부터 공사 기간만큼(주말에 안 하는 집이면 평일로 세요) "12/8부터 12/10까지, 2명". 날짜 글만 만들어요 */
+function example(start: string, n: number, noWeekend: boolean): string {
+  const d = new Date(`${start}T00:00:00Z`);
+  const md = (x: Date) => `${x.getUTCMonth() + 1}/${x.getUTCDate()}`;
+  const off = (x: Date) => noWeekend && (x.getUTCDay() === 0 || x.getUTCDay() === 6);
+  while (off(d)) d.setUTCDate(d.getUTCDate() + 1);
+  const a = md(d);
+  for (let left = Math.max(n, 1) - 1; left > 0; ) {
+    d.setUTCDate(d.getUTCDate() + 1);
+    if (!off(d)) left -= 1;
+  }
+  return `${a}부터 ${md(d)}까지, 2명`;
+}
+
 const CREW = [1, 2, 3, 4, 5, 6].map((n) => ({ value: String(n), label: `${n}명` }));
+const CREW_OVER = "말씀하신 인원은 고를 수 없어요(6명까지). 인원을 다시 골라 주세요.";
+const DAYS_UNREAD = "말씀하신 날짜를 넣지 못했어요. 달력에서 공사할 날을 다시 골라 주세요.";
 
 export function DatesForm({ job, now }: { job: JobV3; now: string }) {
   const router = useRouter();
@@ -32,6 +51,9 @@ export function DatesForm({ job, now }: { job: JobV3; now: string }) {
   const [crew, setCrew] = useState(String(job.proposal?.crew ?? job.need.crew ?? 2));
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // 도우미가 말한 인원 · 날짜를 넣지 못한 까닭. 칸에는 옛 값이 남아 있어서, 업체가 인원을 다시 고르거나 달력을 누르기 전까지 보내기를 막아요
+  const [crewHold, setCrewHold] = useState<string | null>(null);
+  const [daysHold, setDaysHold] = useState<string | null>(null);
   const [idem] = useState(newKey);
   const today = dateSeoul(now);
 
@@ -43,6 +65,7 @@ export function DatesForm({ job, now }: { job: JobV3; now: string }) {
 
   async function go() {
     if (busy) return;
+    if (daysHold || crewHold) return; // 이유는 달력 아래 · 인원 칸에 이미 보여요
     if (need && days.length !== need) { setErr(`견적서 공사 기간 ${need}일과 같게 ${need}일을 골라 주세요. 지금 ${days.length}일 골랐어요.`); return; }
     setErr(null);
     setBusy(true);
@@ -57,6 +80,25 @@ export function DatesForm({ job, now }: { job: JobV3; now: string }) {
     }
   }
 
+  function assist(text: string): string {
+    const got = parseDates(text, today, job.request?.wish_dates[0] ?? v.work_wish_on, job.holidays.map((h) => h.day), !job.weekend_work);
+    // 날짜를 말했는데(숫자 + 일 · 월 · /) 못 넣었으면 달력을 다시 고를 때까지 보내기를 막아요
+    const saidDay = /\d\s*(?:일|월|\/)|오늘|내일|모레|이번\s*주|다음\s*주|요일/.test(text);
+    const ok = got ? got.days.filter((d) => d > today) : [];
+    if (ok.length) { setDays(ok); setDaysHold(null); setErr(null); }
+    else if (saidDay) setDaysHold(DAYS_UNREAD);
+    if (!got) return saidDay ? `날짜를 못 읽었어요. ${DAYS_UNREAD}` : "날짜를 못 읽었어요. 예: 12/8부터 12/10까지, 2명";
+    // 인원은 6명까지 고를 수 있어요. 7명 이상이면 넣지 않고, 업체가 다시 고를 때까지 보내기를 막아요
+    const crewOk = !!got.crew && got.crew <= 6;
+    if (crewOk) { setCrew(String(got.crew)); setCrewHold(null); }
+    else if (got.crew) setCrewHold(CREW_OVER);
+    const said = [ok.length ? `${daysText(ok, true)}(${ok.length}일)` : null, crewOk ? `${got.crew}명` : null].filter(Boolean).join(" · ");
+    const gap = need && ok.length && ok.length !== need ? ` 견적서 공사 기간은 ${need}일이라 달력에서 맞춰 주세요.` : "";
+    const crewMiss = got.crew && !crewOk ? " 인원은 6명까지 고를 수 있어서 넣지 않았어요." : "";
+    const dayMiss = !ok.length && saidDay ? ` ${DAYS_UNREAD}` : "";
+    return said ? `${said}${said.endsWith("명") ? "으로" : "로"} 채웠어요.${gap}${crewMiss}${dayMiss} 보내기는 직접 눌러 주세요.` : (crewMiss + dayMiss).trim() || "오늘 뒤 날짜로 말해 주세요.";
+  }
+
   return (
     <>
       <Main narrow>
@@ -65,6 +107,7 @@ export function DatesForm({ job, now }: { job: JobV3; now: string }) {
         {job.request ? (
           <Notice tone="info">고객이 다른 날짜를 요청했어요{job.request.reason ? ` · ${job.request.reason}` : ""} · 희망 {daysText(job.request.wish_dates)} · {dueText(job.request.due_at, { now })} 새 날짜를 보내요.</Notice>
         ) : job.dates_due_at ? <Small red>{dueText(job.dates_due_at, { now })} 올려요</Small> : null}
+        <AssistBox hint="공사할 날과 인원을 말로 적으면 달력에 표시해요." examples={[example(job.request?.wish_dates[0] ?? v.work_wish_on ?? today, need ?? 3, !job.weekend_work)]} onText={assist} />
         <Group>
           <Calendar
             mode="multiple"
@@ -72,7 +115,7 @@ export function DatesForm({ job, now }: { job: JobV3; now: string }) {
             today={today}
             month={job.request?.wish_dates[0] ?? v.work_wish_on ?? today}
             value={days}
-            onChange={(x) => { setDays(x); setErr(null); }}
+            onChange={(x) => { setDays(x); setDaysHold(null); setErr(null); }}
             marks={marks}
             notes={notes}
             wide
@@ -83,7 +126,8 @@ export function DatesForm({ job, now }: { job: JobV3; now: string }) {
           <Rows label="보낼 공사 날짜">
             <Row label="고른 날" sub={need ? `견적서 공사 기간 ${need}일` : undefined} value={days.length ? daysText(days, true) : "—"} />
           </Rows>
-          <SelectField label="인원" options={CREW} value={crew} onChange={(e) => setCrew(e.target.value)} />
+          {daysHold ? <p className={s.err} role="alert"><Icon name="error" size={16} />{daysHold}</p> : null}
+          <SelectField label="인원" options={CREW} value={crew} error={crewHold} onChange={(e) => { setCrew(e.target.value); setCrewHold(null); setErr(null); }} />
           {err ? <p className={s.err} role="alert"><Icon name="error" size={16} />{err}</p> : null}
         </Group>
       </Main>

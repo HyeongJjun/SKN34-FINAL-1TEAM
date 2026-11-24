@@ -66,7 +66,7 @@ export default async function StartPage({ searchParams }: { searchParams: Promis
   return (
     <>
       <AppHeader phone={{ title: "도배 기본 정보", back: "/" }} />
-      <InfoForm regions={regions} today={today} mode={session?.role === "customer" ? "member" : "guest"} mock={MOCK_V3A}
+      <InfoForm chat regions={regions} today={today} mode={session?.role === "customer" ? "member" : "guest"} mock={MOCK_V3A}
         crumbs={[{ label: "표준견적서 받기", href: "/start" }, { label: "도배 기본 정보" }]} />
     </>
   );
