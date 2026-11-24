@@ -22,7 +22,7 @@ import { Jaejae } from "./Jaejae";
 import { Plan } from "./Plan";
 import s from "./flow.module.css";
 
-type Pick = "region" | "area" | "occupied" | "grade" | "spaces";
+type Pick = "region" | "area" | "occupied" | "grade" | "spaces" | "start";
 type Msg = { id: number; who: "bot" | "me"; node: ReactNode };
 const PY = ["18", "24", "32", "40"];
 const toPy = (m2: string) => (m2 ? `${Math.round(Number(m2) / 3.3058)}평` : "");
@@ -43,6 +43,9 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
   const [open, setOpen] = useState(false);
   const seq = useRef(0);
   const dRef = useRef(d);
+  // 말한 시작일을 넣지 못함(2월 31일 · 지난 날). 다시 말하거나 '날짜 없이'를 고를 때까지 견적으로 넘어가지 않아요
+  const badStart = useRef(false);
+  const setBadStart = (v: boolean) => { badStart.current = v; };
   dRef.current = d;
   const end = useRef<HTMLDivElement>(null);
 
@@ -79,7 +82,7 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
     if (p.grade) out.push(p.grade === "basic" ? "실크 벽지" : "합지 벽지");
     if (p.scope === "partial") out.push("부분 도배");
     if (p.budget) out.push(`예산 ${p.budget}만 원`);
-    if (p.start) out.push(`${p.start.slice(5).replace("-", "/")} 시작 희망`);
+    if (p.start) out.push(`${Number(p.start.slice(5, 7))}월 ${Number(p.start.slice(8, 10))}일 시작 희망`);
     return out.join(" · ");
   }
 
@@ -87,7 +90,7 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
     // 부분 공사는 고른 공간만 계산해서, 공간 · 면이 없으면 서버가 받지 않아요
     const part = x.scope === "partial" && (!x.spaces.length || !x.faces.length);
     // 면적은 있어도 범위 밖(10㎡ 이하 · 400㎡ 이상)이면 다시 물어요
-    return !x.sgg ? "region" : !x.area || checkDraft(x).area ? "area" : x.occupied == null ? "occupied" : !x.grade ? "grade" : part ? "spaces" : null;
+    return !x.sgg ? "region" : !x.area || checkDraft(x).area ? "area" : x.occupied == null ? "occupied" : !x.grade ? "grade" : part ? "spaces" : badStart.current ? "start" : null;
   }
 
   async function next(x: InfoDraft, lead = "") {
@@ -100,6 +103,8 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
     if (m === "grade") return say(<><p>{lead}도배 유형을 골라 주세요. 벽지 종류에 따라 금액이 가장 크게 달라져요.</p>
       <p className={s.why}>실크: 겉에 비닐 막이 있어 물걸레질이 되고 이음매가 덜 보여요. 합지: 종이라 값이 싸고 이음매가 보일 수 있어요.</p>
       <div className={s.row}><Button size="sm" variant="weak" onClick={() => pick("기본형 (실크)", { grade: "basic" })}>기본형 (실크)</Button><Button size="sm" variant="weak" onClick={() => pick("저가형 (합지)", { grade: "economy" })}>저가형 (합지)</Button><Button size="sm" variant="secondary" onClick={() => pick("잘 모르겠어요", { grade: "basic" })}>잘 모르겠어요</Button></div></>);
+    if (m === "start") return say(<><p>{lead}시작 희망일을 다시 말해 주세요. 예: 12월 5일부터. 아직 정하지 않았으면 날짜 없이 견적을 볼 수 있어요.</p>
+      <div className={s.row}><Button size="sm" variant="weak" onClick={() => { add("me", "날짜 없이 할래요"); setBadStart(false); set({ start: null }); void next({ ...dRef.current, start: null }); }}>날짜 없이 할래요</Button></div></>);
     if (m === "spaces") return say(<><p>{lead}부분 도배는 고른 공간만 계산해요. 어느 공간의 어느 면을 할지 골라 주세요.</p>
       <SpacePick start={x} onDone={(p) => pick(p.scope === "full" ? "전체로 할래요" : scopeText({ scope: "partial", spaces: p.spaces ?? [], faces: p.faces ?? [] }), p)} /></>);
     return confirm(x, lead);
@@ -123,6 +128,7 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
     if (busyRef.current) return;
     // 틀린 칸(범위 밖 면적 등)이 있으면 계산하지 않고 그 칸부터 다시 물어요
     const bad = Object.values(checkDraft(x)).filter(Boolean);
+    if (badStart.current) bad.push("시작 희망일을 다시 말해 주세요.");
     if (bad.length) { void say(<p>견적을 내기 전에 고칠 칸이 있어요. {bad.join(" ")}</p>); return; }
     busyRef.current = true;
     setBusy(true);
@@ -190,9 +196,12 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
     const p = readLine(t, regions, today);
     add("me", t);
     // 시작일을 말했는데 못 넣었으면(2월 31일처럼 없는 날 · 지난 날) 알려요
-    const badDay = !p.start && /\d{1,2}\s*(?:월|\/)\s*\d{1,2}\s*일?\s*(?:부터|시작|에|쯤|경)/.test(t) ? "말씀하신 시작일은 달력에 없거나 지난 날이라 넣지 않았어요. 다시 말해 주세요. " : "";
+    const badDay = !p.start && /\d{1,2}\s*(?:월|\/)\s*\d{1,2}\s*일?\s*(?:부터|시작|에|쯤|경)/.test(t) ? "말씀하신 시작일은 달력에 없거나 지난 날이라 넣지 않았어요. " : "";
+    if (p.start) setBadStart(false);
+    else if (badDay) setBadStart(true);
     if (!Object.keys(p).length) {
-      if (/다\s*고쳤|됐어|확인/.test(t)) { void next(base); return; } // 빈 칸이 남았으면 그것부터 다시 물어요
+      if (badDay) { void next(base, badDay); return; } // 없는 날짜만 말했으면 시작일부터 다시 물어요
+      if (/다\s*고쳤|됐어|확인|맞아요|맞습니다|^네\b|^네요?$/.test(t.trim())) { void next(base); return; } // 빈 칸이 남았으면 그것부터 다시 물어요
       void say(<p>{badDay || <>제가 읽을 수 있는 값이 없었어요. &quot;노원구 24평 아파트, 살고 있어요&quot;처럼 적거나 위 칩을 눌러 고쳐 주세요.</>}</p>);
       return;
     }
