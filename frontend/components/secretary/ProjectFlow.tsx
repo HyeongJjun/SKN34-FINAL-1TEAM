@@ -277,13 +277,11 @@ export function ProjectFlow({ data }: { data: FlowData }) {
                 {quick.map((q) => <button key={q} type="button" className={s.chip} disabled={asking} onClick={() => void ask(q)}>{q}</button>)}
               </div>
             ) : null}
-            {attach ? (
-              <div id="pflow-attach" className={s.attach} role="group" aria-label="사진 · 문서 보내기">
-                {targets.length ? targets.map((t) => <Button key={t.href} size="sm" variant="weak" href={t.href}>{t.label}</Button>)
-                  : <p className={s.note}>업체와 실측 날짜가 정해지면 그 업체 채팅에서 사진을 보낼 수 있어요. 지금은 실측을 요청할 때 집 사진을 붙여 보내요.</p>}
-                <p className={s.note}>재재는 아직 사진을 보고 답하지 못해요. 사진 속 동 · 호수 · 얼굴은 가리고 보내 주세요.</p>
-              </div>
-            ) : null}
+            <div id="pflow-attach" className={s.attach} role="group" aria-label="사진 보내기" hidden={!attach}>
+              {targets.length ? targets.map((t) => <Button key={t.href} size="sm" variant="weak" href={t.href}>{t.label}</Button>)
+                : <p className={s.note}>업체와 실측 날짜가 정해지면 그 업체 채팅에서 사진을 보낼 수 있어요. 지금은 실측을 요청할 때 집 사진을 붙여 보내요.</p>}
+              <p className={s.note}>재재는 아직 사진을 보고 답하지 못해요. 사진 속 동 · 호수 · 얼굴은 가리고 보내 주세요.</p>
+            </div>
             <form className={s.input} onSubmit={(e) => { e.preventDefault(); void ask(text); }}>
               <button type="button" className={s.clip} aria-expanded={attach} aria-controls="pflow-attach" onClick={() => setAttach((v) => !v)}>사진</button>
               <label className="mj-sr" htmlFor="pflow-in">재재에게 물을 말</label>

@@ -251,12 +251,10 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
                 {quick.map((q) => <button key={q} type="button" className={s.chip} disabled={busy} onClick={() => take(q, dRef.current)}>{q}</button>)}
               </div>
             ) : null}
-            {attach ? (
-              <div id="flow-attach" className={s.attach} role="group" aria-label="사진 · 문서 보내기">
-                <p className={s.note}>{member ? "사진은 공사를 만든 뒤 업체와 채팅에서 보낼 수 있어요. 표준견적서를 보고 '업체 보러 가기'를 눌러 주세요." : "사진은 가입 · 로그인한 뒤 업체와 채팅에서 보낼 수 있어요. 지금까지 적은 내용은 그대로 가져가요."}</p>
-                {member ? null : <div className={s.row}><Button size="sm" href="/signup?next=/assistant">가입하기</Button><Button size="sm" variant="secondary" href="/login?next=/assistant">로그인</Button></div>}
-              </div>
-            ) : null}
+            <div id="flow-attach" className={s.attach} role="group" aria-label="사진 보내기" hidden={!attach}>
+              <p className={s.note}>{member ? "사진은 공사를 만든 뒤 업체와 채팅에서 보낼 수 있어요. 표준견적서를 보고 '업체 보러 가기'를 눌러 주세요." : "사진은 가입 · 로그인한 뒤 업체와 채팅에서 보낼 수 있어요. 지금까지 적은 내용은 그대로 가져가요."}</p>
+              {member ? null : <div className={s.row}><Button size="sm" href="/signup?next=/assistant">가입하기</Button><Button size="sm" variant="secondary" href="/login?next=/assistant">로그인</Button></div>}
+            </div>
             <form className={s.input} onSubmit={(e) => { e.preventDefault(); send(); }}>
               <button type="button" className={s.clip} aria-expanded={attach} aria-controls="flow-attach" onClick={() => { writeGuest(dRef.current); setAttach((v) => !v); }}>사진</button>
               <label className="mj-sr" htmlFor="flow-in">재재에게 보낼 말</label>
