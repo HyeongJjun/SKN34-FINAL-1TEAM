@@ -8,7 +8,7 @@ from pydantic import BaseModel, ValidationError
 
 from app.config import settings
 
-Role = Literal["orchestrator", "trade", "quote_explanation", "schedule"]
+Role = Literal["orchestrator", "trade", "quote_explanation", "schedule", "photo"]
 
 JEV_URL = "https://openrouter.ai/api/alpha/decisions"
 
@@ -135,6 +135,42 @@ async def structured[T: BaseModel](
         return schema.model_validate(await model.ainvoke(messages))
     except Exception as e:
         raise LLMError(f"{role} 호출 실패") from e
+
+
+async def see[T: BaseModel](schema: type[T], system: str, images: list[tuple[str, bytes]]) -> T:
+    """사진(들)을 보고 schema 모양으로 받는다(AI 칸 사진 읽기, agent/v3/photo.py).
+
+    images: (MIME, 내용). 위치 정보를 지우고 줄인 사진만 넘긴다(부르는 쪽 chat.service).
+    글은 system 지시문뿐이다: 고객이 쓴 글은 넣지 않는다(사진 판독에 지시문 주입이 섞이지 않게).
+    """
+    if not settings.llm_live:
+        return _stub("photo", schema)
+    import base64
+
+    from langchain_core.messages import HumanMessage, SystemMessage
+    from langchain_openai import ChatOpenAI
+
+    name, effort = model_for("photo")
+    model = ChatOpenAI(
+        model=name,
+        api_key=settings.openai_api_key,
+        reasoning_effort=effort,
+        timeout=30,
+        max_retries=1,
+    ).with_structured_output(schema, method="json_schema", strict=True)
+    content = [
+        {
+            "type": "image_url",
+            "image_url": {"url": f"data:{m};base64,{base64.b64encode(b).decode()}"},
+        }
+        for m, b in images
+    ]
+    try:  # 공급자 오류 · 시간 초과 · 모양 틀림을 LLMError로. 입력값(사진)은 남기지 않음
+        return schema.model_validate(
+            await model.ainvoke([SystemMessage(system), HumanMessage(content=content)])
+        )
+    except Exception as e:
+        raise LLMError("photo 호출 실패") from e
 
 
 CHAT_STUB_TEXT = "지금은 AI 답변을 쓸 수 없어요. 버튼으로 이어서 진행해 주세요."

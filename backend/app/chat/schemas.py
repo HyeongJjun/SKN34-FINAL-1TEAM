@@ -37,6 +37,8 @@ class AiTurnIn(BaseModel):
     chat_id: uuid.UUID | None = None
     context: AiContext = AiContext()
     button: Button | None = None
+    # 붙인 사진(POST /files kind=photo로 먼저 올린 내 파일). 한 번에 3장까지(agent/v3/photo.py MAX_PHOTOS)
+    file_ids: list[uuid.UUID] = Field(default=[], max_length=3)
 
 
 class AiSource(BaseModel):
@@ -67,6 +69,7 @@ class AiAnswer(BaseModel):
     suggest: list[str] = []
     failed: bool = False
     vendor: list[str] = []  # 업체에 이렇게 요청해 보세요(정해 둔 부탁 문장)
+    photo: list[str] = []  # 사진에서 본 것(정해 둔 글 · 목록에서 고른 낱말만)
 
 
 class AiTurnOut(BaseModel):

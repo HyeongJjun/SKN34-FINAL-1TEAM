@@ -69,3 +69,14 @@ def _clean(data: bytes, mime: str) -> tuple[bytes, str]:
     else:
         bare.save(out, "WEBP", quality=90, **extra)
     return out.getvalue(), mime
+
+
+def small(data: bytes, side: int = 1024) -> tuple[bytes, str]:
+    """AI 사진 읽기에 보낼 줄인 사본(긴 변 side, JPEG). 저장본은 이미 위치 정보를 지운 것만 넘긴다."""
+    with _SLOTS:
+        img = _open(data)
+        img = img.convert("L" if img.mode in ("L", "1") else "RGB")
+        img.thumbnail((side, side))
+        out = io.BytesIO()
+        Image.frombytes(img.mode, img.size, img.tobytes()).save(out, "JPEG", quality=85)
+        return out.getvalue(), "image/jpeg"

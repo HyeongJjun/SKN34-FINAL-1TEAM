@@ -30,6 +30,8 @@ def _event(name: str, data: dict) -> str:
 
 
 async def _stream(out: AiTurnOut) -> AsyncIterator[str]:
+    for text in out.answer.photo:  # 사진에서 본 것이 맨 먼저
+        yield _event("token", {"section": None, "text": text})
     if out.answer.lead:  # 결론 한 줄이 먼저
         yield _event("token", {"section": None, "text": out.answer.lead})
     for i, sec in enumerate(out.answer.sections):
