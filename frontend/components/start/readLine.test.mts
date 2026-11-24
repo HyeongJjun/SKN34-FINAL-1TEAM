@@ -23,6 +23,14 @@ test("리뷰 회귀: '5일부터'의 '일부'는 부분 공사가 아니에요",
   assert.equal(read("전체 말고 일부만").scope, undefined); // 둘 다 말하면 애매해서 비워요
 });
 
+test("리뷰 회귀: 달력에 없는 시작일은 넣지 않고, 범위 밖 면적은 읽어 두어 다시 물어요", () => {
+  assert.equal(read("2월 31일부터 시작").start, undefined);
+  assert.equal(read("11월 31일부터 시작").start, undefined);
+  assert.equal(read("2월 28일부터 시작").start, "2027-02-28");
+  assert.equal(read("노원구 450㎡ 전체 도배").area, "450");
+  assert.equal(read("노원구 400m^2 전체 도배").area, "400");
+});
+
 test("리뷰 회귀: 안 산다는 말은 빈 집이에요", () => {
   assert.equal(read("지금 살고 있지 않아요").occupied, false);
   assert.equal(read("거기 안 살아요").occupied, false);

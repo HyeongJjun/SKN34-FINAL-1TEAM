@@ -86,13 +86,14 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
   function missing(x: InfoDraft): Pick | null {
     // 부분 공사는 고른 공간만 계산해서, 공간 · 면이 없으면 서버가 받지 않아요
     const part = x.scope === "partial" && (!x.spaces.length || !x.faces.length);
-    return !x.sgg ? "region" : !x.area ? "area" : x.occupied == null ? "occupied" : !x.grade ? "grade" : part ? "spaces" : null;
+    // 면적은 있어도 범위 밖(10㎡ 이하 · 400㎡ 이상)이면 다시 물어요
+    return !x.sgg ? "region" : !x.area || checkDraft(x).area ? "area" : x.occupied == null ? "occupied" : !x.grade ? "grade" : part ? "spaces" : null;
   }
 
   async function next(x: InfoDraft, lead = "") {
     const m = missing(x);
     if (m === "region") return say(<p>{lead}어느 지역이에요? 구 이름으로 적어 주세요. 예: 노원구</p>);
-    if (m === "area") return say(<><p>{lead}몇 평이에요? 분양 면적(공급) 기준으로 골라 주세요.</p>
+    if (m === "area") return say(<><p>{lead}{x.area ? `${checkDraft(x).area} ` : ""}몇 평이에요? 분양 면적(공급) 기준으로 골라 주세요.</p>
       <div className={s.row}>{PY.map((n) => <Button key={n} size="sm" variant="weak" onClick={() => pick(`${n}평`, { area: pyeongToM2(n) ?? "", basis: "supply" })}>{n}평</Button>)}</div></>);
     if (m === "occupied") return say(<><p>{lead}공사하는 동안 집에 살고 계세요? 짐이 있으면 가구 이동 · 보양이 더 들어요.</p>
       <div className={s.row}><Button size="sm" variant="weak" onClick={() => pick("살고 있어요", { occupied: true })}>살고 있어요</Button><Button size="sm" variant="weak" onClick={() => pick("비어 있어요", { occupied: false })}>비어 있어요</Button></div></>);
@@ -115,11 +116,14 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
         <div className={s.kv}><span>도배 유형</span><b>{x.grade === "economy" ? "저가형 (합지)" : "기본형 (실크)"}</b></div>
         {bad.length ? <p className={s.note}>{bad.join(" · ")}</p> : null}
       </div>
-      <div className={s.row}><Button size="sm" onClick={() => { add("me", "맞아요"); const cur = dRef.current; if (missing(cur)) { void next(cur, "아직 비어 있는 칸이 있어요. "); return; } void quote(cur); }}>맞아요, 견적 볼게요</Button><Button size="sm" variant="secondary" onClick={() => { add("me", "고칠래요"); setOpen(true); void say(<p>위 칩이나 오른쪽 플랜 1단계에서 고쳐 주세요. 고친 뒤 &quot;다 고쳤어요&quot;라고 말해 주세요.</p>); }}>고칠래요</Button></div></>);
+      <div className={s.row}><Button size="sm" onClick={() => { add("me", "맞아요"); const cur = dRef.current; if (missing(cur) || Object.values(checkDraft(cur)).some(Boolean)) { void next(cur, "고칠 칸이 있어요. "); return; } void quote(cur); }}>맞아요, 견적 볼게요</Button><Button size="sm" variant="secondary" onClick={() => { add("me", "고칠래요"); setOpen(true); void say(<p>위 칩이나 오른쪽 플랜 1단계에서 고쳐 주세요. 고친 뒤 &quot;다 고쳤어요&quot;라고 말해 주세요.</p>); }}>고칠래요</Button></div></>);
   }
 
   async function quote(x: InfoDraft, compare = false) {
     if (busyRef.current) return;
+    // 틀린 칸(범위 밖 면적 등)이 있으면 계산하지 않고 그 칸부터 다시 물어요
+    const bad = Object.values(checkDraft(x)).filter(Boolean);
+    if (bad.length) { void say(<p>견적을 내기 전에 고칠 칸이 있어요. {bad.join(" ")}</p>); return; }
     busyRef.current = true;
     setBusy(true);
     try {
@@ -185,15 +189,17 @@ export function StartFlow({ regions, today, member, mock }: { regions: Region[];
   function take(t: string, base: InfoDraft) {
     const p = readLine(t, regions, today);
     add("me", t);
+    // 시작일을 말했는데 못 넣었으면(2월 31일처럼 없는 날 · 지난 날) 알려요
+    const badDay = !p.start && /\d{1,2}\s*(?:월|\/)\s*\d{1,2}\s*일?\s*(?:부터|시작|에|쯤|경)/.test(t) ? "말씀하신 시작일은 달력에 없거나 지난 날이라 넣지 않았어요. 다시 말해 주세요. " : "";
     if (!Object.keys(p).length) {
       if (/다\s*고쳤|됐어|확인/.test(t)) { void next(base); return; } // 빈 칸이 남았으면 그것부터 다시 물어요
-      void say(<p>제가 읽을 수 있는 값이 없었어요. &quot;노원구 24평 아파트, 살고 있어요&quot;처럼 적거나 위 칩을 눌러 고쳐 주세요.</p>);
+      void say(<p>{badDay || <>제가 읽을 수 있는 값이 없었어요. &quot;노원구 24평 아파트, 살고 있어요&quot;처럼 적거나 위 칩을 눌러 고쳐 주세요.</>}</p>);
       return;
     }
     const n = { ...base, ...p };
     setD(n);
     writeGuest(n);
-    void next(n, `위 칸에 넣었어요: ${filled(p)}. `);
+    void next(n, `위 칸에 넣었어요: ${filled(p)}. ${badDay}`);
   }
 
   function send() {

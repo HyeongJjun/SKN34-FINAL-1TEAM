@@ -32,7 +32,8 @@ export function readLine(text: string, regions: Region[], today: string, toM2: (
     if (new Set(said.map((h) => h.id)).size === 1) { out.sido = said[0].id; out.sgg = said[0].sgg; }
   }
   // 면적: 숫자가 하나일 때만. 전용은 숫자 바로 앞뒤에 붙을 때만("공급 112㎡ 전용 84㎡"는 비워요)
-  const areas = [...text.matchAll(/(?<![\d.])(\d{1,3}(?:\.\d+)?)\s*(평|㎡|m2|제곱)/gi)];
+  // 범위 밖 면적(400㎡ 넘음 등)도 읽어 두고, 재재가 checkDraft 글로 다시 물어요
+  const areas = [...text.matchAll(/(?<![\d.])(\d{1,4}(?:\.\d+)?)\s*(평|㎡|m\^?2|제곱)/gi)];
   if (areas.length === 1) {
     const a = areas[0];
     const near = /전용\s*(?:면적)?\s*(?:은|는|이)?\s*$/.test(text.slice(Math.max(0, a.index - 8), a.index)) || /^(?:미터)?\s*전용/.test(text.slice(a.index + a[0].length));
@@ -60,7 +61,9 @@ export function readLine(text: string, regions: Region[], today: string, toM2: (
     const y = Number(today.slice(0, 4)), m = Number(day[1]), dd = Number(day[2]);
     const year = m < Number(today.slice(5, 7)) ? y + 1 : y;
     const iso = `${year}-${String(m).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
-    if (m >= 1 && m <= 12 && dd >= 1 && dd <= 31 && iso >= today) out.start = iso;
+    // 달력에 없는 날("2월 31일" · "11월 31일")은 넣지 않아요
+    const real = new Date(Date.UTC(year, m - 1, dd));
+    if (m >= 1 && m <= 12 && dd >= 1 && real.getUTCMonth() === m - 1 && real.getUTCDate() === dd && iso >= today) out.start = iso;
   }
   return out;
 }
