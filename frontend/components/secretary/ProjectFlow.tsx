@@ -19,6 +19,7 @@ import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { dateShort, euro, won } from "@/lib/format";
 import { termByName, termHref } from "@/lib/guide";
+import { attachTargets } from "./attach";
 import { starterChips } from "./chips";
 import { Jaejae } from "./Jaejae";
 import { Plan } from "./Plan";
@@ -72,6 +73,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const [asks, setAsks] = useState<{ q: string; out?: AiTurnOut; err?: string }[]>([]);
   const [chatId, setChatId] = useState<string | null>(null);
   const [text, setText] = useState("");
+  const [attach, setAttach] = useState(false);
   const end = useRef<HTMLDivElement>(null);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [asks.length, now]);
 
@@ -237,6 +239,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const terms = ["실크 벽지", "가견적", "실측 견적서", "보양", "하자담보책임기간"].map((n) => termByName(n)).filter((t) => t !== undefined);
   // 입력칸 위 질문 버튼(#180): 지금 칸의 시작 질문 중 아직 안 물은 것. 답마다의 추천 질문은 답 아래(AiAnswer)에 그대로 보여요
   const quick = starterChips(now, asks.filter((a) => !a.err).map((a) => a.q)); // 오류로 끝난 질문은 다시 누를 수 있게 남겨요
+  // 사진 · 문서 버튼(#181 1단계): 재재는 아직 사진을 보지 않아서, 사진을 받는 업체 채팅으로 이어 줘요
+  const targets = attachTargets(deal ? { vendor_name: deal.deal.vendor_name, thread_id: deal.deal.thread_id } : null, vs);
 
   return (
     <div className={s.page}>
@@ -273,7 +277,15 @@ export function ProjectFlow({ data }: { data: FlowData }) {
                 {quick.map((q) => <button key={q} type="button" className={s.chip} disabled={asking} onClick={() => void ask(q)}>{q}</button>)}
               </div>
             ) : null}
+            {attach ? (
+              <div id="pflow-attach" className={s.attach} role="group" aria-label="사진 · 문서 보내기">
+                {targets.length ? targets.map((t) => <Button key={t.href} size="sm" variant="weak" href={t.href}>{t.label}</Button>)
+                  : <p className={s.note}>업체와 실측 날짜가 정해지면 그 업체 채팅에서 사진을 보낼 수 있어요. 지금은 실측을 요청할 때 집 사진을 붙여 보내요.</p>}
+                <p className={s.note}>재재는 아직 사진을 보고 답하지 못해요. 사진 속 동 · 호수 · 얼굴은 가리고 보내 주세요.</p>
+              </div>
+            ) : null}
             <form className={s.input} onSubmit={(e) => { e.preventDefault(); void ask(text); }}>
+              <button type="button" className={s.clip} aria-expanded={attach} aria-controls="pflow-attach" onClick={() => setAttach((v) => !v)}>사진</button>
               <label className="mj-sr" htmlFor="pflow-in">재재에게 물을 말</label>
               <textarea id="pflow-in" rows={1} maxLength={1000} value={text} placeholder="궁금한 걸 물어보세요. 예: 가견적이 비싼데 줄일 방법 없을까요?" onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void ask(text); } }} />
