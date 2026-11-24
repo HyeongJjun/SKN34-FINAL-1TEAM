@@ -207,6 +207,7 @@ resync {}
 | **새로** `POST /ai/turns` | 고객 | `{client_key, text, context:{screen:'standard'\|'vendors'\|'vendor'\|'visits'\|'pick'\|'quotes'\|'plan', project_id?, ids?}}` → SSE(`event: token` · `card` · `done` · `error`). 카드 = `{kind:'calc'\|'visit_draft'\|'open_calendar'\|'grade_preview'\|'faq', …}` |
 | **새로** `GET /ai/threads?project_id=` | 고객 | 같은 공사 AI 대화(F7 A) |
 
+- 사진(#181 2단계): `POST /ai/turns`에 `file_ids`(먼저 `POST /files` kind=`photo`로 올린 내 사진, 3장까지)를 붙이면 답의 `photo`에 사진에서 본 것이 와요. 설계는 [agent-09](adr/agent-09-photo.md).
 - 사용자 · 프로젝트는 세션으로 고정, 카드의 숫자는 계산 엔진 값, AI는 쓰기 · 확정을 하지 않아요. 지금 `/v2/ask*`는 v3 화면이 옮겨 가면 지워요(B5).
 
 ## 17. 바뀌는 지금 엔드포인트 요약
