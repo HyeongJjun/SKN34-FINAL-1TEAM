@@ -2994,7 +2994,7 @@ export interface components {
              */
             route: "guide" | "trade" | "quote_explanation" | "schedule" | "multi" | "out_of_scope" | "ask_back";
             /** Trade */
-            trade?: ("dobae" | "mokgong" | "floor" | "tile" | "bath" | "kitchen" | "paint" | "film" | "electric" | "window" | "demolition" | "plumbing" | "common") | null;
+            trade?: string | null;
             /** Slot */
             slot?: string | null;
             /** Value */

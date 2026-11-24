@@ -17,7 +17,7 @@ from pydantic import BaseModel
 from app.agent import llm
 from app.agent.v3 import check
 from app.agent.v3.schemas import Section, Sentence, TradeCode
-from app.agent.v3.specialists import SPECIALISTS
+from app.agent.v3.specialists import registered
 
 PROMPTS = Path(__file__).with_name("prompts")
 VERSION = {
@@ -47,7 +47,7 @@ class LlmSection(BaseModel):
 @cache
 def prompt(route: str, trade: TradeCode | None = None) -> str:
     base = (PROMPTS / f"{VERSION[route]}.md").read_text(encoding="utf-8")
-    specialist = SPECIALISTS.get(trade or "") if route == "trade" else None
+    specialist = registered().get(trade or "") if route == "trade" else None
     if specialist is None or specialist.prompt_path is None:
         return base
 

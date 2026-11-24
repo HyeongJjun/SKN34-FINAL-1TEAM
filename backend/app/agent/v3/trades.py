@@ -10,8 +10,8 @@
 import re
 from dataclasses import dataclass, field
 
+from app.agent.v3 import specialists
 from app.agent.v3.schemas import TradeCode
-from app.agent.v3.specialists.dobae.spec import build as build_dobae
 
 
 @dataclass(frozen=True)
@@ -39,14 +39,14 @@ class TradeSpec:
     calc: bool = False  # 믿집 계산 엔진이 금액 · 기간을 내는 공종
     risky_diy: bool = False  # 셀프 방법 대신 전문 업체를 권하는 공종(L24)
     check_where: str = "실측 때 업체"  # 모를 때 확인할 곳
+    route_priority: int = 0  # 같은 위치에서 다른 공종과 단어가 겹칠 때 우선순위
     pattern: re.Pattern = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "pattern", re.compile(self.words, re.IGNORECASE))
 
 
-SPECS: tuple[TradeSpec, ...] = (
-    build_dobae(TradeSpec, Slot),
+_BUILTIN_SPECS: tuple[TradeSpec, ...] = (
     TradeSpec(
         "mokgong",
         "목공",
@@ -196,6 +196,14 @@ SPECS: tuple[TradeSpec, ...] = (
         check_where="관리사무소 · 1372 소비자상담센터",
     ),
 )
+_folder_specs = {
+    spec.code: spec for spec in specialists.load_specs(specialists.ROOT, TradeSpec, Slot)
+}
+_builtin_codes = {spec.code for spec in _BUILTIN_SPECS}
+SPECS = (
+    *(spec for spec in _folder_specs.values() if spec.code not in _builtin_codes),
+    *(_folder_specs.get(spec.code, spec) for spec in _BUILTIN_SPECS),
+)
 BY_CODE: dict[str, TradeSpec] = {s.code: s for s in SPECS}
 TRADE_CODES: tuple[str, ...] = tuple(s.code for s in SPECS if s.code != "common")
 TAG_TO_CODE: dict[str, str] = {t: s.code for s in SPECS for t in s.tags}
@@ -270,14 +278,14 @@ WORK_OVER = {
 
 def trades_in(text: str) -> list[TradeCode]:
     """걸린 공종: 질문의 주인 공종을 맨 앞에, 나머지는 문장에 처음 나온 순서로(공통 빼고)."""
-    hits: list[tuple[int, str]] = []
+    hits: list[tuple[int, int, str]] = []
     for s in SPECS:
         if s.code == "common":
             continue
         m = s.pattern.search(text or "")
         if m:
-            hits.append((m.start(), s.code))
-    order = [c for _, c in sorted(hits)]
+            hits.append((m.start(), -s.route_priority, s.code))
+    order = [code for _, _, code in sorted(hits)]
     if len(order) >= 2 and order[0] in WORK_OVER:
         work = next((c for c in order[1:] if c in WORK_OVER[order[0]]), None)
         if work:

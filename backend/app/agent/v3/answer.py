@@ -25,7 +25,7 @@ from app.agent.v3.schemas import (
     TurnContext,
     UiCard,
 )
-from app.agent.v3.specialists import SPECIALISTS
+from app.agent.v3.specialists import registered
 from app.agent.v3.trades import BY_CODE, TAG_TO_CODE
 from app.knowledge import bm25, cards, extract, search3
 
@@ -44,6 +44,7 @@ class KB:
     ix: bm25.Index
     cards: cards.CardSet
     tags: Mapping[str, str] = field(default_factory=lambda: TAG_TO_CODE)
+    vector_rids: Mapping[tuple[str, str], tuple[str, ...]] = field(default_factory=dict)
 
 
 @dataclass
@@ -59,6 +60,12 @@ class Task:
     slot: str | None = None
     value: str | None = None
     asked: str = ""  # 되물은 담당이 남긴 원래 질문(칸 답일 때)
+
+    @property
+    def search_text(self) -> str:
+        if self.slot and self.value:
+            return f"{self.asked} {self.value}".strip()
+        return self.text
 
 
 @dataclass
@@ -139,7 +146,7 @@ def card_allowed(kb: KB, card: cards.AnswerCard) -> str:
 
 
 def search(kb: KB, q: str, trade: TradeCode | None) -> bm25.Result:
-    specialist = SPECIALISTS.get(trade or "")
+    specialist = registered().get(trade or "")
     if specialist is not None and specialist.retrieve is not None:
         return specialist.retrieve(kb, q)
     want = [trade] if trade and trade != "common" else []

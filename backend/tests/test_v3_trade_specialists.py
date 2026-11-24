@@ -10,7 +10,7 @@ from v3_kb import repo_kb
 from app.agent import llm
 from app.agent.v3 import answer, llm_mode, orchestrator
 from app.agent.v3.schemas import Section, Sentence, TurnContext
-from app.agent.v3.specialists import SPECIALISTS
+from app.agent.v3.specialists import registered
 from app.agent.v3.turn import run_turn
 
 
@@ -61,7 +61,7 @@ def test_dobae_turn_uses_specialist_prompt(monkeypatch):
 def test_dobae_turn_dispatches_to_specialist_and_mokgong_keeps_common_flow(monkeypatch):
     kb = repo_kb()
     ctx = TurnContext(user_id=uuid.UUID(int=0), today=date(2026, 11, 19))
-    specialist = SPECIALISTS["dobae"]
+    specialist = registered()["dobae"]
     run_dobae = specialist.run
     assert run_dobae is not None
     calls = []
@@ -70,7 +70,7 @@ def test_dobae_turn_dispatches_to_specialist_and_mokgong_keeps_common_flow(monke
         calls.append(task.trades[0])
         return run_dobae(task, kb, run_common)
 
-    monkeypatch.setitem(SPECIALISTS, "dobae", replace(specialist, run=run))
+    monkeypatch.setitem(registered(), "dobae", replace(specialist, run=run))
     dobae = asyncio.run(run_turn("합지랑 실크 중에 뭐로 해야 해요?", ctx, kb=kb))
     mokgong = asyncio.run(run_turn("목공 몰딩은 어떤 종류가 있어요?", ctx, kb=kb))
 
@@ -89,5 +89,69 @@ def test_dobae_search_returns_specialist_results(monkeypatch):
         assert question == "타일 벽에 도배할 수 있어요?"
         return result
 
-    monkeypatch.setitem(SPECIALISTS, "dobae", replace(SPECIALISTS["dobae"], retrieve=retrieve))
+    monkeypatch.setitem(registered(), "dobae", replace(registered()["dobae"], retrieve=retrieve))
     assert answer.search(kb, "타일 벽에 도배할 수 있어요?", "dobae") is result
+
+
+def test_new_trade_folder_is_routable_without_shared_registration(tmp_path, monkeypatch):
+    from app.agent.v3 import specialists, trades
+    from app.agent.v3.schemas import Button
+
+    folder = tmp_path / "waterproofing"
+    folder.mkdir()
+    (folder / "spec.py").write_text(
+        "def build(spec_type, slot_type):\n"
+        '    return spec_type("waterproofing", "방수", "knowledge", "방수막", ("방수",), 5, route_priority=1)\n'
+    )
+    (folder / "prompt_v1.md").write_text("방수 전용 지침", encoding="utf-8")
+    monkeypatch.setattr(specialists, "__path__", [*specialists.__path__, str(tmp_path)])
+    specs = specialists.load_specs(tmp_path, trades.TradeSpec, trades.Slot)
+    monkeypatch.setattr(trades, "SPECS", (*trades.SPECS, *specs))
+    monkeypatch.setitem(trades.BY_CODE, specs[0].code, specs[0])
+    registered = specialists.load_specialists(tmp_path, trades.BY_CODE)
+    assert "waterproofing" in registered
+    assert registered["waterproofing"].prompt_path == folder / "prompt_v1.md"
+    assert trades.trades_in("방수막은 어떻게 관리해요?")[0] == "waterproofing"
+    assert Button(route="trade", trade="waterproofing").trade == "waterproofing"
+
+
+def test_vector_lookup_is_used_only_for_opted_in_trade(monkeypatch):
+    kb = repo_kb()
+    ctx = TurnContext(user_id=uuid.UUID(int=0), today=date(2026, 11, 19), mode="llm")
+    calls = []
+
+    async def lookup(question):
+        calls.append(question)
+        return ()
+
+    async def no_rewrite(*args, **kwargs):
+        raise llm.LLMError("test")
+
+    monkeypatch.setattr(llm, "structured", no_rewrite)
+    question = "곰팡이가 있는 벽지는 어떻게 도배해요?"
+    dobae = asyncio.run(run_turn(question, ctx, kb=kb, load_vectors=lookup))
+    assert dobae.answer.trace.trades == ["dobae"]
+    assert not calls
+
+    specialist = registered()["dobae"]
+    monkeypatch.setitem(registered(), "dobae", replace(specialist, vector_query=lambda text: text))
+    asyncio.run(run_turn(question, ctx, kb=kb, load_vectors=lookup))
+    asyncio.run(run_turn("목공 몰딩은 어떤 종류가 있어요?", ctx, kb=kb, load_vectors=lookup))
+    asyncio.run(
+        run_turn(question, ctx.model_copy(update={"mode": "free"}), kb=kb, load_vectors=lookup)
+    )
+    assert calls == [question]
+
+    calls.clear()
+    combined = asyncio.run(run_turn("몰딩 바꾸고 도배도 새로 하려는데 순서가 어떻게 돼요?", ctx,
+                                    kb=kb, load_vectors=lookup))  # fmt: skip
+    assert combined.answer.trace.parts == ["trade:mokgong", "trade:dobae"]
+    assert len(calls) == 1 and "도배" in calls[0]
+
+    calls.clear()
+    waiting = {"route": "trade", "trade": "dobae", "slot": "dobae.mold", "q": question}
+    from app.agent.v3.schemas import Button
+
+    button = Button(route="trade", trade="dobae", slot="dobae.mold", value="있어요")
+    asyncio.run(run_turn("있어요", ctx, kb=kb, waiting=waiting, button=button, load_vectors=lookup))
+    assert calls == [f"{question} 있어요"]

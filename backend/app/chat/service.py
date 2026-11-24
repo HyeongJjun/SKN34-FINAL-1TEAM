@@ -10,6 +10,7 @@ import uuid
 from datetime import date
 
 from redis.exceptions import RedisError
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agent.schemas import HISTORY_LIMIT, Intent, IntentLabel, Turn
@@ -149,8 +150,10 @@ def _public(ans) -> AiAnswer:
 
 async def ai_turn(user, body: AiTurnIn, today: date) -> AiTurnOut:
     """POST /ai/turns. 남의 대화 · 남의 프로젝트는 404, 같은 대화 동시 저장은 409."""
+    from app.agent import llm
     from app.agent.v3.answer import KB
     from app.agent.v3.schemas import TurnContext
+    from app.agent.v3.trades import BY_CODE
     from app.agent.v3.turn import run_turn
     from app.chat import tools
     from app.config import settings
@@ -166,6 +169,8 @@ async def ai_turn(user, body: AiTurnIn, today: date) -> AiTurnOut:
     if old is not None:
         return AiTurnOut.model_validate(old)
     rev, waiting_label = 1, None
+    ai_mode = mode()
+    vector_versions: list[uuid.UUID] = []
     facts = None
     async with SessionLocal() as s:  # 짧게 열고 닫는다. 답을 만드는 동안 세션을 쥐지 않는다
         if body.chat_id is not None:
@@ -175,7 +180,11 @@ async def ai_turn(user, body: AiTurnIn, today: date) -> AiTurnOut:
             facts = await tools.project_facts(
                 s, user, body.context.project_id, today, body.context.ids
             )
-        kb = KB(ix=await knowledge.index(s), cards=cards.default())
+        if ai_mode == "llm":
+            ix, vector_versions = await knowledge.index_with_versions(s)
+        else:
+            ix = await knowledge.index(s)
+        kb = KB(ix=ix, cards=cards.default(tuple(BY_CODE)))
     wait_key = _key("wait", str(body.chat_id)) if body.chat_id else None
     waiting = await _get_json(wait_key) if wait_key and waiting_label else None
     if waiting is None and waiting_label:
@@ -185,10 +194,25 @@ async def ai_turn(user, body: AiTurnIn, today: date) -> AiTurnOut:
         chat_id=body.chat_id,
         project_id=body.context.project_id,
         view=body.context.screen,
-        mode=mode(),  # type: ignore[arg-type]
+        mode=ai_mode,  # type: ignore[arg-type]
         today=today,
     )
-    res = await run_turn(body.text, ctx, kb=kb, facts=facts, waiting=waiting, button=body.button)
+
+    async def load_vectors(question: str) -> tuple[str, ...]:
+        # 임베딩을 기다리는 동안 DB 세션을 열어 두지 않는다.
+        embedding = await llm.embed_query(question)
+        if embedding is None:
+            return ()
+        try:
+            async with SessionLocal() as s:
+                return tuple(await knowledge.vector_rids(s, vector_versions, embedding))
+        except SQLAlchemyError:
+            return ()
+
+    res = await run_turn(
+        body.text, ctx, kb=kb, facts=facts, waiting=waiting, button=body.button,
+        load_vectors=load_vectors if vector_versions and ix.items else None,
+    )  # fmt: skip
     ans = res.answer
     chat_id, new_rev = body.chat_id, None
     if not ans.failed:
