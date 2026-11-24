@@ -80,9 +80,12 @@ export function DatesForm({ job, now }: { job: JobV3; now: string }) {
     if (got.crew && got.crew <= 6) setCrew(String(got.crew));
     const ok = got.days.filter((d) => d > today);
     if (ok.length) { setDays(ok); setErr(null); }
-    const said = [ok.length ? `${daysText(ok, true)}(${ok.length}일)` : null, got.crew ? `${got.crew}명` : null].filter(Boolean).join(" · ");
+    // 실제로 넣은 값만 말해요(인원은 6명까지 고를 수 있어서 7명 이상은 넣지 않고 알려요)
+    const crewOk = !!got.crew && got.crew <= 6;
+    const said = [ok.length ? `${daysText(ok, true)}(${ok.length}일)` : null, crewOk ? `${got.crew}명` : null].filter(Boolean).join(" · ");
     const gap = need && ok.length && ok.length !== need ? ` 견적서 공사 기간은 ${need}일이라 달력에서 맞춰 주세요.` : "";
-    return said ? `${said}${said.endsWith("명") ? "으로" : "로"} 채웠어요.${gap} 보내기는 직접 눌러 주세요.` : "오늘 뒤 날짜로 말해 주세요.";
+    const crewMiss = got.crew && !crewOk ? " 인원은 6명까지 고를 수 있어서 넣지 않았어요." : "";
+    return said ? `${said}${said.endsWith("명") ? "으로" : "로"} 채웠어요.${gap}${crewMiss} 보내기는 직접 눌러 주세요.` : crewMiss ? crewMiss.trim() : "오늘 뒤 날짜로 말해 주세요.";
   }
 
   return (
