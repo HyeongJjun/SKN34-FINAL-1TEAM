@@ -103,6 +103,20 @@ test("리뷰 회귀: 추가 금액 항목 이름", () => {
   const x = parseExtra("곰팡이 방지 12만 원이 아니라 15만 원", T);
   assert.equal(x.title, "곰팡이 방지");
   assert.equal(x.amount, 150_000);
+  // 리뷰(PR #176): 천 단위 쉼표를 문장 구분으로 보지 않아요
+  const mold = parseExtra("곰팡이 처리 1,000,000원, 부가세 포함, 벽면 곰팡이 발견해서", T);
+  assert.equal(mold.title, "곰팡이 처리");
+  assert.equal(mold.amount, 1_000_000);
+  assert.equal(mold.vat, "included");
+  assert.equal(mold.reason, "벽면 곰팡이 발견해서");
+  // QA: 천 단위 쉼표에서 토막을 나누지 않고, 억 금액은 항목 이름에 남기지 않아요
+  const big = parseExtra("걸레받이 교체 1,000,000,000원 부가세 별도, 기존 것이 썩어서", T);
+  assert.equal(big.title, "걸레받이 교체");
+  assert.equal(big.amount, 1_000_000_000);
+  assert.equal(big.reason, "기존 것이 썩어서");
+  const eok = parseExtra("합판 보강 2억 원, 부가세 포함", T);
+  assert.equal(eok.title, "합판 보강");
+  assert.equal(eok.amount, undefined); // 억은 읽지 않아요(화면이 '금액을 읽지 못했어요'로 알려요)
 });
 
 // #174(dev)에서 온 시험 문장

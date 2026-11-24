@@ -251,20 +251,23 @@ export function parseDates(text: string, today: string, baseMonth?: string | nul
 export type ExtraFill = QuoteFill & { title?: string; reason?: string };
 const WHY = /(?<!견적|계약|문|청구|확인)서\s*요?\s*$|때문/;
 /** 항목 이름에서 지울 금액: 만 · 원이 붙은 숫자만("2평 · 3장"은 둬요) */
-const AMOUNT_WORD = /\d[\d,]*(?:\.\d+)?\s*만\s*(?:\d\s*천)?\s*(?:[\d,]*\s*원)?(?:이|가|은|는)?|\d[\d,]*\s*원(?:이|가|은|는)?/g;
+const AMOUNT_WORD = /\d[\d,]*(?:\.\d+)?\s*억\s*(?:[\d,]*\s*만)?\s*(?:[\d,]*\s*원)?(?:이|가|은|는)?|\d[\d,]*(?:\.\d+)?\s*만\s*(?:\d\s*천)?\s*(?:[\d,]*\s*원)?(?:이|가|은|는)?|\d[\d,]*\s*원(?:이|가|은|는)?/g;
+/** 글에 금액처럼 보이는 말이 있는지("2억 원" · "12만" · "30,000원"). 읽지 못했으면 업체에게 알려요 */
+export const SAID_AMOUNT = /\d\s*(?:억|만|천\s*원|원)/;
 
 /** 추가 금액: "곰팡이 방지 처리 12만 원, 부가세 포함, 벽 안쪽까지 곰팡이가 퍼져서" → 항목 · 금액 · 부가세 · 이유 */
 export function parseExtra(text: string, today: string): ExtraFill {
   const out: ExtraFill = parseQuote(text, today);
   delete out.days;
   delete out.valid;
-  for (const raw of text.split(/,|\n/)) {
+  // 쉼표로 나누되 "1,000,000원"처럼 숫자 사이 천 단위 쉼표는 나누지 않아요
+  for (const raw of text.split(/(?<!\d),|,(?!\d{3})|\n/)) {
     const part = raw.trim();
     if (!part) continue;
     if (!out.reason && WHY.test(part)) { out.reason = part.replace(/[.。]\s*$/, ""); continue; }
-    if (!out.title && !/부가세|부가가치세|VAT|면세/i.test(part)) {
-      // 정정한 뒤 말은 항목 이름이 아니에요("곰팡이 방지 12만 원이 아니라 15만 원")
-      const head = part.split(/아니라|아니고|말고/)[0];
+    if (!out.title) {
+      // 정정한 뒤 말 · 부가세 말은 항목 이름이 아니에요("곰팡이 방지 12만 원이 아니라 15만 원", "걸레받이 교체 30만 원 부가세 별도")
+      const head = part.split(/아니라|아니고|말고|부가세|부가가치세|VAT|면세/i)[0];
       const t = head.replace(AMOUNT_WORD, "").replace(/\s*(?:추가요|추가돼요|더\s*들어요)\s*$/, "").replace(/\s+/g, " ").trim();
       if (t && !/^\d/.test(t)) out.title = t.slice(0, 60);
     }
