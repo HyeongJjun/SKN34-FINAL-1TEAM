@@ -11,12 +11,12 @@ export type TabItem = NavItem & { icon: IconName; count?: "notify" };
 /** 웹 머리 메뉴(≥768). '표준견적서 받기'는 copy-fixes CF-09(믿집 견적이 셋이라 업체 견적으로 읽히지 않게) */
 export const NAV: Record<HeaderKind, NavItem[]> = {
   guest: [
-    { id: "start", href: "/start", label: "표준견적서 받기" },
+    { id: "start", href: "/assistant", label: "표준견적서 받기" },
     { id: "guide", href: "/guide", label: "백과" },
     { id: "faq", href: "/faq", label: "자주 묻는 질문" },
   ],
   customer: [
-    { id: "start", href: "/start", label: "표준견적서 받기" },
+    { id: "start", href: "/assistant", label: "표준견적서 받기" },
     { id: "my", href: "/my", label: "내 공사" },
     { id: "chat", href: "/chat", label: "채팅" },
     { id: "guide", href: "/guide", label: "백과" },
