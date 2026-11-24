@@ -1,7 +1,7 @@
 // 재재 질문 버튼 고르기 시험(#180): pnpm test:unit
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { guestChips, starterChips } from "./chips.ts";
+import { guestChips, quickChips, starterChips } from "./chips.ts";
 import { readLine } from "../start/readLine.ts";
 
 test("고객 공사: 칸마다 시작 질문, 물은 건 빼고 3개까지", () => {
@@ -12,6 +12,16 @@ test("고객 공사: 칸마다 시작 질문, 물은 건 빼고 3개까지", () 
   assert.equal(starterChips(9, []).join(), starterChips(8, []).join());
   const all = [2, 3, 4, 5, 6, 7, 8].flatMap((s) => starterChips(s, []));
   for (const q of all) assert.ok(!/얼마|몇\s*일|며칠|평당|단가/.test(q), q); // 숫자를 바로 묻지 않아요(계산 엔진 몫)
+});
+
+test("고객 공사: 답을 받으면 그 답의 추천 질문으로 바뀌고, 없으면 시작 질문", () => {
+  const sug = ["초배지는 왜 발라요?", "풀은 뭘 써요?", "보양은 뭐예요?", "네 번째"];
+  assert.deepEqual(quickChips(5, [], null), starterChips(5, []));
+  assert.deepEqual(quickChips(5, ["표준견적서는 뭐예요?"], sug), sug.slice(0, 3));
+  assert.deepEqual(quickChips(5, ["풀은 뭘 써요?"], sug), ["초배지는 왜 발라요?", "보양은 뭐예요?", "네 번째"]);
+  assert.deepEqual(quickChips(5, [], []), starterChips(5, [])); // 추천이 없는 답이면 시작 질문
+  const allStarters = [2, 3, 4, 5, 6, 7, 8].flatMap((s) => starterChips(s, []));
+  assert.equal(quickChips(5, allStarters, sug).length, 3); // 시작 질문을 다 써도 버튼이 남아요
 });
 
 test("손님: 빈 칸만 답 버튼, 누른 말은 readLine이 그 칸으로 읽어요", () => {
