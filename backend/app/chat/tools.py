@@ -12,6 +12,7 @@
 import uuid
 from collections.abc import Sequence
 from datetime import date
+from enum import StrEnum
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -36,6 +37,15 @@ STATES = {"included", "bundled", "separate", "optional", "after_visit", "exclude
 TRADES = {"dobae", "mokgong"}
 # overview_for phase → 에이전트 단계(다음 할 일 버튼)
 PHASE = {"estimate": "standard", "progress": "visit", "work": "construction", "done": "done"}
+
+
+class WorkTool(StrEnum):
+    """업무 도구 이름. 조회·초안과 사용자 제출을 잇는 실행은 후속에 연결한다."""
+
+    FORM = "form"  # 화면에 채울 값과 빠진 항목
+    VISIT_SCHEDULE = "visit_schedule"  # 실측 가능 기간과 반나절
+    VENDOR_QUOTE = "vendor_quote"  # 실측 견적서 입력 초안과 비교
+    PROJECT_PROGRESS = "project_progress"  # 공사 일정·추가 금액·완료 안내
 
 
 async def project_facts(

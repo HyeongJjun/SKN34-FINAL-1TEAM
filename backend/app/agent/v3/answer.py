@@ -25,6 +25,7 @@ from app.agent.v3.schemas import (
     TurnContext,
     UiCard,
 )
+from app.agent.v3.specialists import SPECIALISTS
 from app.agent.v3.trades import BY_CODE, TAG_TO_CODE
 from app.knowledge import bm25, cards, extract, search3
 
@@ -139,7 +140,12 @@ def card_allowed(kb: KB, card: cards.AnswerCard) -> str:
 
 def search(kb: KB, q: str, trade: TradeCode | None) -> bm25.Result:
     want = [trade] if trade and trade != "common" else []
-    return search3.search(kb.ix, q, trades=want, tags=kb.tags, k=8)
+    specialist = SPECIALISTS.get(trade or "")
+    query = specialist.search_query(q) if specialist and specialist.search_query else q
+    # 검색어를 보강해도 출처 제한은 고객의 원래 질문으로 판단한다.
+    return search3.search(
+        kb.ix, query, trades=want, tags=kb.tags, k=8, policy_text=q if query != q else None
+    )
 
 
 def knowledge(

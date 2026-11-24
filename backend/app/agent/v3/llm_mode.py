@@ -16,7 +16,8 @@ from pydantic import BaseModel
 
 from app.agent import llm
 from app.agent.v3 import check
-from app.agent.v3.schemas import Section, Sentence
+from app.agent.v3.schemas import Section, Sentence, TradeCode
+from app.agent.v3.specialists import SPECIALISTS
 
 PROMPTS = Path(__file__).with_name("prompts")
 VERSION = {
@@ -44,8 +45,14 @@ class LlmSection(BaseModel):
 
 
 @cache
-def prompt(route: str) -> str:
-    return (PROMPTS / f"{VERSION[route]}.md").read_text(encoding="utf-8")
+def prompt(route: str, trade: TradeCode | None = None) -> str:
+    base = (PROMPTS / f"{VERSION[route]}.md").read_text(encoding="utf-8")
+    specialist = SPECIALISTS.get(trade or "") if route == "trade" else None
+    if specialist is None or specialist.prompt_path is None:
+        return base
+
+    # 공통 근거·출력 규칙을 유지하도록 공종 지침은 뒤에 덧붙인다.
+    return f"{base.rstrip()}\n\n{specialist.prompt_path.read_text(encoding='utf-8')}"
 
 
 def _data(s: str) -> str:
@@ -59,7 +66,7 @@ async def rewrite(
     """free 묶음(카드 · 조각)을 질문에 맞게 다시 쓴다. 쓸 수 없으면 (None, 이유)."""
     if sec.source not in ("card", "extract") or route not in VERSION:
         return None, []
-    system = prompt(route)
+    system = prompt(route, sec.trade)
     data = {
         "근거": [{"ref": k, "글": _data(v)} for k, v in evidence.items()],
         "지금 답(무료 모드)": [x.text for x in sec.sentences],
