@@ -19,6 +19,7 @@ import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { dateShort, euro, won } from "@/lib/format";
 import { termByName, termHref } from "@/lib/guide";
+import { quickChips } from "./chips";
 import { Jaejae } from "./Jaejae";
 import { Plan } from "./Plan";
 import s from "./flow.module.css";
@@ -83,10 +84,10 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   }
 
   const asking = asks.length > 0 && !asks[asks.length - 1].out && !asks[asks.length - 1].err;
-  async function ask(q: string, button: AiButton | null = null) {
+  async function ask(q: string, button: AiButton | null = null, fromInput = false) {
     const t = q.trim().slice(0, 1000);
     if (!t || asking) return; // 답을 기다리는 동안 새 질문을 막아요(답이 엇갈리지 않게 · 대화 하나로)
-    setText("");
+    if (fromInput) setText(""); // 입력칸에서 보낼 때만 비워요(질문 버튼은 글이 같아도 쓰던 글을 남겨요)
     setAsks((a) => [...a, { q: t }]);
     try {
       const out = await askAi({ client_key: newClientKey(), text: t, chat_id: chatId, context: { screen: now <= 2 ? "vendors" : now <= 4 ? "quotes" : "plan", project_id: p.id, ids: [] }, button }); // 선택지의 길(route) · 칸 정보를 그대로 넘겨요
@@ -234,6 +235,9 @@ export function ProjectFlow({ data }: { data: FlowData }) {
 
   const auto: Record<number, string[]> = { 0: ["집 정보 정리"], 1: ["표준견적서 계산"], 2: vs.length ? ["업체에 실측 날짜 물어보기"] : [], 4: quoted.length ? ["견적서를 표준견적서와 비교"] : [], 5: deal ? ["확정 공정표 만들기"] : [] };
   const terms = ["실크 벽지", "가견적", "실측 견적서", "보양", "하자담보책임기간"].map((n) => termByName(n)).filter((t) => t !== undefined);
+  // 입력칸 위 질문 버튼(#180): 마지막 답의 추천 질문, 없으면 지금 칸의 시작 질문. 물은 건 빼요
+  const lastOut = [...asks].reverse().find((a) => a.out)?.out ?? null;
+  const quick = quickChips(now, asks.filter((a) => !a.err).map((a) => a.q), lastOut?.answer.suggest ?? null); // 오류로 끝난 질문은 다시 누를 수 있게 남겨요
 
   return (
     <div className={s.page}>
@@ -263,14 +267,22 @@ export function ProjectFlow({ data }: { data: FlowData }) {
                   {a.out ? <AiAnswer answer={a.out.answer} projectId={p.id} onPick={(q, b) => void ask(q, b ?? null)} /> : a.err ? <p className="mj-error">{a.err}</p> : <p className={s.typing}>줄자로 재는 중…</p>}</div></div>
               </div>
             ))}
-            <div ref={end} />
           </div>
-          <form className={s.input} onSubmit={(e) => { e.preventDefault(); void ask(text); }}>
-            <label className="mj-sr" htmlFor="pflow-in">재재에게 물을 말</label>
-            <textarea id="pflow-in" rows={1} maxLength={1000} value={text} placeholder="궁금한 걸 물어보세요. 예: 가견적이 비싼데 줄일 방법 없을까요?" onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void ask(text); } }} />
-            <Button type="submit" disabled={!text.trim() || asking}>{asking ? "답 기다리는 중" : "보내기"}</Button>
-          </form>
+          <div className={s.dock}>
+            {quick.length ? (
+              <div className={s.quick} role="group" aria-label="이런 걸 물어보세요">
+                {quick.map((q) => <button key={q} type="button" className={s.chip} disabled={asking} onClick={() => void ask(q)}>{q}</button>)}
+              </div>
+            ) : null}
+            <form className={s.input} onSubmit={(e) => { e.preventDefault(); void ask(text, null, true); }}>
+              <label className="mj-sr" htmlFor="pflow-in">재재에게 물을 말</label>
+              <textarea id="pflow-in" rows={1} maxLength={1000} value={text} placeholder="궁금한 걸 물어보세요. 예: 가견적이 비싼데 줄일 방법 없을까요?" onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void ask(text, null, true); } }} />
+              <Button type="submit" disabled={!text.trim() || asking}>{asking ? "답 기다리는 중" : "보내기"}</Button>
+            </form>
+          </div>
+          {/* 새 말이 오면 여기까지 내려요. 입력칸(dock) 뒤에 두어 마지막 말풍선이 입력칸에 가려지지 않아요 */}
+          <div ref={end} />
         </section>
         <Plan now={now} scope={p.id} open={open} auto={auto}
           render={(step) => step === 0 ? <><Link href={`/start?edit=${pid}`}>기본 정보 고치기{p.locked ? " (요청 뒤라 잠겼어요)" : ""}</Link><SiteInfoCard projectId={p.id} /></>
