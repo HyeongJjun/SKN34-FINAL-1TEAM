@@ -79,3 +79,10 @@
 .boardLink { align-self: flex-start; display: inline-flex; align-items: center; min-height: 40px; padding: 0 12px; border: 1px solid var(--mj-primary); border-radius: 999px; background: var(--mj-surface); color: var(--mj-primary); font: inherit; font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); cursor: pointer; }
 .boardLink:hover { background: var(--mj-primary-weak); }
 .done { align-self: flex-start; margin: 0 0 0 54px; padding: 6px 12px; border-radius: 999px; background: var(--mj-surface-sub); font-size: var(--mj-type-caption); color: var(--mj-text-sub); }
+/* #197: 보드 업체 칸 공정 탭 · 찾기 · 재재가 말한 업체 강조 */
+.trades { display: flex; gap: 6px; }
+.tradeTab { flex: 1; min-height: 40px; border: 1px solid var(--mj-line); border-radius: 10px; background: var(--mj-surface); font: inherit; font-size: var(--mj-type-label); color: var(--mj-text-sub); cursor: pointer; }
+.tradeOn { border-color: var(--mj-primary); background: var(--mj-primary-weak); color: var(--mj-text); font-weight: var(--mj-weight-bold); }
+.search input { width: 100%; min-height: 40px; padding: 0 12px; border: 1px solid var(--mj-line-control); border-radius: 10px; font: inherit; font-size: var(--mj-type-label); background: var(--mj-surface); }
+.vrowHi { border-color: var(--mj-primary); box-shadow: 0 0 0 2px var(--mj-primary-weak); }
+.hiTag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--mj-primary); color: var(--mj-text-inverse); font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); }
