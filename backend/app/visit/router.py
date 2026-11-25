@@ -40,6 +40,7 @@ from app.visit.schemas import (
     VisitDraftOut,
     VisitedIn,
     VisitListOut,
+    VisitOpenDaysOut,
     VisitOut,
     VisitPickOut,
     VisitStateOut,
@@ -102,6 +103,22 @@ async def vendor_detail(
 
 
 @router.get(
+    "/projects/{project_id}/vendors/{vendor_id}/open-days",
+    response_model=VisitOpenDaysOut,
+    summary="업체가 등록한 영업일 중 실측을 받을 수 있는 반나절 (내 프로젝트만, 고객 정보 없음)",
+)
+async def vendor_open_days(
+    project_id: uuid.UUID,
+    vendor_id: uuid.UUID,
+    start: date,
+    end: date,
+    user: User = Depends(customer_only),
+    s: AsyncSession = Session,
+) -> VisitOpenDaysOut:
+    return await service.open_days_for_customer(s, user, project_id, vendor_id, start, end)
+
+
+@router.get(
     "/projects/{project_id}/vendors/{vendor_id}/photos/{file_id}",
     summary="업체 시공 사진 보기 (이 집에서 고를 수 있는 업체만)",
 )
@@ -127,7 +144,9 @@ async def request_visits(
     user: User = Depends(customer_only),
     s: AsyncSession = Session,
 ) -> VisitCreateOut:
-    if data.wish_start is not None or data.wish_end is not None:  # v3: 담긴 업체 · 희망 기간
+    if (
+        data.picks or data.wish_start is not None or data.wish_end is not None
+    ):  # v3: 담긴 업체 · 희망 기간 · 영업일 날짜
         return await flow.request(s, user, project_id, data, now_utc())
     if data.photos or data.grade is not None:
         raise app_error("invalid", "사진 · 벽지는 희망 기간을 고른 요청에만 붙여요.")

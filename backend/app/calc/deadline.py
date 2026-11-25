@@ -48,9 +48,16 @@ def pick_due(answered_at: datetime) -> datetime:
     return _aware(answered_at) + timedelta(days=PICK_DAYS)
 
 
-def accept_due(picked_at: datetime) -> datetime:
-    """잡아 둔 반나절의 기한(visit_holds.until)과 같다."""
-    return _aware(picked_at) + timedelta(hours=ACCEPT_HOURS)
+HALF_START: dict[str, time] = {"am": time(9, 0), "pm": time(13, 0)}
+
+
+def accept_due(picked_at: datetime, day: date | None = None, half: str | None = None) -> datetime:
+    """잡아 둔 반나절의 기한(visit_holds.until)과 같다: 고른 때 + 48시간. 고른 반나절(day · half)이
+    시작하기 전을 넘지 않아요(가까운 영업일을 고르면 실측 시각 뒤에 수락 기한이 오지 않게)."""
+    due = _aware(picked_at) + timedelta(hours=ACCEPT_HOURS)
+    if day is None or half is None:
+        return due
+    return min(due, datetime.combine(day, HALF_START[half], SEOUL))
 
 
 def proposal_due(proposed_at: datetime) -> datetime:
