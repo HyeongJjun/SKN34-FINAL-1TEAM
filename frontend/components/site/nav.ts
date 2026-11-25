@@ -24,6 +24,7 @@ export const NAV: Record<HeaderKind, NavItem[]> = {
   // W6 B: 일정은 작업함 탭이라 머리에 따로 두지 않아요
   vendor: [
     { id: "inbox", href: "/vendor", label: "작업함" },
+    { id: "opendays", href: "/vendor/open-days", label: "영업일" },
     { id: "chat", href: "/chat", label: "채팅" },
     { id: "profile", href: "/vendor/profile", label: "업체 정보" },
   ],
