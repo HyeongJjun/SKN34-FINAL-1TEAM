@@ -37,7 +37,13 @@ ACTIONS = (
     ("window", "vendor", V + "/window", WINDOW, {"requested"}),
     ("accept", "vendor", V + "/accept", None, {"picked"}),
     ("propose", "vendor", V + "/propose", PROPOSE, {"picked"}),
-    ("decline", "vendor", V + "/decline", {"code": "full"}, {"requested"}),
+    (
+        "decline",
+        "vendor",
+        V + "/decline",
+        {"code": "full"},
+        {"requested", "picked"},
+    ),  # picked: 현장 사정
     ("pick", "customer", C + "/pick", SLOT, {"offered"}),
     ("proposal_pick", "customer", C + "/proposal/pick", SLOT, {"proposed"}),
     ("repick", "customer", C + "/repick", None, {"proposed"}),

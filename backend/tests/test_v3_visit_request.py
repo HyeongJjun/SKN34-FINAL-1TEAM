@@ -172,7 +172,7 @@ def test_board_head_next_and_can(api):
         "change": False,
         "requote": False,
     }
-    assert ra["window"] is None and ra["booked"] is None and ra["thread_id"] is None
+    assert ra["window"] is None and ra["booked"] is None and ra["thread_id"]  # 요청 때 채팅
     query(
         "update visits set reply_due_at = now() - interval '1 minute' where vendor_id = $1",
         uuid.UUID(b),

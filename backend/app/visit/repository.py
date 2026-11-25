@@ -451,6 +451,9 @@ class VendorFacts:
     instant_default: bool
     capacity: int
     suspended: bool
+    # 0038: 업체가 등록한 실측 영업 요일(월 0 ~ 일 6) · 쉬는 날
+    open_weekdays: tuple[int, ...] = (0, 1, 2, 3, 4, 5)
+    off_days: frozenset[date] = frozenset()
 
 
 async def vendor_facts(
@@ -465,10 +468,21 @@ async def vendor_facts(
         Vendor.instant_default,
         Vendor.visit_capacity,
         Vendor.suspended_at,
+        Vendor.open_weekdays,
+        Vendor.off_days,
     ).where(Vendor.user_id.in_(vendor_ids))
     return {
-        vid: VendorFacts(vid, name or "업체", st, bool(inst), int(cap or 1), sus is not None)
-        for vid, name, st, inst, cap, sus in (await s.execute(q)).all()
+        vid: VendorFacts(
+            vid,
+            name or "업체",
+            st,
+            bool(inst),
+            int(cap or 1),
+            sus is not None,
+            tuple(wd if wd is not None else (0, 1, 2, 3, 4, 5)),
+            frozenset(off or ()),
+        )
+        for vid, name, st, inst, cap, sus, wd, off in (await s.execute(q)).all()
     }
 
 

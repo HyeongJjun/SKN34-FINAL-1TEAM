@@ -326,7 +326,7 @@ def test_vendor_detail_has_calendar_and_no_customer_privates(api):
     assert det["state"] == {"icon": "todo", "label": "새 실측 요청"}
     assert det["next"]["label"] == "기간 답하기" and det["reply_due_at"]
     assert det["capacity"] == 2 and det["instant_default"] is False
-    assert det["window"] is None and det["thread_id"] is None
+    assert det["window"] is None and det["thread_id"]  # 채팅은 요청 때 열려요(2026-11-25 회의)
     assert det["open_count"] == 15 * 2 * 2 - 1  # 희망 2 ~ 16일 × 반나절 2 × 칸 2, 6일 오전 1칸 잡힘
     assert [(x["day"], x["half"], x["kind"]) for x in det["taken"]] == [(d(6), "am", "booked")]
     assert det["when_text"].count("~") == 1
