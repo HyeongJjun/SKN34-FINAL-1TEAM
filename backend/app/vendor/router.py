@@ -18,6 +18,8 @@ from app.vendor.deps import approved_vendor
 from app.vendor.schemas import (
     ApplicationOut,
     ConfirmPricesIn,
+    OpenDaysIn,
+    OpenDaysOut,
     PortfolioIn,
     PortfolioOut,
     PriceFileIn,
@@ -164,6 +166,28 @@ async def reapply(
     s: AsyncSession = Depends(get_session),
 ) -> ApplicationOut:
     return await service.reapply(s, vendor, data)
+
+
+@router.get(
+    "/vendor/open-days", response_model=OpenDaysOut, summary="실측 영업일 (영업 요일 · 쉬는 날)"
+)
+async def open_days(
+    vendor: User = Depends(approved_vendor), s: AsyncSession = Depends(get_session)
+) -> OpenDaysOut:
+    return await service.get_open_days(s, vendor)
+
+
+@router.put(
+    "/vendor/open-days",
+    response_model=OpenDaysOut,
+    summary="실측 영업일 저장 (고객은 이 안의 빈 반나절만 골라요)",
+)
+async def save_open_days(
+    data: OpenDaysIn,
+    vendor: User = Depends(approved_vendor),
+    s: AsyncSession = Depends(get_session),
+) -> OpenDaysOut:
+    return await service.save_open_days(s, vendor, data, today_seoul())
 
 
 @router.get("/vendor/profile", response_model=ProfileOut, summary="업체 정보 (승인된 업체 본인)")
