@@ -137,15 +137,15 @@ export function ProjectFlow({ data }: { data: FlowData }) {
         </div>
         {/* 피드백: 재재가 고른 업체만 보이지 않게 전체 목록 길을 늘 둬요 */}
         <div className={s.row}><Button size="sm" variant="secondary" href={`/projects/${pid}/vendors`}>전체 업체에서 직접 고르기</Button></div>
-        {picked.length ? <VisitRequest pid={pid} draft={draft} today={today} busy={busy} act={act} onFailed={setNote} /> : null}
+        {picked.length ? <VisitRequest pid={pid} draft={draft} /> : null}
       </>
     ) });
   }
 
   for (const v of vs) {
-    if (v.status === "requested") cards.push({ key: v.id, node: <p><b>{v.vendor_name}</b>에 실측 날짜를 물어봤어요. 업체가 되는 기간을 보내면 먼저 알려 드릴게요.</p> });
+    if (v.status === "requested") cards.push({ key: v.id, node: <p><b>{v.vendor_name}</b>에 실측 날짜를 물어봤어요. 업체가 되는 기간을 보내면 먼저 알려 드릴게요. 궁금한 건 <Link href="/chat">업체 채팅</Link>으로 물어보세요.</p> });
     else if (v.status === "offered" || v.status === "proposed") cards.push({ key: v.id, alert: true, node: <PickCard pid={pid} visitId={v.id} name={v.vendor_name} proposal={v.status === "proposed"} busy={busy} act={act} /> });
-    else if (v.status === "picked") cards.push({ key: v.id, node: <p><b>{v.vendor_name}</b>에 고른 날을 보냈어요. 업체가 수락하면 실측이 확정돼요.</p> });
+    else if (v.status === "picked") cards.push({ key: v.id, node: <><p><b>{v.vendor_name}</b>에 고른 날을 보냈어요. 업체가 현장 정보를 보고 수락하면 실측이 확정돼요.</p><p className={s.why}>주차 · 엘리베이터 사정으로 업체가 다른 날을 제안하면 먼저 알려 드릴게요. 그 사이 <Link href="/chat">업체 채팅</Link>으로 주고받을 수 있어요.</p></> });
     else if (v.status === "booked") cards.push({ key: v.id, node: <><p><b>{v.vendor_name}</b> 실측이 잡혔어요. 실측 때 업체가 벽 크기와 상태를 재고 견적서를 보내요.</p><p className={s.why}>실측 전날: 가구 앞 벽이 보이게 비워 두고, 벽지 철거 · 폐기물이 견적에 들어가는지 물어보세요.</p><SiteInfoCard projectId={p.id} /></> });
     else if (v.status === "visited") cards.push({ key: v.id, node: <p><b>{v.vendor_name}</b> 실측을 마쳤어요. 실측 견적서를 기다리고 있어요.</p> });
   }
@@ -303,32 +303,14 @@ export function ProjectFlow({ data }: { data: FlowData }) {
 
 type Act = (key: string, fn: () => Promise<unknown>) => Promise<void>;
 
-/** 내일(서버가 준 오늘 + 1일, 날짜 문자열만 바꿔요). 서버도 오늘은 받지 않아요 */
-function nextDay(day: string): string {
-  const d = new Date(`${day}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + 1);
-  return d.toISOString().slice(0, 10);
-}
-
-function VisitRequest({ pid, draft, today, busy, act, onFailed }: { pid: string; draft: VisitDraft | null; today: string; busy: string | null; act: Act; onFailed: (t: string | null) => void }) {
-  const min = nextDay(today);
-  const [from, setFrom] = useState(draft?.wish_start ?? "");
-  const [to, setTo] = useState(draft?.wish_end ?? "");
-  const ids = (draft?.vendors ?? []).map((v) => v.vendor_id);
-  const ok = from && to && from >= min && to >= from && ids.length > 0;
+// 2026-11-25 회의: 채팅에는 입력 칸을 두지 않아요. 날짜는 요청 화면에서 업체가 등록한 영업일로 골라요
+function VisitRequest({ pid, draft }: { pid: string; draft: VisitDraft | null }) {
+  const n = draft?.vendors.length ?? 0;
   return (
     <div className={s.card}>
-      <h4>실측 날짜 물어보기</h4>
-      <p className={s.note}>집에 계실 수 있는 기간을 고르면 담은 업체 {ids.length}곳에 물어봐요. 업체가 되는 날을 보내면 그중에서 반나절을 골라요.</p>
-      <div className={s.dates}>
-        <label className={s.field}>언제부터<input type="date" min={min} value={from} onChange={(e) => setFrom(e.target.value)} /></label>
-        <label className={s.field}>언제까지<input type="date" min={from || min} value={to} onChange={(e) => setTo(e.target.value)} /></label>
-      </div>
-      <Button size="sm" disabled={!ok} busy={busy === "req"} onClick={() => act("req", async () => {
-        const out = await call<Schemas["VisitCreateOut"]>("POST", `/projects/${pid}/visits`, { trade: "dobae", vendor_ids: ids, wish_start: from, wish_end: to });
-        // 일부 업체만 못 보낸 경우(서버는 전부 실패일 때만 409)도 알려요
-        if (out?.failed?.length) onFailed(`${out.failed.length}곳에는 요청을 보내지 못했어요. 업체 목록에서 다시 확인해 주세요.`);
-      })}>{ids.length}곳에 실측 날짜 물어보기</Button>
+      <h4>실측 날짜 고르기</h4>
+      <p className={s.note}>담은 업체 {n}곳이 등록해 둔 영업일에서 실측 반나절을 골라 요청해요. 업체는 주차 · 엘리베이터 같은 현장 정보를 보고 수락하거나 다른 날을 제안해요.</p>
+      <Button size="sm" href={`/projects/${pid}/visits/new`}>영업일 보고 실측 요청하기</Button>
     </div>
   );
 }
