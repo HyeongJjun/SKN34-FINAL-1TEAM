@@ -6,6 +6,9 @@
 // - 업체 담기 POST · DELETE /projects/{id}/shortlist · 반나절 고르기 POST …/visits/{vid}/pick(제안이면 proposal/pick)
 // - 견적서 확정 POST …/quotes/{vid}/confirm · 공사 날짜 수락 POST …/deals/{did}/dates/{pid}/accept · 추가 금액 POST …/extras/{eid}/answer
 // - 공사 끝 확인 POST …/deals/{did}/check · 준비 체크 PUT /projects/{id}/checks/{key}. 실측 요청 · 리뷰는 각 화면으로 가요.
+// #197(멘토 피드백 '오른쪽 패널과 채팅이 유기적으로'): AI 답에 나온 업체 이름은 보드 업체 칸에서 강조하고, 일정 답이면 일정 칸으로 옮겨요.
+//   업체 칸은 공정별 탭(도배 · 목공, 목공은 고른 공사만)과 찾기 칸이 있고, 공정마다 3곳까지 담아요(서버도 slots_full 409로 막아요).
+//   AI 카드 모양은 그대로예요. 강조는 답 글 · 표 · 초안에 나온 이름을 이 공사 업체 목록과 맞춰 봐요(화면에서만).
 // - 질문은 POST /ai/turns(로그인한 고객 AI). 금액 · 날짜는 API 값 그대로이고, 저장 · 확정 · 승인은 사람이 보드 단추를 눌러요.
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
@@ -32,6 +35,17 @@ const CLOSED = ["declined", "expired", "cancelled", "no_show", "closed"];
 type Half = "am" | "pm";
 const HALF: Record<Half, string> = { am: "오전", pm: "오후" };
 const enc = encodeURIComponent;
+type Trade = "dobae" | "mokgong";
+const TRADE_WORD: Record<Trade, string> = { dobae: "도배", mokgong: "목공" };
+const MAX_PICK = 3;
+/** 찾기 · 이름 맞추기용: 띄어쓰기 빼고 소문자 */
+const norm = (x: string) => x.replace(/\s+/g, "").toLowerCase();
+/** AI 답의 글을 모아요(업체 이름 맞추기용). 금액 · 날짜를 만들지 않아요 */
+function answerText(a: AiTurnOut["answer"]): string {
+  const parts = [a.lead ?? "", a.notice, ...(a.vendor ?? []), ...a.sections.flatMap((x) => [x.title, ...x.sentences, x.caution, x.tip])];
+  for (const c of a.cards) parts.push(c.title, c.text, ...(c.draft?.vendors ?? []), c.draft?.recommend?.vendor ?? "", ...(c.table?.cols ?? []), ...(c.table?.rows.flatMap((r) => r.cells) ?? []));
+  return parts.join(" ");
+}
 
 export type FlowData = {
   p: VisitProject;
@@ -41,6 +55,8 @@ export type FlowData = {
   visits: ProjectVisits | null;
   vendors: ProjectVendors | null;
   draft: VisitDraft | null;
+  /** 목공 업체 목록(목공을 고른 공사만, 아니면 null) */
+  mokVendors: ProjectVendors | null;
   today: string;
   /** 표준견적서 창 값(서버가 읽어 넘겨요). 못 읽으면 표준견적서 화면 링크로 가요 */
   std: StdData | null;
@@ -66,12 +82,16 @@ function stepOf(d: FlowData): number {
 
 export function ProjectFlow({ data }: { data: FlowData }) {
   const router = useRouter();
-  const { p, ov, compare, schedule, visits, vendors, draft, today, std } = data;
+  const { p, ov, compare, schedule, visits, vendors, mokVendors, draft, today, std } = data;
   const pid = enc(p.id);
   const now = stepOf(data);
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState(Math.min(now, 7));
   const [stdOpen, setStdOpen] = useState(data.openStd && !!std);
+  const [trade, setTrade] = useState<Trade>("dobae");
+  const [query, setQuery] = useState("");
+  /** AI 답에 나온 업체(보드에서 강조) */
+  const [hi, setHi] = useState<string[]>([]);
   const [busyKey, setBusy] = useState<string | null>(null);
   const [refreshing, startRefresh] = useTransition();
   // 새 화면 값이 올 때까지 단추를 막아요(같은 요청을 두 번 보내 409가 나지 않게)
@@ -96,6 +116,24 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     requestAnimationFrame(() => document.getElementById("jj-board")?.scrollIntoView({ block: "start", behavior: "smooth" }));
   }
 
+  const listOf = (t: Trade) => { const x = t === "dobae" ? vendors : mokVendors; return [...(x?.local ?? []), ...(x?.nearby ?? [])]; };
+  /** AI 답 → 보드: 업체 이름이 나오면 업체(견적서가 왔으면 비교) 칸에서 강조, 일정 답이면 일정 칸 */
+  function linkBoard(out: AiTurnOut) {
+    const t = norm(answerText(out.answer));
+    const match = (t2: Trade) => listOf(t2).filter((v) => norm(v.name).length >= 2 && t.includes(norm(v.name))).map((v) => v.vendor_id);
+    const dob = match("dobae");
+    const mok = match("mokgong");
+    if (dob.length || mok.length) {
+      setHi([...new Set([...dob, ...mok])]);
+      setQuery("");
+      setTrade(dob.length ? "dobae" : "mokgong");
+      const quotedNow = (compare?.vendors ?? []).some((r) => r.latest && r.status === "quoted");
+      setTab(quotedNow && !schedule?.trades.length ? 4 : 2);
+      return;
+    }
+    if (out.route === "schedule") setTab(schedule?.trades.length ? 5 : 3);
+  }
+
   async function act(key: string, fn: () => Promise<unknown>, said?: string) {
     if (busy) return;
     setBusy(key);
@@ -117,6 +155,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
       const out = await askAi({ client_key: newClientKey(), text: t, chat_id: chatId, context: { screen: now <= 2 ? "vendors" : now <= 4 ? "quotes" : "plan", project_id: p.id, ids: [] }, button }); // 선택지의 길(route) · 칸 정보를 그대로 넘겨요
       if (out.chat_id) setChatId(out.chat_id);
       setAsks((a) => a.map((x, i) => (i === a.length - 1 ? { ...x, out } : x)));
+      linkBoard(out);
     } catch (e) {
       setAsks((a) => a.map((x, i) => (i === a.length - 1 ? { ...x, err: errorText(e) } : x)));
     }
@@ -211,25 +250,25 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     );
     if (step === 2) return (
       <>
-        {!vs.length && !deal ? (
-          <div className={s.vlist}>
-            {ready.slice(0, 6).map((v) => (
-              <div key={v.vendor_id} className={`${s.vrow} ${v.shortlisted ? s.vrowOn : ""}`}>
-                <div><b>{v.name}</b><span className={s.note}>{v.rating ? `별 ${v.rating} · ` : ""}후기 {v.review_count} · 시공 {v.done_count}</span></div>
-                <div className={s.row}>
-                  <b className="mj-num">{v.estimate_total != null ? won(v.estimate_total) : "—"}</b>
-                  <Button size="sm" variant={v.shortlisted ? "secondary" : "weak"} busy={busy === v.vendor_id}
-                    onClick={() => act(v.vendor_id, () => v.shortlisted ? call("DELETE", `/projects/${pid}/shortlist/${enc(v.vendor_id)}?trade=dobae`) : call("POST", `/projects/${pid}/shortlist`, { trade: "dobae", vendor_id: v.vendor_id }), `${v.name}${v.shortlisted ? " 뺐어요" : " 담았어요"}`)}>
-                    {v.shortlisted ? "빼기" : "담기"}
-                  </Button>
-                </div>
-              </div>
-            ))}
-            {!ready.length ? <p className={s.note}>이 지역에 가견적을 낸 업체가 아직 없어요.</p> : null}
+        {mokVendors ? (
+          <div className={s.trades} role="tablist" aria-label="공정별 업체">
+            {(["dobae", "mokgong"] as Trade[]).map((t) => {
+              const n = listOf(t).filter((v) => v.shortlisted).length;
+              return <button key={t} type="button" role="tab" aria-selected={trade === t} className={trade === t ? `${s.tradeTab} ${s.tradeOn}` : s.tradeTab} onClick={() => setTrade(t)}>{TRADE_WORD[t]} <span className="mj-num">{n}/{MAX_PICK}</span></button>;
+            })}
           </div>
-        ) : <p className={s.note}>업체는 이미 골랐어요. 실측 칸을 봐 주세요.</p>}
+        ) : null}
+        {trade === "mokgong" || (!vs.length && !deal) ? (
+          <>
+            <div className={s.search} role="search">
+              <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="업체 이름 · 지역으로 찾기" aria-label={`${TRADE_WORD[trade]} 업체 찾기`} />
+            </div>
+            <VendorRows list={listOf(trade).filter((v) => v.state === "ok")} query={query} hi={hi} trade={trade} pid={pid} busy={busy} act={act} />
+          </>
+        ) : <p className={s.note}>도배 업체는 이미 골랐어요. 실측 칸을 봐 주세요.</p>}
         <Link href={`/projects/${pid}/vendors`}>전체 업체에서 직접 고르기</Link>
-        {picked.length && !vs.length && !deal ? <VisitRequest pid={pid} draft={draft} /> : null}
+        {trade === "dobae" && picked.length && !vs.length && !deal ? <VisitRequest pid={pid} draft={draft} /> : null}
+        {trade === "mokgong" ? <p className={s.note}>목공 실측 요청은 다음 묶음에서 열려요. 지금은 담아 두기만 해요.</p> : null}
       </>
     );
     if (step === 3) return (
@@ -376,6 +415,41 @@ export function ProjectFlow({ data }: { data: FlowData }) {
 
 type Act = (key: string, fn: () => Promise<unknown>, said?: string) => Promise<void>;
 const VISIT_WORD: Record<string, string> = { requested: "날짜 묻는 중", picked: "고른 날 보냄 · 업체 수락 기다림", booked: "실측 잡힘", visited: "실측 끝 · 견적서 기다림", quoted: "견적서 옴" };
+
+type Card = ProjectVendors["local"][number];
+/** 보드 업체 줄(#197): 찾기 낱말로 거르고, AI 답에 나온 업체는 위로 올려 강조해요. 공정마다 3곳까지 담아요 */
+function VendorRows({ list, query, hi, trade, pid, busy, act }: { list: Card[]; query: string; hi: string[]; trade: Trade; pid: string; busy: string | null; act: Act }) {
+  const key = norm(query);
+  const shown = list
+    .filter((v) => !key || norm(`${v.name} ${v.sgg}`).includes(key))
+    .sort((a, b) => Number(hi.includes(b.vendor_id)) - Number(hi.includes(a.vendor_id)));
+  const full = list.filter((v) => v.shortlisted).length >= MAX_PICK;
+  const first = useRef<HTMLDivElement>(null);
+  // 강조가 바뀌면 그 업체가 보이게 옮겨요
+  useEffect(() => { if (hi.length) first.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [hi]);
+  if (!list.length) return <p className={s.note}>이 지역에 {TRADE_WORD[trade]} 가견적을 낸 업체가 아직 없어요.</p>;
+  if (!shown.length) return <p className={s.note} role="status">찾는 업체가 없어요. 업체 이름이나 구 이름으로 찾아 주세요.</p>;
+  return (
+    <div className={s.vlist}>
+      {shown.slice(0, 8).map((v, i) => {
+        const on = hi.includes(v.vendor_id);
+        return (
+          <div key={v.vendor_id} ref={on && i === 0 ? first : undefined} className={[s.vrow, v.shortlisted ? s.vrowOn : "", on ? s.vrowHi : ""].join(" ")}>
+            <div><b>{v.name}</b>{on ? <span className={s.hiTag}>재재가 말한 업체</span> : null}<span className={s.note}>{v.rating ? `별 ${v.rating} · ` : ""}후기 {v.review_count} · 시공 {v.done_count}</span></div>
+            <div className={s.row}>
+              <b className="mj-num">{v.estimate_total != null ? won(v.estimate_total) : "—"}</b>
+              <Button size="sm" variant={v.shortlisted ? "secondary" : "weak"} busy={busy === v.vendor_id} disabled={!v.shortlisted && full}
+                onClick={() => act(v.vendor_id, () => v.shortlisted ? call("DELETE", `/projects/${pid}/shortlist/${enc(v.vendor_id)}?trade=${trade}`) : call("POST", `/projects/${pid}/shortlist`, { trade, vendor_id: v.vendor_id }), `${TRADE_WORD[trade]} ${v.name}${v.shortlisted ? " 뺐어요" : " 담았어요"}`)}>
+                {v.shortlisted ? "빼기" : "담기"}
+              </Button>
+            </div>
+          </div>
+        );
+      })}
+      {full ? <p className={s.note}>{TRADE_WORD[trade]}는 {MAX_PICK}곳을 다 담았어요. 바꾸려면 하나를 빼 주세요.</p> : null}
+    </div>
+  );
+}
 
 // 2026-11-25 회의: 날짜는 요청 화면에서 업체가 등록한 영업일로 골라요
 function VisitRequest({ pid, draft }: { pid: string; draft: VisitDraft | null }) {
