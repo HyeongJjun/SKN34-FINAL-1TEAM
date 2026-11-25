@@ -28,3 +28,9 @@
 .askBtn { display: inline-flex; align-items: center; min-height: var(--mj-hit); padding: 0 10px; border: 0; border-radius: var(--mj-radius-field); background: none; color: var(--mj-link); font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); cursor: pointer; white-space: nowrap; }
 .askBtn:hover { background: var(--mj-primary-weak); }
 .saved { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 6px; color: var(--mj-text-mute); font-size: var(--mj-type-caption); }
+
+/* 공정 순서 띠 · 바닥 자리(#193) */
+.order { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; }
+.order li { padding: 6px 12px; border-radius: var(--mj-radius-pill); background: var(--mj-surface-sub); color: var(--mj-text-mute); font-size: var(--mj-type-caption); }
+.order .orderOn { background: var(--mj-primary-weak); color: var(--mj-on-primary-weak); font-weight: var(--mj-weight-semibold); }
+.soonRow { margin: 0; color: var(--mj-text-mute); font-size: var(--mj-type-label); }
