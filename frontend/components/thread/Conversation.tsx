@@ -204,6 +204,12 @@ export function Conversation({ role, thread, visit, visitLabel, initial, today }
         </div>
       </div>
 
+      {/* 2026-11-25 회의: 연락처 공개 기능 대신 안내 두 줄. 채팅은 실측 요청 때 열려요 */}
+      <p className={s.guide}>
+        {role === "customer"
+          ? "견적서는 믿집에 올려야 비교 · 리뷰가 돼요. 연락처는 실측을 맡길 업체에만 알려 주세요."
+          : "연락처는 실측 날짜가 정해진 뒤 부탁해 주세요. 견적서는 믿집에 올려야 고객이 비교할 수 있어요."}
+      </p>
       <div ref={listRef} className={s.msgs} role="log" aria-label="대화 글">
         <MessageList
           messages={msgs}
