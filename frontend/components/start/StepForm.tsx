@@ -3,6 +3,8 @@
 // - 단계 띠: 우리 집 → 원하는 공사 → 표준견적서. 카드 하나씩 [다음]으로 넘기고, 지난 카드는 한 줄 요약 + [고치기].
 // - 칸은 dev 백엔드에 있는 것만: 지역 · 면적(공급 | 전용, ㎡ | 평) · 공사할 때 집 · 벽지 · 도배 범위 · 희망 시기.
 //   방 개수 · 철거 범위는 DB 칸이 없어 두지 않아요. 예산은 고치기에서 저장된 값을 그대로 넘겨요(이 화면에서 묻지 않아요).
+// - 원하는 공사에서 공정을 골라요(#193): 도배(꼭) · 목공(할 곳 하나 이상) · 바닥(마루)은 '준비 중' 틀만(서버로 보내지 않아요).
+//   공사 순서는 목공 → 도배 → 바닥이에요(표준견적서 순서 띠와 같아요).
 // - 칸 이름 옆 '?'는 백과 용어 사전의 쉬운 말(HelpTip)이에요.
 // - 손님: 답은 이 기기에만(mj_guest_v3) → /start/standard. 로그인한 고객: POST /projects → 재재 화면(/projects/{id}/assistant).
 // - 고치기(mode=edit): 같은 카드, 마지막 단추가 저장(PATCH /projects/{id}) → 재재 화면.
@@ -20,7 +22,7 @@ import { Segmented } from "@/components/ui/Segmented";
 import type { Region } from "@/lib/api/project";
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { dateShort } from "@/lib/format";
-import { EMPTY_DRAFT, FACES, GRADE_WORD, PYEONG_M2, SPACES, checkDraft, placeText, pyeongToM2, scopeText, toHomeInfo, type Face, type InfoDraft, type InfoErrors, type SpaceKind } from "@/lib/guest/info";
+import { EMPTY_DRAFT, FACES, GRADE_WORD, PYEONG_M2, MOK_ITEMS, SPACES, checkDraft, placeText, pyeongToM2, scopeText, toHomeInfo, type Face, type InfoDraft, type InfoErrors, type MokItem, type SpaceKind } from "@/lib/guest/info";
 import { clearGuest, draftOf, readGuest, writeGuest } from "@/lib/guest/store";
 import { termByName, termHref } from "@/lib/guide";
 import { DateSheet } from "./DateSheet";
@@ -30,7 +32,7 @@ import s from "./StepForm.module.css";
 export type StepMode = "guest" | "member" | "edit";
 type Step = "home" | "work";
 const STEPS = ["우리 집", "원하는 공사", "표준견적서"] as const;
-const KEYS: Record<Step, (keyof InfoErrors)[]> = { home: ["region", "area", "occupied"], work: ["grade", "spaces", "faces"] };
+const KEYS: Record<Step, (keyof InfoErrors)[]> = { home: ["region", "area", "occupied"], work: ["grade", "spaces", "faces", "mokgong"] };
 const errorsIn = (e: InfoErrors, step: Step): InfoErrors => Object.fromEntries(KEYS[step].filter((k) => e[k]).map((k) => [k, e[k]]));
 
 /** 백과 용어 쉬운 말 '?'(용어가 사전에 없으면 note만) */
@@ -197,7 +199,19 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
           </section>
         ) : (
           <section className={s.card} aria-labelledby="sf-work">
-            <div className={s.top}><h2 id="sf-work" ref={head} tabIndex={-1}>원하는 공사</h2><span className={s.mute}>도배</span></div>
+            <div className={s.top}><h2 id="sf-work" ref={head} tabIndex={-1}>원하는 공사</h2><span className={s.mute}>아파트</span></div>
+            <Row label="공정" help={<Tip label="공정" terms={["걸레받이", "문선"]} note="목공은 몰딩 · 걸레받이 · 문처럼 나무로 마감하는 일이에요. 목공을 먼저 하고 도배를 해요." />} error={eWork.mokgong}>
+              <div className={s.chips} role="group" aria-label="공정 고르기">
+                <button type="button" className={s.chip} aria-pressed disabled>도배</button>
+                <button type="button" className={s.chip} aria-pressed={d.mok} onClick={() => set({ mok: !d.mok })}>목공</button>
+                <button type="button" className={s.chip} aria-pressed={false} disabled aria-describedby="sf-floor">바닥(마루) <span className={s.soon}>준비 중</span></button>
+              </div>
+              {d.mok ? (
+                <ChoiceChips multiple legend="목공 할 곳" value={d.mokgong} onChange={(v) => set({ mokgong: v as MokItem[] })} options={MOK_ITEMS.map((x) => ({ value: x.key, label: x.label }))} />
+              ) : null}
+              <p id="sf-floor" className={s.mute}>바닥(마루)은 준비 중이에요. 마루 종류 · 기존 바닥 철거는 곧 여기서 골라요.</p>
+              {d.mok ? <p className={s.order} aria-label="공사 순서">공사 순서 <b>목공</b> → <b>도배</b> → <span>바닥</span></p> : null}
+            </Row>
             <Row label="벽지" help={<Tip label="벽지" terms={["실크 벽지", "합지"]} />} error={eWork.grade}>
               <ChoiceChips legend="벽지" hideLegend value={d.grade} onChange={(v) => set({ grade: v as InfoDraft["grade"] })}
                 options={[{ value: "basic", label: GRADE_WORD.basic }, { value: "economy", label: GRADE_WORD.economy }]} />
@@ -220,7 +234,7 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
             </Row>
             {formErr ? <p className={s.err} role="alert">{formErr}</p> : null}
             {nWork ? <p className={s.err} role="alert">고를 칸이 {nWork}개 있어요</p> : null}
-            <p className={s.mute}>{d.grade ? `도배 ${GRADE_WORD[d.grade]} · ${scopeText(d)}` : "벽지를 고르면 표준견적서를 계산해요"}</p>
+            <p className={s.mute}>{d.grade ? `도배 ${GRADE_WORD[d.grade]} · ${scopeText(d)}${d.mok && d.mokgong.length ? ` + 목공 ${d.mokgong.map((k) => MOK_ITEMS.find((x) => x.key === k)?.label).join(" · ")}` : ""}` : "벽지를 고르면 표준견적서를 계산해요"}</p>
             <div className={s.actions}>
               <Button size="lg" variant="secondary" disabled={busy} onClick={() => setStep("home")}>이전</Button>
               <Button size="lg" busy={busy} onClick={() => { void finish(); }}>{doneLabel}</Button>
