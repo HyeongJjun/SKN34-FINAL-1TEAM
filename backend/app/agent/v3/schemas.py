@@ -6,14 +6,20 @@
 
 import uuid
 from datetime import date
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
-TradeCode = Literal[
-    "dobae", "mokgong", "floor", "tile", "bath", "kitchen", "paint", "film", "electric",
-    "window", "demolition", "plumbing", "common",
-]  # fmt: skip
+
+def _known_trade(code: str) -> str:
+    from app.agent.v3.trades import BY_CODE
+
+    if code not in BY_CODE:
+        raise ValueError("등록된 공종 코드가 아닙니다")
+    return code
+
+
+TradeCode = Annotated[str, AfterValidator(_known_trade)]
 Route = Literal[
     "guide", "trade", "quote_explanation", "schedule", "multi", "out_of_scope", "ask_back"
 ]

@@ -19,6 +19,7 @@ from app.agent.v3.answer import (
     use_card,
 )
 from app.agent.v3.schemas import AskSlot, Choice, UiCard
+from app.agent.v3.specialists import registered
 from app.agent.v3.trades import BY_CODE
 
 
@@ -27,6 +28,13 @@ def primary(task: Task) -> str:
 
 
 def run(task: Task, kb: KB) -> Part:
+    specialist = registered().get(primary(task))
+    if specialist is not None and specialist.run is not None:
+        return specialist.run(task, kb, _run_common)
+    return _run_common(task, kb)
+
+
+def _run_common(task: Task, kb: KB) -> Part:
     code = primary(task)
     spec = BY_CODE[code]
     part = Part(route="trade", trade=code)  # type: ignore[arg-type]
@@ -78,7 +86,6 @@ def run(task: Task, kb: KB) -> Part:
             "\n".join([*lines, templates.ALLOWED]),
         )
 
-    q = task.text
     pick = next_card(kb, task.slot, task.value) if task.slot and task.value else None
     # 카드가 정해 둔 '고른 답 → 다음 카드'(상황별 안내)
     if pick is not None and pick.card is not None:
@@ -98,9 +105,9 @@ def run(task: Task, kb: KB) -> Part:
         )
         how = "ask"
     else:
-        if task.slot and task.value:  # 되물은 칸의 답: 원래 질문 + 고른 값으로 다시 찾는다
-            q = f"{task.asked} {task.value}".strip()
-        how = knowledge(part, kb, q, trade=code, route="trade", facts=facts, policy=task.policy)  # type: ignore[arg-type]
+        how = knowledge(
+            part, kb, task.search_text, trade=code, route="trade", facts=facts, policy=task.policy
+        )
     if task.slot and how != "ask":
         part.ask = None  # 한 칸은 한 번만 묻는다(되묻기 반복 막기). 정할 수 없을 때만 다시 물어요
     if how == "unknown" and lines:

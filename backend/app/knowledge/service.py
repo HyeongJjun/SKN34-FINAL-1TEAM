@@ -21,10 +21,10 @@ def _build(datasets: list[tuple[str, list[dict]]], version: str) -> bm25.Index:
 
 
 async def index(s: AsyncSession) -> bm25.Index:
-    return (await _index(s))[0]
+    return (await index_with_versions(s))[0]
 
 
-async def _index(s: AsyncSession) -> tuple[bm25.Index, list[uuid.UUID]]:
+async def index_with_versions(s: AsyncSession) -> tuple[bm25.Index, list[uuid.UUID]]:
     """키워드 색인과 그 색인을 만든 활성 버전 id들"""
     global _cache
     versions = await repository.active_versions(s)
@@ -39,6 +39,13 @@ async def _index(s: AsyncSession) -> tuple[bm25.Index, list[uuid.UUID]]:
     return ix, ids
 
 
+async def vector_rids(
+    s: AsyncSession, ids: list[uuid.UUID], embedding: tuple[str, list[float]]
+) -> list[str]:
+    model, vector = embedding
+    return await repository.nearest(s, ids, model, vector, bm25.CONF["dense_n"])
+
+
 async def search(
     s: AsyncSession,
     q: str,
@@ -50,11 +57,10 @@ async def search(
     embedding: tuple[str, list[float]] | None = None,
 ) -> bm25.Result:
     """질문(+ 검색어 여러 개)으로 근거 조각을 찾는다. embedding = (모델, 질문 벡터). 활성 자료가 없으면 빈 결과"""
-    ix, ids = await _index(s)
+    ix, ids = await index_with_versions(s)
     dense: list[str] = []
     if embedding and ix.items:
-        model, vector = embedding
-        dense = await repository.nearest(s, ids, model, vector, bm25.CONF["dense_n"])
+        dense = await vector_rids(s, ids, embedding)
     return bm25.search(
         ix, q, queries=queries, trade=trade, k=k, policy_text=policy_text, dense=dense
     )
