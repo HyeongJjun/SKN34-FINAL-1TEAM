@@ -1,0 +1,18 @@
+/* 표준견적서 창: 웹 680px 가운데 큰 창 · 폰은 거의 전체 */
+.dlg {
+  width: min(680px, calc(100% - 2 * var(--mj-gutter)));
+  max-width: none; max-height: calc(100dvh - 32px);
+  margin: auto; padding: 0; border: 0; border-radius: var(--mj-radius-sheet);
+  background: var(--mj-bg); color: var(--mj-text); box-shadow: var(--mj-shadow-overlay);
+  overflow: hidden; overscroll-behavior: contain;
+}
+.dlg::backdrop { background: var(--mj-scrim); }
+.dlg[open] { display: flex; }
+.card { display: flex; flex-direction: column; width: 100%; max-height: calc(100dvh - 32px); }
+.head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px 10px 20px; background: var(--mj-surface); border-bottom: 1px solid var(--mj-line-soft); }
+.head h2 { margin: 0; font-size: var(--mj-type-label); font-weight: var(--mj-weight-bold); }
+.x { display: grid; place-items: center; width: var(--mj-hit); height: var(--mj-hit); padding: 0; border: 0; border-radius: 50%; background: var(--mj-surface-sub); color: var(--mj-text-sub); cursor: pointer; }
+.body { display: flex; flex-direction: column; gap: 12px; padding: 16px; overflow: auto; min-height: 0; }
+.note { margin: 0; font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+.actions { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; background: var(--mj-surface); border-top: 1px solid var(--mj-line-soft); }
+@media (max-width: 767px) { .actions > * { flex: 1 1 0; } }
