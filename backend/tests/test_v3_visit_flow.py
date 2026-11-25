@@ -291,7 +291,7 @@ def test_quote_needs_a_booked_visit_and_requote(api):
     use(api, f["token"])
     rq = f"/projects/{f['pid']}/visits/{f['visit']}/requote"
     assert code(api.post(rq)) == (409, "stale")  # 아직 유효기간 안
-    query("update vendor_quotes set valid_until = current_date - 1")
+    query("update vendor_quotes set valid_until = $1", day(-1))
     assert row(api, f)["can"]["requote"] is True
     r = api.post(rq)
     assert r.status_code == 200 and r.json()["status"] == "quoted", r.text
