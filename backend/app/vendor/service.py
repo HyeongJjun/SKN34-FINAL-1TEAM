@@ -14,6 +14,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Protocol
 
 from fastapi import UploadFile
+from sqlalchemy import update as sa_update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -64,6 +65,8 @@ from app.vendor.schemas import (
     FaqIn,
     LicenseOut,
     LinkIn,
+    OpenDaysIn,
+    OpenDaysOut,
     OpenFieldOut,
     PortfolioIn,
     PortfolioMeta,
@@ -1391,3 +1394,26 @@ async def set_review_link_status(
         note=row.note,
         checked_at=row.checked_at,
     )
+
+
+# ---- 실측 영업일 (0038): 업체가 미리 등록하고, 고객은 이 안의 빈 반나절만 골라요 ----
+
+
+async def get_open_days(s: AsyncSession, vendor: User) -> OpenDaysOut:
+    v = await s.get(Vendor, vendor.id, populate_existing=True)
+    if v is None:
+        raise AppError(404, "not_found", "업체 정보를 찾을 수 없어요.")
+    return OpenDaysOut(open_weekdays=list(v.open_weekdays or []), off_days=list(v.off_days or []))
+
+
+async def save_open_days(
+    s: AsyncSession, vendor: User, data: OpenDaysIn, today: date
+) -> OpenDaysOut:
+    off = [d for d in data.off_days if d > today]  # 지난 날은 남기지 않아요
+    await s.execute(
+        sa_update(Vendor)
+        .where(Vendor.user_id == vendor.id)
+        .values(open_weekdays=data.open_weekdays, off_days=off)
+    )
+    await s.commit()
+    return await get_open_days(s, vendor)
