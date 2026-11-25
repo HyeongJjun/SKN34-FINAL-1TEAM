@@ -109,6 +109,8 @@ from app.visit.schemas import (
     VisitHeadOut,
     VisitListOut,
     VisitNextOut,
+    VisitOpenDayOut,
+    VisitOpenDaysOut,
     VisitOut,
     VisitPickOut,
     VisitProposalOut,
@@ -777,14 +779,16 @@ async def _move(
     values: dict | None = None,
     code: str | None = None,
     message: str,
+    allowed_from: tuple[str, ...] = ("requested",),
 ) -> None:
-    """requested에서만 바꾼다. 1행이 아니면 409(다른 곳에서 먼저 바꿈)."""
+    """requested에서만 바꾼다(업체 못 받아요는 고객이 영업일에서 날짜를 고른 picked도). 1행이 아니면 409."""
+    frm = v.status if v.status in allowed_from else allowed_from[0]
     ok = await repo.set_status(
-        s, v.id, allowed_from=("requested",), values={"status": to, **(values or {})}
+        s, v.id, allowed_from=allowed_from, values={"status": to, **(values or {})}
     )
     if not ok:
         raise AppError(409, "invalid_state", message)
-    s.add(VisitEvent(visit_id=v.id, from_status="requested", to_status=to, by_id=by.id, code=code))
+    s.add(VisitEvent(visit_id=v.id, from_status=frm, to_status=to, by_id=by.id, code=code))
 
 
 async def cancel(
@@ -878,6 +882,10 @@ async def decline(
         values={"decline_code": code, "decline_note": note or None},
         code=code,
         message="이미 닫혔거나 견적서를 보낸 요청이에요.",
+        allowed_from=(
+            "requested",
+            "picked",
+        ),  # 현장 정보(주차 · 엘리베이터)를 보고 못 받을 수 있어요
     )
     await end_visit(s, v, now=now_utc(), shortlist_code="declined", thread_reason="declined")
     owner = (await project_service.briefs(s, [v.project_id]))[v.project_id].owner_id
@@ -2312,3 +2320,48 @@ def expired_due(v: Visit, window: VisitWindow | None) -> datetime | None:
 def visit_error(v: Visit, message: str) -> AppError:
     """지금 상태에서 못 하는 일: 기한이 지나 끝났으면 expired, 그 밖은 stale"""
     return app_error("expired" if v.status == "expired" else "stale", message)
+
+
+# ---- 업체 영업일의 빈 반나절 (0038): 업체가 등록한 영업 요일 · 쉬는 날 안에서, 고객 정보 없이 날 · 반나절만 ----
+
+SPAN_INVALID = "기간을 다시 골라 주세요. (62일 안)"
+
+
+async def open_halves_for(
+    s: AsyncSession, vendor_id: uuid.UUID, start: date, end: date
+) -> dict[date, list[str]]:
+    """그 업체가 start ~ end에 실측을 더 받을 수 있는 반나절: 날 → ["am", "pm"] 중 빈 것(날 순).
+    영업 요일 밖 · 쉬는 날 · 오늘과 그 앞 날 · 칸이 다 찬 반나절은 뺀다. 승인 전 · 멈춘 업체는 빈 dict."""
+    if end < start or (end - start).days > slots.SPAN_MAX:
+        raise app_error("invalid", SPAN_INVALID, fields=[{"loc": ["end"], "msg": SPAN_INVALID}])
+    f = (await repo.vendor_facts(s, [vendor_id])).get(vendor_id)
+    if f is None or f.status != "approved" or f.suspended:
+        return {}
+    holds = await repo.vendor_holds(s, vendor_id, start, end)
+    taken = slots.taken_count((h.day, h.half) for h in holds)
+    days = slots.open_halves(start, end, [], taken, f.capacity, today_of(now_utc()))
+    return {
+        x.day: [h for h in slots.HALVES if x.left(h) > 0]
+        for x in days
+        if (x.am or x.pm) and slots.is_open_day(x.day, f.open_weekdays, f.off_days)
+    }
+
+
+async def open_days_for_customer(
+    s: AsyncSession,
+    user: User,
+    project_id: uuid.UUID,
+    vendor_id: uuid.UUID,
+    start: date,
+    end: date,
+) -> VisitOpenDaysOut:
+    """내 공사(남의 것은 404)에서 본 업체 영업일의 빈 반나절. 같은 집 다른 실측이 잡은 반나절은 빼요."""
+    p = await project_service.get_for(s, user, project_id)
+    free = await open_halves_for(s, vendor_id, start, end)
+    mine = [v.id for v in await repo.of_project(s, p.id, None)]
+    taken = {(h.day, h.half) for h in (await repo.holds_of_visits(s, mine)).values()}
+    days = [
+        VisitOpenDayOut(day=d, halves=[h for h in hs if (d, h) not in taken])
+        for d, hs in sorted(free.items())
+    ]
+    return VisitOpenDaysOut(days=[x for x in days if x.halves])
