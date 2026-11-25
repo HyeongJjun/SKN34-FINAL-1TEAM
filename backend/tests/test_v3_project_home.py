@@ -50,6 +50,7 @@ def test_v3_body_creates_a_member_project_with_home(api):
         "grade": "basic",
         "budget_won": 3_000_000,
         "start_date": START,
+        "mokgong": [],
     }
     assert p["size"] == {"band": None, "basis": "supply", "m2": "69.4"}
     assert p["when"] == {"kind": "date", "start": START, "end": None}
