@@ -19,6 +19,7 @@ import { draftOf, readGuest } from "@/lib/guest/store";
 import { GUEST_ASK_EVENT, GuestAskSheet } from "./GuestAside";
 import { GuestJaejae } from "./GuestJaejae";
 import { StandardSheet, StandardSkeleton } from "./StandardSheet";
+import { TradeOrder } from "./TradeParts";
 import s from "./standard.module.css";
 
 // 전체 도배는 시장 단가 표준견적서(업체 견적서 235건 중앙값, /estimate와 같은 계산)로 보여요.
@@ -29,11 +30,14 @@ export function GuestStandard({ mock }: { mock: boolean }) {
   const [st, setSt] = useState<State>({ kind: "loading" });
   const [join, setJoin] = useState(false);
   const [ask, setAsk] = useState(false);
+  /** 목공도 골랐어요(#193): 손님 계산은 도배만 세고, 목공 줄은 가입 뒤 내 공사 표준견적서에 나와요 */
+  const [mok, setMok] = useState(false);
 
   const load = useCallback(async () => {
     const g = readGuest();
     const d = g ? draftOf(g) : null;
     if (!d || Object.keys(checkDraft(d)).length) { setSt({ kind: "none" }); return; }
+    setMok(d.mok && d.mokgong.length > 0);
     setSt({ kind: "loading" });
     const info = toHomeInfo(d);
     try {
@@ -91,6 +95,8 @@ export function GuestStandard({ mock }: { mock: boolean }) {
               </div>
             </div>
           ) : null}
+          {mok ? <TradeOrder has={["dobae", "mokgong"]} /> : null}
+          {mok ? <p className={s.guestInfo}>여기 금액은 도배만이에요. 목공 줄은 가입하면 내 공사 표준견적서에 공정별로 같이 나와요.</p> : null}
           {ok ? <StandardSheet view={ok} changeHref="/start" /> : null}
           {st.kind === "market" ? (
             <>

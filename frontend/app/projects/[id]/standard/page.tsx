@@ -7,6 +7,7 @@ import { AppHeader } from "@/components/site/AppHeader";
 import { AsideOpenButton } from "@/components/site/AsideSlot";
 import { Main, PageHead, WithAside } from "@/components/site/Frame";
 import { StandardSheet } from "@/components/start/StandardSheet";
+import { TradeOrder, TradePartSheets } from "@/components/start/TradeParts";
 import { BottomBar } from "@/components/ui/BottomBar";
 import { Button } from "@/components/ui/Button";
 import { MarketSheet, MarketTotal, MarketTrust } from "@/components/v2/market/MarketQuote";
@@ -33,6 +34,7 @@ export default async function StandardPage({ params }: { params: Promise<{ id: s
       <Main>
         <PageHead title="표준견적서" crumbs={[{ label: "내 공사", href: "/my" }, { label: shell.name, href: base }, { label: "표준견적서" }]} />
         <WithAside aside={<AiPanel screen="standard" projectId={shell.id} />}>
+          {view.parts?.length ? <TradeOrder has={["dobae", ...view.parts.map((x) => x.trade)]} /> : null}
           {market ? (
             <>
               <MarketTotal q={market} changeHref={changeHref} caption={["부가세 포함", daysCaption(view.days)].filter(Boolean).join(" · ")} />
@@ -42,6 +44,7 @@ export default async function StandardPage({ params }: { params: Promise<{ id: s
           ) : (
             <StandardSheet view={view} changeHref={changeHref} />
           )}
+          {view.parts?.length ? <TradePartSheets parts={view.parts} /> : null}
         </WithAside>
       </Main>
       <BottomBar>

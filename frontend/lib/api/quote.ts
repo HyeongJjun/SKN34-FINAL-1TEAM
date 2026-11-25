@@ -51,5 +51,6 @@ export async function getStandardView(shell: ProjectShell): Promise<StdView | nu
   // 예상 일수는 계산 엔진 값(StandardOut.days). v2로 만든 옛 공사처럼 비어 있으면 예상 공정표의 일하는 날 수를 써요
   const days = q.days ?? (await getPlanView(shell.id).then((p) => (p ? String(p.work_days) : null)).catch(() => null));
   const fit = q.budget_fit ?? (q.budget && q.budget.status !== "open" ? q.budget.status : null);
-  return { scope, lines: toQuoteLines(t.lines, scope), supply: t.supply, vat: t.vat, total: t.total, days, budget: budgetText(fit, shell.budgetWon), condition: cond };
+  const parts = q.trades.filter((x) => x.trade === "mokgong").map((x) => ({ trade: "mokgong" as const, lines: toQuoteLines(x.lines, "full"), supply: x.supply, vat: x.vat, total: x.total }));
+  return { scope, lines: toQuoteLines(t.lines, scope), supply: t.supply, vat: t.vat, total: t.total, days, budget: budgetText(fit, shell.budgetWon), condition: cond, parts };
 }
