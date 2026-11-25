@@ -28,7 +28,7 @@ export default async function ChatListPage() {
           </>
         ) : me.role === "vendor" ? (
           <div className={s.empty}>
-            <EmptyState icon="chat" title={<>실측이 확정되면<br />고객과 채팅할 수 있어요</>} action={<Button variant="text" arrow href="/vendor">작업함 보기</Button>} />
+            <EmptyState icon="chat" title={<>실측 요청이 오면<br />고객과 채팅할 수 있어요</>} action={<Button variant="text" arrow href="/vendor">작업함 보기</Button>} />
           </div>
         ) : (
           <CustomerEmpty />
@@ -48,10 +48,10 @@ async function CustomerEmpty() {
     <div className={s.empty}>
       <EmptyState
         icon="chat"
-        title={<>실측 날짜가 정해지면<br />업체와 채팅할 수 있어요</>}
+        title={<>실측을 요청하면<br />업체와 채팅할 수 있어요</>}
         action={pid ? <Button variant="text" arrow href={`/projects/${encodeURIComponent(pid)}/visits`}>실측 일정 보기</Button> : <Button variant="text" arrow href="/my">내 공사 보기</Button>}
       >
-        {offered ? `${offered.vendor_name} 날짜를 고르면 바로 열려요` : "실측 날짜를 고르면 바로 열려요"}
+        {offered ? `${offered.vendor_name} 채팅은 요청할 때 열려요` : "담은 업체에 실측을 요청하면 바로 열려요"}
       </EmptyState>
     </div>
   );
