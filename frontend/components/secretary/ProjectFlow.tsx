@@ -1,15 +1,17 @@
 "use client";
-// /projects/{id}/assistant(시연 영상 11~48장면): 서버 상태를 읽어 대화 안에 지금 단계 카드를 띄워요. 카드 단추가 기존 API를 불러요.
-// - 업체 담기 POST · DELETE /projects/{id}/shortlist · 실측 요청 POST /projects/{id}/visits · 반나절 고르기 POST …/visits/{vid}/pick
+// /projects/{id}/assistant(시연 영상 11~48장면): 서버 상태를 읽어 왼쪽 대화에 지금 단계를 알리고, 고르기 · 단추는 오른쪽 보드(내 도배 플랜)에 둬요.
+// #196(멘토 피드백 · 2026-11-25 회의 '채팅에 폼 없음'): 대화에는 글과 '오른쪽에서 보기' 링크만, 입력은 글뿐이에요.
+//   보드에서 처리하면 대화에 결과 한 줄이 붙어요. 표준견적서는 페이지를 옮기지 않고 큰 창(StandardDialog)으로 바로 열려요.
+// 보드 단추가 부르는 API(그대로예요):
+// - 업체 담기 POST · DELETE /projects/{id}/shortlist · 반나절 고르기 POST …/visits/{vid}/pick(제안이면 proposal/pick)
 // - 견적서 확정 POST …/quotes/{vid}/confirm · 공사 날짜 수락 POST …/deals/{did}/dates/{pid}/accept · 추가 금액 POST …/extras/{eid}/answer
-// - 공사 끝 확인 POST …/deals/{did}/check · 리뷰 POST …/deals/{did}/review · 준비 체크 PUT /projects/{id}/checks/{key}
-// - 질문은 POST /ai/turns(로그인한 고객 AI). 금액 · 날짜는 API 값 그대로이고, 저장 · 확정 · 승인은 사람이 카드 단추를 눌러요.
+// - 공사 끝 확인 POST …/deals/{did}/check · 준비 체크 PUT /projects/{id}/checks/{key}. 실측 요청 · 리뷰는 각 화면으로 가요.
+// - 질문은 POST /ai/turns(로그인한 고객 AI). 금액 · 날짜는 API 값 그대로이고, 저장 · 확정 · 승인은 사람이 보드 단추를 눌러요.
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AiAnswer } from "@/components/ai/AiAnswer";
 import { PreWorkCheck } from "@/components/project/PreWorkCheck";
-import { SiteInfoCard } from "@/components/project/SiteInfoCard";
 import { donePhotoHref } from "@/components/schedule/v3text";
 import { Button } from "@/components/ui/Button";
 import { iGa as iga } from "@/components/vendors/text";
@@ -21,7 +23,8 @@ import { dateShort, euro, won } from "@/lib/format";
 import { termByName, termHref } from "@/lib/guide";
 import { quickChips } from "./chips";
 import { Jaejae } from "./Jaejae";
-import { Plan } from "./Plan";
+import { Plan, PLAN_STEPS } from "./Plan";
+import { StandardDialog, type StdData } from "./StandardDialog";
 import s from "./flow.module.css";
 
 type Pick = Schemas["VisitPickOut"];
@@ -39,6 +42,10 @@ export type FlowData = {
   vendors: ProjectVendors | null;
   draft: VisitDraft | null;
   today: string;
+  /** 표준견적서 창 값(서버가 읽어 넘겨요). 못 읽으면 표준견적서 화면 링크로 가요 */
+  std: StdData | null;
+  /** 만든 바로 뒤(?open=standard)면 표준견적서 창을 열고 시작해요 */
+  openStd: boolean;
 };
 
 /** 서버 상태 → 플랜 8칸 지금 칸 */
@@ -59,28 +66,45 @@ function stepOf(d: FlowData): number {
 
 export function ProjectFlow({ data }: { data: FlowData }) {
   const router = useRouter();
-  const { p, ov, compare, schedule, visits, vendors, draft, today } = data;
+  const { p, ov, compare, schedule, visits, vendors, draft, today, std } = data;
   const pid = enc(p.id);
   const now = stepOf(data);
   const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState(Math.min(now, 7));
+  const [stdOpen, setStdOpen] = useState(data.openStd && !!std);
   const [busyKey, setBusy] = useState<string | null>(null);
   const [refreshing, startRefresh] = useTransition();
   // 새 화면 값이 올 때까지 단추를 막아요(같은 요청을 두 번 보내 409가 나지 않게)
   const busy = busyKey ?? (refreshing ? "refresh" : null);
-  const [note, setNote] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  /** 보드에서 처리한 결과 한 줄(대화에 붙어요) */
+  const [done, setDone] = useState<string[]>([]);
   const [asks, setAsks] = useState<{ q: string; out?: AiTurnOut; err?: string }[]>([]);
   const [chatId, setChatId] = useState<string | null>(null);
   const [text, setText] = useState("");
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [asks.length, now]);
+  useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [asks.length, now, done.length]);
+  // 단계가 넘어가면 보드도 지금 단계로 옮겨요
+  useEffect(() => { setTab(Math.min(now, 7)); }, [now]);
+  // ?open=standard는 한 번만 써요(새로고침 · 뒤로 가기에 다시 열리지 않게)
+  useEffect(() => { if (data.openStd) router.replace(`/projects/${pid}/assistant`, { scroll: false }); }, [data.openStd, pid, router]);
 
-  async function act(key: string, fn: () => Promise<unknown>) {
+  /** 대화의 '오른쪽에서 보기': 보드를 그 단계로 바꾸고(폰은 펼쳐) 그 자리로 옮겨요 */
+  function toBoard(step: number) {
+    setTab(step);
+    setOpen(true);
+    requestAnimationFrame(() => document.getElementById("jj-board")?.scrollIntoView({ block: "start", behavior: "smooth" }));
+  }
+
+  async function act(key: string, fn: () => Promise<unknown>, said?: string) {
     if (busy) return;
     setBusy(key);
     setErr(null);
-    setNote(null);
-    try { await fn(); startRefresh(() => router.refresh()); } catch (e) { setErr(errorText(e)); } finally { setBusy(null); }
+    try {
+      await fn();
+      if (said) setDone((x) => [...x, said]);
+      startRefresh(() => router.refresh());
+    } catch (e) { setErr(errorText(e)); } finally { setBusy(null); }
   }
 
   const asking = asks.length > 0 && !asks[asks.length - 1].out && !asks[asks.length - 1].err;
@@ -103,93 +127,60 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   // 닫힌 요청(거절 · 기한 지남 · 취소 · 안 옴 · 다시 고름)은 진행 중이 아니에요
   const vs = all.filter((v) => !CLOSED.includes(v.status));
   const closed = all.filter((v) => CLOSED.includes(v.status));
+  const ready = [...(vendors?.local ?? []), ...(vendors?.nearby ?? [])].filter((v) => v.state === "ok");
+  const picked = ready.filter((v) => v.shortlisted);
+  const quoted = (compare?.vendors ?? []).filter((r) => r.latest && r.status === "quoted");
+  const extras = deal ? deal.extras.items.filter((i) => (i.answer === "pending" || i.answer === "asked") && !i.superseded) : [];
+  // 표준견적서 금액은 창 · 표준견적서 화면과 같은 값 하나로 보여요(전체 도배는 시장 단가, 아니면 공공 기준)
+  const stdTotal = std ? (std.market?.total ?? std.view.total) : compare?.standard_total ?? null;
+  const toPick = vs.filter((v) => v.status === "offered" || v.status === "proposed");
+  const go = (step: number, label = "오른쪽에서 보기") => (
+    <button type="button" className={s.boardLink} onClick={() => toBoard(step)}>{label} · {PLAN_STEPS[step]} 칸</button>
+  );
+
+  // ── 왼쪽 대화: 알림 글 + 오른쪽 링크만(입력 칸 · 고르기 칸 · 확정 단추 없음) ──
   const cards: { key: string; alert?: boolean; node: ReactNode }[] = [];
-
-  // 지난 단계 요약
-  cards.push({ key: "home", node: <p>집 정보와 표준견적서는 끝났어요. 표준견적서 <b className="mj-num">{compare ? won(compare.standard_total) : "—"}</b>(부가세 포함, 업체 견적이 아니에요).</p> });
-
-  // 재재가 먼저 알림(서버가 정한 지금 할 일)
+  cards.push({ key: "home", node: (
+    <>
+      <p>집 정보와 표준견적서는 끝났어요. 표준견적서 <b className="mj-num">{stdTotal != null ? won(stdTotal) : "—"}</b>(부가세 포함, 업체 견적이 아니에요).</p>
+      {std ? <button type="button" className={s.boardLink} onClick={() => setStdOpen(true)}>표준견적서 바로 보기</button> : <Link href={`/projects/${pid}/standard`}>표준견적서 보기</Link>}
+    </>
+  ) });
   if (ov.todo?.text) cards.push({ key: "todo", alert: true, node: <p><b>{ov.todo.text}</b></p> });
-
   if (!vs.length && !deal && closed.length) {
     cards.push({ key: "closed", alert: true, node: <p>{closed.map((v) => v.vendor_name).join(" · ")} 실측 요청은 닫혔어요(거절 · 기한 지남 등). 다른 업체를 담아 다시 물어봐 주세요.</p> });
   }
   if (!vs.length && !deal) {
-    const cardsOf = [...(vendors?.local ?? []), ...(vendors?.nearby ?? [])].filter((v) => v.state === "ok");
-    const picked = cardsOf.filter((v) => v.shortlisted);
     cards.push({ key: "vendors", node: (
       <>
-        <p>이 조건으로 가견적을 낸 업체예요. <b>가견적</b>은 업체가 확인한 단가로 믿집이 계산한 <b>실측 전 금액</b>이에요. 마음에 드는 곳을 담아 주세요.</p>
-        <div className={s.vlist}>
-          {cardsOf.slice(0, 6).map((v) => (
-            <div key={v.vendor_id} className={`${s.vrow} ${v.shortlisted ? s.vrowOn : ""}`}>
-              <div><b>{v.name}</b><span className={s.note}>{v.rating ? `별 ${v.rating} · ` : ""}후기 {v.review_count} · 시공 {v.done_count}</span></div>
-              <div className={s.row}>
-                <b className="mj-num">{v.estimate_total != null ? won(v.estimate_total) : "—"}</b>
-                <Button size="sm" variant={v.shortlisted ? "secondary" : "weak"} busy={busy === v.vendor_id}
-                  onClick={() => act(v.vendor_id, () => v.shortlisted ? call("DELETE", `/projects/${pid}/shortlist/${enc(v.vendor_id)}?trade=dobae`) : call("POST", `/projects/${pid}/shortlist`, { trade: "dobae", vendor_id: v.vendor_id }))}>
-                  {v.shortlisted ? "빼기" : "담기"}
-                </Button>
-              </div>
-            </div>
-          ))}
-          {!cardsOf.length ? <p className={s.note}>이 지역에 가견적을 낸 업체가 아직 없어요.</p> : null}
-        </div>
-        {/* 피드백: 재재가 고른 업체만 보이지 않게 전체 목록 길을 늘 둬요 */}
-        <div className={s.row}><Button size="sm" variant="secondary" href={`/projects/${pid}/vendors`}>전체 업체에서 직접 고르기</Button></div>
-        {picked.length ? <VisitRequest pid={pid} draft={draft} /> : null}
+        <p>{ready.length ? <>이 조건으로 가견적을 낸 업체가 <b>{ready.length}곳</b> 있어요.</> : "이 지역에 가견적을 낸 업체가 아직 없어요."} <b>가견적</b>은 업체가 확인한 단가로 믿집이 계산한 <b>실측 전 금액</b>이에요.</p>
+        <p>{picked.length ? `${picked.length}곳을 담았어요. 오른쪽에서 실측 날짜를 골라 요청해요.` : "오른쪽에서 마음에 드는 곳을 담아 주세요."}</p>
+        {go(2)}
       </>
     ) });
   }
-
   for (const v of vs) {
     if (v.status === "requested") cards.push({ key: v.id, node: <p><b>{v.vendor_name}</b>에 실측 날짜를 물어봤어요. 업체가 되는 기간을 보내면 먼저 알려 드릴게요. 궁금한 건 <Link href="/chat">업체 채팅</Link>으로 물어보세요.</p> });
-    else if (v.status === "offered" || v.status === "proposed") cards.push({ key: v.id, alert: true, node: <PickCard pid={pid} visitId={v.id} name={v.vendor_name} proposal={v.status === "proposed"} busy={busy} act={act} /> });
+    else if (v.status === "offered" || v.status === "proposed") cards.push({ key: v.id, alert: true, node: <><p><b>{iga(v.vendor_name)} {v.status === "proposed" ? "다른 실측 날을 제안했어요." : "실측 되는 날을 보냈어요."}</b> 오른쪽에서 집에 계실 반나절을 골라 주세요.</p>{go(3)}</> });
     else if (v.status === "picked") cards.push({ key: v.id, node: <><p><b>{v.vendor_name}</b>에 고른 날을 보냈어요. 업체가 현장 정보를 보고 수락하면 실측이 확정돼요.</p><p className={s.why}>주차 · 엘리베이터 사정으로 업체가 다른 날을 제안하면 먼저 알려 드릴게요. 그 사이 <Link href="/chat">업체 채팅</Link>으로 주고받을 수 있어요.</p></> });
-    else if (v.status === "booked") cards.push({ key: v.id, node: <><p><b>{v.vendor_name}</b> 실측이 잡혔어요. 실측 때 업체가 벽 크기와 상태를 재고 견적서를 보내요.</p><p className={s.why}>실측 전날: 가구 앞 벽이 보이게 비워 두고, 벽지 철거 · 폐기물이 견적에 들어가는지 물어보세요.</p><SiteInfoCard projectId={p.id} /></> });
+    else if (v.status === "booked") cards.push({ key: v.id, node: <><p><b>{v.vendor_name}</b> 실측이 잡혔어요. 실측 때 업체가 벽 크기와 상태를 재고 견적서를 보내요.</p><p className={s.why}>실측 전날: 가구 앞 벽이 보이게 비워 두고, 벽지 철거 · 폐기물이 견적에 들어가는지 물어보세요.</p></> });
     else if (v.status === "visited") cards.push({ key: v.id, node: <p><b>{v.vendor_name}</b> 실측을 마쳤어요. 실측 견적서를 기다리고 있어요.</p> });
   }
-
-  const quoted = (compare?.vendors ?? []).filter((r) => r.latest && r.status === "quoted");
   if (quoted.length && !deal) {
-    cards.push({ key: "compare", alert: true, node: (
-      <>
-        <p><b>실측 견적서가 도착했어요.</b> 표준견적서와 먼저 비교해 뒀어요.</p>
-        <div className={s.two}>
-          {quoted.map((r) => (
-            <div key={r.visit_id} className={s.card}>
-              <h4>{r.vendor_name}</h4>
-              <b className="mj-num">{r.latest!.total != null ? won(r.latest!.total) : "—"}</b>
-              <span className={s.note}>실측 견적서 · 확정 전 금액{r.vs_standard && r.vs_direction && r.vs_direction !== "same" ? ` · 표준견적서보다 ${r.vs_standard}% ${r.vs_direction === "more" ? "높아요" : "낮아요"}` : ""}</span>
-              {r.estimate_total != null ? <span className={s.note}>가견적(실측 전) {won(r.estimate_total)}</span> : null}
-              <Button size="sm" busy={busy === `c${r.visit_id}`} disabled={r.seen_ver == null}
-                onClick={() => act(`c${r.visit_id}`, () => call("POST", `/projects/${pid}/quotes/${enc(r.visit_id)}/confirm`, { seen_ver: r.seen_ver }))}>{euro(r.vendor_name)} 확정</Button>
-            </div>
-          ))}
-        </div>
-        <p className={s.why}>확정은 직접 눌러요. 확정하면 다른 업체 견적서는 닫혀요. 물어볼 게 있으면 <Link href={`/projects/${pid}/quotes`}>비교 화면</Link>이나 채팅으로요.</p>
-      </>
-    ) });
+    cards.push({ key: "compare", alert: true, node: <><p><b>실측 견적서가 {quoted.length}곳에서 도착했어요.</b> 표준견적서와 먼저 비교해 뒀어요. 오른쪽에서 보고 확정해요.</p>{go(4)}</> });
   }
-
   if (deal) {
     const d = deal.deal;
     cards.push({ key: "deal", node: <p><b>{euro(d.vendor_name)}</b> 확정했어요. 확정 금액 <b className="mj-num">{won(d.quote.total)}</b>.</p> });
     if (deal.dates_state === "waiting") cards.push({ key: "dates-wait", node: <p>{iga(d.vendor_name)} 공사 날짜를 올리면 알려 드릴게요.</p> });
     if ((deal.dates_state === "proposed" || deal.dates_state === "change_proposed") && deal.proposal) {
       const x = deal.proposal;
-      cards.push({ key: "dates", alert: true, node: (
-        <>
-          <p><b>{iga(d.vendor_name)} 공사 날짜를 올렸어요.</b> {dateShort(x.start)} ~ {dateShort(x.end)} · {x.workdays}일 · {x.crew}명</p>
-          <div className={s.row}><Button size="sm" busy={busy === "accept"} onClick={() => act("accept", () => call("POST", `/projects/${pid}/deals/${enc(d.id)}/dates/${enc(x.id)}/accept`, { seen_version: schedule!.final_version }))}>이 날짜로 수락</Button>
-            <Button size="sm" variant="secondary" href={`/projects/${pid}/schedule`}>다른 날짜 요청</Button></div>
-        </>
-      ) });
+      cards.push({ key: "dates", alert: true, node: <><p><b>{iga(d.vendor_name)} 공사 날짜를 올렸어요.</b> {dateShort(x.start)} ~ {dateShort(x.end)} · {x.workdays}일 · {x.crew}명. 오른쪽에서 수락하거나 다른 날짜를 요청해요.</p>{go(5)}</> });
     }
     if (deal.dates_state === "scheduled" && d.status === "scheduled") {
       const before = d.start_date && d.start_date > today;
       cards.push({ key: "work", node: before
-        ? <><p>공사는 <b>{d.start_date ? dateShort(d.start_date) : ""}</b>에 시작해요. 공사 전에 할 일을 챙겨 주세요. 체크한 건 업체도 봐요.</p>{ov.checks.length ? <PreWorkCheck projectId={p.id} checks={ov.checks} start={d.start_date} /> : null}</>
+        ? <><p>공사는 <b>{d.start_date ? dateShort(d.start_date) : ""}</b>에 시작해요. 공사 전에 할 일은 오른쪽에서 체크해요. 체크한 건 업체도 봐요.</p>{go(5)}</>
         : <p>공사 중이에요. 궁금한 건 아래에 물어보거나 업체 채팅으로 물어보세요.</p> });
     }
     const last = d.progress?.[0];
@@ -204,33 +195,122 @@ export function ProjectFlow({ data }: { data: FlowData }) {
         </>
       ) });
     }
-    // 최신 판만 · 물어본 것(asked)도 아직 답할 수 있어요
-    for (const x of deal.extras.items.filter((i) => (i.answer === "pending" || i.answer === "asked") && !i.superseded)) {
-      cards.push({ key: `x${x.id}`, alert: true, node: (
-        <>
-          <p><b>{iga(d.vendor_name)} 추가 금액을 요청했어요.</b> {x.title} · <b className="mj-num">{won(x.total)}</b></p>
-          <p className={s.why}>이유: {x.reason.replace(/[.。]\s*$/, "")}. 승인해야 금액에 더해져요. 설명이 더 필요하면 &quot;물어볼래요&quot;로 채팅에서 물어보세요.</p>
-          <div className={s.row}>
-            <Button size="sm" busy={busy === `xa${x.id}`} onClick={() => act(`xa${x.id}`, () => call("POST", `/projects/${pid}/deals/${enc(d.id)}/extras/${enc(x.id)}/answer`, { answer: "approve" }))}>승인</Button>
-            <Button size="sm" variant="secondary" busy={busy === `xr${x.id}`} onClick={() => act(`xr${x.id}`, () => call("POST", `/projects/${pid}/deals/${enc(d.id)}/extras/${enc(x.id)}/answer`, { answer: "reject" }))}>거절</Button>
-            {x.answer === "asked" ? <span className={s.note}>채팅으로 물어봤어요</span> : <Button size="sm" variant="weak" busy={busy === `xq${x.id}`} onClick={() => act(`xq${x.id}`, () => call("POST", `/projects/${pid}/deals/${enc(d.id)}/extras/${enc(x.id)}/answer`, { answer: "ask" }))}>물어볼래요</Button>}
+    for (const x of extras) cards.push({ key: `x${x.id}`, alert: true, node: <><p><b>{iga(d.vendor_name)} 추가 금액을 요청했어요.</b> {x.title} · <b className="mj-num">{won(x.total)}</b>. 오른쪽에서 승인하거나 거절해요.</p>{go(6)}</> });
+    if (d.status === "checking") cards.push({ key: "check", alert: true, node: <><p><b>{iga(d.vendor_name)} 공사를 마쳤다고 올렸어요.</b> 오른쪽 목록으로 같이 확인하고 완료를 눌러요.</p>{go(7)}</> });
+    if (d.status === "done") cards.push({ key: "review", node: d.review_open ? <><p><b>공사를 완료했어요.</b> 수고 많으셨어요. {d.vendor_name} 리뷰를 남기면 다음 고객이 업체를 고를 때 도움이 돼요.</p>{go(7, "리뷰 남기기")}</> : <p>리뷰까지 마쳤어요. 하자가 보이면 {d.vendor_name}에 채팅으로 알려 주세요. 수고 많으셨어요.</p> });
+  }
+
+  // ── 오른쪽 보드: 단계별 고르기 · 단추 ──
+  function board(step: number): ReactNode {
+    if (step === 0) return <><Link href={`/start?edit=${pid}`}>기본 정보 고치기{p.locked ? " (요청 뒤라 잠겼어요)" : ""}</Link><Link href={`/projects/${pid}`}>현장 정보 고치기</Link></>;
+    if (step === 1) return (
+      <>
+        {std ? <Button size="sm" onClick={() => setStdOpen(true)}>표준견적서 보기 · {won(std.market?.total ?? std.view.total)}</Button> : <Link href={`/projects/${pid}/standard`}>표준견적서 보기 · {stdTotal != null ? won(stdTotal) : "—"}</Link>}
+        <Link href={`/projects/${pid}/plan`}>예상 공정표 보기</Link>
+      </>
+    );
+    if (step === 2) return (
+      <>
+        {!vs.length && !deal ? (
+          <div className={s.vlist}>
+            {ready.slice(0, 6).map((v) => (
+              <div key={v.vendor_id} className={`${s.vrow} ${v.shortlisted ? s.vrowOn : ""}`}>
+                <div><b>{v.name}</b><span className={s.note}>{v.rating ? `별 ${v.rating} · ` : ""}후기 {v.review_count} · 시공 {v.done_count}</span></div>
+                <div className={s.row}>
+                  <b className="mj-num">{v.estimate_total != null ? won(v.estimate_total) : "—"}</b>
+                  <Button size="sm" variant={v.shortlisted ? "secondary" : "weak"} busy={busy === v.vendor_id}
+                    onClick={() => act(v.vendor_id, () => v.shortlisted ? call("DELETE", `/projects/${pid}/shortlist/${enc(v.vendor_id)}?trade=dobae`) : call("POST", `/projects/${pid}/shortlist`, { trade: "dobae", vendor_id: v.vendor_id }), `${v.name}${v.shortlisted ? " 뺐어요" : " 담았어요"}`)}>
+                    {v.shortlisted ? "빼기" : "담기"}
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {!ready.length ? <p className={s.note}>이 지역에 가견적을 낸 업체가 아직 없어요.</p> : null}
           </div>
-        </>
-      ) });
-    }
-    if (d.status === "checking") {
-      cards.push({ key: "check", alert: true, node: (
+        ) : <p className={s.note}>업체는 이미 골랐어요. 실측 칸을 봐 주세요.</p>}
+        <Link href={`/projects/${pid}/vendors`}>전체 업체에서 직접 고르기</Link>
+        {picked.length && !vs.length && !deal ? <VisitRequest pid={pid} draft={draft} /> : null}
+      </>
+    );
+    if (step === 3) return (
+      <>
+        {toPick.map((v) => <PickCard key={v.id} pid={pid} visitId={v.id} name={v.vendor_name} proposal={v.status === "proposed"} busy={busy} act={act} />)}
+        {vs.filter((v) => !toPick.includes(v)).map((v) => <p key={v.id} className={s.note}>{v.vendor_name} · {VISIT_WORD[v.status] ?? "진행 중"}</p>)}
+        <Link href={`/projects/${pid}/visits`}>실측 일정 보기</Link>
+      </>
+    );
+    if (step === 4) return (
+      <>
+        {quoted.length && !deal ? (
+          <>
+            {quoted.map((r) => (
+              <div key={r.visit_id} className={s.card}>
+                <h4>{r.vendor_name}</h4>
+                <b className="mj-num">{r.latest!.total != null ? won(r.latest!.total) : "—"}</b>
+                <span className={s.note}>실측 견적서 · 확정 전 금액{r.vs_standard && r.vs_direction && r.vs_direction !== "same" ? ` · 표준견적서보다 ${r.vs_standard}% ${r.vs_direction === "more" ? "높아요" : "낮아요"}` : ""}</span>
+                {r.estimate_total != null ? <span className={s.note}>가견적(실측 전) {won(r.estimate_total)}</span> : null}
+                <Button size="sm" busy={busy === `c${r.visit_id}`} disabled={r.seen_ver == null}
+                  onClick={() => act(`c${r.visit_id}`, () => call("POST", `/projects/${pid}/quotes/${enc(r.visit_id)}/confirm`, { seen_ver: r.seen_ver }), `${euro(r.vendor_name)} 확정했어요`)}>{euro(r.vendor_name)} 확정</Button>
+              </div>
+            ))}
+            <p className={s.why}>확정은 직접 눌러요. 확정하면 다른 업체 견적서는 닫혀요.</p>
+          </>
+        ) : null}
+        <Link href={`/projects/${pid}/quotes`}>견적서 비교 화면</Link>
+      </>
+    );
+    if (step === 5) {
+      const x = deal && (deal.dates_state === "proposed" || deal.dates_state === "change_proposed") ? deal.proposal : null;
+      return (
         <>
-          <p><b>{iga(d.vendor_name)} 공사를 마쳤다고 올렸어요.</b> 완료를 누르기 전에 같이 확인해요.</p>
-          <ul className={s.auto}><li>벽지가 들뜨거나 운 곳이 없는지</li><li>이음매가 벌어지지 않았는지</li><li>모서리 · 콘센트 둘레가 깔끔한지</li><li>몰딩 · 걸레받이와 벽지 사이가 뜨지 않았는지</li></ul>
-          <div className={s.row}>
-            <Button size="sm" busy={busy === "done"} onClick={() => act("done", () => call("POST", `/projects/${pid}/deals/${enc(d.id)}/check`, { result: "done" }))}>확인했어요, 완료</Button>
-            <Button size="sm" variant="secondary" href={`/projects/${pid}/schedule`}>고칠 곳이 있어요</Button>
-          </div>
+          {deal && x ? (
+            <div className={s.card}>
+              <h4>{iga(deal.deal.vendor_name)} 올린 공사 날짜</h4>
+              <p>{dateShort(x.start)} ~ {dateShort(x.end)} · {x.workdays}일 · {x.crew}명</p>
+              <div className={s.row}>
+                <Button size="sm" busy={busy === "accept"} onClick={() => act("accept", () => call("POST", `/projects/${pid}/deals/${enc(deal.deal.id)}/dates/${enc(x.id)}/accept`, { seen_version: schedule!.final_version }), "공사 날짜를 수락했어요")}>이 날짜로 수락</Button>
+                <Button size="sm" variant="secondary" href={`/projects/${pid}/schedule`}>다른 날짜 요청</Button>
+              </div>
+            </div>
+          ) : null}
+          {ov.checks.length ? <PreWorkCheck projectId={p.id} checks={ov.checks} start={deal?.deal.start_date ?? null} /> : null}
+          <Link href={`/projects/${pid}/plan`}>공정표 보기</Link>
         </>
-      ) });
+      );
     }
-    if (d.status === "done") cards.push({ key: "review", node: d.review_open ? <ReviewCard pid={pid} dealId={d.id} name={d.vendor_name} busy={busy} act={act} /> : <p>리뷰까지 마쳤어요. 하자가 보이면 {d.vendor_name}에 채팅으로 알려 주세요. 수고 많으셨어요.</p> });
+    if (step === 6) return (
+      <>
+        {deal ? extras.map((x) => (
+          <div key={x.id} className={s.card}>
+            <h4>추가 금액 · {x.title}</h4>
+            <b className="mj-num">{won(x.total)}</b>
+            <p className={s.why}>이유: {x.reason.replace(/[.。]\s*$/, "")}. 승인해야 금액에 더해져요.</p>
+            <div className={s.row}>
+              <Button size="sm" busy={busy === `xa${x.id}`} onClick={() => act(`xa${x.id}`, () => call("POST", `/projects/${pid}/deals/${enc(deal.deal.id)}/extras/${enc(x.id)}/answer`, { answer: "approve" }), `추가 금액(${x.title})을 승인했어요`)}>승인</Button>
+              <Button size="sm" variant="secondary" busy={busy === `xr${x.id}`} onClick={() => act(`xr${x.id}`, () => call("POST", `/projects/${pid}/deals/${enc(deal.deal.id)}/extras/${enc(x.id)}/answer`, { answer: "reject" }), `추가 금액(${x.title})을 거절했어요`)}>거절</Button>
+              {x.answer === "asked" ? <span className={s.note}>채팅으로 물어봤어요</span> : <Button size="sm" variant="weak" busy={busy === `xq${x.id}`} onClick={() => act(`xq${x.id}`, () => call("POST", `/projects/${pid}/deals/${enc(deal.deal.id)}/extras/${enc(x.id)}/answer`, { answer: "ask" }), "추가 금액을 채팅으로 물어봤어요")}>물어볼래요</Button>}
+            </div>
+          </div>
+        )) : null}
+        <Link href={`/projects/${pid}/schedule`}>공사 화면</Link>
+      </>
+    );
+    return (
+      <>
+        {deal?.deal.status === "checking" ? (
+          <div className={s.card}>
+            <h4>완료 전에 같이 확인해요</h4>
+            <ul className={s.auto}><li>벽지가 들뜨거나 운 곳이 없는지</li><li>이음매가 벌어지지 않았는지</li><li>모서리 · 콘센트 둘레가 깔끔한지</li><li>몰딩 · 걸레받이와 벽지 사이가 뜨지 않았는지</li></ul>
+            <div className={s.row}>
+              <Button size="sm" busy={busy === "done"} onClick={() => act("done", () => call("POST", `/projects/${pid}/deals/${enc(deal.deal.id)}/check`, { result: "done" }), "공사 완료를 확인했어요")}>확인했어요, 완료</Button>
+              <Button size="sm" variant="secondary" href={`/projects/${pid}/schedule`}>고칠 곳이 있어요</Button>
+            </div>
+          </div>
+        ) : null}
+        {deal?.deal.status === "done" && deal.deal.review_open ? <Button size="sm" href={`/projects/${pid}/review`}>리뷰 남기기</Button> : null}
+        <Link href={`/projects/${pid}/schedule`}>공사 끝 확인 · 리뷰</Link>
+      </>
+    );
   }
 
   const auto: Record<number, string[]> = { 0: ["집 정보 정리"], 1: ["표준견적서 계산"], 2: vs.length ? ["업체에 실측 날짜 물어보기"] : [], 4: quoted.length ? ["견적서를 표준견적서와 비교"] : [], 5: deal ? ["확정 공정표 만들기"] : [] };
@@ -248,7 +328,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
         <span className={`${s.chip} ${s.chipOn}`}>도배 유형<b>{p.grade === "economy" ? "저가형" : "기본형"}</b></span>
         <Link className={s.chip} href={`/projects/${pid}?tab=log`}>결정 기록<b>보기</b></Link>
       </div>
-      <button type="button" className={s.planBar} aria-expanded={open} onClick={() => setOpen((v) => !v)}><b>{Math.min(now + 1, 8)}/8 · 내 도배 플랜</b><span>{open ? "접기" : "보기"}</span></button>
+      <button type="button" className={s.planBar} aria-expanded={open} aria-controls="jj-board" onClick={() => setOpen((v) => !v)}><b>{Math.min(now + 1, 8)}/8 · 내 도배 플랜</b><span>{open ? "접기" : "보기"}</span></button>
       <div className={s.body}>
         <section className={s.chat} aria-label="재재와 대화">
           <div className={s.msgs} role="log" aria-live="polite">
@@ -258,8 +338,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
                 <div className={s.bubble}><span className={s.who}>{c.alert ? "재재 · 먼저 알려 드려요" : "재재 · 믿집 비서"}</span>{c.node}</div>
               </div>
             ))}
+            {done.map((t, i) => <p key={`d${i}`} className={s.done} role="status">✓ {t}</p>)}
             {err ? <p className="mj-error" role="alert">{err}</p> : null}
-            {note ? <p className="mj-error" role="status">{note}</p> : null}
             {asks.map((a, i) => (
               <div key={`a${i}`} className={s.msgs} style={{ padding: 0 }}>
                 <p className={s.me}>{a.q}</p>
@@ -284,26 +364,20 @@ export function ProjectFlow({ data }: { data: FlowData }) {
           {/* 새 말이 오면 여기까지 내려요. 입력칸(dock) 뒤에 두어 마지막 말풍선이 입력칸에 가려지지 않아요 */}
           <div ref={end} />
         </section>
-        <Plan now={now} scope={p.id} open={open} auto={auto}
-          render={(step) => step === 0 ? <><Link href={`/start?edit=${pid}`}>기본 정보 고치기{p.locked ? " (요청 뒤라 잠겼어요)" : ""}</Link><SiteInfoCard projectId={p.id} /></>
-            : step === 1 ? <Link href={`/projects/${pid}/standard`}>표준견적서 보기 · {compare ? won(compare.standard_total) : "—"}</Link>
-            : step === 2 ? <Link href={`/projects/${pid}/vendors`}>전체 업체에서 직접 고르기</Link>
-            : step === 3 ? <Link href={`/projects/${pid}/visits`}>실측 일정 보기</Link>
-            : step === 4 ? <Link href={`/projects/${pid}/quotes`}>견적서 비교 화면</Link>
-            : step === 5 || step === 6 ? <>{ov.checks.length ? <PreWorkCheck projectId={p.id} checks={ov.checks} start={deal?.deal.start_date ?? null} /> : null}<Link href={`/projects/${pid}/plan`}>공정표 보기</Link></>
-            : <Link href={`/projects/${pid}/schedule`}>공사 끝 확인 · 리뷰</Link>}
-        />
+        <Plan now={now} scope={p.id} open={open} auto={auto} tab={tab} onTab={setTab} render={board} />
       </div>
       <div className={s.chips} aria-label="믿집 백과">
         {terms.map((t) => <Link key={t.id} className={s.chip} href={termHref(t)}>백과<b>{t.term}</b></Link>)}
       </div>
+      {std ? <StandardDialog open={stdOpen} onClose={() => setStdOpen(false)} data={std} pid={pid} locked={p.locked} /> : null}
     </div>
   );
 }
 
-type Act = (key: string, fn: () => Promise<unknown>) => Promise<void>;
+type Act = (key: string, fn: () => Promise<unknown>, said?: string) => Promise<void>;
+const VISIT_WORD: Record<string, string> = { requested: "날짜 묻는 중", picked: "고른 날 보냄 · 업체 수락 기다림", booked: "실측 잡힘", visited: "실측 끝 · 견적서 기다림", quoted: "견적서 옴" };
 
-// 2026-11-25 회의: 채팅에는 입력 칸을 두지 않아요. 날짜는 요청 화면에서 업체가 등록한 영업일로 골라요
+// 2026-11-25 회의: 날짜는 요청 화면에서 업체가 등록한 영업일로 골라요
 function VisitRequest({ pid, draft }: { pid: string; draft: VisitDraft | null }) {
   const n = draft?.vendors.length ?? 0;
   return (
@@ -322,8 +396,8 @@ function PickCard({ pid, visitId, name, proposal, busy, act }: { pid: string; vi
   useEffect(() => { void call<Pick>("GET", `/projects/${pid}/visits/${enc(visitId)}`).then(setPick).catch(() => setFailed(true)); }, [pid, visitId]);
   const days = (pick?.days ?? []).filter((d) => d.am || d.pm).slice(0, 14);
   return (
-    <>
-      <p><b>{iga(name)} 실측 되는 날을 보냈어요.</b> 집에 계실 반나절을 골라 주세요.</p>
+    <div className={s.card}>
+      <h4>{name} · 실측 반나절 고르기</h4>
       <div className={s.vlist}>
         {days.map((d) => (
           <div key={d.day} className={s.vrow}><b>{dateShort(d.day)}</b><div className={s.row}>
@@ -335,22 +409,9 @@ function PickCard({ pid, visitId, name, proposal, busy, act }: { pid: string; vi
         {failed ? <p className={s.note}>고를 수 있는 날을 불러오지 못했어요. <Link href={`/projects/${pid}/visits/${enc(visitId)}`}>실측 화면</Link>에서 봐 주세요.</p> : null}
         {pick && !days.length ? <p className={s.note}>고를 수 있는 반나절이 없어요. <Link href={`/projects/${pid}/visits/${enc(visitId)}`}>실측 화면</Link>에서 다시 물어보세요.</p> : null}
       </div>
-      <Button size="sm" disabled={!sel} busy={busy === `p${visitId}`} onClick={() => sel && act(`p${visitId}`, () => call("POST", `/projects/${pid}/visits/${enc(visitId)}/${proposal ? "proposal/pick" : "pick"}`, sel))}>
+      <Button size="sm" disabled={!sel} busy={busy === `p${visitId}`} onClick={() => sel && act(`p${visitId}`, () => call("POST", `/projects/${pid}/visits/${enc(visitId)}/${proposal ? "proposal/pick" : "pick"}`, sel), `${name}에 ${dateShort(sel.day)} ${HALF[sel.half]}을 보냈어요`)}>
         {sel ? `${dateShort(sel.day)} ${euro(HALF[sel.half])} 보내기` : "반나절을 골라 주세요"}
       </Button>
-    </>
-  );
-}
-
-function ReviewCard({ pid, dealId, name, busy, act }: { pid: string; dealId: string; name: string; busy: string | null; act: Act }) {
-  const [rating, setRating] = useState(0);
-  const [body, setBody] = useState("");
-  return (
-    <>
-      <p><b>공사를 완료했어요.</b> 수고 많으셨어요. {name} 리뷰를 남기면 다음 고객이 업체를 고를 때 도움이 돼요.</p>
-      <div className={s.row}>{[5, 4, 3, 2, 1].map((n) => <Button key={n} size="sm" aria-pressed={rating === n} variant={rating === n ? "primary" : "weak"} onClick={() => setRating(n)}>별 {n}개</Button>)}</div>
-      {rating ? <label className={s.field}>리뷰 글(선택)<textarea rows={3} maxLength={500} value={body} placeholder="예: 약속한 날에 깔끔하게 마무리해 주셨어요." onChange={(e) => setBody(e.target.value)} /></label> : null}
-      <Button size="sm" disabled={!rating} busy={busy === "review"} onClick={() => act("review", () => call("POST", `/projects/${pid}/deals/${enc(dealId)}/review`, { rating, tags: [], body: body.trim() || null, photo_file_ids: [] }))}>리뷰 등록</Button>
-    </>
+    </div>
   );
 }
