@@ -106,6 +106,8 @@ def test_request_with_pick_goes_to_picked_and_opens_chat(api):
         )
     }
     assert "visit_reply_due" not in jobs and "visit_accept_due" in jobs
+    # 업체가 수락하지 않아 offered로 돌아와도 끝나게 고르기 기한 일도 있어요(리뷰 1)
+    assert "visit_pick_due" in jobs
     # 고른 반나절은 다시 고를 수 없어요(같은 집)
     assert open_days(api, pid, vid).get(day, []) == ["am"]
 
@@ -185,3 +187,75 @@ def test_accept_due_never_after_picked_half():
     far = tomorrow + timedelta(days=10)
     assert deadline.accept_due(now, far, "pm") == now + timedelta(hours=48)
     assert deadline.accept_due(now) == now + timedelta(hours=48)
+
+
+def test_same_half_for_two_vendors_is_409(api):
+    """한 집에 같은 반나절 업체 둘은 안 돼요(리뷰 2): 한 요청 안에서 · 이미 잡아 둔 반나절과도"""
+    token, pid, vid = setup(api)
+    vid2 = vendor(api, "gyeol@mitjip.test", "결도배")
+    use(api, token)
+    assert add(api, pid, vid2).status_code == 201
+    days = open_days(api, pid, vid)
+    day = next(d for d in days if "am" in open_days(api, pid, vid2).get(d, []))
+    body = {"trade": "dobae", "vendor_ids": [vid, vid2]}
+    same = [
+        {"vendor_id": vid, "day": day, "half": "am"},
+        {"vendor_id": vid2, "day": day, "half": "am"},
+    ]
+    assert code(api.post(f"/projects/{pid}/visits", json={**body, "picks": same})) == (
+        409,
+        "slot_taken",
+    )
+    assert query("select count(*) as n from visits where project_id = $1::uuid", pid)[0]["n"] == 0
+    # 하나 먼저 잡고, 다른 업체를 같은 반나절로 따로 요청해도 409
+    one = {"trade": "dobae", "vendor_ids": [vid], "picks": same[:1]}
+    assert api.post(f"/projects/{pid}/visits", json=one).status_code == 201
+    two = {"trade": "dobae", "vendor_ids": [vid2], "picks": same[1:]}
+    assert code(api.post(f"/projects/{pid}/visits", json=two)) == (409, "slot_taken")
+
+
+def test_reply_due_expiry_makes_request_chat_read_only(api):
+    """요청 때 연 채팅은 업체 답 기한이 지나 요청이 끝나면 읽기만(expired)이에요(리뷰 3)"""
+    import asyncio
+    import uuid
+    from datetime import datetime
+
+    from app.db import SessionLocal
+    from app.jobs.models import Job
+    from app.visit import jobs as visit_jobs
+
+    _token, pid, vid = setup(api)
+    r = api.post(f"/projects/{pid}/visits", json={"trade": "dobae", "vendor_ids": [vid], **wish()})
+    assert r.status_code == 201, r.text
+    visit = visit_of(pid, vid)
+    assert [
+        x["status"] for x in query("select status from threads where visit_id = $1::uuid", visit)
+    ] == ["open"]
+    due = query("select reply_due_at from visits where id = $1::uuid", visit)[0]["reply_due_at"]
+
+    async def go(now: datetime):
+        job = Job(
+            id=uuid.uuid4(),
+            kind="visit_reply_due",
+            ref_id=uuid.UUID(visit),
+            run_at=now,
+            dedup_key="t",
+            status="running",
+        )
+        async with SessionLocal() as s:
+            out = await visit_jobs.HANDLERS["visit_reply_due"](s, job, now)
+            await s.commit()
+            return out
+
+    asyncio.run(go(due + timedelta(minutes=1)))
+    assert status(visit) == "expired"
+    t = query("select status, ro_reason from threads where visit_id = $1::uuid", visit)
+    assert [(x["status"], x["ro_reason"]) for x in t] == [("read_only", "expired")]
+
+
+def wish() -> dict:
+    t = today_seoul()
+    return {
+        "wish_start": (t + timedelta(days=2)).isoformat(),
+        "wish_end": (t + timedelta(days=9)).isoformat(),
+    }
