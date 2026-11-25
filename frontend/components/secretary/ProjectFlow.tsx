@@ -1,6 +1,6 @@
 "use client";
 // /projects/{id}/assistant(시연 영상 11~48장면): 서버 상태를 읽어 왼쪽 대화에 지금 단계를 알리고, 고르기 · 단추는 오른쪽 보드(내 도배 플랜)에 둬요.
-// #196(멘토 피드백 · 2026-11-25 회의 '채팅에 폼 없음'): 대화에는 글과 '오른쪽에서 보기' 링크만, 입력은 글뿐이에요.
+// #196(멘토 피드백 · 2026-11-25 회의 '채팅에 폼 없음'): 대화에는 글과 '플랜에서 보기' 링크만(폰은 플랜이 대화 위에 열려서 '오른쪽'이라 하지 않아요), 입력은 글뿐이에요.
 //   보드에서 처리하면 대화에 결과 한 줄이 붙어요. 표준견적서는 페이지를 옮기지 않고 큰 창(StandardDialog)으로 바로 열려요.
 // 보드 단추가 부르는 API(그대로예요):
 // - 업체 담기 POST · DELETE /projects/{id}/shortlist · 반나절 고르기 POST …/visits/{vid}/pick(제안이면 proposal/pick)
@@ -134,7 +134,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   // 표준견적서 금액은 창 · 표준견적서 화면과 같은 값 하나로 보여요(전체 도배는 시장 단가, 아니면 공공 기준)
   const stdTotal = std ? (std.market?.total ?? std.view.total) : compare?.standard_total ?? null;
   const toPick = vs.filter((v) => v.status === "offered" || v.status === "proposed");
-  const go = (step: number, label = "오른쪽에서 보기") => (
+  const go = (step: number, label = "플랜에서 보기") => (
     <button type="button" className={s.boardLink} onClick={() => toBoard(step)}>{label} · {PLAN_STEPS[step]} 칸</button>
   );
 
@@ -154,20 +154,20 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     cards.push({ key: "vendors", node: (
       <>
         <p>{ready.length ? <>이 조건으로 가견적을 낸 업체가 <b>{ready.length}곳</b> 있어요.</> : "이 지역에 가견적을 낸 업체가 아직 없어요."} <b>가견적</b>은 업체가 확인한 단가로 믿집이 계산한 <b>실측 전 금액</b>이에요.</p>
-        <p>{picked.length ? `${picked.length}곳을 담았어요. 오른쪽에서 실측 날짜를 골라 요청해요.` : "오른쪽에서 마음에 드는 곳을 담아 주세요."}</p>
+        <p>{picked.length ? `${picked.length}곳을 담았어요. 내 도배 플랜에서 실측 날짜를 골라 요청해요.` : "내 도배 플랜에서 마음에 드는 곳을 담아 주세요."}</p>
         {go(2)}
       </>
     ) });
   }
   for (const v of vs) {
     if (v.status === "requested") cards.push({ key: v.id, node: <p><b>{v.vendor_name}</b>에 실측 날짜를 물어봤어요. 업체가 되는 기간을 보내면 먼저 알려 드릴게요. 궁금한 건 <Link href="/chat">업체 채팅</Link>으로 물어보세요.</p> });
-    else if (v.status === "offered" || v.status === "proposed") cards.push({ key: v.id, alert: true, node: <><p><b>{iga(v.vendor_name)} {v.status === "proposed" ? "다른 실측 날을 제안했어요." : "실측 되는 날을 보냈어요."}</b> 오른쪽에서 집에 계실 반나절을 골라 주세요.</p>{go(3)}</> });
+    else if (v.status === "offered" || v.status === "proposed") cards.push({ key: v.id, alert: true, node: <><p><b>{iga(v.vendor_name)} {v.status === "proposed" ? "다른 실측 날을 제안했어요." : "실측 되는 날을 보냈어요."}</b> 내 도배 플랜에서 집에 계실 반나절을 골라 주세요.</p>{go(3)}</> });
     else if (v.status === "picked") cards.push({ key: v.id, node: <><p><b>{v.vendor_name}</b>에 고른 날을 보냈어요. 업체가 현장 정보를 보고 수락하면 실측이 확정돼요.</p><p className={s.why}>주차 · 엘리베이터 사정으로 업체가 다른 날을 제안하면 먼저 알려 드릴게요. 그 사이 <Link href="/chat">업체 채팅</Link>으로 주고받을 수 있어요.</p></> });
     else if (v.status === "booked") cards.push({ key: v.id, node: <><p><b>{v.vendor_name}</b> 실측이 잡혔어요. 실측 때 업체가 벽 크기와 상태를 재고 견적서를 보내요.</p><p className={s.why}>실측 전날: 가구 앞 벽이 보이게 비워 두고, 벽지 철거 · 폐기물이 견적에 들어가는지 물어보세요.</p></> });
     else if (v.status === "visited") cards.push({ key: v.id, node: <p><b>{v.vendor_name}</b> 실측을 마쳤어요. 실측 견적서를 기다리고 있어요.</p> });
   }
   if (quoted.length && !deal) {
-    cards.push({ key: "compare", alert: true, node: <><p><b>실측 견적서가 {quoted.length}곳에서 도착했어요.</b> 표준견적서와 먼저 비교해 뒀어요. 오른쪽에서 보고 확정해요.</p>{go(4)}</> });
+    cards.push({ key: "compare", alert: true, node: <><p><b>실측 견적서가 {quoted.length}곳에서 도착했어요.</b> 표준견적서와 먼저 비교해 뒀어요. 내 도배 플랜에서 보고 확정해요.</p>{go(4)}</> });
   }
   if (deal) {
     const d = deal.deal;
@@ -175,12 +175,12 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     if (deal.dates_state === "waiting") cards.push({ key: "dates-wait", node: <p>{iga(d.vendor_name)} 공사 날짜를 올리면 알려 드릴게요.</p> });
     if ((deal.dates_state === "proposed" || deal.dates_state === "change_proposed") && deal.proposal) {
       const x = deal.proposal;
-      cards.push({ key: "dates", alert: true, node: <><p><b>{iga(d.vendor_name)} 공사 날짜를 올렸어요.</b> {dateShort(x.start)} ~ {dateShort(x.end)} · {x.workdays}일 · {x.crew}명. 오른쪽에서 수락하거나 다른 날짜를 요청해요.</p>{go(5)}</> });
+      cards.push({ key: "dates", alert: true, node: <><p><b>{iga(d.vendor_name)} 공사 날짜를 올렸어요.</b> {dateShort(x.start)} ~ {dateShort(x.end)} · {x.workdays}일 · {x.crew}명. 내 도배 플랜에서 수락하거나 다른 날짜를 요청해요.</p>{go(5)}</> });
     }
     if (deal.dates_state === "scheduled" && d.status === "scheduled") {
       const before = d.start_date && d.start_date > today;
       cards.push({ key: "work", node: before
-        ? <><p>공사는 <b>{d.start_date ? dateShort(d.start_date) : ""}</b>에 시작해요. 공사 전에 할 일은 오른쪽에서 체크해요. 체크한 건 업체도 봐요.</p>{go(5)}</>
+        ? <><p>공사는 <b>{d.start_date ? dateShort(d.start_date) : ""}</b>에 시작해요. 공사 전에 할 일은 내 도배 플랜에서 체크해요. 체크한 건 업체도 봐요.</p>{go(5)}</>
         : <p>공사 중이에요. 궁금한 건 아래에 물어보거나 업체 채팅으로 물어보세요.</p> });
     }
     const last = d.progress?.[0];
@@ -195,8 +195,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
         </>
       ) });
     }
-    for (const x of extras) cards.push({ key: `x${x.id}`, alert: true, node: <><p><b>{iga(d.vendor_name)} 추가 금액을 요청했어요.</b> {x.title} · <b className="mj-num">{won(x.total)}</b>. 오른쪽에서 승인하거나 거절해요.</p>{go(6)}</> });
-    if (d.status === "checking") cards.push({ key: "check", alert: true, node: <><p><b>{iga(d.vendor_name)} 공사를 마쳤다고 올렸어요.</b> 오른쪽 목록으로 같이 확인하고 완료를 눌러요.</p>{go(7)}</> });
+    for (const x of extras) cards.push({ key: `x${x.id}`, alert: true, node: <><p><b>{iga(d.vendor_name)} 추가 금액을 요청했어요.</b> {x.title} · <b className="mj-num">{won(x.total)}</b>. 내 도배 플랜에서 승인하거나 거절해요.</p>{go(6)}</> });
+    if (d.status === "checking") cards.push({ key: "check", alert: true, node: <><p><b>{iga(d.vendor_name)} 공사를 마쳤다고 올렸어요.</b> 내 도배 플랜의 목록으로 같이 확인하고 완료를 눌러요.</p>{go(7)}</> });
     if (d.status === "done") cards.push({ key: "review", node: d.review_open ? <><p><b>공사를 완료했어요.</b> 수고 많으셨어요. {d.vendor_name} 리뷰를 남기면 다음 고객이 업체를 고를 때 도움이 돼요.</p>{go(7, "리뷰 남기기")}</> : <p>리뷰까지 마쳤어요. 하자가 보이면 {d.vendor_name}에 채팅으로 알려 주세요. 수고 많으셨어요.</p> });
   }
 
