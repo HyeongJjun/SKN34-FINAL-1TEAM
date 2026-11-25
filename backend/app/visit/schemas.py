@@ -236,6 +236,14 @@ class SlotIn(BaseModel):
     half: Half
 
 
+class VendorSlotIn(BaseModel):
+    """업체 하나에 고른 반나절 (요청 때, 업체 영업일 안)"""
+
+    vendor_id: uuid.UUID
+    day: date
+    half: Half
+
+
 class SlotOut(BaseModel):
     day: date
     half: Half
@@ -477,6 +485,12 @@ class VisitCreateIn(BaseModel):
         description="v3 고른 벽지 (C11, 도배만). 비면 담을 때 고른 벽지, 그것도 없으면 공사 벽지",
     )
 
+    picks: list["VendorSlotIn"] = Field(
+        default_factory=list,
+        max_length=3,
+        description="업체마다 고른 실측 반나절(업체 영업일 안). 있으면 그 업체는 바로 '업체 수락 기다림'",
+    )
+
     @field_validator("message", "apt_name", "dong", "ho")
     @classmethod
     def _blank(cls, v: str | None) -> str | None:
@@ -486,6 +500,10 @@ class VisitCreateIn(BaseModel):
     def _ids(self) -> "VisitCreateIn":
         if len(set(self.vendor_ids)) != len(self.vendor_ids):
             raise ValueError("같은 업체를 두 번 담았어요.")
+        if not {x.vendor_id for x in self.picks} <= set(self.vendor_ids):
+            raise ValueError("요청하는 업체의 날짜만 고를 수 있어요.")
+        if len({x.vendor_id for x in self.picks}) != len(self.picks):
+            raise ValueError("업체마다 날짜를 하나만 골라 주세요.")
         if not set(self.share_contact_ids) <= set(self.vendor_ids):
             raise ValueError("연락처는 요청하는 업체에만 보낼 수 있어요.")
         if self.photos and self.photo_file_ids:
@@ -884,3 +902,14 @@ VendorListOut.model_rebuild()
 VendorVisitRow.model_rebuild()
 VendorVisitDetailOut.model_rebuild()
 VisitCreateIn.model_rebuild()
+
+
+class VisitOpenDayOut(BaseModel):
+    day: date
+    halves: list[Half]
+
+
+class VisitOpenDaysOut(BaseModel):
+    """업체 영업일의 빈 반나절(날 순)"""
+
+    days: list[VisitOpenDayOut]
