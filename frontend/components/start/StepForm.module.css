@@ -1,0 +1,39 @@
+/* 인테리어 받기 단계 카드(#192): 성민 v4 폼 카드 모양 */
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0 0 16px; padding: 0; list-style: none; }
+.steps li { padding-top: 10px; border-top: 4px solid var(--mj-line); font-size: var(--mj-type-caption); color: var(--mj-text-mute); text-align: center; }
+.steps .done { border-color: var(--mj-blue-300); color: var(--mj-text); }
+.steps .now { border-color: var(--mj-primary); color: var(--mj-primary); font-weight: var(--mj-weight-bold); }
+
+.card { display: flex; flex-direction: column; gap: 18px; padding: 20px; margin-bottom: 12px; border: 1px solid var(--mj-line); border-radius: var(--mj-radius-group); background: var(--mj-surface); min-width: 0; }
+.past { gap: 6px; padding: 14px 20px; background: var(--mj-surface-sub); }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.top h2 { margin: 0; font-size: var(--mj-type-title, 18px); font-weight: var(--mj-weight-bold); outline: none; }
+.line { margin: 0; font-size: var(--mj-type-label); color: var(--mj-text-sub); }
+.mute { margin: 0; font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+
+.row { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.lbl { display: inline-flex; align-items: center; gap: 4px; font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); color: var(--mj-text); }
+.tip { display: block; margin-bottom: 6px; }
+.tip:last-child { margin-bottom: 0; }
+.area { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.area > :first-child { flex: 1 1 160px; max-width: 280px; }
+.part { display: flex; flex-direction: column; gap: 12px; padding-top: 12px; border-top: 1px solid var(--mj-line-soft); }
+
+.pick {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+  min-height: 48px; padding: 0 14px; border: 1px solid var(--mj-line-control); border-radius: var(--mj-radius-field);
+  background: var(--mj-field-bg); color: var(--mj-text); font: inherit; font-size: var(--mj-type-body); text-align: left; cursor: pointer;
+}
+.pick > svg { flex: none; color: var(--mj-text-sub); }
+.bad { border: 2px solid var(--mj-danger); }
+.ph { color: var(--mj-text-placeholder); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { min-height: 40px; padding: 0 16px; border: 1px solid var(--mj-line-control); border-radius: var(--mj-radius-chip); background: var(--mj-surface); color: var(--mj-text); font: inherit; font-size: var(--mj-type-label); cursor: pointer; }
+.chip[aria-pressed="true"] { border-color: var(--mj-primary); background: var(--mj-primary-weak); color: var(--mj-on-primary-weak); font-weight: var(--mj-weight-semibold); }
+
+.err { margin: 0; color: var(--mj-danger); font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); }
+.fieldErr { display: flex; align-items: flex-start; gap: 6px; color: var(--mj-danger); font-size: var(--mj-type-label); }
+.fieldErr > svg { flex: none; margin-top: 2px; }
+.actions { display: flex; gap: 8px; }
+.actions > * { flex: 1; }
