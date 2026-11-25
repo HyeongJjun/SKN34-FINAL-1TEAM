@@ -18,7 +18,7 @@ const TODO: Record<number, string[]> = {
 };
 const KEY = (scope: string) => `mj_plan_todo_${scope}`;
 
-export function Plan({ now, scope, open, render, auto }: {
+export function Plan({ now, scope, open, render, auto, tab: shown, onTab }: {
   /** 지금 단계(0~7, 다 끝나면 8) */
   now: number;
   /** 할 일 체크를 이 기기에 둘 이름(공사 id 또는 guest) */
@@ -28,8 +28,13 @@ export function Plan({ now, scope, open, render, auto }: {
   render?: (step: number) => ReactNode;
   /** 재재가 챙긴 일(단계별) */
   auto?: Record<number, string[]>;
+  /** 보이는 단계를 밖에서 정할 때(대화의 '오른쪽에서 보기' · #196) */
+  tab?: number;
+  onTab?: (step: number) => void;
 }) {
-  const [tab, setTab] = useState(Math.min(now, 7));
+  const [own, setOwn] = useState(Math.min(now, 7));
+  const tab = shown ?? own;
+  const setTab = onTab ?? setOwn;
   const [done, setDone] = useState<Record<string, boolean>>({});
   // 저장된 체크는 그린 뒤에 읽어요(서버 그림과 첫 화면을 같게 · hydration 어긋남 막기)
   useEffect(() => {
@@ -43,7 +48,7 @@ export function Plan({ now, scope, open, render, auto }: {
   const todos = TODO[tab] ?? [];
   const left = todos.filter((t) => !done[`${tab}:${t}`]).length;
   return (
-    <aside className={open ? `${s.plan} ${s.planOpen}` : s.plan} aria-label="내 도배 플랜">
+    <aside id="jj-board" className={open ? `${s.plan} ${s.planOpen}` : s.plan} aria-label="내 도배 플랜">
       <h2 className={s.planT}>내 도배 플랜 <Badge tone="mute">{Math.min(now + 1, 8)}/8 단계</Badge></h2>
       <div className={s.tabs} role="tablist" aria-label="플랜 단계">
         {PLAN_STEPS.map((label, i) => (
