@@ -68,4 +68,6 @@ export type StdView = {
   budget: string | null;
   /** '도배 전체 · 아파트 공급 69.4㎡ · 실크 · 빈 집' */
   condition: string;
+  /** 도배 밖 공정(#193 목공). 공정마다 계산 엔진 합계 그대로, 화면에서 더하지 않아요 */
+  parts?: { trade: "mokgong"; lines: QuoteLine[]; supply: number; vat: number; total: number }[];
 };
