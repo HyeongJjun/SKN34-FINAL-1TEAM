@@ -75,3 +75,7 @@
 }
 .pics { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
 .pics img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: var(--mj-surface-sub); }
+/* #196: 대화의 '오른쪽에서 보기' 링크 · 보드에서 처리한 결과 한 줄 */
+.boardLink { align-self: flex-start; display: inline-flex; align-items: center; min-height: 40px; padding: 0 12px; border: 1px solid var(--mj-primary); border-radius: 999px; background: var(--mj-surface); color: var(--mj-primary); font: inherit; font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); cursor: pointer; }
+.boardLink:hover { background: var(--mj-primary-weak); }
+.done { align-self: flex-start; margin: 0 0 0 54px; padding: 6px 12px; border-radius: 999px; background: var(--mj-surface-sub); font-size: var(--mj-type-caption); color: var(--mj-text-sub); }
