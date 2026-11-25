@@ -437,6 +437,15 @@ async def request(
         for vid in ok
     ]
     picks = {x.vendor_id: x for x in data.picks if x.vendor_id in set(ok)}
+    # 한 집에 같은 반나절 업체 둘은 안 돼요: 이번에 고른 것끼리 · 이 공사의 다른 실측이 잡아 둔 것과 겹치면 409
+    halves = [(x.day, x.half) for x in picks.values()]
+    mine = [v.id for v in await repo.of_project(s, project_id, None)]
+    held = {(h.day, h.half) for h in (await repo.holds_of_visits(s, mine)).values()}
+    if len(set(halves)) != len(halves) or held & set(halves):
+        raise app_error(
+            "slot_taken",
+            "같은 반나절에 업체 둘이 올 수 없어요. 업체마다 다른 반나절을 골라 주세요.",
+        )
     for vid, x in picks.items():  # 업체가 등록한 영업일 · 빈 반나절인지 다시 봐요
         if not (data.wish_start <= x.day <= data.wish_end):
             raise _invalid("희망 기간 안의 날짜를 골라 주세요.", ["picks"])
@@ -493,6 +502,7 @@ async def _pick_at_request(
         raise app_error("stale")
     v.status = "offered"
     assert v.wish_start is not None and v.wish_end is not None
+    pick_due = deadline.pick_due(now)
     s.add(
         VisitWindow(
             visit_id=v.id,
@@ -501,11 +511,13 @@ async def _pick_at_request(
             excluded=[],
             instant=False,
             answered_at=now,
-            pick_due_at=deadline.pick_due(now),
+            pick_due_at=pick_due,
         )
     )
     s.add(_event(v, "requested", "offered", user, "open_days", now, v.wish_start, None, v.wish_end))
     await jobs_service.cancel(s, now=now, kind="visit_reply_due", ref_id=v.id)
+    # 업체가 수락하지 않아 offered로 돌아오면 고르기 기한에 끝나요(answer_window와 같아요)
+    await jobs_service.add(s, kind="visit_pick_due", ref_id=v.id, run_at=pick_due)
     await s.flush()
     await _pick(s, user, v, SlotIn(day=x.day, half=x.half), now)
 
