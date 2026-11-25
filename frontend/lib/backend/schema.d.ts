@@ -7747,7 +7747,7 @@ export interface components {
              */
             status: "open" | "read_only";
             /** Ro Reason */
-            ro_reason: ("other_chosen" | "cancelled" | "declined" | "withdrawn" | "blocked" | "admin") | null;
+            ro_reason: ("other_chosen" | "cancelled" | "declined" | "withdrawn" | "blocked" | "admin" | "expired") | null;
             /**
              * Blocked
              * @description 고객이 차단함
@@ -7792,7 +7792,7 @@ export interface components {
              */
             status: "open" | "read_only";
             /** Ro Reason */
-            ro_reason: ("other_chosen" | "cancelled" | "declined" | "withdrawn" | "blocked" | "admin") | null;
+            ro_reason: ("other_chosen" | "cancelled" | "declined" | "withdrawn" | "blocked" | "admin" | "expired") | null;
         };
         /**
          * TodoOut

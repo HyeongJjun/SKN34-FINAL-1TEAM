@@ -28,6 +28,7 @@ export function readOnlyText(role: "customer" | "vendor", reason: string | null,
     case "declined": return "업체가 요청을 받지 않아서 읽기만 돼요";
     case "withdrawn": return "고객이 탈퇴해서 읽기만 돼요";
     case "admin": return "믿집이 이 채팅을 멈췄어요";
+    case "expired": return "요청 기한이 지나 이 채팅은 읽기만 돼요";
     default: return "지금은 글을 보낼 수 없어요";
   }
 }
