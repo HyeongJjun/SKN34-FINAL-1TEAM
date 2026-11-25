@@ -24,6 +24,7 @@ import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { dateShort, euro, won } from "@/lib/format";
 import { termByName, termHref } from "@/lib/guide";
+import { boardTarget, norm } from "./boardLink";
 import { quickChips } from "./chips";
 import { Jaejae } from "./Jaejae";
 import { Plan, PLAN_STEPS } from "./Plan";
@@ -38,15 +39,6 @@ const enc = encodeURIComponent;
 type Trade = "dobae" | "mokgong";
 const TRADE_WORD: Record<Trade, string> = { dobae: "도배", mokgong: "목공" };
 const MAX_PICK = 3;
-/** 찾기 · 이름 맞추기용: 띄어쓰기 빼고 소문자 */
-const norm = (x: string) => x.replace(/\s+/g, "").toLowerCase();
-/** AI 답의 글을 모아요(업체 이름 맞추기용). 금액 · 날짜를 만들지 않아요 */
-function answerText(a: AiTurnOut["answer"]): string {
-  const parts = [a.lead ?? "", a.notice, ...(a.vendor ?? []), ...a.sections.flatMap((x) => [x.title, ...x.sentences, x.caution, x.tip])];
-  for (const c of a.cards) parts.push(c.title, c.text, ...(c.draft?.vendors ?? []), c.draft?.recommend?.vendor ?? "", ...(c.table?.cols ?? []), ...(c.table?.rows.flatMap((r) => r.cells) ?? []));
-  return parts.join(" ");
-}
-
 export type FlowData = {
   p: VisitProject;
   ov: ApiOverview;
@@ -117,21 +109,16 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   }
 
   const listOf = (t: Trade) => { const x = t === "dobae" ? vendors : mokVendors; return [...(x?.local ?? []), ...(x?.nearby ?? [])]; };
-  /** AI 답 → 보드: 업체 이름이 나오면 업체(견적서가 왔으면 비교) 칸에서 강조, 일정 답이면 일정 칸 */
-  function linkBoard(out: AiTurnOut) {
-    const t = norm(answerText(out.answer));
-    const match = (t2: Trade) => listOf(t2).filter((v) => norm(v.name).length >= 2 && t.includes(norm(v.name))).map((v) => v.vendor_id);
-    const dob = match("dobae");
-    const mok = match("mokgong");
-    if (dob.length || mok.length) {
-      setHi([...new Set([...dob, ...mok])]);
-      setQuery("");
-      setTrade(dob.length ? "dobae" : "mokgong");
-      const quotedNow = (compare?.vendors ?? []).some((r) => r.latest && r.status === "quoted");
-      setTab(quotedNow && !schedule?.trades.length ? 4 : 2);
-      return;
-    }
-    if (out.route === "schedule") setTab(schedule?.trades.length ? 5 : 3);
+  /** AI 답 → 보드(#197, boardLink.ts): 업체 이름이면 그 업체 강조, 아니면 물은 말로 일정 · 업체 칸 */
+  function linkBoard(q: string, out: AiTurnOut) {
+    const names = (["dobae", "mokgong"] as Trade[]).flatMap((t) => listOf(t).map((v) => ({ vendor_id: v.vendor_id, name: v.name, trade: t })));
+    const quotedNow = (compare?.vendors ?? []).some((r) => r.latest && r.status === "quoted");
+    const to = boardTarget(q, out.answer, names, { quoted: quotedNow, deal: !!schedule?.trades.length });
+    if (!to) return;
+    setTab(to.tab);
+    setHi(to.hi);
+    if (to.hi.length) setQuery("");
+    if (to.trade && (to.trade === "dobae" || mokVendors)) setTrade(to.trade);
   }
 
   async function act(key: string, fn: () => Promise<unknown>, said?: string) {
@@ -155,7 +142,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
       const out = await askAi({ client_key: newClientKey(), text: t, chat_id: chatId, context: { screen: now <= 2 ? "vendors" : now <= 4 ? "quotes" : "plan", project_id: p.id, ids: [] }, button }); // 선택지의 길(route) · 칸 정보를 그대로 넘겨요
       if (out.chat_id) setChatId(out.chat_id);
       setAsks((a) => a.map((x, i) => (i === a.length - 1 ? { ...x, out } : x)));
-      linkBoard(out);
+      linkBoard(t, out);
     } catch (e) {
       setAsks((a) => a.map((x, i) => (i === a.length - 1 ? { ...x, err: errorText(e) } : x)));
     }
