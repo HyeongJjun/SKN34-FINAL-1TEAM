@@ -38,6 +38,7 @@ export function VendorDialog({ pid, open, onClose, busy, act, full }: { pid: str
   const name = v?.profile.biz_name ?? "업체";
   const t = open?.trade ?? "dobae";
   const picked = !!v?.shortlisted;
+  const est = v?.estimate_v3 ?? null;
   return (
     <dialog ref={ref} className={d.dlg} aria-labelledby={`${id}-t`} onCancel={h.onCancel} onClick={h.onClick}>
       {open ? (
@@ -59,8 +60,9 @@ export function VendorDialog({ pid, open, onClose, busy, act, full }: { pid: str
                     </div>
                     <div className={s.vdPrice}>
                       <span className={s.note}>{TRADE_WORD[t]} 가견적 · 부가세 포함</span>
-                      <b className="mj-num">{v.estimate ? won(v.estimate.total) : "준비 중"}</b>
-                      {v.estimate ? <span className={s.note}>{compareText(v.estimate.vs_standard) ?? ""}</span> : null}
+                      {/* 가견적은 v3(보드 · 업체 목록과 같은 값). 옛 v2 가견적(estimate)은 쓰지 않아요 */}
+                      <b className="mj-num">{est ? won(est.total) : "준비 중"}</b>
+                      {est ? <span className={s.note}>{compareText(est.vs_standard_pct) ?? ""}</span> : null}
                     </div>
                   </div>
                   <dl className={s.vdRows}>
