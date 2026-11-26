@@ -21,13 +21,13 @@ export const GROUP_KO: Record<string, string> = {
 };
 const rateText = (r: number) => r.toLocaleString("ko-KR", { style: "percent", maximumFractionDigits: 2 });
 
-/** 기본 정보 → 시장 단가 계산 입력. 기본 정보 흐름은 도배만 고르므로 목공은 끈다. 벽지: economy = 합지, basic = 실크 */
-export function toMarketIn(c: { area_m2: string | number; area_basis: string; grade: string | null }): MqIn {
+/** 기본 정보 → 시장 단가 계산 입력(표준견적서, #207). 목공 할 곳을 골랐으면 목공도 켜요. 벽지: economy = 합지, basic = 실크 */
+export function toMarketIn(c: { area_m2: string | number; area_basis: string; grade: string | null; mokgong?: readonly string[] | null }): MqIn {
   return {
     area_m2: String(c.area_m2),
     area_basis: c.area_basis === "exclusive" ? "exclusive" : "supply",
     dobae: true,
-    mokgong: false,
+    mokgong: (c.mokgong?.length ?? 0) > 0,
     wallpaper: c.grade === "economy" ? "hapji" : "silk",
     door: "abs",
     jungmun: "slim3",

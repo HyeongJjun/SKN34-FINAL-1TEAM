@@ -19,6 +19,7 @@ import { budgetText, toQuoteLines, type StdView } from "@/lib/guest/standard";
 import { draftOf, readGuest } from "@/lib/guest/store";
 import { GUEST_ASK_EVENT, GuestAskSheet } from "./GuestAside";
 import { StandardSheet, StandardSkeleton } from "./StandardSheet";
+import { TradeOrder } from "./TradeParts";
 import s from "./standard.module.css";
 
 // 전체 도배는 시장 단가 표준견적서(업체 견적서 235건 중앙값, /estimate와 같은 계산)로 보여요.
@@ -29,11 +30,14 @@ export function GuestStandard({ mock }: { mock: boolean }) {
   const [st, setSt] = useState<State>({ kind: "loading" });
   const [join, setJoin] = useState(false);
   const [ask, setAsk] = useState(false);
+  /** 목공도 골랐어요(#193): 시장 단가 표준견적서에 목공도 같이 세요(#207) */
+  const [mok, setMok] = useState(false);
 
   const load = useCallback(async () => {
     const g = readGuest();
     const d = g ? draftOf(g) : null;
     if (!d || Object.keys(checkDraft(d)).length) { setSt({ kind: "none" }); return; }
+    setMok(d.mok && d.mokgong.length > 0);
     setSt({ kind: "loading" });
     const info = toHomeInfo(d);
     try {
@@ -88,6 +92,7 @@ export function GuestStandard({ mock }: { mock: boolean }) {
               </div>
             </div>
           ) : null}
+          {mok ? <TradeOrder has={["dobae", "mokgong"]} /> : null}
           {ok ? <StandardSheet view={ok} changeHref="/start" /> : null}
           {st.kind === "market" ? (
             <>

@@ -1,10 +1,11 @@
 // /start — 도배 기본 정보(C02 · C03 · D11). ?edit={id}면 그 공사를 고쳐요(만든 고객만, 남의 것은 404). 첫 실측 요청 뒤면 잠김(C50).
+// 새로 시작 · 고치기는 같은 단계 카드 화면(StepForm, 채팅 없음, #192). 로그인한 고객은 만든 뒤 재재 화면(/projects/{id}/assistant)으로 가요.
 // 손님은 답을 이 기기에 두고 가입 없이 표준견적서로 가요(N1 A). 로그인한 고객은 같은 답으로 내 공사를 만들어요.
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/site/AppHeader";
 import { Main, PageHead } from "@/components/site/Frame";
-import { InfoForm } from "@/components/start/InfoForm";
 import { InfoLocked } from "@/components/start/InfoLocked";
+import { StepForm } from "@/components/start/StepForm";
 import { BottomBar } from "@/components/ui/BottomBar";
 import { Button } from "@/components/ui/Button";
 import { getMyProject, getProjectShell, getRegions, type ApiProject } from "@/lib/api/project";
@@ -13,7 +14,7 @@ import { EMPTY_DRAFT, fromSaved, placeText, type InfoDraft } from "@/lib/guest/i
 import { MOCK_V3A, mockKeyOf } from "@/lib/mock/v3a/mode";
 import { getSession, requireRole } from "@/lib/session";
 
-export const metadata = { title: "도배 기본 정보" };
+export const metadata = { title: "인테리어 받기" };
 
 /** v2로 만든 공사(기본 정보 v3 칸이 비었음)는 옛 칸에서 모아요 */
 function draftOfProject(p: ApiProject): InfoDraft {
@@ -57,17 +58,17 @@ export default async function StartPage({ searchParams }: { searchParams: Promis
     }
     return (
       <>
-        <AppHeader phone={{ title: "도배 기본 정보", back: `/projects/${shell.id}/standard` }} />
-        <InfoForm key={shell.id} regions={regions} today={today} mode="edit" projectId={shell.id} initial={draft} mock={shell.mock} crumbs={crumbs} />
+        <AppHeader phone={{ title: "기본 정보 고치기", back: `/projects/${shell.id}/assistant` }} />
+        <StepForm key={shell.id} regions={regions} today={today} mode="edit" projectId={shell.id} initial={draft} mock={shell.mock} crumbs={crumbs} />
       </>
     );
   }
 
   return (
     <>
-      <AppHeader phone={{ title: "도배 기본 정보", back: "/" }} />
-      <InfoForm chat regions={regions} today={today} mode={session?.role === "customer" ? "member" : "guest"} mock={MOCK_V3A}
-        crumbs={[{ label: "표준견적서 받기", href: "/start" }, { label: "도배 기본 정보" }]} />
+      <AppHeader phone={{ title: "인테리어 받기", back: "/" }} />
+      <StepForm regions={regions} today={today} mode={session?.role === "customer" ? "member" : "guest"} mock={MOCK_V3A}
+        crumbs={[{ label: "인테리어 받기" }]} />
     </>
   );
 }

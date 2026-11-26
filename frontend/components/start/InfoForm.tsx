@@ -32,7 +32,7 @@ import s from "./info.module.css";
 export type InfoMode = "guest" | "member" | "edit";
 
 const FIELD_ID: Record<keyof InfoErrors, string> = {
-  spaces: "inf-spaces", faces: "inf-faces", region: "inf-region", area: "inf-area", occupied: "inf-occupied", grade: "inf-grade", budget: "inf-budget",
+  spaces: "inf-spaces", faces: "inf-faces", region: "inf-region", area: "inf-area", occupied: "inf-occupied", grade: "inf-grade", budget: "inf-budget", mokgong: "inf-mokgong",
 };
 
 export function InfoForm({ regions, today, mode, projectId, initial, mock, crumbs, chat = false }: {
