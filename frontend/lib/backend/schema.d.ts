@@ -4984,9 +4984,15 @@ export interface components {
             phase: "estimate" | "progress" | "work" | "done";
             /**
              * Current
-             * @description 가장 늦은 공정의 지금 단계 번호, 1부터 (1~6, 다 마치면 6, C40)
+             * @description 지금 할 일이 있는 공정의 단계 번호, 1부터 (1~8, 다 마치면 8). 없으면 가장 늦은 공정
              */
             current: number;
+            /**
+             * Trade Steps
+             * @description 공정마다 지금 단계 (#203)
+             * @default []
+             */
+            trade_steps: components["schemas"]["TradeStepOut"][];
             todo: components["schemas"]["TodoOut"] | null;
             next: components["schemas"]["NextOut"] | null;
             /**
@@ -7572,7 +7578,7 @@ export interface components {
              * Key
              * @enum {string}
              */
-            key: "house" | "standard" | "pick" | "visit" | "deal" | "dates";
+            key: "house" | "standard" | "pick" | "visit" | "compare" | "dates" | "work" | "done";
             /** Label */
             label: string;
             /**
@@ -7587,7 +7593,7 @@ export interface components {
             on: string | null;
             /**
              * Count
-             * @description 업체 고르기: 요청한 곳 · 실측: 받은 견적서 수
+             * @description 업체: 요청한 곳 · 실측: 받은 견적서 수
              */
             count: number | null;
         };
@@ -7934,7 +7940,7 @@ export interface components {
             phase: "estimate" | "progress" | "work" | "done";
             /**
              * Current
-             * @description 지금 단계 번호, 1부터 (1~6, 다 마치면 6)
+             * @description 지금 단계 번호, 1부터 (1~8, 다 마치면 8)
              */
             current: number;
             /** Steps */
@@ -7957,6 +7963,24 @@ export interface components {
             /** Proposed End */
             proposed_end: string | null;
             next: components["schemas"]["NextOut"] | null;
+        };
+        /**
+         * TradeStepOut
+         * @description 공정 하나의 지금 단계 (재재 보드 8칸: 집 · 견적 · 업체 · 실측 · 비교 · 일정 · 공사 · 완료)
+         */
+        TradeStepOut: {
+            /** Trade */
+            trade: string;
+            /**
+             * Current
+             * @description 1~8 (다 마치면 8)
+             */
+            current: number;
+            /**
+             * Label
+             * @description 지금 칸 이름
+             */
+            label: string;
         };
         /** TradesIn */
         TradesIn: {
