@@ -1,9 +1,10 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { QuoteForm } from "@/components/pro/quote/QuoteForm";
 import { ProHeader } from "@/components/pro/Shell";
 import { Desk } from "@/components/pro/desk/Desk";
 import { deskFeed } from "@/components/pro/desk/feed";
 import { approvedVendorGate, getQuoteBoard, getVendorVisit, vendorNow } from "@/lib/api/vendor";
+import { dateSeoul } from "@/lib/format";
 
 export const metadata = { title: "실측 견적서 올리기" };
 
@@ -13,6 +14,8 @@ export default async function VendorQuotePage({ params }: { params: Promise<{ vi
   const me = await approvedVendorGate(`/vendor/requests/${encodeURIComponent(visitId)}/quote`);
   const [v, board] = await Promise.all([getVendorVisit(visitId), getQuoteBoard(visitId)]);
   if (!v || !board) notFound();
+  // 실측일 전이면 견적서를 낼 수 없어요(실측한 날은 오늘까지만, 서버 422). 요청 화면으로 돌려보내 안내를 봐요
+  if (v.status === "booked" && v.booked && v.booked.day > dateSeoul(vendorNow("quote"))) redirect(`/vendor/requests/${encodeURIComponent(v.id)}`);
   const feed = await deskFeed(v.id, vendorNow("inbox"));
   return (
     <>
