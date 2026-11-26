@@ -25,8 +25,8 @@ export default async function StandardPage({ params }: { params: Promise<{ id: s
   if (!view) notFound();
   // 전체 도배는 시장 단가(업체 견적서 235건 중앙값)로 보여요. 서버가 이 공사 값으로 계산하고 AI 칸도 같은 값을 읽어요.
   // 부분 공사 · 시장 단가를 못 받으면 기존 표준견적서 그대로예요
-  // 목공도 하는 공사는 시장 단가(도배만)를 쓰지 않고 공정 합계가 있는 표준견적서로 보여요(큰 금액이 도배만이 되지 않게)
-  const market = shell.mock || view.parts?.length ? null : await getMyMarketQuote(shell.id);
+  // 표준견적서는 업체 견적서 시장 단가(#207). 목공을 고른 공사는 서버가 목공도 켜서 줘요
+  const market = shell.mock ? null : await getMyMarketQuote(shell.id);
   const base = `/projects/${shell.id}`;
   const changeHref = `/start?edit=${shell.id}`;
   return (
@@ -45,7 +45,8 @@ export default async function StandardPage({ params }: { params: Promise<{ id: s
           ) : (
             <StandardSheet view={view} changeHref={changeHref} />
           )}
-          {view.parts?.length ? <TradePartSheets parts={view.parts} /> : null}
+          {/* 시장 단가 견적엔 목공 줄도 들어 있어요. 시장 단가가 없을 때(부분 공사)만 공정별 줄을 따로 */}
+          {view.parts?.length && !market ? <TradePartSheets parts={view.parts} /> : null}
         </WithAside>
       </Main>
       <BottomBar>
