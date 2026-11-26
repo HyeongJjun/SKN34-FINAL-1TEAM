@@ -75,7 +75,10 @@ export type FlowData = {
 };
 
 /** 서버 상태 → 플랜 8칸 지금 칸 */
-function stepOf(d: FlowData): number {
+/** 보드 지금 칸(0~7, 다 끝나면 8): 서버 공정별 단계(overview.trades, #203)를 그대로 써요. 위 띠 · 내 공사 목록과 같은 값 */
+function stepOf(d: FlowData, trade = "dobae"): number {
+  const t = d.ov.trades.find((x) => x.trade === trade);
+  if (t) return t.steps.length && t.steps.every((st) => st.state === "done") ? 8 : Math.max(0, t.current - 1);
   const deal = d.schedule?.trades.find((t) => t.deal.trade === "dobae") ?? null;
   if (deal) {
     const st = deal.deal.status;
@@ -95,6 +98,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const { p, ov, compare, schedule, visits, vendors, mokVendors, draft, mokDraft, today, std } = data;
   const pid = enc(p.id);
   const now = stepOf(data);
+  // 목공도 하는 공사면 보드 머리에 목공 지금 칸도 같이(보드 칸 내용은 도배 기준)
+  const mokNow = ov.trades.some((t) => t.trade === "mokgong") ? stepOf(data, "mokgong") : null;
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState(data.step ?? Math.min(now, 7));
   const [stdOpen, setStdOpen] = useState(data.openStd && !!std);
@@ -457,7 +462,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
 
   return (
     <div className={s.page}>
-      <button type="button" className={s.planBar} aria-expanded={open} aria-controls="jj-board" onClick={() => setOpen((v) => !v)}><b>{Math.min(now + 1, 8)}/8 · 내 도배 플랜</b><span>{open ? "접기" : "보기"}</span></button>
+      <button type="button" className={s.planBar} aria-expanded={open} aria-controls="jj-board" onClick={() => setOpen((v) => !v)}><b>{Math.min(now + 1, 8)}/8 · 내 도배 플랜</b>{mokNow != null ? <span className={s.planMok}>목공 {Math.min(mokNow + 1, 8)}/8 · {PLAN_STEPS[Math.min(mokNow, 7)]}</span> : null}<span>{open ? "접기" : "보기"}</span></button>
       <div className={s.body}>
         <section className={s.chat} aria-label="재재와 대화">
           <AiActionContext.Provider value={onAiAction}>

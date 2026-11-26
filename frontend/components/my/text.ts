@@ -2,8 +2,8 @@
 import type { ApiProjectItem } from "@/lib/api/project";
 import { tradeLabel } from "@/lib/labels";
 
-/** 6단계 이름 (backend/app/calc/progress.py STEPS 순서) */
-export const STEP_NAMES = ["집 정보", "기준 금액", "업체 고르기", "실측", "업체 확정", "공사 날짜"];
+/** 8단계 이름 (backend/app/calc/progress.py STEPS 순서, 재재 보드와 같아요) */
+export { STEP_NAMES } from "@/lib/guest/info";
 
 /** 지금 단계에 붙는 기본 말 (번호 1부터) */
 const STEP_NOW: Record<number, string> = {
@@ -11,8 +11,10 @@ const STEP_NOW: Record<number, string> = {
   2: "기준 금액을 볼 차례",
   3: "업체를 고를 차례",
   4: "실측 견적서를 받는 중",
-  5: "업체를 확정할 차례",
+  5: "견적서를 비교할 차례",
   6: "공사 날짜를 정하는 중",
+  7: "공사를 기다리는 중",
+  8: "공사가 끝났어요",
 };
 
 /** 할 일(서버 todo.code)마다 짧은 말과 그 일이 속한 단계. 단계가 없으면 공사 날짜를 정한 뒤의 일이다 */
@@ -20,7 +22,7 @@ const TODO_NOTE: Record<string, { step?: number; text: string }> = {
   pick: { step: 3, text: "업체를 고를 차례" },
   visit_requested: { step: 4, text: "업체에 연락할 차례" },
   quotes_partial: { step: 4, text: "견적서가 오는 중" },
-  quotes_arrived: { step: 4, text: "견적서 옴 · 비교할 차례" },
+  quotes_arrived: { step: 5, text: "견적서 옴 · 비교할 차례" },
   dates_received: { step: 6, text: "날짜 옴 · 확인할 차례" },
   dates_overdue: { step: 6, text: "날짜를 낼 기한이 지났어요" },
   dates_waiting: { step: 6, text: "업체가 날짜를 정하는 중" },

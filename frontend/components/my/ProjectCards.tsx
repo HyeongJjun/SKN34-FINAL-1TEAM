@@ -4,11 +4,12 @@ import Link from "next/link";
 import type { ApiMyProject } from "@/lib/api/schedule";
 import type { BoardRow } from "@/lib/api/visit";
 import { dateSeoul, dateShort, dueText, won } from "@/lib/format";
-import { gradeLabel, sizeLabel, visitState } from "@/lib/labels";
+import { gradeLabel, sizeLabel, tradeLabel, visitState } from "@/lib/labels";
+import { stepIndex } from "@/lib/guest/info";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { StateTag } from "@/components/ui/StateTag";
-import { PROJECT_STEPS, Steps } from "@/components/ui/Steps";
+import { Steps } from "@/components/ui/Steps";
 import { Group, Row, Rows, Small } from "@/components/project/Kit";
 import { boardState, slotText, windowText } from "@/components/visit/text";
 import s from "./cards.module.css";
@@ -61,7 +62,8 @@ function VendorRows({ c, base }: { c: MyCard; base: string }) {
 function Card({ c }: { c: MyCard }) {
   const { p } = c;
   const base = `/projects/${encodeURIComponent(p.id)}`;
-  const current = Math.max(0, Math.min(PROJECT_STEPS.length - 1, p.current));
+  // 서버 단계 번호는 1부터, 칸은 0부터(#203). 공정이 둘이면 공정마다 한 줄(목공 → 도배 순)
+  const tracks = [...p.trade_steps].sort((a, b) => (a.trade === "mokgong" ? -1 : b.trade === "mokgong" ? 1 : 0));
   const small = [sizeLabel(p.size), p.trades.includes("dobae") ? gradeLabel(p.grades.dobae) : null, `마지막 소식 ${dateShort(dateSeoul(p.updated_at))}`].filter(Boolean).join(" · ");
   const todo = p.todo && p.todo.text ? p.todo : null;
   const todoHref = todo && inSite(todo.link) ? todo.link : null;
@@ -73,7 +75,14 @@ function Card({ c }: { c: MyCard }) {
           <h2 className={s.title}><Link className={s.name} href={`${base}/assistant`}>{c.name}<Icon name="chevron-right" size={18} /></Link></h2>
           <Small>{small}</Small>
         </div>
-        <Steps current={current} />
+        {tracks.length > 1
+          ? tracks.map((t) => (
+              <div key={t.trade} className={s.track}>
+                <span className={s.trackName}>{tradeLabel(t.trade)}</span>
+                <Steps current={stepIndex(t.current)} label={`${tradeLabel(t.trade)} 단계`} />
+              </div>
+            ))
+          : <Steps current={stepIndex(p.current)} />}
         {picked ? (
           <>
             {todo ? (

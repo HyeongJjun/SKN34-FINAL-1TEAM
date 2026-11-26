@@ -3,10 +3,10 @@
 import type { ApiCompare, ApiOverview } from "@/lib/api/schedule";
 import type { VisitProject } from "@/lib/api/visit";
 import { areaText, won } from "@/lib/format";
-import { visitState, type StateTone } from "@/lib/labels";
+import { tradeLabel, visitState, type StateTone } from "@/lib/labels";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { AFTER_VISIT_STEPS, PROJECT_STEPS, Steps, SubSteps } from "@/components/ui/Steps";
+import { PROJECT_STEPS, Steps } from "@/components/ui/Steps";
 import { Eyebrow, Group, Row, Rows, Strip, Title } from "./Kit";
 import { SiteInfoCard } from "./SiteInfoCard";
 import s from "./home.module.css";
@@ -26,9 +26,8 @@ function nowIndex(steps: { state: "done" | "now" | "todo" }[], fallback: number,
 
 export function Summary({ p, ov, compare }: { p: VisitProject; ov: ApiOverview; compare: ApiCompare | null }) {
   const base = `/projects/${encodeURIComponent(p.id)}`;
-  const trade = ov.trades[0];
-  const current = nowIndex(trade?.steps ?? [], trade?.current ?? 0, PROJECT_STEPS.length);
-  const afterCurrent = nowIndex(ov.after_steps, 0, AFTER_VISIT_STEPS.length);
+  // 공정마다 8칸(#203). 다 마친 공정은 마지막 칸(완료)
+  const tracks = ov.trades.map((t) => ({ trade: t.trade, current: Math.min(nowIndex(t.steps, t.current - 1, PROJECT_STEPS.length), PROJECT_STEPS.length - 1) }));
   const quoteOf = (visitId: string) => compare?.vendors.find((r) => r.visit_id === visitId)?.latest ?? null;
   const quotedCount = compare?.vendors.filter((r) => r.latest).length ?? 0;
   const todo = ov.todo && ov.todo.text ? ov.todo : null;
@@ -53,12 +52,16 @@ export function Summary({ p, ov, compare }: { p: VisitProject; ov: ApiOverview; 
         </Group>
       ) : null}
 
-      {/* 웹(≥1024)은 위쪽 공사 띠가 6단계를 그려서 폰 · 태블릿에서만 보여요 */}
+      {/* 웹(≥1024)은 위쪽 공사 띠가 8단계를 그려서 폰 · 태블릿에서만 보여요 */}
       <div className={s.phoneSteps}>
         <Group label="공사 단계">
           <div className={s.steps}>
-            <Steps current={Math.min(current, PROJECT_STEPS.length - 1)} />
-            {current >= PROJECT_STEPS.length - 1 ? <SubSteps current={afterCurrent} /> : null}
+            {tracks.map((t) => (
+              <div key={t.trade}>
+                {tracks.length > 1 ? <Eyebrow>{tradeLabel(t.trade)}</Eyebrow> : null}
+                <Steps current={t.current} label={`${tradeLabel(t.trade)} 단계`} />
+              </div>
+            ))}
           </div>
         </Group>
       </div>
