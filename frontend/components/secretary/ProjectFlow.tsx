@@ -480,7 +480,7 @@ function VendorRows({ list, query, hi, trade, pick, pid, busy, act, onOpen }: { 
         const can = pickRule(v, pick);
         return (
           <div key={v.vendor_id} ref={on && i === 0 ? first : undefined} className={[s.vrow, v.shortlisted ? s.vrowOn : "", on ? s.vrowHi : ""].join(" ")}>
-            <div><button type="button" className={s.vname} onClick={() => onOpen(v.vendor_id)} aria-label={`${v.name} 자세히`}>{v.name} ›</button>{on ? <span className={s.hiTag}>재재가 말한 업체</span> : null}<span className={s.note}>{v.rating ? `별 ${v.rating} · ` : ""}후기 {v.review_count} · 시공 {v.done_count}</span></div>
+            <div className={s.vcol}><button type="button" className={s.vname} onClick={() => onOpen(v.vendor_id)} aria-label={`${v.name} 자세히`}>{v.name} ›</button>{on ? <span className={s.hiTag}>재재가 말한 업체</span> : null}<span className={s.note}>{v.rating ? `별 ${v.rating} · ` : ""}후기 {v.review_count} · 시공 {v.done_count}</span></div>
             <div className={s.row}>
               <b className="mj-num">{v.estimate_total != null ? won(v.estimate_total) : "—"}</b>
               {pick.live.has(v.vendor_id) ? <span className={s.note}>실측 요청한 업체</span> : (
