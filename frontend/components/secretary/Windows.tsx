@@ -5,6 +5,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { ExpectedPlan } from "@/components/plan/ExpectedPlan";
 import { FinalPlanAside, FinalPlanBody } from "@/components/plan/FinalPlanView";
+import { DocsTable } from "@/components/docs/DocsTable";
 import { LogList } from "@/components/project/LogList";
 import { ReviewForm } from "@/components/schedule/ReviewForm";
 import { datesView, doneView, extraView } from "@/components/schedule/views";
@@ -15,7 +16,7 @@ import { Conversation } from "@/components/thread/Conversation";
 import { Icon } from "@/components/ui/Icon";
 import { useModal } from "@/components/ui/useModal";
 import type { ApiCheck, ApiPlan, Region } from "@/lib/api/project";
-import type { ApiLogItem, ApiSchedule } from "@/lib/api/schedule";
+import type { ApiDocs, ApiLogItem, ApiSchedule } from "@/lib/api/schedule";
 import type { Message, Thread } from "@/lib/api/thread";
 import { call, errorText } from "@/lib/backend/client";
 import { placeText, type InfoDraft } from "@/lib/guest/info";
@@ -31,6 +32,7 @@ export type Win =
   | { kind: "schedule"; view: ScheduleView }
   | { kind: "term"; name: string }
   | { kind: "log" }
+  | { kind: "docs" }
   | null;
 
 /** 창 한 개 틀(표준견적서 창과 같아요) */
@@ -66,7 +68,7 @@ export type WinData = {
   startDate: string | null;
 };
 
-const TITLE: Record<NonNullable<Win>["kind"], string> = { edit: "기본 정보 고치기", plan: "공정표", chat: "업체 채팅", review: "리뷰 쓰기", schedule: "공사 일정", term: "믿집 백과", log: "결정 기록" };
+const TITLE: Record<NonNullable<Win>["kind"], string> = { edit: "기본 정보 고치기", plan: "공정표", chat: "업체 채팅", review: "리뷰 쓰기", schedule: "공사 일정", term: "믿집 백과", log: "결정 기록", docs: "서류" };
 
 export function Windows({ win, onClose, onDone, data }: { win: Win; onClose: () => void; onDone: (said: string) => void; data: WinData }) {
   const title = win ? (win.kind === "chat" ? `${win.vendorName} 채팅` : win.kind === "term" ? `백과 · ${win.name}` : TITLE[win.kind]) : "";
@@ -79,6 +81,7 @@ export function Windows({ win, onClose, onDone, data }: { win: Win; onClose: () 
       {win?.kind === "schedule" ? <ScheduleBody data={data} view={win.view} /> : null}
       {win?.kind === "term" ? <TermBody name={win.name} /> : null}
       {win?.kind === "log" ? <LogBody data={data} /> : null}
+      {win?.kind === "docs" ? <DocsBody data={data} /> : null}
     </JjWindow>
   );
 }
@@ -160,6 +163,21 @@ function LogBody({ data }: { data: WinData }) {
   if (err) return <p className="mj-error" role="alert">{err}</p>;
   if (!items) return <p className={s.note}>기록을 불러오는 중이에요</p>;
   return <LogList items={items} />;
+}
+
+/** 서류(UC-PRJ-04): 표준견적서 · 공정표 · 실측 견적서 · 추가 금액 기록. 열 때 GET /projects/{id}/docs */
+function DocsBody({ data }: { data: WinData }) {
+  const [docs, setDocs] = useState<ApiDocs | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    call<ApiDocs>("GET", `/projects/${data.pid}/docs`).then((x) => { if (live) setDocs(x); }).catch((e) => { if (live) setErr(errorText(e)); });
+    return () => { live = false; };
+  }, [data.pid]);
+  if (err) return <p className="mj-error" role="alert">{err}</p>;
+  if (!docs) return <p className={s.note}>서류를 불러오는 중이에요</p>;
+  const trades = (["mokgong", "dobae"] as const).filter((t) => docs.standard.some((x) => x.trade === t));
+  return <DocsTable docs={docs} trades={[...trades]} deals={(data.schedule?.trades ?? []).map((t) => t.deal)} />;
 }
 
 function TermBody({ name }: { name: string }) {
