@@ -122,8 +122,9 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [asks.length, now, done.length]);
   // 단계가 넘어가면 보드도 지금 단계로 옮겨요
   // 처음 그릴 때는 넘어온 칸(?step)을 지켜요
-  const firstNow = useRef(true);
-  useEffect(() => { if (firstNow.current) { firstNow.current = false; return; } setTab(Math.min(now, 7)); }, [now]);
+  // 개발 모드(StrictMode)는 effect를 두 번 돌려서 '처음 한 번 건너뛰기'로는 넘어온 칸이 지워져요. 지금 칸 값이 실제로 바뀔 때만 옮겨요
+  const lastNow = useRef(now);
+  useEffect(() => { if (lastNow.current === now) return; lastNow.current = now; setTab(Math.min(now, 7)); }, [now]);
   // ?open=standard는 한 번만 써요(새로고침 · 뒤로 가기에 다시 열리지 않게)
   useEffect(() => { if (data.openStd || data.step != null) router.replace(`/projects/${pid}/assistant`, { scroll: false }); }, [data.openStd, data.step, pid, router]);
 
@@ -248,8 +249,9 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     cards.push({ key: "wait", node: (
       <>
         <div className={s.wait} role="status"><span className={s.waitBar} aria-hidden="true" /><span>업체 답을 기다리는 중이에요</span></div>
-        <p>기다리는 동안 미리 해 두면 좋은 것들이에요.</p>
+        <p>기다리는 동안 미리 해 두면 좋은 것들이에요. 다른 업체도 둘러보고 더 담으면 실측을 같이 물어볼 수 있어요(공정마다 3곳까지).</p>
         <div className={s.row}>
+          <button type="button" className={s.boardLink} onClick={() => toBoard(2)}>다른 업체 둘러보기</button>
           <button type="button" className={s.boardLink} onClick={() => setWin({ kind: "term", name: "실크 벽지" })}>벽지 자재 알아보기</button>
           <button type="button" className={s.boardLink} onClick={() => setWin({ kind: "plan" })}>공사 순서 다시 보기</button>
           {std ? <button type="button" className={s.boardLink} onClick={() => setStdOpen(true)}>표준견적서 다시 보기</button> : null}
@@ -315,7 +317,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             })}
           </div>
         ) : null}
-        {!(trade === "dobae" ? vs.length || deal : mvs.length) ? (
+        {/* 실측을 기다리는 동안에도 다른 업체를 보고 더 담아요(공정마다 3곳까지). 확정한 뒤에만 닫아요 */}
+        {!(trade === "dobae" && deal) ? (
           <>
             <div className={s.search} role="search">
               <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="업체 이름 · 지역으로 찾기" aria-label={`${TRADE_WORD[trade]} 업체 찾기`} />
@@ -324,20 +327,31 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             {trade === "dobae" && mokVendors && vendors ? <p className={s.note}>가견적 %는 도배만 시장 단가 <b className="mj-num">{won(vendors.standard_total)}</b>와 견줘요. 표준견적서 합계에는 목공도 들어 있어요.</p> : null}
             <VendorRows list={listOf(trade).filter((v) => v.state === "ok")} query={query} hi={hi} trade={trade} pid={pid} busy={busy} act={act} onOpen={(vendorId) => setVOpen({ vendorId, trade })} />
           </>
-        ) : <p className={s.note}>{TRADE_WORD[trade]} 업체는 이미 골랐어요. 실측 칸을 봐 주세요.</p>}
-        {trade === "dobae" && picked.length && !vs.length && !deal ? (
-          <Button size="lg" block onClick={() => setTab(3)}>도배 담은 {picked.length}곳 실측 날짜 고르기 →</Button>
+        ) : <p className={s.note}>도배 업체를 확정했어요. 일정 칸을 봐 주세요.</p>}
+        {trade === "dobae" && draft?.vendors.length && !deal ? (
+          <Button size="lg" block onClick={() => setTab(3)}>{vs.length ? `도배 남은 ${draft.vendors.length}곳도 실측 날짜 고르기 →` : `도배 담은 ${draft.vendors.length}곳 실측 날짜 고르기 →`}</Button>
         ) : null}
-        {trade === "mokgong" && mokPicked.length && !mvs.length ? (
-          <Button size="lg" block onClick={() => setTab(3)}>목공 담은 {mokPicked.length}곳 실측 날짜 고르기 →</Button>
+        {trade === "mokgong" && mokDraft?.vendors.length ? (
+          <Button size="lg" block onClick={() => setTab(3)}>{mvs.length ? `목공 남은 ${mokDraft.vendors.length}곳도 실측 날짜 고르기 →` : `목공 담은 ${mokDraft.vendors.length}곳 실측 날짜 고르기 →`}</Button>
         ) : null}
       </>
     );
     if (step === 3) return (
       <>
-        {!vs.length && !deal && draft?.vendors.length ? <BoardVisitRequest pid={pid} trade="dobae" draft={draft} today={today} busy={busy} act={act} /> : null}
+        {/* 아직 요청하지 않은 담은 업체(draft)에는 실측 요청 뒤에도 보낼 수 있어요 */}
+        {!deal && draft?.vendors.length ? (
+          <>
+            {vs.length ? <p className={s.note}>아직 요청하지 않은 도배 업체 {draft.vendors.length}곳에도 보낼 수 있어요.</p> : null}
+            <BoardVisitRequest pid={pid} trade="dobae" draft={draft} today={today} busy={busy} act={act} />
+          </>
+        ) : null}
         {!vs.length && !deal && !draft?.vendors.length ? <p className={s.note}>먼저 업체 칸에서 도배 업체를 담아 주세요. <button type="button" className={s.boardLink} onClick={() => { setTrade("dobae"); setTab(2); }}>업체 칸으로</button></p> : null}
-        {mokVendors && !mvs.length && mokDraft?.vendors.length ? <BoardVisitRequest pid={pid} trade="mokgong" draft={mokDraft} today={today} busy={busy} act={act} /> : null}
+        {mokVendors && mokDraft?.vendors.length ? (
+          <>
+            {mvs.length ? <p className={s.note}>아직 요청하지 않은 목공 업체 {mokDraft.vendors.length}곳에도 보낼 수 있어요.</p> : null}
+            <BoardVisitRequest pid={pid} trade="mokgong" draft={mokDraft} today={today} busy={busy} act={act} />
+          </>
+        ) : null}
         {mokVendors && !mvs.length && !mokDraft?.vendors.length ? <p className={s.note}>목공 업체를 담으면 여기서 목공 실측 날짜도 골라요. <button type="button" className={s.boardLink} onClick={() => { setTrade("mokgong"); setTab(2); }}>목공 업체 칸으로</button></p> : null}
         {toPick.map((v) => <PickCard key={v.id} pid={pid} visitId={v.id} name={v.vendor_name} proposal={v.status === "proposed"} busy={busy} act={act} />)}
         {/* 업체마다 카드 하나: 상태 · 큰 채팅 단추 · 취소(정석 피드백 10: 채팅 단추가 작아 찾기 어려움) */}
@@ -549,10 +563,15 @@ function PickCard({ pid, visitId, name, proposal, busy, act }: { pid: string; vi
   const [sel, setSel] = useState<{ day: string; half: Half } | null>(null);
   useEffect(() => { void call<Pick>("GET", `/projects/${pid}/visits/${enc(visitId)}`).then(setPick).catch(() => setFailed(true)); }, [pid, visitId]);
   // 업체가 보낸 날을 달력으로(팀 피드백 3)
-  const days = (pick?.days ?? []).map((d) => ({ day: d.day, halves: (["am", "pm"] as Half[]).filter((h) => d[h]) })).filter((d) => d.halves.length);
+  // 업체가 다른 날을 제안했으면(proposed) 제안한 반나절만 골라요. 영업일 전체를 보이면 제안 밖 날을 눌러 409가 나요(PickBoard와 같은 규칙)
+  const offer = proposal && pick?.proposal ? pick.proposal.slots : null;
+  const days = offer
+    ? [...new Set(offer.map((x) => x.day))].sort().map((day) => ({ day, halves: (["am", "pm"] as Half[]).filter((h) => offer.some((x) => x.day === day && x.half === h)) }))
+    : (pick?.days ?? []).map((d) => ({ day: d.day, halves: (["am", "pm"] as Half[]).filter((h) => d[h]) })).filter((d) => d.halves.length);
   return (
     <div className={s.card}>
-      <h4>{name} · 실측 반나절 고르기</h4>
+      <h4>{name} · {offer ? "업체가 제안한 반나절 고르기" : "실측 반나절 고르기"}</h4>
+      {offer && pick?.proposal?.note ? <p className={s.why}>업체 말: {pick.proposal.note}</p> : null}
       <div className={s.vlist}>
         {days.length ? <HalfCalendar days={days} value={sel} onChange={setSel} label={`${name} 실측 고를 수 있는 날`} /> : null}
         {failed ? <p className={s.note}>고를 수 있는 날을 불러오지 못했어요. 새로고침하거나 업체 채팅으로 물어봐 주세요.</p> : null}
