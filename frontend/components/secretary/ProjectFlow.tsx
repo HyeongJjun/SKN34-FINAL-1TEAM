@@ -32,6 +32,7 @@ import { Jaejae } from "./Jaejae";
 import { Plan, PLAN_STEPS } from "./Plan";
 import { BoardVisitRequest } from "./BoardVisitRequest";
 import { StandardDialog, type StdData } from "./StandardDialog";
+import { VendorDialog, type VendorOpen } from "./VendorDialog";
 import s from "./flow.module.css";
 
 type Pick = Schemas["VisitPickOut"];
@@ -89,6 +90,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const [query, setQuery] = useState("");
   /** AI 답에 나온 업체(보드에서 강조) */
   const [hi, setHi] = useState<string[]>([]);
+  /** 업체 자세히 창(보드에서 업체 이름을 누르면) */
+  const [vOpen, setVOpen] = useState<VendorOpen>(null);
   const [busyKey, setBusy] = useState<string | null>(null);
   const [refreshing, startRefresh] = useTransition();
   // 새 화면 값이 올 때까지 단추를 막아요(같은 요청을 두 번 보내 409가 나지 않게)
@@ -257,7 +260,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             <div className={s.search} role="search">
               <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="업체 이름 · 지역으로 찾기" aria-label={`${TRADE_WORD[trade]} 업체 찾기`} />
             </div>
-            <VendorRows list={listOf(trade).filter((v) => v.state === "ok")} query={query} hi={hi} trade={trade} pid={pid} busy={busy} act={act} />
+            <VendorRows list={listOf(trade).filter((v) => v.state === "ok")} query={query} hi={hi} trade={trade} pid={pid} busy={busy} act={act} onOpen={(vendorId) => setVOpen({ vendorId, trade })} />
           </>
         ) : <p className={s.note}>도배 업체는 이미 골랐어요. 실측 칸을 봐 주세요.</p>}
         {trade === "dobae" && picked.length && !vs.length && !deal ? (
@@ -405,6 +408,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
       <div className={s.chips} aria-label="믿집 백과">
         {terms.map((t) => <Link key={t.id} className={s.chip} href={termHref(t)}>백과<b>{t.term}</b></Link>)}
       </div>
+      <VendorDialog pid={pid} open={vOpen} onClose={() => setVOpen(null)} busy={busy} act={act}
+        full={!!vOpen && listOf(vOpen.trade).filter((v) => v.shortlisted).length >= MAX_PICK} />
       {std ? <StandardDialog open={stdOpen} onClose={() => setStdOpen(false)} data={std} pid={pid} locked={p.locked} /> : null}
     </div>
   );
@@ -415,7 +420,7 @@ const VISIT_WORD: Record<string, string> = { requested: "날짜 묻는 중", pic
 
 type Card = ProjectVendors["local"][number];
 /** 보드 업체 줄(#197): 찾기 낱말로 거르고, AI 답에 나온 업체는 위로 올려 강조해요. 공정마다 3곳까지 담아요 */
-function VendorRows({ list, query, hi, trade, pid, busy, act }: { list: Card[]; query: string; hi: string[]; trade: Trade; pid: string; busy: string | null; act: Act }) {
+function VendorRows({ list, query, hi, trade, pid, busy, act, onOpen }: { list: Card[]; query: string; hi: string[]; trade: Trade; pid: string; busy: string | null; act: Act; onOpen: (vendorId: string) => void }) {
   const key = norm(query);
   const shown = list
     .filter((v) => !key || norm(`${v.name} ${v.sgg}`).includes(key))
@@ -433,7 +438,7 @@ function VendorRows({ list, query, hi, trade, pid, busy, act }: { list: Card[]; 
         const on = hi.includes(v.vendor_id);
         return (
           <div key={v.vendor_id} ref={on && i === 0 ? first : undefined} className={[s.vrow, v.shortlisted ? s.vrowOn : "", on ? s.vrowHi : ""].join(" ")}>
-            <div><Link className={s.vname} href={`/projects/${pid}/vendors/${enc(v.vendor_id)}?trade=${trade}`}>{v.name}</Link>{on ? <span className={s.hiTag}>재재가 말한 업체</span> : null}<span className={s.note}>{v.rating ? `별 ${v.rating} · ` : ""}후기 {v.review_count} · 시공 {v.done_count}</span></div>
+            <div><button type="button" className={s.vname} onClick={() => onOpen(v.vendor_id)} aria-label={`${v.name} 자세히`}>{v.name} ›</button>{on ? <span className={s.hiTag}>재재가 말한 업체</span> : null}<span className={s.note}>{v.rating ? `별 ${v.rating} · ` : ""}후기 {v.review_count} · 시공 {v.done_count}</span></div>
             <div className={s.row}>
               <b className="mj-num">{v.estimate_total != null ? won(v.estimate_total) : "—"}</b>
               <Button size="sm" variant={v.shortlisted ? "secondary" : "weak"} busy={busy === v.vendor_id} disabled={!v.shortlisted && full}
