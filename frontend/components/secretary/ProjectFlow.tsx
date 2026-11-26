@@ -393,7 +393,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
         <span className={`${s.chip} ${s.chipOn}`}>공정<b>도배 {p.scope === "partial" ? "부분" : "전체"}{mokVendors ? " · 목공" : ""}</b></span>
         <span className={`${s.chip} ${s.chipOn}`}>거주<b>{p.occupied ? "살고 있어요" : "빈 집"}</b></span>
         <span className={`${s.chip} ${s.chipOn}`}>도배 유형<b>{p.grade === "economy" ? "저가형" : "기본형"}</b></span>
-        <Link className={s.chip} href={`/projects/${pid}?tab=log`}>결정 기록<b>보기</b></Link>
+        <button type="button" className={s.chip} onClick={() => setWin({ kind: "log" })}>결정 기록<b>보기</b></button>
       </div>
       <button type="button" className={s.planBar} aria-expanded={open} aria-controls="jj-board" onClick={() => setOpen((v) => !v)}><b>{Math.min(now + 1, 8)}/8 · 내 도배 플랜</b><span>{open ? "접기" : "보기"}</span></button>
       <div className={s.body}>
