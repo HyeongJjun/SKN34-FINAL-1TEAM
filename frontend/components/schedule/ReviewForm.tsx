@@ -18,7 +18,7 @@ import s from "./v3.module.css";
 type Photo = { id: string; name: string; url: string };
 
 /** 화면 본문(Main) · 아래 단추 띠까지 그려요(띠는 Main 바로 뒤에 붙어야 해서요). top: 제목 · 업체 줄, after: 묶음 뒤 줄 */
-export function ReviewForm({ projectId, dealId, vendorId, top, after }: { projectId: string; dealId: string; vendorId: string | null; top?: React.ReactNode; after?: React.ReactNode }) {
+export function ReviewForm({ projectId, dealId, vendorId, top, after, onDone }: { projectId: string; dealId: string; vendorId: string | null; top?: React.ReactNode; after?: React.ReactNode; /** 재재 화면 창: 올린 뒤 닫기(옮기지 않아요) */ onDone?: () => void }) {
   const router = useRouter();
   const toast = useToast();
   const formId = useId();
@@ -69,6 +69,7 @@ export function ReviewForm({ projectId, dealId, vendorId, top, after }: { projec
         { step: "reviewed" },
       );
       toast.show("리뷰를 올렸어요");
+      if (onDone) { setBusy(false); onDone(); return; }
       router.push(vendorId ? `/projects/${encodeURIComponent(projectId)}/vendors/${encodeURIComponent(vendorId)}` : `/projects/${encodeURIComponent(projectId)}`);
       router.refresh();
     } catch (x) {
