@@ -10,7 +10,7 @@ import { wonFull } from "@/lib/format";
 import { daysCaption, type StdView } from "@/lib/guest/standard";
 import s from "./standard.module.css";
 
-export function StandardSheet({ view, changeHref }: { view: StdView; changeHref: string }) {
+export function StandardSheet({ view, changeHref, onChange }: { view: StdView; changeHref: string; /** 재재 화면 창: 그 자리에서 고치기 */ onChange?: () => void }) {
   const part = view.scope === "partial";
   return (
     <>
@@ -21,7 +21,8 @@ export function StandardSheet({ view, changeHref }: { view: StdView; changeHref:
           <BigFigure value={view.sum?.total ?? view.total}
             caption={[view.sum ? "도배 + 목공 합계" : "", daysCaption(view.days)].filter(Boolean).join(" · ") || false}
             sub={view.sum ? `공급가 ${wonFull(view.sum.supply)} + 부가세 ${wonFull(view.sum.vat)}` : view.budget ?? undefined} />
-          <Button variant="text" href={changeHref} aria-label={`조건 바꾸기 · 지금 조건: ${view.condition}`}>조건 바꾸기</Button>
+          {onChange ? <Button variant="text" onClick={onChange} aria-label={`조건 바꾸기 · 지금 조건: ${view.condition}`}>조건 바꾸기</Button>
+            : <Button variant="text" href={changeHref} aria-label={`조건 바꾸기 · 지금 조건: ${view.condition}`}>조건 바꾸기</Button>}
         </div>
       </section>
       <section className={s.group} aria-labelledby="std-lines">
