@@ -86,7 +86,7 @@ function body(f: Form): In | null {
 }
 
 /** 큰 합계 카드(+ 조건 바꾸기). 내 공사 표준견적서와 같은 모양 */
-export function MarketTotal({ q, changeHref, caption }: { q: Out; changeHref: string; caption?: string }) {
+export function MarketTotal({ q, changeHref, caption, onChange }: { q: Out; changeHref: string; caption?: string; /** 재재 화면 창: 옮기지 않고 그 자리에서 고치기 */ onChange?: () => void }) {
   return (
     <section className={s.group} aria-label="표준견적서 합계">
       <div className={s.totalRow}>
@@ -95,7 +95,7 @@ export function MarketTotal({ q, changeHref, caption }: { q: Out; changeHref: st
           caption={caption ?? `부가세 포함 · 평당 약 ${won(q.per_pyeong)}`}
           sub={`${numText(q.pyeong)}평형 · 방 ${q.rooms} · 욕실 ${q.baths}${q.rooms_auto ? " (어림)" : ""} · ${q.trades.map((t) => `${t.name} ${won(t.total)}`).join(" + ")}`}
         />
-        <Button variant="text" href={changeHref}>조건 바꾸기</Button>
+        {onChange ? <Button variant="text" onClick={onChange}>조건 바꾸기</Button> : <Button variant="text" href={changeHref}>조건 바꾸기</Button>}
       </div>
     </section>
   );

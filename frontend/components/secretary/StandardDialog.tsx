@@ -15,7 +15,7 @@ import s from "./StandardDialog.module.css";
 
 export type StdData = { view: StdView; market: Schemas["V2MqOut"] | null };
 
-export function StandardDialog({ open, onClose, data, pid, locked }: { open: boolean; onClose: () => void; data: StdData; pid: string; locked: boolean }) {
+export function StandardDialog({ open, onClose, data, pid, locked, onEdit, onPlan }: { open: boolean; onClose: () => void; data: StdData; pid: string; locked: boolean; /** 조건 바꾸기 · 예상 공정표를 재재 화면 창으로(옮기지 않아요) */ onEdit: () => void; onPlan: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const id = useId();
   const h = useModal(ref, open, onClose);
@@ -35,17 +35,17 @@ export function StandardDialog({ open, onClose, data, pid, locked }: { open: boo
             {parts.length ? <TradeOrder has={["dobae", ...parts.map((x) => x.trade)]} /> : null}
             {market ? (
               <>
-                <MarketTotal q={market} changeHref={change} caption={["부가세 포함", daysCaption(view.days)].filter(Boolean).join(" · ")} />
+                <MarketTotal q={market} changeHref={change} onChange={onEdit} caption={["부가세 포함", daysCaption(view.days)].filter(Boolean).join(" · ")} />
                 <MarketSheet q={market} />
               </>
             ) : (
-              <StandardSheet view={view} changeHref={change} />
+              <StandardSheet view={view} changeHref={change} onChange={onEdit} />
             )}
             {parts.length ? <TradePartSheets parts={parts} /> : null}
             {locked ? <p className={s.note}>실측을 요청한 뒤라 조건은 잠겼어요. 조건 바꾸기에서 넣은 값만 볼 수 있어요.</p> : null}
           </div>
           <div className={s.actions}>
-            {view.scope === "partial" ? null : <Button size="lg" variant="secondary" href={`${base}/plan`}>예상 공정표</Button>}
+            {view.scope === "partial" ? null : <Button size="lg" variant="secondary" onClick={onPlan}>예상 공정표</Button>}
             <Button size="lg" onClick={onClose}>업체 고르기</Button>
           </div>
         </div>

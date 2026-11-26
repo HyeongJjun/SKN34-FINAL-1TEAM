@@ -2,9 +2,9 @@
 // 재재 보드 '실측' 칸에서 바로 실측 요청(2026-11-26 사용자: 요청 화면이 할 게 많고 불편해서 재재 화면 안으로).
 // 담은 업체마다 그 업체가 등록한 영업일에서 반나절 하나를 고르면 그 업체에 보내요(안 고른 업체는 이번에 안 보내요).
 // POST /projects/{id}/visits {trade, vendor_ids, picks}: 서버가 영업일 · 빈 반나절 · 한 집 같은 반나절(409)을 다시 봐요.
-// 현장 정보(주차 · 엘리베이터)는 고르지 않아도 되고, 적으려면 현장 정보 화면으로 가요. 사진은 요청 뒤 업체 채팅으로 보내요.
+// 현장 정보(주차 · 엘리베이터)는 고르지 않아도 되고, 이 카드 안에서 펼쳐 적어요(SiteInfoCard). 사진은 요청 뒤 업체 채팅으로 보내요.
 import { useState } from "react";
-import Link from "next/link";
+import { SiteInfoCard } from "@/components/project/SiteInfoCard";
 import { Button } from "@/components/ui/Button";
 import { OpenDayPicker, type DayPick } from "@/components/visit/OpenDayPicker";
 import type { VisitDraft } from "@/lib/api/visit";
@@ -44,7 +44,10 @@ export function BoardVisitRequest({ pid, draft, today, busy, act }: { pid: strin
         }, `실측을 요청했어요 · ${said}`)}>
         {picks.length ? `${picks.length}곳에 실측 요청 보내기` : "반나절을 골라 주세요"}
       </Button>
-      <p className={s.note}>주차 · 엘리베이터를 적어 두면 업체가 날짜를 정하기 쉬워요. <Link href={`/projects/${pid}`}>현장 정보 적기</Link> (안 적어도 돼요)</p>
+      <details className={s.site}>
+        <summary>현장 정보 적기(주차 · 엘리베이터, 안 적어도 돼요)</summary>
+        <SiteInfoCard projectId={decodeURIComponent(pid)} />
+      </details>
     </div>
   );
 }
