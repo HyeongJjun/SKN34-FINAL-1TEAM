@@ -14,6 +14,7 @@ from tests.test_v3_visit_kit import (
     booked,
     choose,
     customer,
+    notes,
     pending_jobs,
     status,
     vendor,
@@ -140,6 +141,9 @@ def test_request_with_pick_goes_to_picked_and_opens_chat(api):
     assert not pending_jobs(visit, "visit_accept_due")
     t = query("select status, ro_reason from threads where visit_id = $1::uuid", visit)
     assert [(x["status"], x["ro_reason"]) for x in t] == [("read_only", "declined")]
+    # 업체 알림은 '날짜를 골랐어요' 하나만(요청 알림과 겹치지 않게)
+    kinds = [n["kind"] for n in notes("maru@mitjip.test") if n["kind"].startswith("visit_")]
+    assert kinds.count("visit_picked") == 1 and "visit_requested" not in kinds
 
 
 def test_pick_outside_open_days_is_refused(api):

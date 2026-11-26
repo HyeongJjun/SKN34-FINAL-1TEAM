@@ -454,8 +454,8 @@ async def request(
             for v in rows
             for i, x in enumerate(data.photos)
         )
-        for v in rows:
-            await _asked(s, v, user, now)
+        for v in rows:  # 날짜를 고른 업체는 '날짜를 골랐어요' 알림 하나만 받아요(_pick)
+            await _asked(s, v, user, now, notify=v.vendor_id not in picks)
         await _open_threads(s, rows)
         for v in rows:
             if v.vendor_id in picks:
@@ -530,11 +530,15 @@ async def _check_photos(s: AsyncSession, user: User, photos: list[VisitPhotoIn])
         raise _invalid("내가 올린 공간 사진만 붙일 수 있어요.", ["photos"])
 
 
-async def _asked(s: AsyncSession, v: Visit, user: User, now: datetime) -> None:
+async def _asked(
+    s: AsyncSession, v: Visit, user: User, now: datetime, *, notify: bool = True
+) -> None:
     """요청 하나를 넣은 뒤 같은 트랜잭션에: 이력 · 답 기한 일 · 업체 알림 (이름 · 연락처 없음)"""
     code = "asked" if v.attempt == 1 else "re_asked"
     s.add(_event(v, None, "requested", user, code, now, v.wish_start, None, v.wish_end))
     await jobs_service.add(s, kind="visit_reply_due", ref_id=v.id, run_at=v.reply_due_at)
+    if not notify:
+        return
     h = await _home(s, v)
     await notify_service.add(
         s,
