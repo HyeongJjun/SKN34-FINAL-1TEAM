@@ -13,6 +13,8 @@ function textOf(x: ApiLogItem, all: ApiLogItem[]): string {
   switch (x.code) {
     case "asked": return `실측 요청 보냄${tail(v)}`;
     case "re_asked": return `${v}에 한 번 더 요청`;
+    // 요청 때 업체 영업일에서 고름(0038, requested → offered). 바로 뒤 '… 보냄' 줄이 고른 반나절이에요
+    case "open_days": return `${v} 영업일에서 고름`;
     case "answered": return `기간 답함${x.day && x.day_to ? tail(rangeText(x.day, x.day_to)) : ""}`;
     case "declined": return "못 받아요 · 요청 닫힘";
     case "picked": return slot(x) ? `${v}에 ${slot(x)} 보냄` : `${v}에 날짜 보냄`;
