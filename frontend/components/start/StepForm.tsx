@@ -202,8 +202,9 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
             <div className={s.top}><h2 id="sf-work" ref={head} tabIndex={-1}>원하는 공사</h2><span className={s.mute}>아파트</span></div>
             <Row label="공정" help={<Tip label="공정" terms={["걸레받이", "문선"]} note="목공은 몰딩 · 걸레받이 · 문처럼 나무로 마감하는 일이에요. 목공을 먼저 하고 도배를 해요." />} error={eWork.mokgong}>
               <div className={s.chips} role="group" aria-label="공정 고르기">
-                <button type="button" className={s.chip} aria-pressed disabled>도배</button>
+                {/* 공사 순서대로 목공 → 도배 → 바닥(2026-11-26 사용자) */}
                 <button type="button" className={s.chip} aria-pressed={d.mok} onClick={() => set({ mok: !d.mok })}>목공</button>
+                <button type="button" className={s.chip} aria-pressed disabled>도배</button>
                 <button type="button" className={s.chip} aria-pressed={false} disabled aria-describedby="sf-floor">바닥(마루) <span className={s.soon}>준비 중</span></button>
               </div>
               {d.mok ? (
