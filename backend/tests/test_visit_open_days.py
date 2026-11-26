@@ -7,7 +7,18 @@ from app.calc import slots
 from app.shared.clock import today_seoul
 from tests.conftest import query
 from tests.helpers import use
-from tests.test_v3_visit_kit import add, customer, status, vendor, visit_of
+from tests.test_v3_visit_kit import (
+    add,
+    answer,
+    ask,
+    booked,
+    choose,
+    customer,
+    pending_jobs,
+    status,
+    vendor,
+    visit_of,
+)
 from tests.test_visit_inbox import login
 
 
@@ -125,6 +136,10 @@ def test_request_with_pick_goes_to_picked_and_opens_chat(api):
         )[0]["n"]
         == 0
     )
+    # 수락 기한 일은 거두고, 채팅은 읽기만(못 받아요)
+    assert not pending_jobs(visit, "visit_accept_due")
+    t = query("select status, ro_reason from threads where visit_id = $1::uuid", visit)
+    assert [(x["status"], x["ro_reason"]) for x in t] == [("read_only", "declined")]
 
 
 def test_pick_outside_open_days_is_refused(api):
@@ -212,6 +227,22 @@ def test_same_half_for_two_vendors_is_409(api):
     assert api.post(f"/projects/{pid}/visits", json=one).status_code == 201
     two = {"trade": "dobae", "vendor_ids": [vid2], "picks": same[1:]}
     assert code(api.post(f"/projects/{pid}/visits", json=two)) == (409, "slot_taken")
+
+
+def test_same_half_after_window_answer_is_409(api):
+    """기간 답 뒤 고르기(원래 길)도 한 집 같은 반나절 업체 둘은 409예요(리뷰 3)"""
+    f = booked(api)  # 마루와벽: 오늘 + 6일 오전 확정
+    vid2 = vendor(api, "gyeol@mitjip.test", "결도배")
+    use(api, f["token"])
+    assert add(api, f["pid"], vid2).status_code == 201
+    assert ask(api, f["pid"], [vid2]).status_code == 201
+    visit2 = visit_of(f["pid"], vid2)
+    login(api, "gyeol@mitjip.test")
+    assert answer(api, visit2).status_code == 200
+    use(api, f["token"])
+    assert code(choose(api, f["pid"], visit2, 6, "am")) == (409, "slot_taken")
+    assert status(visit2) == "offered"
+    assert choose(api, f["pid"], visit2, 6, "pm").status_code == 200  # 다른 반나절은 돼요
 
 
 def test_reply_due_expiry_makes_request_chat_read_only(api):

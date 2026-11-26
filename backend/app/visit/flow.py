@@ -437,15 +437,10 @@ async def request(
         for vid in ok
     ]
     picks = {x.vendor_id: x for x in data.picks if x.vendor_id in set(ok)}
-    # 한 집에 같은 반나절 업체 둘은 안 돼요: 이번에 고른 것끼리 · 이 공사의 다른 실측이 잡아 둔 것과 겹치면 409
+    # 한 집에 같은 반나절 업체 둘은 안 돼요: 이번에 고른 것끼리는 여기서, 이미 잡아 둔 것과는 _pick이 409
     halves = [(x.day, x.half) for x in picks.values()]
-    mine = [v.id for v in await repo.of_project(s, project_id, None)]
-    held = {(h.day, h.half) for h in (await repo.holds_of_visits(s, mine)).values()}
-    if len(set(halves)) != len(halves) or held & set(halves):
-        raise app_error(
-            "slot_taken",
-            "같은 반나절에 업체 둘이 올 수 없어요. 업체마다 다른 반나절을 골라 주세요.",
-        )
+    if len(set(halves)) != len(halves):
+        raise app_error("slot_taken", SAME_HALF)
     for vid, x in picks.items():  # 업체가 등록한 영업일 · 빈 반나절인지 다시 봐요
         if not (data.wish_start <= x.day <= data.wish_end):
             raise _invalid("희망 기간 안의 날짜를 골라 주세요.", ["picks"])
@@ -472,6 +467,9 @@ async def request(
     for v in rows:
         svc.push_later(s, [user.id, v.vendor_id], v)
     return VisitCreateOut(created=[svc._visit_out(v, {}, today) for v in rows], failed=failed)
+
+
+SAME_HALF = "같은 반나절에 업체 둘이 올 수 없어요. 업체마다 다른 반나절을 골라 주세요."
 
 
 async def _open_threads(s: AsyncSession, rows: list[Visit]) -> None:
@@ -718,6 +716,12 @@ async def _pick(
     if deadline.is_over(now, w.pick_due_at):
         raise app_error("expired", "날짜를 고르는 기한이 지났어요.")
     _in_window(w, data.day, data.half, svc.today_of(now))
+    others = [o.id for o in await repo.of_project(s, v.project_id, None) if o.id != v.id]
+    if any(
+        (h.day, h.half) == (data.day, data.half)
+        for h in (await repo.holds_of_visits(s, others)).values()
+    ):  # 한 집에 같은 반나절 업체 둘은 안 돼요(요청 때 고르기 · 기간 답 뒤 고르기 둘 다)
+        raise app_error("slot_taken", SAME_HALF)
     cap = await svc.capacity_of(s, v.vendor_id)
     tid = None
     if w.instant:
