@@ -45,6 +45,8 @@ export function SignupForm({ next, mock }: { next?: string; mock: boolean }) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email.trim())) e.email = "이메일 형식을 확인해 주세요. 예: name@example.com";
     if (v.password.length < 8) e.password = "비밀번호를 8자 이상으로 넣어 주세요.";
     if (!v.name.trim()) e.name = "이름을 넣어 주세요.";
+    // 이름 칸에 비밀번호가 들어가면 화면 곳곳에 "비밀번호 님"으로 보여요(브라우저 자동 채우기 · 칸 착각)
+    else if (v.password && v.name.trim() === v.password.trim()) e.name = "이름 칸에 비밀번호가 들어갔어요. 이름을 넣어 주세요.";
     if (v.phone.trim() && !phoneOk(v.phone)) e.phone = PHONE_MSG;
     if (!all) e.terms = "필수 동의 세 가지에 모두 체크해 주세요.";
     return e;
