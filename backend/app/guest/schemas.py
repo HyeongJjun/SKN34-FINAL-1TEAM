@@ -24,6 +24,24 @@ class GuestLineOut(BaseModel):
     source: str = Field(description="출처 이름 (벽지 시장 평균 가격 2026.11 …)")
 
 
+class GuestPartOut(BaseModel):
+    """도배 밖 공정 한 장(목공). 가입 뒤 표준견적서 StandardTradeOut과 같은 계산 엔진 값."""
+
+    trade: Literal["mokgong"]
+    lines: list[GuestLineOut]
+    supply: int
+    vat: int
+    total: int = Field(description="부가세 포함")
+
+
+class GuestSumOut(BaseModel):
+    """공정이 둘 이상일 때 모든 공정 합계 (가입 뒤 StandardOut.supply · vat · total과 같음)."""
+
+    supply: int
+    vat: int
+    total: int = Field(description="부가세 포함")
+
+
 class GuestStandardOut(BaseModel):
     """저장하지 않는 계산 결과. DB · 로그에 입력을 남기지 않는다."""
 
@@ -45,3 +63,10 @@ class GuestStandardOut(BaseModel):
         description="넣은 예산 안 · 밖 (예산을 안 넣었으면 비움)"
     )
     assumptions: list[str] = Field(description="계산에 쓴 가정 (화면 '이렇게 셌어요')")
+    parts: list[GuestPartOut] = Field(
+        default=[], description="목공 할 곳을 골랐으면 목공 공정 (lines · supply · total은 도배만)"
+    )
+    sum: GuestSumOut | None = Field(
+        default=None,
+        description="공정이 둘 이상이면 모든 공정 합계. 예산 안/밖 · days도 이 합계 기준",
+    )

@@ -1,23 +1,24 @@
 "use client";
-// 실측 일정 요청서(C13 · D08). 담은 업체에 같은 요청(희망 기간 · 사진)을 한 번에 보내요.
-// 희망 기간 초안은 계산 엔진 값(GET …/visits/draft: 공사 시작 − 28일 ~ − 14일)이고 고객이 달력에서 바꿔요.
+// 실측 일정 요청서(C13 · D08). 담은 업체마다 그 업체가 등록한 영업일에서 실측 반나절을 골라 한 번에 보내요(2026-11-25 회의).
+// 업체는 현장 정보(주차 · 엘리베이터)를 보고 수락 · 다른 날 제안 · 못 받아요를 정해요. 요청하면 업체와 채팅이 열려요(연락처는 자동으로 가지 않아요).
 // 보내면 그때 고른 벽지의 가견적이 고정되고 기본 정보가 잠겨요(서버). 검사는 보낼 때 한 번(I6 B), 첫 틀린 곳으로 옮겨 가요.
 // 사진은 POST /files(kind photo, 위치 정보는 서버가 지움) 뒤 id만 보내요. AI 초안 카드(D08)는 옆 AI 칸(B5)이 그려요.
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { errorText, type Schemas } from "@/lib/backend/client";
 import type { VisitDraft } from "@/lib/api/visit";
-import { dateShort, rangeText, won } from "@/lib/format";
+import { dateShort, won } from "@/lib/format";
 import { gradeLabel } from "@/lib/labels";
 import { send, upload } from "@/lib/mock/v3b/client";
 import { Main, PageHead, WithAside } from "@/components/site/Frame";
 import { BottomBar } from "@/components/ui/BottomBar";
 import { Button } from "@/components/ui/Button";
-import { Calendar } from "@/components/ui/Calendar";
 import { FileDrop } from "@/components/ui/FileDrop";
 import { Icon } from "@/components/ui/Icon";
 import { useToast } from "@/components/ui/Toast";
-import { Eyebrow, Group, GroupHead } from "@/components/project/Kit";
+import { Eyebrow, Group } from "@/components/project/Kit";
+import { SiteInfoCard } from "@/components/project/SiteInfoCard";
+import { OpenDayPicker, type DayPick } from "./OpenDayPicker";
 import s from "./visit.module.css";
 
 type Created = Schemas["VisitCreateOut"];
@@ -42,9 +43,9 @@ export function RequestForm({ projectId, projectName, draft, today, aside }: {
 }) {
   const router = useRouter();
   const toast = useToast();
-  const ids = { cal: useId(), vendors: useId(), wishErr: useId(), vendorErr: useId() };
-  const [range, setRange] = useState<{ from: string; to?: string } | null>(draft.wish_start && draft.wish_end ? { from: draft.wish_start, to: draft.wish_end } : null);
-  const [calOpen, setCalOpen] = useState(!draft.wish_start);
+  const ids = { vendors: useId(), wishErr: useId(), vendorErr: useId() };
+  /** 업체마다 고른 반나절(업체 영업일 안) */
+  const [days, setDays] = useState<Record<string, DayPick | null>>({});
   const [picked, setPicked] = useState<string[]>(draft.vendors.map((v) => v.vendor_id));
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -54,7 +55,7 @@ export function RequestForm({ projectId, projectName, draft, today, aside }: {
   const [failed, setFailed] = useState<{ name: string; text: string }[]>([]);
   const [busy, setBusy] = useState(false);
   const firstCheck = useRef<HTMLInputElement>(null);
-  const calRef = useRef<HTMLDivElement>(null);
+  const daysRef = useRef<HTMLDivElement>(null);
   const photosRef = useRef(photos);
   useEffect(() => { photosRef.current = photos; }, [photos]);
   // 미리 보기 주소(blob:)는 화면을 떠날 때 돌려줘요
@@ -97,16 +98,18 @@ export function RequestForm({ projectId, projectName, draft, today, aside }: {
   async function submit() {
     setFailed([]);
     // 보낼 때 한 번 검사하고 첫 틀린 곳으로 옮겨 가요(I6 B)
-    const wishBad = !range ? "희망 기간을 골라 주세요." : !range.to ? "희망 기간이 끝나는 날도 골라 주세요." : null;
     const vendorBad = n === 0 ? "보낼 업체를 한 곳 이상 골라 주세요." : null;
+    const missing = picked.filter((id) => !days[id]).map((id) => draft.vendors.find((v) => v.vendor_id === id)?.name ?? "업체");
+    const wishBad = !vendorBad && missing.length ? `${missing.join(" · ")}의 실측 날짜를 골라 주세요.` : null;
     setWishErr(wishBad);
     setVendorErr(vendorBad);
-    if (wishBad) { setCalOpen(true); requestAnimationFrame(() => calRef.current?.focus()); return; }
     if (vendorBad) { firstCheck.current?.focus(); return; }
+    if (wishBad) { requestAnimationFrame(() => daysRef.current?.focus()); return; }
     if (uploading) { setPhotoErr("사진을 올리는 중이에요. 다 올라간 뒤 보내 주세요."); return; }
     setBusy(true);
     try {
-      const body = { trade: "dobae" as const, vendor_ids: picked, wish_start: range!.from, wish_end: range!.to!, photo_file_ids: photos.flatMap((p) => (p.id ? [p.id] : [])) };
+      const picks = picked.map((id) => ({ vendor_id: id, day: days[id]!.day, half: days[id]!.half }));
+      const body = { trade: "dobae" as const, vendor_ids: picked, picks, photo_file_ids: photos.flatMap((p) => (p.id ? [p.id] : [])) };
       const out = await send<Created>("POST", `/projects/${pid}/visits`, body, { step: "sent", result: { created: [], failed: [] } });
       if (out.failed.length) {
         const name = (id: string) => draft.vendors.find((v) => v.vendor_id === id)?.name ?? "업체";
@@ -125,7 +128,6 @@ export function RequestForm({ projectId, projectName, draft, today, aside }: {
     }
   }
 
-  const wishText = range ? (range.to ? rangeText(range.from, range.to, { weekday: true }) : `${dateShort(range.from)}~`) : "아직 안 골랐어요";
 
   return (
     <>
@@ -133,14 +135,21 @@ export function RequestForm({ projectId, projectName, draft, today, aside }: {
         <PageHead title="실측 일정 요청" crumbs={[{ label: "내 공사", href: "/my" }, { label: projectName, href: `/projects/${pid}` }, { label: "실측 일정 요청" }]} />
         <WithAside aside={aside}>
           <div className={s.reqCols}>
-            <Group label="희망 기간">
-              <Eyebrow as="h2">희망 기간</Eyebrow>
-              <GroupHead>
-                <p className={`${s.bigText} mj-num`}>{wishText}</p>
-                <Button variant="text" className={s.calToggle} aria-expanded={calOpen} aria-controls={ids.cal} onClick={() => setCalOpen((v) => !v)}>{calOpen ? "접기" : "바꾸기"}</Button>
-              </GroupHead>
-              <div id={ids.cal} ref={calRef} tabIndex={-1} className={calOpen ? `${s.calBox} ${s.calOn}` : s.calBox}>
-                <Calendar mode="range" label="희망 기간 고르기" today={today} month={range?.from ?? today} value={range} onChange={(v) => { setRange(v); setWishErr(null); }} />
+            <Group label="실측 날짜">
+              <Eyebrow as="h2">실측 날짜</Eyebrow>
+              <p className={s.fieldLabel}>업체가 등록한 영업일에서 골라요. <span>업체가 현장 정보를 보고 수락하면 확정돼요</span></p>
+              <div ref={daysRef} tabIndex={-1} aria-describedby={wishErr ? ids.wishErr : undefined}>
+                {picked.length ? picked.map((id) => {
+                  const v = draft.vendors.find((x) => x.vendor_id === id);
+                  if (!v) return null;
+                  return (
+                    <div key={id} className={s.dayBlock}>
+                      <p className={s.fieldLabel}><b>{v.name}</b>{days[id] ? <span> · 고른 날 {dateShort(days[id]!.day)} {days[id]!.half === "am" ? "오전" : "오후"}</span> : null}</p>
+                      <OpenDayPicker projectId={projectId} vendorId={id} name={v.name} today={today} value={days[id] ?? null}
+                        onChange={(x) => { setDays((d) => ({ ...d, [id]: x })); setWishErr(null); }} />
+                    </div>
+                  );
+                }) : <p className={s.fieldLabel}><span>보낼 업체를 고르면 그 업체의 영업일이 보여요</span></p>}
               </div>
               {wishErr ? <p id={ids.wishErr} className={s.err} role="alert"><Icon name="error" size={16} />{wishErr}</p> : null}
             </Group>
@@ -168,6 +177,11 @@ export function RequestForm({ projectId, projectName, draft, today, aside }: {
                 ) : null}
               </Group>
 
+              <Group label="현장 정보">
+                <p className={s.fieldLabel}>현장 정보 <span>(업체가 날짜를 정할 때 봐요)</span></p>
+                <SiteInfoCard projectId={projectId} />
+              </Group>
+
               <Group label="사진">
                 <p className={s.fieldLabel}>사진 <span>(선택)</span></p>
                 {photos.length ? (
@@ -188,6 +202,7 @@ export function RequestForm({ projectId, projectName, draft, today, aside }: {
           </div>
         </WithAside>
       </Main>
+      <p className={s.reqNote}>요청하면 업체마다 채팅이 열려요. 연락처는 자동으로 가지 않아요. 실측을 맡길 업체에만 채팅으로 알려 주세요.</p>
       <BottomBar>
         <Button size="lg" onClick={submit} busy={busy}>{busy ? "보내는 중" : n > 0 ? `고른 ${n}곳에 요청 보내기` : "요청 보내기"}</Button>
       </BottomBar>

@@ -24,6 +24,7 @@ export const NAV: Record<HeaderKind, NavItem[]> = {
   // W6 B: 일정은 작업함 탭이라 머리에 따로 두지 않아요
   vendor: [
     { id: "inbox", href: "/vendor", label: "작업함" },
+    { id: "opendays", href: "/vendor/open-days", label: "영업일" },
     { id: "chat", href: "/chat", label: "채팅" },
     { id: "profile", href: "/vendor/profile", label: "업체 정보" },
   ],
@@ -63,7 +64,7 @@ export const ACCOUNT: Record<Role, NavItem[]> = {
 };
 
 // 승인 전 업체는 작업함 · 채팅을 잠가요(업체 정보는 열어요). 9판 V02 · 시안 WVHome
-export const VENDOR_LOCKED = ["inbox", "chat"];
+export const VENDOR_LOCKED = ["inbox", "opendays", "chat"];
 /** 승인 전 업체의 잠금 문구. 승인됐으면 null */
 export function vendorLock(status: string | null | undefined): string | null {
   if (status === "approved") return null;
