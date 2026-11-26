@@ -26,7 +26,7 @@ export default async function VendorsPage({ params }: { params: Promise<{ id: st
   const context = n ? `업체 ${n}곳 보는 중` : "업체 보기 보는 중";
   return (
     <>
-      <AppHeader only="phone" phone={{ title: "업체 보기", back: `${base}/standard`, action: n ? <AsideOpenButton /> : undefined }} />
+      <AppHeader only="phone" phone={{ title: "업체 보기", back: `${base}/assistant`, action: n ? <AsideOpenButton /> : undefined }} />
       <VendorList
         projectId={shell.id}
         list={list}
