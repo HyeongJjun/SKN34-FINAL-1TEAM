@@ -98,3 +98,7 @@
 .sheetNote { margin-top: 12px; font-size: var(--mj-type-caption); color: var(--mj-text-mute); line-height: var(--mj-lh-ui); }
 .err { display: flex; align-items: flex-start; gap: 6px; margin-top: 8px; font-size: var(--mj-type-label); color: var(--mj-danger); }
 .err svg { flex: none; margin-top: 2px; }
+/* 업체 영업일에서 실측 날짜 고르기(2026-11-25 회의) */
+.dayBlock { display: flex; flex-direction: column; gap: 6px; padding: 12px 0; border-bottom: 1px solid var(--mj-line-soft); }
+.dayBlock:last-child { border-bottom: 0; }
+.reqNote { max-width: 1080px; margin: 8px auto 0; padding: 0 20px; font-size: var(--mj-type-caption); color: var(--mj-text-mute); }

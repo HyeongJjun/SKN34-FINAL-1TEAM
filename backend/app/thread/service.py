@@ -41,7 +41,9 @@ from app.thread.schemas import (
     ThreadRowOut,
 )
 
-RoReason = Literal["other_chosen", "cancelled", "declined", "withdrawn", "blocked", "admin"]
+RoReason = Literal[
+    "other_chosen", "cancelled", "declined", "withdrawn", "blocked", "admin", "expired"
+]
 Side = Literal["customer", "vendor"]
 # 고객 차단 · 관리자 쓰기 막기로 닫힌 대화는 실측이 다시 확정돼도 자동으로 열지 않는다
 STICKY = ("blocked", "admin")
