@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { BigFigure } from "@/components/ui/Money";
 import { StateTag } from "@/components/ui/StateTag";
 import type { VendorVisitV3 } from "@/lib/api/vendor";
-import { dueText, halfDayText, rangeText } from "@/lib/format";
+import { dateSeoul, dueText, halfDayText, rangeText } from "@/lib/format";
 import { DECLINE_LABEL, visitState, type StateTone } from "@/lib/labels";
 import { enc } from "../send";
 import { LOC_NOTE } from "../text";
@@ -19,7 +19,9 @@ export function VisitStatus({ v, now }: { v: VendorVisitV3; now: string }) {
   const b = v.booked;
   const quoteHref = `/vendor/requests/${enc(v.id)}/quote`;
   const chatHref = v.thread_id ? `/chat/${enc(v.thread_id)}` : null;
-  const canQuote = v.status === "booked" || v.status === "visited";
+  // 실측한 날은 오늘까지만 적을 수 있어서(서버 422), 실측일이 오기 전에는 견적서 단추를 숨기고 안내해요
+  const beforeVisit = v.status === "booked" && !!b && b.day > dateSeoul(now);
+  const canQuote = (v.status === "booked" && !beforeVisit) || v.status === "visited";
   let body: React.ReactNode = null;
   switch (v.status) {
     case "offered":
@@ -72,6 +74,7 @@ export function VisitStatus({ v, now }: { v: VendorVisitV3; now: string }) {
         {v.change && v.change.status === "open" ? (
           <Notice tone="info">고객이 일정 바꾸기를 요청했어요 · {halfDayText(v.change.from_day, v.change.from_half)} → {halfDayText(v.change.to_day, v.change.to_half)} · {dueText(v.change.due_at, { now })} 채팅에서 답해요.</Notice>
         ) : null}
+        {beforeVisit ? <Small>실측한 뒤에 견적서를 낼 수 있어요. 실측 날 아침부터 &lsquo;실측 견적서 올리기&rsquo;가 열려요.</Small> : null}
         <Small>{LOC_NOTE}</Small>
       </Main>
       {canQuote || chatHref || v.status === "chosen" ? (
