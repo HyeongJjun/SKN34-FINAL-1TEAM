@@ -9,6 +9,8 @@
 // #197(멘토 피드백 '오른쪽 패널과 채팅이 유기적으로'): AI 답에 나온 업체 이름은 보드 업체 칸에서 강조하고, 일정 답이면 일정 칸으로 옮겨요.
 //   업체 칸은 공정별 탭(도배 · 목공, 목공은 고른 공사만)과 찾기 칸이 있고, 공정마다 3곳까지 담아요(서버도 slots_full 409로 막아요).
 //   AI 카드 모양은 그대로예요. 강조는 답 글 · 표 · 초안에 나온 이름을 이 공사 업체 목록과 맞춰 봐요(화면에서만).
+// 2026-11-26 팀 피드백: 위 칩 줄을 빼고(결정 기록 · 서류는 플랜 머리로), 실측 반나절은 달력으로, 실측을 기다리는 동안 할 거리 카드,
+//   목공도 담은 업체에 실측을 요청해요(견적서 비교 · 확정 · 공사 일정은 아직 도배만).
 // 2026-11-26 사용자: 업체 담기 · 실측 요청 · 표준견적서도 이 화면 안에서. 업체 보기 · 실측 요청 · 표준견적서 화면은 여기로 넘어와요
 //   (보드 업체 칸 · 실측 칸(BoardVisitRequest) · 표준견적서 창). 업체 이름을 누르면 업체 자세히(리뷰 · 사례) 화면이에요.
 // - 질문은 POST /ai/turns(로그인한 고객 AI). 금액 · 날짜는 API 값 그대로이고, 저장 · 확정 · 승인은 사람이 보드 단추를 눌러요.
@@ -35,6 +37,7 @@ import { StandardDialog, type StdData } from "./StandardDialog";
 import { VendorDialog, type VendorOpen } from "./VendorDialog";
 import { Reselect } from "@/components/confirm/Reselect";
 import { CancelSheet } from "@/components/visit/CancelSheet";
+import { HalfCalendar } from "@/components/visit/HalfCalendar";
 import { Windows, type Win, type WinData } from "./Windows";
 import { SiteInfoCard } from "@/components/project/SiteInfoCard";
 import { AiActionContext } from "@/components/ai/AiAnswer";
@@ -56,6 +59,8 @@ export type FlowData = {
   visits: ProjectVisits | null;
   vendors: ProjectVendors | null;
   draft: VisitDraft | null;
+  /** 목공 실측 요청 초안(목공을 고른 공사만, 아니면 null) */
+  mokDraft: VisitDraft | null;
   /** 목공 업체 목록(목공을 고른 공사만, 아니면 null) */
   mokVendors: ProjectVendors | null;
   today: string;
@@ -87,7 +92,7 @@ function stepOf(d: FlowData): number {
 
 export function ProjectFlow({ data }: { data: FlowData }) {
   const router = useRouter();
-  const { p, ov, compare, schedule, visits, vendors, mokVendors, draft, today, std } = data;
+  const { p, ov, compare, schedule, visits, vendors, mokVendors, draft, mokDraft, today, std } = data;
   const pid = enc(p.id);
   const now = stepOf(data);
   const [open, setOpen] = useState(false);
@@ -189,6 +194,10 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const all = (visits?.visits ?? []).filter((v) => v.trade === "dobae");
   // 닫힌 요청(거절 · 기한 지남 · 취소 · 안 옴 · 다시 고름)은 진행 중이 아니에요
   const vs = all.filter((v) => !CLOSED.includes(v.status));
+  // 목공 실측(팀 피드백 5): 목공을 고른 공사만. 견적서 비교 · 확정은 아직 도배만이라 실측 칸까지만 보여요
+  const mvs = mokVendors ? (visits?.visits ?? []).filter((v) => v.trade === "mokgong" && !CLOSED.includes(v.status)) : [];
+  const both = [...vs, ...mvs];
+  const mokPicked = listOf("mokgong").filter((v) => v.state === "ok" && v.shortlisted);
   const closed = all.filter((v) => CLOSED.includes(v.status));
   const ready = [...(vendors?.local ?? []), ...(vendors?.nearby ?? [])].filter((v) => v.state === "ok");
   const picked = ready.filter((v) => v.shortlisted);
@@ -196,7 +205,9 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const extras = deal ? deal.extras.items.filter((i) => (i.answer === "pending" || i.answer === "asked") && !i.superseded) : [];
   // 표준견적서 금액은 창 · 비교 칸과 같은 값 하나(업체 견적서 시장 단가, #207). 부분 공사처럼 없을 때만 기존 표준견적서
   const stdTotal = std ? (std.market?.total ?? std.view.sum?.total ?? std.view.total) : compare?.standard_total ?? null;
-  const toPick = vs.filter((v) => v.status === "offered" || v.status === "proposed");
+  const toPick = both.filter((v) => v.status === "offered" || v.status === "proposed");
+  // 업체 답 · 실측 · 견적서를 기다리기만 하는 때(고를 것 · 볼 견적서 · 확정이 없을 때): 기다리는 동안 할 거리를 보여요(팀 피드백 4)
+  const waiting = !deal && !toPick.length && !quoted.length && both.some((v) => ["requested", "picked", "booked", "visited"].includes(v.status));
   const go = (step: number, label = "플랜에서 보기") => (
     <button type="button" className={s.boardLink} onClick={() => toBoard(step)}>{label} · {PLAN_STEPS[step]} 칸</button>
   );
@@ -222,12 +233,28 @@ export function ProjectFlow({ data }: { data: FlowData }) {
       </>
     ) });
   }
-  for (const v of vs) {
+  if (mokPicked.length && !mvs.length) {
+    cards.push({ key: "mok", node: <><p>목공 <b>{mokPicked.length}곳</b>을 담았어요. 실측 칸에서 목공 날짜도 골라 바로 요청해요.</p>{go(3, "목공 실측 날짜 고르기")}</> });
+  }
+  for (const v of both) {
     if (v.status === "requested") cards.push({ key: v.id, node: <p><b>{v.vendor_name}</b>에 실측 날짜를 물어봤어요. 업체가 되는 기간을 보내면 먼저 알려 드릴게요. 궁금한 건 <button type="button" className={s.inlineLink} onClick={() => setWin({ kind: "chat", vendorName: v.vendor_name })}>업체 채팅</button>으로 물어보세요.</p> });
     else if (v.status === "offered" || v.status === "proposed") cards.push({ key: v.id, alert: true, node: <><p><b>{iga(v.vendor_name)} {v.status === "proposed" ? "다른 실측 날을 제안했어요." : "실측 되는 날을 보냈어요."}</b> 내 도배 플랜에서 집에 계실 반나절을 골라 주세요.</p>{go(3)}</> });
     else if (v.status === "picked") cards.push({ key: v.id, node: <><p><b>{v.vendor_name}</b>에 고른 날을 보냈어요. 업체가 현장 정보를 보고 수락하면 실측이 확정돼요.</p><p className={s.why}>주차 · 엘리베이터 사정으로 업체가 다른 날을 제안하면 먼저 알려 드릴게요. 그 사이 <button type="button" className={s.inlineLink} onClick={() => setWin({ kind: "chat", vendorName: v.vendor_name })}>업체 채팅</button>으로 주고받을 수 있어요.</p></> });
     else if (v.status === "booked") cards.push({ key: v.id, node: <><p><b>{v.vendor_name}</b> 실측이 잡혔어요. 실측 때 업체가 벽 크기와 상태를 재고 견적서를 보내요.</p><p className={s.why}>실측 전날: 가구 앞 벽이 보이게 비워 두고, 벽지 철거 · 폐기물이 견적에 들어가는지 물어보세요.</p></> });
     else if (v.status === "visited") cards.push({ key: v.id, node: <p><b>{v.vendor_name}</b> 실측을 마쳤어요. 실측 견적서를 기다리고 있어요.</p> });
+  }
+  if (waiting) {
+    cards.push({ key: "wait", node: (
+      <>
+        <div className={s.wait} role="status"><span className={s.waitBar} aria-hidden="true" /><span>업체 답을 기다리는 중이에요</span></div>
+        <p>기다리는 동안 미리 해 두면 좋은 것들이에요.</p>
+        <div className={s.row}>
+          <button type="button" className={s.boardLink} onClick={() => setWin({ kind: "term", name: "실크 벽지" })}>벽지 자재 알아보기</button>
+          <button type="button" className={s.boardLink} onClick={() => setWin({ kind: "plan" })}>공사 순서 다시 보기</button>
+          {std ? <button type="button" className={s.boardLink} onClick={() => setStdOpen(true)}>표준견적서 다시 보기</button> : null}
+        </div>
+      </>
+    ) });
   }
   if (quoted.length && !deal) {
     cards.push({ key: "compare", alert: true, node: <><p><b>실측 견적서가 {quoted.length}곳에서 도착했어요.</b> 표준견적서와 먼저 비교해 뒀어요. 내 도배 플랜에서 보고 확정해요.</p>{go(4)}</> });
@@ -287,7 +314,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             })}
           </div>
         ) : null}
-        {trade === "mokgong" || (!vs.length && !deal) ? (
+        {!(trade === "dobae" ? vs.length || deal : mvs.length) ? (
           <>
             <div className={s.search} role="search">
               <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="업체 이름 · 지역으로 찾기" aria-label={`${TRADE_WORD[trade]} 업체 찾기`} />
@@ -296,20 +323,24 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             {trade === "dobae" && mokVendors && vendors ? <p className={s.note}>가견적 %는 도배만 시장 단가 <b className="mj-num">{won(vendors.standard_total)}</b>와 견줘요. 표준견적서 합계에는 목공도 들어 있어요.</p> : null}
             <VendorRows list={listOf(trade).filter((v) => v.state === "ok")} query={query} hi={hi} trade={trade} pid={pid} busy={busy} act={act} onOpen={(vendorId) => setVOpen({ vendorId, trade })} />
           </>
-        ) : <p className={s.note}>도배 업체는 이미 골랐어요. 실측 칸을 봐 주세요.</p>}
+        ) : <p className={s.note}>{TRADE_WORD[trade]} 업체는 이미 골랐어요. 실측 칸을 봐 주세요.</p>}
         {trade === "dobae" && picked.length && !vs.length && !deal ? (
-          <Button size="lg" block onClick={() => setTab(3)}>담은 {picked.length}곳 실측 날짜 고르기 →</Button>
+          <Button size="lg" block onClick={() => setTab(3)}>도배 담은 {picked.length}곳 실측 날짜 고르기 →</Button>
         ) : null}
-        {trade === "mokgong" ? <p className={s.note}>목공 실측 요청은 다음 묶음에서 열려요. 지금은 담아 두기만 해요.</p> : null}
+        {trade === "mokgong" && mokPicked.length && !mvs.length ? (
+          <Button size="lg" block onClick={() => setTab(3)}>목공 담은 {mokPicked.length}곳 실측 날짜 고르기 →</Button>
+        ) : null}
       </>
     );
     if (step === 3) return (
       <>
-        {!vs.length && !deal && draft?.vendors.length ? <BoardVisitRequest pid={pid} draft={draft} today={today} busy={busy} act={act} /> : null}
-        {!vs.length && !deal && !draft?.vendors.length ? <p className={s.note}>먼저 업체 칸에서 업체를 담아 주세요. <button type="button" className={s.boardLink} onClick={() => setTab(2)}>업체 칸으로</button></p> : null}
+        {!vs.length && !deal && draft?.vendors.length ? <BoardVisitRequest pid={pid} trade="dobae" draft={draft} today={today} busy={busy} act={act} /> : null}
+        {!vs.length && !deal && !draft?.vendors.length ? <p className={s.note}>먼저 업체 칸에서 도배 업체를 담아 주세요. <button type="button" className={s.boardLink} onClick={() => { setTrade("dobae"); setTab(2); }}>업체 칸으로</button></p> : null}
+        {mokVendors && !mvs.length && mokDraft?.vendors.length ? <BoardVisitRequest pid={pid} trade="mokgong" draft={mokDraft} today={today} busy={busy} act={act} /> : null}
+        {mokVendors && !mvs.length && !mokDraft?.vendors.length ? <p className={s.note}>목공 업체를 담으면 여기서 목공 실측 날짜도 골라요. <button type="button" className={s.boardLink} onClick={() => { setTrade("mokgong"); setTab(2); }}>목공 업체 칸으로</button></p> : null}
         {toPick.map((v) => <PickCard key={v.id} pid={pid} visitId={v.id} name={v.vendor_name} proposal={v.status === "proposed"} busy={busy} act={act} />)}
-        {vs.filter((v) => !toPick.includes(v)).map((v) => <p key={v.id} className={s.note}>{v.vendor_name} · {VISIT_WORD[v.status] ?? "진행 중"}</p>)}
-        {vs.map((v) => (
+        {both.filter((v) => !toPick.includes(v)).map((v) => <p key={v.id} className={s.note}>{mokVendors ? `${TRADE_WORD[v.trade as Trade] ?? ""} ` : ""}{v.vendor_name} · {VISIT_WORD[v.status] ?? "진행 중"}</p>)}
+        {both.map((v) => (
           <div key={`c${v.id}`} className={s.row}>
             <button type="button" className={s.boardLink} onClick={() => setWin({ kind: "chat", vendorName: v.vendor_name })}>{v.vendor_name} 채팅</button>
             {/* 답 전 요청은 '요청 취소', 잡힌 실측은 '실측 취소'(UC-VND-06). 실측을 다녀간 뒤에는 취소하지 않아요 */}
@@ -409,14 +440,6 @@ export function ProjectFlow({ data }: { data: FlowData }) {
 
   return (
     <div className={s.page}>
-      <div className={s.chips} aria-label="모은 조건">
-        <span className={`${s.chip} ${s.chipOn}`}>집<b>아파트 · {p.emd ?? p.sgg}</b></span>
-        <span className={`${s.chip} ${s.chipOn}`}>공정<b>도배 {p.scope === "partial" ? "부분" : "전체"}{mokVendors ? " · 목공" : ""}</b></span>
-        <span className={`${s.chip} ${s.chipOn}`}>거주<b>{p.occupied ? "살고 있어요" : "빈 집"}</b></span>
-        <span className={`${s.chip} ${s.chipOn}`}>도배 유형<b>{p.grade === "economy" ? "저가형" : "기본형"}</b></span>
-        <button type="button" className={s.chip} onClick={() => setWin({ kind: "log" })}>결정 기록<b>보기</b></button>
-        <button type="button" className={s.chip} onClick={() => setWin({ kind: "docs" })}>서류<b>보기</b></button>
-      </div>
       <button type="button" className={s.planBar} aria-expanded={open} aria-controls="jj-board" onClick={() => setOpen((v) => !v)}><b>{Math.min(now + 1, 8)}/8 · 내 도배 플랜</b><span>{open ? "접기" : "보기"}</span></button>
       <div className={s.body}>
         <section className={s.chat} aria-label="재재와 대화">
@@ -455,7 +478,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
           {/* 새 말이 오면 여기까지 내려요. 입력칸(dock) 뒤에 두어 마지막 말풍선이 입력칸에 가려지지 않아요 */}
           <div ref={end} />
         </section>
-        <Plan now={now} scope={p.id} open={open} auto={auto} tab={tab} onTab={setTab} render={board} />
+        <Plan now={now} scope={p.id} open={open} auto={auto} tab={tab} onTab={setTab} render={board}
+          extra={<div className={s.row}><button type="button" className={s.textBtn} onClick={() => setWin({ kind: "log" })}>결정 기록</button><button type="button" className={s.textBtn} onClick={() => setWin({ kind: "docs" })}>서류</button></div>} />
       </div>
       <div className={s.chips} aria-label="믿집 백과">
         {terms.map((t) => <button key={t.id} type="button" className={s.chip} onClick={() => setWin({ kind: "term", name: t.term })}>백과<b>{t.term}</b></button>)}
@@ -519,20 +543,15 @@ function PickCard({ pid, visitId, name, proposal, busy, act }: { pid: string; vi
   const [failed, setFailed] = useState(false);
   const [sel, setSel] = useState<{ day: string; half: Half } | null>(null);
   useEffect(() => { void call<Pick>("GET", `/projects/${pid}/visits/${enc(visitId)}`).then(setPick).catch(() => setFailed(true)); }, [pid, visitId]);
-  const days = (pick?.days ?? []).filter((d) => d.am || d.pm).slice(0, 14);
+  // 업체가 보낸 날을 달력으로(팀 피드백 3)
+  const days = (pick?.days ?? []).map((d) => ({ day: d.day, halves: (["am", "pm"] as Half[]).filter((h) => d[h]) })).filter((d) => d.halves.length);
   return (
     <div className={s.card}>
       <h4>{name} · 실측 반나절 고르기</h4>
       <div className={s.vlist}>
-        {days.map((d) => (
-          <div key={d.day} className={s.vrow}><b>{dateShort(d.day)}</b><div className={s.row}>
-            {(["am", "pm"] as Half[]).filter((h) => d[h]).map((h) => (
-              <Button key={h} size="sm" aria-pressed={sel?.day === d.day && sel.half === h} variant={sel?.day === d.day && sel.half === h ? "primary" : "weak"} onClick={() => setSel({ day: d.day, half: h })}>{HALF[h]}</Button>
-            ))}
-          </div></div>
-        ))}
-        {failed ? <p className={s.note}>고를 수 있는 날을 불러오지 못했어요. <Link href={`/projects/${pid}/visits/${enc(visitId)}`}>실측 화면</Link>에서 봐 주세요.</p> : null}
-        {pick && !days.length ? <p className={s.note}>고를 수 있는 반나절이 없어요. <Link href={`/projects/${pid}/visits/${enc(visitId)}`}>실측 화면</Link>에서 다시 물어보세요.</p> : null}
+        {days.length ? <HalfCalendar days={days} value={sel} onChange={setSel} label={`${name} 실측 고를 수 있는 날`} /> : null}
+        {failed ? <p className={s.note}>고를 수 있는 날을 불러오지 못했어요. 새로고침하거나 업체 채팅으로 물어봐 주세요.</p> : null}
+        {pick && !days.length ? <p className={s.note}>고를 수 있는 반나절이 없어요. 업체 채팅으로 다른 날을 물어봐 주세요.</p> : null}
       </div>
       <Button size="sm" disabled={!sel} busy={busy === `p${visitId}`} onClick={() => sel && act(`p${visitId}`, () => call("POST", `/projects/${pid}/visits/${enc(visitId)}/${proposal ? "proposal/pick" : "pick"}`, sel), `${name}에 ${dateShort(sel.day)} ${HALF[sel.half]}을 보냈어요`)}>
         {sel ? `${dateShort(sel.day)} ${euro(HALF[sel.half])} 보내기` : "반나절을 골라 주세요"}

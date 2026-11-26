@@ -107,3 +107,13 @@
 .vlines li { display: flex; justify-content: space-between; gap: 12px; }
 .rv { display: flex; flex-direction: column; gap: 2px; padding: 8px 0; border-top: 1px solid var(--mj-line-soft); font-size: var(--mj-type-label); }
 .inlineLink { display: inline; padding: 0; border: 0; background: none; font: inherit; color: var(--mj-primary); font-weight: var(--mj-weight-semibold); text-decoration: underline; cursor: pointer; }
+/* 플랜 제목 옆 결정 기록 · 서류(위 칩 줄을 뺀 자리, 팀 피드백 1) */
+.planExtra { margin-left: auto; }
+.textBtn { min-height: 40px; padding: 0 8px; border: 0; background: none; color: var(--mj-primary); font: inherit; font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); cursor: pointer; }
+.textBtn:hover { text-decoration: underline; }
+/* 실측을 기다리는 동안(팀 피드백 4): 줄자가 오가는 띠 */
+.wait { display: flex; flex-direction: column; gap: 6px; font-size: var(--mj-type-caption); color: var(--mj-text-sub); }
+.waitBar { position: relative; display: block; height: 6px; border-radius: 999px; background: var(--mj-primary-weak); overflow: hidden; }
+.waitBar::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 35%; border-radius: 999px; background: var(--mj-primary); animation: jjWait 1.6s ease-in-out infinite alternate; }
+@keyframes jjWait { from { transform: translateX(0); } to { transform: translateX(186%); } }
+@media (prefers-reduced-motion: reduce) { .waitBar::after { animation: none; width: 100%; opacity: 0.4; } }
