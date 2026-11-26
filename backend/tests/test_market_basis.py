@@ -39,3 +39,20 @@ def test_mokgong_options_follow_chosen_items(api):
     q = api.get(f"/v2/projects/{p['id']}/market-quote").json()
     on = {o["key"] for o in q["options"] if o["on"]}
     assert "doors" not in on and "board" not in on
+
+
+def test_mokgong_basis_counts_only_chosen_items():
+    """목공 비교 기준도 고른 목공 할 곳만: 몰딩 · 걸레받이만이면 문 · 중문 · 단열을 넣지 않아요(넣으면 4배쯤 커져요)"""
+    only, _ = market_calc(
+        pyeong=None,
+        area_m2=Decimal(84),
+        area_basis="exclusive",
+        dobae=False,
+        mokgong=True,
+        options=frozenset(),
+    )
+    got = basis_total("mokgong", "84", "exclusive", None, "full", ["molding", "base"])
+    assert got == only.total
+    assert got < basis_total("mokgong", "84", "exclusive", None, "full")  # 모르면 흔한 것
+    with_door = basis_total("mokgong", "84", "exclusive", None, "full", ["molding", "door"])
+    assert with_door is not None and with_door > got

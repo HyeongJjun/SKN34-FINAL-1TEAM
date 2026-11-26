@@ -419,10 +419,6 @@ def market_calc(
         raise AppError(422, "invalid", str(e)) from e
 
 
-# 고객이 고른 목공 할 곳 → 시장 단가 목공 선택 항목(몰딩 · 걸레받이는 기본 줄에 늘 있어요)
-MOK_OPTIONS = {"door": "doors", "flatten": "board"}
-
-
 def market_of(
     st: StandardOut, mok_items: list[str] | None = None
 ) -> tuple[market_quote.Quote, str] | None:
@@ -435,9 +431,7 @@ def market_of(
     if d is None:
         return None
     mok = any(t.trade == "mokgong" for t in st.trades)
-    options = None
-    if mok and mok_items is not None:
-        options = frozenset(MOK_OPTIONS[x] for x in mok_items if x in MOK_OPTIONS)
+    options = market_basis.mok_options(mok_items) if mok else None
     return market_calc(
         pyeong=None,
         area_m2=st.area_m2,
