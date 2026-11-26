@@ -10,12 +10,13 @@ import { Icon } from "@/components/ui/Icon";
 import { useModal } from "@/components/ui/useModal";
 import { MarketSheet, MarketTotal } from "@/components/v2/market/MarketQuote";
 import type { Schemas } from "@/lib/backend/client";
+import { won } from "@/lib/format";
 import { daysCaption, type StdView } from "@/lib/guest/standard";
 import s from "./StandardDialog.module.css";
 
 export type StdData = { view: StdView; market: Schemas["V2MqOut"] | null };
 
-export function StandardDialog({ open, onClose, data, pid, locked, onEdit, onPlan }: { open: boolean; onClose: () => void; data: StdData; pid: string; locked: boolean; /** 조건 바꾸기 · 예상 공정표를 재재 화면 창으로(옮기지 않아요) */ onEdit: () => void; onPlan: () => void }) {
+export function StandardDialog({ open, onClose, data, pid, locked, onEdit, onPlan, basis }: { open: boolean; onClose: () => void; data: StdData; pid: string; locked: boolean; /** 업체 도배 가견적 %의 기준(도배만 시장 단가, 서버 standard_total) */ basis?: number | null; /** 조건 바꾸기 · 예상 공정표를 재재 화면 창으로(옮기지 않아요) */ onEdit: () => void; onPlan: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const id = useId();
   const h = useModal(ref, open, onClose);
@@ -35,6 +36,10 @@ export function StandardDialog({ open, onClose, data, pid, locked, onEdit, onPla
             {market ? (
               <>
                 <MarketTotal q={market} changeHref={change} onChange={onEdit} caption={["부가세 포함", daysCaption(view.days)].filter(Boolean).join(" · ")} />
+                {/* 목공도 한 공사는 합계와 가견적 % 기준이 달라서, 기준(도배만)을 서버 값 그대로 보여요(#207) */}
+                {basis != null && market.trades.some((t) => t.key === "mokgong") ? (
+                  <p className={s.note}>도배만 시장 단가 <b className="mj-num">{won(basis)}</b> · 업체 도배 가견적의 &lsquo;표준견적서보다 몇 %&rsquo;는 이 금액과 견줘요.</p>
+                ) : null}
                 <MarketSheet q={market} />
               </>
             ) : (
