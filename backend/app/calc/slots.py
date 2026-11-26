@@ -86,6 +86,11 @@ def is_open(days: Iterable[DayOpen], day: date, half: Half) -> bool:
     return any(x.day == day and x.left(half) > 0 for x in days)
 
 
+def is_open_day(day: date, open_weekdays: Collection[int], off_days: Collection[date]) -> bool:
+    """업체가 등록한 실측 영업일인가: 영업 요일(월 0 ~ 일 6) 안이고 쉬는 날이 아니면 True"""
+    return day.weekday() in open_weekdays and day not in off_days
+
+
 def free_seat(used: Collection[int], capacity: int) -> int | None:
     """그 반나절에서 비어 있는 가장 작은 칸 번호 (없으면 None → 409 slot_taken)"""
     for seat in range(1, min(capacity, CAPACITY_MAX) + 1):

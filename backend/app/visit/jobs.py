@@ -66,7 +66,8 @@ async def on_reply_due(s: AsyncSession, job: Job, now: datetime) -> bool | Outco
     if not await repo.set_status(s, v.id, allowed_from=("requested",), values=values):
         return False
     s.add(_event(v, "requested", "expired", "expired", now))
-    await svc.end_visit(s, v, now=now, shortlist_code="expired")
+    # 요청 때 연 채팅(0038)도 읽기만으로 닫아요
+    await svc.end_visit(s, v, now=now, shortlist_code="expired", thread_reason="expired")
     owner = await _owner(s, v)
     await notify_service.add(
         s,
@@ -92,7 +93,7 @@ async def on_pick_due(s: AsyncSession, job: Job, now: datetime) -> bool | Outcom
     if not await repo.set_status(s, v.id, allowed_from=("offered",), values=values):
         return False
     s.add(_event(v, "offered", "expired", "expired", now))
-    await svc.end_visit(s, v, now=now, shortlist_code="expired")
+    await svc.end_visit(s, v, now=now, shortlist_code="expired", thread_reason="expired")
     await notify_service.add(
         s,
         user_id=v.vendor_id,

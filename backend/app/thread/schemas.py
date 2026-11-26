@@ -9,7 +9,9 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_vali
 from app.thread.models import BODY_MAX
 
 Body = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=BODY_MAX)]
-RoReason = Literal["other_chosen", "cancelled", "declined", "withdrawn", "blocked", "admin"]
+RoReason = Literal[
+    "other_chosen", "cancelled", "declined", "withdrawn", "blocked", "admin", "expired"
+]
 
 
 class ThreadLastOut(BaseModel):

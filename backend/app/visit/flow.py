@@ -8,7 +8,7 @@
 """
 
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 
 from fastapi.responses import Response
 from sqlalchemy.exc import IntegrityError
@@ -56,6 +56,7 @@ from app.visit.schemas import (
     SlotIn,
     SlotsIn,
     VendorScheduleOut,
+    VendorSlotIn,
     VendorVisitStateOut,
     VisitCreateIn,
     VisitCreateOut,
@@ -364,6 +365,11 @@ async def request(
     사본(L04) · 프로젝트 잠금 · 담기 칸과 연결 · 답 기한 일(+48시간) · 업체 알림.
     보낼 수 없는 업체는 만들지 않고 failed로 돌려준다(모두 안 되면 409)."""
     today = svc.today_of(now)
+    if data.picks and (data.wish_start is None or data.wish_end is None):
+        # 업체 영업일에서 날짜를 골랐으면 희망 기간은 내일 ~ 고른 날 뒤 2주(62일 안)로 채워요
+        start = today + timedelta(days=1)
+        last = max(x.day for x in data.picks) + timedelta(days=14)
+        data.wish_start, data.wish_end = start, min(last, start + timedelta(days=WISH_SPAN_MAX))
     if data.wish_start is None or data.wish_end is None:
         raise _invalid("희망 기간 시작과 끝을 같이 골라 주세요.", ["wish_end"])
     if data.wish_end < data.wish_start or (data.wish_end - data.wish_start).days > WISH_SPAN_MAX:
@@ -430,6 +436,16 @@ async def request(
         )
         for vid in ok
     ]
+    picks = {x.vendor_id: x for x in data.picks if x.vendor_id in set(ok)}
+    # 한 집에 같은 반나절 업체 둘은 안 돼요: 이번에 고른 것끼리는 여기서, 이미 잡아 둔 것과는 _pick이 409
+    halves = [(x.day, x.half) for x in picks.values()]
+    if len(set(halves)) != len(halves):
+        raise app_error("slot_taken", SAME_HALF)
+    for vid, x in picks.items():  # 업체가 등록한 영업일 · 빈 반나절인지 다시 봐요
+        if not (data.wish_start <= x.day <= data.wish_end):
+            raise _invalid("희망 기간 안의 날짜를 골라 주세요.", ["picks"])
+        if x.half not in (await svc.open_halves_for(s, vid, x.day, x.day)).get(x.day, []):
+            raise app_error("slot_taken", "그 업체가 받을 수 없는 날이에요. 다른 날을 골라 주세요.")
     try:
         s.add_all(rows)
         await s.flush()
@@ -438,8 +454,12 @@ async def request(
             for v in rows
             for i, x in enumerate(data.photos)
         )
+        for v in rows:  # 날짜를 고른 업체는 '날짜를 골랐어요' 알림 하나만 받아요(_pick)
+            await _asked(s, v, user, now, notify=v.vendor_id not in picks)
+        await _open_threads(s, rows)
         for v in rows:
-            await _asked(s, v, user, now)
+            if v.vendor_id in picks:
+                await _pick_at_request(s, user, v, picks[v.vendor_id], now)
         await s.commit()
     except IntegrityError as exc:  # 칸 · 업체 · 시도 UNIQUE: 다른 곳에서 먼저 요청했다
         await s.rollback()
@@ -447,6 +467,57 @@ async def request(
     for v in rows:
         svc.push_later(s, [user.id, v.vendor_id], v)
     return VisitCreateOut(created=[svc._visit_out(v, {}, today) for v in rows], failed=failed)
+
+
+SAME_HALF = "같은 반나절에 업체 둘이 올 수 없어요. 업체마다 다른 반나절을 골라 주세요."
+
+
+async def _open_threads(s: AsyncSession, rows: list[Visit]) -> None:
+    """실측 요청 때 (공사, 업체) 채팅을 열어요(2026-11-25 회의: 주차 · 엘리베이터 같은 현장 사정으로 날짜를
+    바꾸거나 거절할 때 주고받게). 연락처는 자동으로 보내지 않아요(고객이 채팅에 직접 적을 때만 가요)."""
+    for v in rows:
+        h = await _home(s, v)
+        await thread_service.open(
+            s,
+            project_id=v.project_id,
+            vendor_id=v.vendor_id,
+            customer_id=h.owner_id,
+            visit_id=v.id,
+            customer_label=f"{h.emd or h.sgg} 고객",
+            vendor_label=v.vendor_name,
+            area_label=await _area(s, v, h),
+        )
+
+
+async def _pick_at_request(
+    s: AsyncSession, user: User, v: Visit, x: VendorSlotIn, now: datetime
+) -> None:
+    """고객이 업체 영업일에서 고른 반나절로 바로 '업체 수락 기다림'(picked)으로 가요. 업체 기간은 요청 희망 기간
+    그대로 두고(다른 날 제안은 그 안에서), 업체는 수락 · 다른 날 제안 · 못 받아요를 골라요."""
+    if not await repo.set_status(
+        s, v.id, allowed_from=("requested",), values={"status": "offered"}
+    ):
+        raise app_error("stale")
+    v.status = "offered"
+    assert v.wish_start is not None and v.wish_end is not None
+    pick_due = deadline.pick_due(now)
+    s.add(
+        VisitWindow(
+            visit_id=v.id,
+            start_date=v.wish_start,
+            end_date=v.wish_end,
+            excluded=[],
+            instant=False,
+            answered_at=now,
+            pick_due_at=pick_due,
+        )
+    )
+    s.add(_event(v, "requested", "offered", user, "open_days", now, v.wish_start, None, v.wish_end))
+    await jobs_service.cancel(s, now=now, kind="visit_reply_due", ref_id=v.id)
+    # 업체가 수락하지 않아 offered로 돌아오면 고르기 기한에 끝나요(answer_window와 같아요)
+    await jobs_service.add(s, kind="visit_pick_due", ref_id=v.id, run_at=pick_due)
+    await s.flush()
+    await _pick(s, user, v, SlotIn(day=x.day, half=x.half), now)
 
 
 async def _check_photos(s: AsyncSession, user: User, photos: list[VisitPhotoIn]) -> None:
@@ -459,11 +530,15 @@ async def _check_photos(s: AsyncSession, user: User, photos: list[VisitPhotoIn])
         raise _invalid("내가 올린 공간 사진만 붙일 수 있어요.", ["photos"])
 
 
-async def _asked(s: AsyncSession, v: Visit, user: User, now: datetime) -> None:
+async def _asked(
+    s: AsyncSession, v: Visit, user: User, now: datetime, *, notify: bool = True
+) -> None:
     """요청 하나를 넣은 뒤 같은 트랜잭션에: 이력 · 답 기한 일 · 업체 알림 (이름 · 연락처 없음)"""
     code = "asked" if v.attempt == 1 else "re_asked"
     s.add(_event(v, None, "requested", user, code, now, v.wish_start, None, v.wish_end))
     await jobs_service.add(s, kind="visit_reply_due", ref_id=v.id, run_at=v.reply_due_at)
+    if not notify:
+        return
     h = await _home(s, v)
     await notify_service.add(
         s,
@@ -544,6 +619,8 @@ async def again(
             VisitPhoto(visit_id=v.id, file_id=x.file_id, sort=x.sort, label=x.label) for x in photos
         )
         await _asked(s, v, user, now)
+        # 앞 요청이 끝나 읽기만이던 (공사, 업체) 채팅을 새 요청에 잇고 다시 열어요(차단 · 관리자로 닫힌 것은 그대로)
+        await _open_threads(s, [v])
         await s.commit()
     except IntegrityError as exc:
         await s.rollback()
@@ -629,12 +706,32 @@ async def pick(
     v = await _customer_visit(s, user, project_id, visit_id)
     if v.status != "offered":
         raise svc.visit_error(v, "날짜를 고를 수 있는 요청이 아니에요.")
+    status, hold, tid = await _pick(s, user, v, data, now)
+    await s.commit()
+    svc.push_later(s, [user.id, v.vendor_id], v)
+    return PickOut(visit_id=v.id, status=status, booked=svc.booked_out(hold), thread_id=tid)
+
+
+async def _pick(
+    s: AsyncSession, user: User, v: Visit, data: SlotIn, now: datetime
+) -> tuple[str, VisitHold, uuid.UUID | None]:
+    """offered인 요청에서 반나절 고르기(commit · 신호는 부르는 쪽). (상태, 잡기, 대화 id)."""
     w = (await repo.windows(s, [v.id])).get(v.id)
     if w is None:
         raise app_error("stale")
     if deadline.is_over(now, w.pick_due_at):
         raise app_error("expired", "날짜를 고르는 기한이 지났어요.")
     _in_window(w, data.day, data.half, svc.today_of(now))
+    # 영업일에서 고른 요청은 수락 기한이 지나 다시 골라도 영업일 안에서만
+    f = await svc.open_day_facts(s, v)
+    if f is not None and not slots.is_open_day(data.day, f.open_weekdays, f.off_days):
+        raise app_error("slot_taken", "그 업체가 받을 수 없는 날이에요. 다른 날을 골라 주세요.")
+    others = [o.id for o in await repo.of_project(s, v.project_id, None) if o.id != v.id]
+    if any(
+        (h.day, h.half) == (data.day, data.half)
+        for h in (await repo.holds_of_visits(s, others)).values()
+    ):  # 한 집에 같은 반나절 업체 둘은 안 돼요(요청 때 고르기 · 기간 답 뒤 고르기 둘 다)
+        raise app_error("slot_taken", SAME_HALF)
     cap = await svc.capacity_of(s, v.vendor_id)
     tid = None
     if w.instant:
@@ -644,7 +741,7 @@ async def pick(
         tid = await _book(s, v, hold, frm="offered", by=user, code="booked", now=now)
         status = "booked"
     else:
-        until = deadline.accept_due(now)
+        until = deadline.accept_due(now, data.day, data.half)  # 고른 반나절 시작 전까지
         hold = await take_seat(
             s, v, data.day, data.half, kind="hold", until=until, now=now, capacity=cap
         )
@@ -665,9 +762,7 @@ async def pick(
             dedup_key=f"visit_picked:{v.id}:{_short(hold.id)}",
         )
         status = "picked"
-    await s.commit()
-    svc.push_later(s, [user.id, v.vendor_id], v)
-    return PickOut(visit_id=v.id, status=status, booked=svc.booked_out(hold), thread_id=tid)
+    return status, hold, tid
 
 
 # ---- 업체 수락 · 다른 날 제안 (V06 · V07) ----
