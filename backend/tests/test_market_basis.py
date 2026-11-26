@@ -4,7 +4,7 @@
 from decimal import Decimal
 
 from app.quote.service import market_calc
-from app.refprice.market_basis import basis_total
+from app.refprice.market_basis import basis_total, mok_base, mok_options
 from tests.helpers import signup
 from tests.test_project import body as v2_body
 from tests.test_v3_project_home import HOME, create
@@ -56,3 +56,29 @@ def test_mokgong_basis_counts_only_chosen_items():
     assert got < basis_total("mokgong", "84", "exclusive", None, "full")  # 모르면 흔한 것
     with_door = basis_total("mokgong", "84", "exclusive", None, "full", ["molding", "door"])
     assert with_door is not None and with_door > got
+
+
+def test_mokgong_basis_follows_molding_and_skirting_choice():
+    """몰딩 · 걸레받이도 고른 것만: 하나를 빼면 비교 기준이 줄고, 화면 표준견적서와 같은 값이에요(#215 리뷰 후속)"""
+    both = basis_total("mokgong", "84", "exclusive", None, "full", ["molding", "base"])
+    mold = basis_total("mokgong", "84", "exclusive", None, "full", ["molding"])
+    skirt = basis_total("mokgong", "84", "exclusive", None, "full", ["base"])
+    door = basis_total("mokgong", "84", "exclusive", None, "full", ["door"])
+    assert both is not None and mold is not None and skirt is not None and door is not None
+    assert mold < both and skirt < both and mold != skirt
+    assert door < basis_total(
+        "mokgong", "84", "exclusive", None, "full", ["molding", "base", "door"]
+    )
+    for items, got in ((["molding"], mold), (["base"], skirt), (["door"], door)):
+        q, _ = market_calc(
+            pyeong=None,
+            area_m2=Decimal(84),
+            area_basis="exclusive",
+            dobae=False,
+            mokgong=True,
+            options=mok_options(items),
+            **mok_base(items),
+        )
+        assert q.total == got
+        names = [ln.item for t in q.trades for ln in t.lines]
+        assert ("1302" in names) == ("molding" in items) and ("1304" in names) == ("base" in items)
