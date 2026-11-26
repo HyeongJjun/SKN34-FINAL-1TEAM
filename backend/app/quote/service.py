@@ -419,28 +419,42 @@ def market_calc(
         raise AppError(422, "invalid", str(e)) from e
 
 
-def market_of(st: StandardOut) -> tuple[market_quote.Quote, str] | None:
-    """내 공사 시장 단가 견적(표준견적서, 2026-11-26 팀 결정). 목공을 고른 공사는 목공도 켜요.
+# 고객이 고른 목공 할 곳 → 시장 단가 목공 선택 항목(몰딩 · 걸레받이는 기본 줄에 늘 있어요)
+MOK_OPTIONS = {"door": "doors", "flatten": "board"}
+
+
+def market_of(
+    st: StandardOut, mok_items: list[str] | None = None
+) -> tuple[market_quote.Quote, str] | None:
+    """내 공사 시장 단가 견적(표준견적서, 2026-11-26 팀 결정 #207). 목공을 고른 공사는 목공도 켜고,
+    고른 목공 할 곳(mok_items)을 선택 항목으로 맞춰요(모르면 235건에서 흔한 것).
     부분 공사 · 도배 없는 공사는 None(기존 표준견적서)."""
     if (st.scope or "full") != "full":
         return None
     d = next((t for t in st.trades if t.trade == "dobae"), None)
     if d is None:
         return None
+    mok = any(t.trade == "mokgong" for t in st.trades)
+    options = None
+    if mok and mok_items is not None:
+        options = frozenset(MOK_OPTIONS[x] for x in mok_items if x in MOK_OPTIONS)
     return market_calc(
         pyeong=None,
         area_m2=st.area_m2,
         area_basis="exclusive" if st.area_basis == "exclusive" else "supply",
-        mokgong=any(t.trade == "mokgong" for t in st.trades),
+        mokgong=mok,
         wallpaper="hapji" if d.grade == "economy" else "silk",
+        options=options,
     )
 
 
 async def market_for(
     s: AsyncSession, user: User, project_id: uuid.UUID
 ) -> tuple[market_quote.Quote, str] | None:
-    """GET /v2/projects/{id}/market-quote · AI 칸: 남의 것은 404."""
-    return market_of(await standard_for(s, user, project_id))
+    """GET /v2/projects/{id}/market-quote · AI 칸: 남의 것은 404. 고른 목공 할 곳을 맞춰 넣어요."""
+    st = await standard_for(s, user, project_id)
+    p = await project_service.get_for(s, user, project_id)
+    return market_of(st, list(p.trades.mokgong.items) if p.trades.mokgong else None)
 
 
 # ---- 업체 실측 견적서: 업체 양식 파일 + 요약 칸. 실측 요청(visit) 확인 · 상태 바꾸기는 visit.service가 한다 ----

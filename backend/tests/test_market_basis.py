@@ -30,3 +30,12 @@ def test_mokgong_project_market_quote_has_both_trades(api):
     assert {t["name"] for t in b["trades"]} == {"도배", "목공 (문 포함)"} and b["total"] > a[
         "total"
     ]
+
+
+def test_mokgong_options_follow_chosen_items(api):
+    """고른 목공 할 곳만 시장 단가 선택 항목으로: 몰딩 · 걸레받이만이면 방문 교체 · 보드 보수는 꺼요"""
+    signup(api)
+    p = create(api, v2_body()).json()  # 목공 할 곳: 몰딩 · 걸레받이
+    q = api.get(f"/v2/projects/{p['id']}/market-quote").json()
+    on = {o["key"] for o in q["options"] if o["on"]}
+    assert "doors" not in on and "board" not in on
