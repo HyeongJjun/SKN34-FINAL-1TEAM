@@ -19,7 +19,6 @@ export function StandardDialog({ open, onClose, data, pid, locked, onEdit, onPla
   const ref = useRef<HTMLDialogElement>(null);
   const id = useId();
   const h = useModal(ref, open, onClose);
-  const base = `/projects/${pid}`;
   const change = `/start?edit=${pid}`;
   const { view, market } = data;
   const parts = view.parts ?? [];
