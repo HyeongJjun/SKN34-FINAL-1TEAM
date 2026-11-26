@@ -9,6 +9,8 @@
 // #197(멘토 피드백 '오른쪽 패널과 채팅이 유기적으로'): AI 답에 나온 업체 이름은 보드 업체 칸에서 강조하고, 일정 답이면 일정 칸으로 옮겨요.
 //   업체 칸은 공정별 탭(도배 · 목공, 목공은 고른 공사만)과 찾기 칸이 있고, 공정마다 3곳까지 담아요(서버도 slots_full 409로 막아요).
 //   AI 카드 모양은 그대로예요. 강조는 답 글 · 표 · 초안에 나온 이름을 이 공사 업체 목록과 맞춰 봐요(화면에서만).
+// 2026-11-26 사용자: 업체 담기 · 실측 요청 · 표준견적서도 이 화면 안에서. 업체 보기 · 실측 요청 · 표준견적서 화면은 여기로 넘어와요
+//   (보드 업체 칸 · 실측 칸(BoardVisitRequest) · 표준견적서 창). 업체 이름을 누르면 업체 자세히(리뷰 · 사례) 화면이에요.
 // - 질문은 POST /ai/turns(로그인한 고객 AI). 금액 · 날짜는 API 값 그대로이고, 저장 · 확정 · 승인은 사람이 보드 단추를 눌러요.
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
@@ -29,6 +31,7 @@ import { boardTarget, norm, pickRule, type PickState } from "./boardLink";
 import { quickChips } from "./chips";
 import { Jaejae } from "./Jaejae";
 import { Plan, PLAN_STEPS } from "./Plan";
+import { BoardVisitRequest } from "./BoardVisitRequest";
 import { StandardDialog, type StdData } from "./StandardDialog";
 import s from "./flow.module.css";
 
@@ -57,6 +60,8 @@ export type FlowData = {
   std: StdData | null;
   /** 만든 바로 뒤(?open=standard)면 표준견적서 창을 열고 시작해요 */
   openStd: boolean;
+  /** 다른 화면에서 넘어올 때 열 보드 칸(?step=2 업체 · 3 실측). 업체 보기 · 실측 요청 화면은 이 화면으로 와요(2026-11-26) */
+  step: number | null;
 };
 
 /** 서버 상태 → 플랜 8칸 지금 칸 */
@@ -81,7 +86,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const pid = enc(p.id);
   const now = stepOf(data);
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState(Math.min(now, 7));
+  const [tab, setTab] = useState(data.step ?? Math.min(now, 7));
   const [stdOpen, setStdOpen] = useState(data.openStd && !!std);
   const [trade, setTrade] = useState<Trade>("dobae");
   const [query, setQuery] = useState("");
@@ -105,9 +110,11 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     if ((tab === 3 || tab === 4) && hi.length) requestAnimationFrame(() => document.querySelector("#jj-board [data-hi]")?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
   }, [tab, hi]);
   // 단계가 넘어가면 보드도 지금 단계로 옮겨요
-  useEffect(() => { setTab(Math.min(now, 7)); }, [now]);
+  // 처음 그릴 때는 넘어온 칸(?step)을 지켜요
+  const firstNow = useRef(true);
+  useEffect(() => { if (firstNow.current) { firstNow.current = false; return; } setTab(Math.min(now, 7)); }, [now]);
   // ?open=standard는 한 번만 써요(새로고침 · 뒤로 가기에 다시 열리지 않게)
-  useEffect(() => { if (data.openStd) router.replace(`/projects/${pid}/assistant`, { scroll: false }); }, [data.openStd, pid, router]);
+  useEffect(() => { if (data.openStd || data.step != null) router.replace(`/projects/${pid}/assistant`, { scroll: false }); }, [data.openStd, data.step, pid, router]);
 
   /** 대화의 '오른쪽에서 보기': 보드를 그 단계로 바꾸고(폰은 펼쳐) 그 자리로 옮겨요 */
   function toBoard(step: number) {
@@ -208,8 +215,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     cards.push({ key: "vendors", node: (
       <>
         <p>{ready.length ? <>이 조건으로 가견적을 낸 업체가 <b>{ready.length}곳</b> 있어요.</> : "이 지역에 가견적을 낸 업체가 아직 없어요."} <b>가견적</b>은 업체가 확인한 단가로 믿집이 계산한 <b>실측 전 금액</b>이에요.</p>
-        <p>{picked.length ? `${picked.length}곳을 담았어요. 내 도배 플랜에서 실측 날짜를 골라 요청해요.` : "내 도배 플랜에서 마음에 드는 곳을 담아 주세요."}</p>
-        {go(2)}
+        <p>{picked.length ? `${picked.length}곳을 담았어요. 내 도배 플랜 실측 칸에서 날짜를 골라 바로 요청해요.` : "내 도배 플랜에서 마음에 드는 곳을 담아 주세요."}</p>
+        {picked.length ? go(3, "실측 날짜 고르기") : go(2)}
       </>
     ) });
   }
@@ -281,13 +288,16 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             <VendorRows list={listOf(trade).filter((v) => v.state === "ok")} query={query} hi={hi} trade={trade} pick={pickOf(trade)} pid={pid} busy={busy} act={act} />
           </>
         ) : <p className={s.note}>도배 업체는 이미 골랐어요. 실측 칸을 봐 주세요.</p>}
-        <Link href={`/projects/${pid}/vendors`}>전체 업체에서 직접 고르기</Link>
-        {trade === "dobae" && picked.length && !vs.length && !deal ? <VisitRequest pid={pid} draft={draft} /> : null}
+        {trade === "dobae" && picked.length && !vs.length && !deal ? (
+          <Button size="lg" block onClick={() => setTab(3)}>담은 {picked.length}곳 실측 날짜 고르기 →</Button>
+        ) : null}
         {trade === "mokgong" ? <p className={s.note}>목공 실측 요청은 다음 묶음에서 열려요. 지금은 담아 두기만 해요.</p> : null}
       </>
     );
     if (step === 3) return (
       <>
+        {!vs.length && !deal && draft?.vendors.length ? <BoardVisitRequest pid={pid} draft={draft} today={today} busy={busy} act={act} /> : null}
+        {!vs.length && !deal && !draft?.vendors.length ? <p className={s.note}>먼저 업체 칸에서 업체를 담아 주세요. <button type="button" className={s.boardLink} onClick={() => setTab(2)}>업체 칸으로</button></p> : null}
         {toPick.map((v) => (
           <div key={v.id} data-hi={v.vendor_id && hi.includes(v.vendor_id) ? "1" : undefined}>
             {v.vendor_id && hi.includes(v.vendor_id) ? <span className={s.hiTag}>재재가 말한 업체</span> : null}
@@ -453,18 +463,19 @@ function VendorRows({ list, query, hi, trade, pick, pid, busy, act }: { list: Ca
     .sort((a, b) => Number(hi.includes(b.vendor_id)) - Number(hi.includes(a.vendor_id)));
   const full = !pick.locked && pick.left <= 0;
   const first = useRef<HTMLDivElement>(null);
+  const [all, setAll] = useState(false);
   // 강조가 바뀌면 그 업체가 보이게 옮겨요
   useEffect(() => { if (hi.length) first.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [hi]);
   if (!list.length) return <p className={s.note}>이 지역에 {TRADE_WORD[trade]} 가견적을 낸 업체가 아직 없어요.</p>;
   if (!shown.length) return <p className={s.note} role="status">찾는 업체가 없어요. 업체 이름이나 구 이름으로 찾아 주세요.</p>;
   return (
     <div className={s.vlist}>
-      {shown.slice(0, 8).map((v, i) => {
+      {shown.slice(0, all ? shown.length : 8).map((v, i) => {
         const on = hi.includes(v.vendor_id);
         const can = pickRule(v, pick);
         return (
           <div key={v.vendor_id} ref={on && i === 0 ? first : undefined} className={[s.vrow, v.shortlisted ? s.vrowOn : "", on ? s.vrowHi : ""].join(" ")}>
-            <div><b>{v.name}</b>{on ? <span className={s.hiTag}>재재가 말한 업체</span> : null}<span className={s.note}>{v.rating ? `별 ${v.rating} · ` : ""}후기 {v.review_count} · 시공 {v.done_count}</span></div>
+            <div><Link className={s.vname} href={`/projects/${pid}/vendors/${enc(v.vendor_id)}?trade=${trade}`}>{v.name}</Link>{on ? <span className={s.hiTag}>재재가 말한 업체</span> : null}<span className={s.note}>{v.rating ? `별 ${v.rating} · ` : ""}후기 {v.review_count} · 시공 {v.done_count}</span></div>
             <div className={s.row}>
               <b className="mj-num">{v.estimate_total != null ? won(v.estimate_total) : "—"}</b>
               {pick.live.has(v.vendor_id) ? <span className={s.note}>실측 요청한 업체</span> : (
@@ -478,19 +489,8 @@ function VendorRows({ list, query, hi, trade, pick, pid, busy, act }: { list: Ca
         );
       })}
       {pick.locked ? <p className={s.note}>{TRADE_WORD[trade]} 업체를 확정해서 더 담거나 뺄 수 없어요. 업체 정보는 볼 수 있어요.</p> : null}
+      {shown.length > 8 ? <button type="button" className={s.boardLink} onClick={() => setAll((x) => !x)}>{all ? "접기" : `업체 ${shown.length - 8}곳 더 보기`}</button> : null}
       {full ? <p className={s.note}>{TRADE_WORD[trade]}는 {MAX_PICK}곳을 다 담았어요. 바꾸려면 하나를 빼 주세요.</p> : null}
-    </div>
-  );
-}
-
-// 2026-11-25 회의: 날짜는 요청 화면에서 업체가 등록한 영업일로 골라요
-function VisitRequest({ pid, draft }: { pid: string; draft: VisitDraft | null }) {
-  const n = draft?.vendors.length ?? 0;
-  return (
-    <div className={s.card}>
-      <h4>실측 날짜 고르기</h4>
-      <p className={s.note}>담은 업체 {n}곳이 등록해 둔 영업일에서 실측 반나절을 골라 요청해요. 업체는 주차 · 엘리베이터 같은 현장 정보를 보고 수락하거나 다른 날을 제안해요.</p>
-      <Button size="sm" href={`/projects/${pid}/visits/new`}>영업일 보고 실측 요청하기</Button>
     </div>
   );
 }

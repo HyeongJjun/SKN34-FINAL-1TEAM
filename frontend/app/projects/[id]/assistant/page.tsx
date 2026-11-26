@@ -14,8 +14,10 @@ import { requireRole } from "@/lib/session";
 
 export const metadata = { title: "재재와 진행하기" };
 
-export default async function SecretaryPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ open?: string }> }) {
-  const [{ id }, { open }] = await Promise.all([params, searchParams]);
+export default async function SecretaryPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ open?: string; step?: string }> }) {
+  const [{ id }, { open, step }] = await Promise.all([params, searchParams]);
+  // ?step=2(업체) · 3(실측): 업체 보기 · 실측 요청 화면에서 넘어와 그 보드 칸을 열어요
+  const board = step && /^[0-7]$/.test(step) ? Number(step) : null;
   await requireRole("customer", `/projects/${encodeURIComponent(id)}/assistant`);
   const [p, ov] = await Promise.all([getVisitProject(id), getOverview(id)]);
   if (!p || !ov) notFound();
@@ -30,7 +32,7 @@ export default async function SecretaryPage({ params, searchParams }: { params: 
   return (
     <>
       <AppHeader only="phone" phone={{ title: "재재와 진행하기", back: `/projects/${encodeURIComponent(p.id)}` }} />
-      <ProjectFlow data={{ p, ov, compare, schedule, visits, vendors, mokVendors, mokVisits, draft, today: todaySeoul(), std, openStd: open === "standard" }} />
+      <ProjectFlow data={{ p, ov, compare, schedule, visits, vendors, mokVendors, mokVisits, draft, today: todaySeoul(), std, openStd: open === "standard", step: board }} />
       <LiveRefresh projectId={p.id} />
     </>
   );
