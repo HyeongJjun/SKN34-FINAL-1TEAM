@@ -7,6 +7,7 @@ from datetime import timedelta
 from app.auth.models import User
 from app.calc.quote_diff import percent_vs
 from app.db import SessionLocal
+from app.refprice.market_basis import basis_total
 from app.shared.clock import today_seoul
 from app.shared.errors import AppError
 from app.visit import service
@@ -18,6 +19,9 @@ from tests.test_visit_request import home, listed, send
 from tests.test_visit_vendors import priced
 
 TODAY = today_seoul()
+
+# 시험 집(32평 · 공급 105.8㎡ · 실크)의 시장 단가 표준견적서
+MARKET = basis_total("dobae", "105.8", "supply", "basic", "full")
 
 
 def quote(api, v: str, amount: int, mode: str = "excluded", name: str = "견적.pdf", **over):
@@ -83,8 +87,8 @@ def test_resend_and_compare(api):
     r = api.get(f"/projects/{p['id']}/quotes", params={"trade": "dobae"})
     assert r.status_code == 200, r.text
     c = r.json()
-    # v3 표준견적서(도배지 벽지 평 × 시장 평균). 옛 표준은 3,166,556원
-    assert c["standard_total"] == 3_140_760 and c["sent_counts"] == {"dobae": 2}
+    # 비교 기준 표준견적서: 시장 단가 견적(2026-11-26 팀 결정, 전에는 공공 기준 3,140,760원)
+    assert c["standard_total"] == MARKET and c["sent_counts"] == {"dobae": 2}
     assert c["formula_ver"] and c["price_ver"] and c["computed_at"]
     names = [(x["vendor_name"], x["status"]) for x in c["vendors"]]
     assert names == [("결도배", "quoted"), ("마루와벽", "quoted"), ("한결인테리어", "requested")]
@@ -97,7 +101,7 @@ def test_resend_and_compare(api):
     assert maru["latest"]["total"] == 3_421_000 and maru["latest"]["supply"] == 3_110_000
     assert [h["total"] for h in maru["history"]] == [3_388_000]  # 처음 금액
     assert maru["changed"] == ["total", "days"]
-    assert maru["vs_standard"] == str(percent_vs(3_421_000, 3_140_760))
+    assert maru["vs_standard"] == str(percent_vs(3_421_000, MARKET))
     assert (
         maru["estimate_total"] == 3_132_800
         and maru["latest"]["files"][0]["filename"] == "견적_고침.pdf"

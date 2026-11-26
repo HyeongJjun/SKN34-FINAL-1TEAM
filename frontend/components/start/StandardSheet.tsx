@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { BigFigure } from "@/components/ui/Money";
 import { QuoteLines } from "@/components/ui/QuoteLines";
+import { wonFull } from "@/lib/format";
 import { daysCaption, type StdView } from "@/lib/guest/standard";
 import s from "./standard.module.css";
 
@@ -16,12 +17,15 @@ export function StandardSheet({ view, changeHref }: { view: StdView; changeHref:
       <section className={s.group} aria-label="표준견적서 합계">
         {part ? <Badge tone="wait" className={s.badge}>부분 · 실측 후 확정</Badge> : null}
         <div className={s.totalRow}>
-          <BigFigure value={view.total} caption={daysCaption(view.days) || false} sub={view.budget ?? undefined} />
+          {/* 목공도 하면 큰 금액은 모든 공정 합계(서버 값). 줄 표 합계는 공정마다예요 */}
+          <BigFigure value={view.sum?.total ?? view.total}
+            caption={[view.sum ? "도배 + 목공 합계" : "", daysCaption(view.days)].filter(Boolean).join(" · ") || false}
+            sub={view.sum ? `공급가 ${wonFull(view.sum.supply)} + 부가세 ${wonFull(view.sum.vat)}` : view.budget ?? undefined} />
           <Button variant="text" href={changeHref} aria-label={`조건 바꾸기 · 지금 조건: ${view.condition}`}>조건 바꾸기</Button>
         </div>
       </section>
       <section className={s.group} aria-labelledby="std-lines">
-        <h2 id="std-lines" className={part ? s.eyebrow : "mj-sr"}>{part ? "고른 공간만 어림했어요" : "표준견적서 줄"}</h2>
+        <h2 id="std-lines" className={part || view.sum ? s.eyebrow : "mj-sr"}>{[view.sum ? "도배 줄 · 이 공정만의 합계예요" : "", part ? "고른 공간만 어림했어요" : ""].filter(Boolean).join(" · ") || "표준견적서 줄"}</h2>
         <QuoteLines lines={view.lines} totals={{ supply: view.supply, vat: view.vat, total: view.total }} vatSplit caption="표준견적서 줄" />
       </section>
       {part ? <p className={s.info}>부분 공사는 고른 공간의 넓이를 어림해 계산했어요. 실측 뒤 업체 견적서로 확정해요.</p> : null}

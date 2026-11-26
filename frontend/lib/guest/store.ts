@@ -2,7 +2,7 @@
 // - 키 mj_guest_v3 = { v: 3, key: UUID(가입 뒤 POST /projects의 Idempotency-Key), saved_at, info }
 // - 두는 것: 공종 · 범위 · 주거 · 지역 코드 · 면적 · 집 상태 · 벽지 · 예산 · 희망일. 이름 · 연락처 · 동 · 호 · 사진 · 금액은 두지 않아요.
 // - 읽을 때 믿지 않고 모양을 검사해요. 틀리거나 30일이 지나면 지워요. 옛 키(mj_start_draft_v4)는 읽어 옮기고 지워요.
-import { EMPTY_DRAFT, SPACES, type InfoDraft } from "./info";
+import { EMPTY_DRAFT, MOK_ITEMS, SPACES, type InfoDraft } from "./info";
 
 const KEY = "mj_guest_v3";
 const LEGACY = "mj_start_draft_v4";
@@ -26,10 +26,13 @@ type StoredInfo = {
   grade: "economy" | "basic" | null;
   budget_won: number | null;
   start_date: string | null;
+  /** 목공 할 곳(#193). 이 칸이 생기기 전에 둔 답에는 없어요 */
+  mokgong?: string[];
 };
 export type GuestSaved = { v: 3; key: string; saved_at: string; info: StoredInfo };
 
 const SPACE_KEYS = new Set<string>(SPACES.map((s) => s.key));
+const MOK_KEYS = new Set<string>(MOK_ITEMS.map((m) => m.key));
 const str = (v: unknown, max: number) => typeof v === "string" && v.length <= max;
 const day = (v: unknown) => v === null || (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v));
 
@@ -48,7 +51,8 @@ function valid(x: unknown): x is GuestSaved {
     (i.occupied === null || typeof i.occupied === "boolean") &&
     (i.grade === null || i.grade === "economy" || i.grade === "basic") &&
     (i.budget_won === null || (Number.isInteger(i.budget_won) && (i.budget_won as number) >= 0 && (i.budget_won as number) <= 10_000_000_000)) &&
-    day(i.start_date)
+    day(i.start_date) &&
+    (i.mokgong === undefined || (Array.isArray(i.mokgong) && i.mokgong.length <= 4 && i.mokgong.every((m) => MOK_KEYS.has(m as string))))
   );
 }
 
@@ -71,6 +75,7 @@ function toStored(d: InfoDraft): StoredInfo {
     occupied: d.occupied, grade: d.grade,
     budget_won: /^\d{1,6}$/.test(b) ? Number(b) * 10000 : null,
     start_date: d.start,
+    mokgong: d.mok ? d.mokgong : [],
   };
 }
 
@@ -86,6 +91,8 @@ export function draftOf(s: GuestSaved): InfoDraft {
     occupied: i.occupied, grade: i.grade,
     budget: i.budget_won ? String(Math.round(i.budget_won / 10000)) : "",
     start: i.start_date,
+    mok: (i.mokgong ?? []).length > 0,
+    mokgong: (i.mokgong ?? []) as InfoDraft["mokgong"],
   };
 }
 

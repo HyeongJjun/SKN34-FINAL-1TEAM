@@ -4278,6 +4278,12 @@ export interface components {
              * @description 공사 시작 희망일 (모르면 비움)
              */
             start_date?: string | null;
+            /**
+             * Mokgong
+             * @description 목공 할 곳(몰딩 · 걸레받이 · 문 · 벽 평탄화). 비우면 도배만. 손님 계산은 도배만 센다
+             * @default []
+             */
+            mokgong: ("molding" | "base" | "door" | "flatten")[];
         };
         /**
          * HomeInfoOut
@@ -4315,6 +4321,11 @@ export interface components {
             budget_won: number | null;
             /** Start Date */
             start_date: string | null;
+            /**
+             * Mokgong
+             * @default []
+             */
+            mokgong: ("molding" | "base" | "door" | "flatten")[];
         };
         /** InboxPageOut */
         InboxPageOut: {
