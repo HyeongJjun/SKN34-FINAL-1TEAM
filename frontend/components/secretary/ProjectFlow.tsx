@@ -263,15 +263,16 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             <VendorRows list={listOf(trade).filter((v) => v.state === "ok")} query={query} hi={hi} trade={trade} pid={pid} busy={busy} act={act} onOpen={(vendorId) => setVOpen({ vendorId, trade })} />
           </>
         ) : <p className={s.note}>도배 업체는 이미 골랐어요. 실측 칸을 봐 주세요.</p>}
-        {trade === "dobae" && picked.length && !vs.length && !deal ? (
-          <Button size="lg" block onClick={() => setTab(3)}>담은 {picked.length}곳 실측 날짜 고르기 →</Button>
+        {trade === "dobae" && draft?.vendors.length && !deal ? (
+          <Button size="lg" block onClick={() => setTab(3)}>담은 {draft.vendors.length}곳 실측 날짜 고르기 →</Button>
         ) : null}
         {trade === "mokgong" ? <p className={s.note}>목공 실측 요청은 다음 묶음에서 열려요. 지금은 담아 두기만 해요.</p> : null}
       </>
     );
     if (step === 3) return (
       <>
-        {!vs.length && !deal && draft?.vendors.length ? <BoardVisitRequest pid={pid} draft={draft} today={today} busy={busy} act={act} /> : null}
+        {/* 아직 요청 안 한 담은 업체(서버 draft가 진행 중인 업체를 빼요)가 있으면, 먼저 한 곳에 보냈어도 계속 보여요 */}
+        {!deal && draft?.vendors.length ? <BoardVisitRequest pid={pid} draft={draft} today={today} busy={busy} act={act} /> : null}
         {!vs.length && !deal && !draft?.vendors.length ? <p className={s.note}>먼저 업체 칸에서 업체를 담아 주세요. <button type="button" className={s.boardLink} onClick={() => setTab(2)}>업체 칸으로</button></p> : null}
         {toPick.map((v) => <PickCard key={v.id} pid={pid} visitId={v.id} name={v.vendor_name} proposal={v.status === "proposed"} busy={busy} act={act} />)}
         {vs.filter((v) => !toPick.includes(v)).map((v) => <p key={v.id} className={s.note}>{v.vendor_name} · {VISIT_WORD[v.status] ?? "진행 중"}</p>)}
