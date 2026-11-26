@@ -352,7 +352,10 @@ def test_repick_after_accept_due_keeps_open_days(api):
     # 다시 고르는 화면에도 영업일 밖 · 쉬는 날은 빈 칸이 없어요
     view = api.get(f"/projects/{pid}/visits/{visit}").json()
     full = {x["day"] for x in view.get("full", [])}
-    assert shut.isoformat() in full and off.isoformat() in full
+    shown = {x["day"]: x for x in view["days"]}
+    for bad in (shut, off):
+        assert bad.isoformat() not in full  # 마감(다른 고객이 잡음)이 아니에요
+        assert not shown[bad.isoformat()]["am"] and not shown[bad.isoformat()]["pm"]
     for bad in (shut, off):
         r = api.post(
             f"/projects/{pid}/visits/{visit}/pick", json={"day": bad.isoformat(), "half": "pm"}
@@ -362,4 +365,91 @@ def test_repick_after_accept_due_keeps_open_days(api):
     r = api.post(
         f"/projects/{pid}/visits/{visit}/pick", json={"day": good.isoformat(), "half": "pm"}
     )
+    assert r.status_code == 200, r.text
+
+
+def _open_days_request(api, token, pid, vid):
+    """영업 요일 하나(shut)를 빼고 쉬는 날 하나(off)를 둔 뒤 첫 영업일 오전을 골라 요청"""
+    t = today_seoul()
+    days = [t + timedelta(days=i) for i in range(2, 10)]
+    first = days[0]
+    shut = next(x for x in days[1:] if x.weekday() != first.weekday())
+    off = next(x for x in days[1:] if x.weekday() == first.weekday() and x != first)
+    login(api, "maru@mitjip.test")
+    weekdays = sorted({x.weekday() for x in days} - {shut.weekday()})
+    r = api.put(
+        "/vendor/open-days", json={"open_weekdays": weekdays, "off_days": [off.isoformat()]}
+    )
+    assert r.status_code == 200, r.text
+    use(api, token)
+    r = api.post(
+        f"/projects/{pid}/visits",
+        json={
+            "trade": "dobae",
+            "vendor_ids": [vid],
+            "wish_start": days[0].isoformat(),
+            "wish_end": days[-1].isoformat(),
+            "picks": [{"vendor_id": vid, "day": first.isoformat(), "half": "am"}],
+        },
+    )
+    assert r.status_code == 201, r.text
+    good = next(x for x in days[1:] if x not in (shut, off) and x.weekday() != shut.weekday())
+    return visit_of(pid, vid), shut, off, good
+
+
+def test_change_after_booking_keeps_open_days(api):
+    """영업일에서 고른 실측을 확정한 뒤 날짜를 바꿀 때도 영업일 밖 · 쉬는 날은 막아요"""
+    token, pid, vid = setup(api)
+    visit, shut, off, good = _open_days_request(api, token, pid, vid)
+    login(api, "maru@mitjip.test")
+    assert api.post(f"/vendor/visits/{visit}/accept").status_code == 200
+    use(api, token)
+    for bad in (shut, off):
+        r = api.post(
+            f"/projects/{pid}/visits/{visit}/changes", json={"day": bad.isoformat(), "half": "pm"}
+        )
+        assert code(r) == (409, "slot_taken"), r.text
+    r = api.post(
+        f"/projects/{pid}/visits/{visit}/changes", json={"day": good.isoformat(), "half": "pm"}
+    )
+    assert r.status_code == 201, r.text
+
+
+def test_vendor_proposal_on_closed_day_still_books(api):
+    """업체가 직접 제안한 날은 업체가 정한 것이라 쉬는 날이어도 고객이 골라 확정할 수 있어요"""
+    token, pid, vid = setup(api)
+    visit, shut, _off, _good = _open_days_request(api, token, pid, vid)
+    login(api, "maru@mitjip.test")
+    r = api.post(
+        f"/vendor/visits/{visit}/propose",
+        json={
+            "reason_code": "other",
+            "note": "",
+            "slots": [{"day": shut.isoformat(), "half": "am"}],
+        },
+    )
+    assert r.status_code == 200, r.text
+    use(api, token)
+    r = api.post(
+        f"/projects/{pid}/visits/{visit}/proposal/pick",
+        json={"day": shut.isoformat(), "half": "am"},
+    )
+    assert r.status_code == 200, r.text
+    assert status(visit) == "booked"
+
+
+def test_vendor_window_answer_is_not_limited_by_open_days(api):
+    """업체가 기간을 직접 답한 요청(영업일에서 고르지 않음)은 전처럼 그 기간 안이면 골라요"""
+    from tests.test_v3_visit_kit import d, offered
+
+    f = offered(api)
+    shut = today_seoul() + timedelta(days=6)
+    login(api, f["email"])
+    weekdays = [x for x in range(7) if x != shut.weekday()]
+    assert (
+        api.put("/vendor/open-days", json={"open_weekdays": weekdays, "off_days": []}).status_code
+        == 200
+    )
+    use(api, f["token"])
+    r = api.post(f"/projects/{f['pid']}/visits/{f['visit']}/pick", json={"day": d(6), "half": "am"})
     assert r.status_code == 200, r.text

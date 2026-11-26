@@ -1971,6 +1971,11 @@ async def pick_view(
     if w is not None and v.vendor_id is not None:
         days = await open_days(s, v, w, await capacity_of(s, v.vendor_id), today)
     excluded = set(w.excluded or []) if w else set()
+    f = await open_day_facts(s, v)
+    if f is not None:  # 업체가 쉬는 날은 '마감(다른 고객이 잡음)'이 아니라 고를 수 없는 날이에요
+        excluded |= {
+            d.day for d in days if not slots.is_open_day(d.day, f.open_weekdays, f.off_days)
+        }
     full = [
         SlotOut(day=d.day, half=h)
         for d in days
