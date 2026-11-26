@@ -100,3 +100,10 @@
 .vdRows dt { font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
 .vdRows dd { margin: 0; font-size: var(--mj-type-label); }
 .vcol { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
+/* 재재 화면 창 · 보드 안 현장 정보(2026-11-26) */
+.site summary { min-height: 40px; display: flex; align-items: center; cursor: pointer; font-size: var(--mj-type-label); color: var(--mj-primary); font-weight: var(--mj-weight-semibold); }
+.chatWin { display: flex; flex-direction: column; min-height: 420px; max-height: 70dvh; min-width: 0; }
+.vlines { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: var(--mj-type-label); }
+.vlines li { display: flex; justify-content: space-between; gap: 12px; }
+.rv { display: flex; flex-direction: column; gap: 2px; padding: 8px 0; border-top: 1px solid var(--mj-line-soft); font-size: var(--mj-type-label); }
+.inlineLink { display: inline; padding: 0; border: 0; background: none; font: inherit; color: var(--mj-primary); font-weight: var(--mj-weight-semibold); text-decoration: underline; cursor: pointer; }
