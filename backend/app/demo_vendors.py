@@ -33,7 +33,7 @@ from sqlalchemy.orm import Session
 from app.auth import repository as auth_repo
 from app.auth import service as auth_service
 from app.auth.models import User
-from app.calc import deadline
+from app.calc import deadline, estimate
 from app.calc.common import from_entered
 from app.calc.schedule import workdays
 from app.config import settings
@@ -370,7 +370,13 @@ async def _profile(s, v: dict, user: User, admin: User, now: datetime) -> bool:
     if v["dobae_prices"]:
         sets = await vendor_repo.price_sets(s, [user.id], "dobae", ("confirmed",))
         if not any(x.rows_ver == vendor_service.V3 for x in sets):
-            data = ConfirmPricesIn(base_version=0, lines=[_v3_line(x) for x in v["dobae_prices"]])
+            # dev 단가 줄(calc.estimate.V3_ROWS)에 없는 v4 줄(material_hapji 등)은 빼고 넣어요
+            known = [
+                x
+                for x in v["dobae_prices"]
+                if x[0] in estimate.V3_BY_KEY and (x[1] != "included" or x[2] in estimate.V3_BY_KEY)
+            ]
+            data = ConfirmPricesIn(base_version=0, lines=[_v3_line(x) for x in known])
             with _at(at + timedelta(minutes=30)):
                 await vendor_service.confirm_prices_v3(s, user, "dobae", data)
             changed = True
