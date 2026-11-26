@@ -35,6 +35,7 @@ from app.quote import service as quote_service
 from app.quote.models import QUOTE_FILES_MAX, VAT_MODES, StandardQuote, StandardQuoteLine
 from app.quote.schemas import QuoteBriefOut, QuoteDraftIn
 from app.realtime import service as realtime
+from app.refprice import market_basis
 from app.shared.clock import SEOUL, now_utc
 from app.shared.errors import AppError, app_error
 from app.shared.ids import uuid7
@@ -219,6 +220,16 @@ def _estimate(
     return None if e.missing or not e.lines else e
 
 
+def _basis(std: StandardQuote, p: ProjectOut) -> int:
+    """비교 기준 표준견적서 금액: 시장 단가 견적(2026-11-26 팀 결정). 부분 공사처럼 셀 수 없으면 기존 표준견적서.
+    목공은 고객이 고른 목공 할 곳만 넣어요(화면 표준견적서와 같은 값)"""
+    mok = list(p.trades.mokgong.items) if p.trades.mokgong else None
+    got = market_basis.basis_total(
+        std.trade, std.area_m2, std.area_basis, std.grade, std.scope, mok
+    )
+    return got if got is not None else std.total
+
+
 def _vs(total: int, standard: int) -> tuple[Decimal | None, Direction | None]:
     if standard <= 0:
         return None, None
@@ -278,7 +289,7 @@ async def _cards(
             e = _estimate(trade, std, lines, prices.get(vid), grade) if V2_FALLBACK else None
             total = e.total if e else None
             set_id = prices[vid].set_id if e else None
-            pct = _vs(e.total, std.total)[0] if e else None
+            pct = _vs(e.total, _basis(std, p))[0] if e else None
         if tried.get(vid, 0) >= ATTEMPTS_MAX and vid not in live:
             state = "blocked_retry"
         elif v3 is not None and not v3.paper_ok:
@@ -370,7 +381,7 @@ async def vendors_for(
     rows = []
     for c in cards:
         e = _estimate(trade, std, lines, prices.get(c.vendor_id))
-        pct, way = _vs(e.total, std.total) if e else (None, None)
+        pct, way = _vs(e.total, _basis(std, p)) if e else (None, None)
         rows.append(
             VendorRowOut(
                 vendor_id=c.vendor_id,
@@ -395,7 +406,7 @@ async def vendors_for(
         trade=trade,
         region=p.region,
         area_name=p.sgg,
-        standard_total=std.total,
+        standard_total=_basis(std, p),
         slots_left=SLOTS - len(await repo.live(s, p.id, trade)),
         consent_ver=CONSENT_VER,
         vendors=rows,
@@ -473,7 +484,7 @@ async def vendor_detail(
     e = _estimate(trade, std, lines, cp)
     estimate = None
     if e is not None and cp is not None:
-        pct, way = _vs(e.total, std.total)
+        pct, way = _vs(e.total, _basis(std, p))
         estimate = EstimateDetailOut(
             **e.model_dump(),
             set_id=cp.set_id,
@@ -493,7 +504,7 @@ async def vendor_detail(
     return VendorDetailOut(
         project_id=p.id,
         trade=trade,
-        standard_total=std.total,
+        standard_total=_basis(std, p),
         profile=profile,
         verified_on=_day(profile.verified_at),
         years_open=years_since(profile.opened_on, today) if profile.opened_on else None,
@@ -1262,7 +1273,7 @@ async def compare(
     for v in rows:
         sent = versions.get(v.id, [])
         latest = sent[0] if sent else None
-        pct, way = _vs(latest.total, std.total) if latest else (None, None)
+        pct, way = _vs(latest.total, _basis(std, p)) if latest else (None, None)
         until = latest.valid_until if latest else None
         out.append(
             CompareRowOut(
@@ -1313,7 +1324,7 @@ async def compare(
     return CompareOut(
         project_id=p.id,
         trade=trade,
-        standard_total=std.total,
+        standard_total=_basis(std, p),
         formula_ver=std.formula_ver,
         price_ver=std.price_ver,
         computed_at=std.created_at,
