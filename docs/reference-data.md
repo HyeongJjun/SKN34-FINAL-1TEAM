@@ -77,6 +77,18 @@
 - 9열만 있는 CSV도 적재 · 검색된다(출처 기관 · 주소는 빈 값).
 - 원본이 파일 하나인 자료(로컬 책 등)는 JSON의 `docs[문서].sha256`에 원본 파일의 SHA-256을, 조각의 `pdf_page`에 원본 파일의 쪽을 담는다. 변환하면 CSV의 `source_sha256` · `page`가 그 값이 된다. 없으면 JSON 파일의 해시와 `page`를 쓴다(웹 자료를 묶은 상담 자료).
 
+### 시장 실견적 (`data/market_quotes/`)
+
+업체 실견적 줄을 공정별 CSV로 둔다. 시장 단가 견적(`refprice/market_book.py`)의 근거이며 `data_ingest`로 적재하지 않는다.
+
+| CSV | 내용 |
+| --- | --- |
+| `seoul12_2026/dobae_lines.csv` | 도배(1200) 1,595줄 |
+| `seoul12_2026/floor_lines.csv` | 바닥(1100) 1,627줄 |
+
+- 행에는 글 번호 · 평형 · 구만 두고 주소는 넣지 않는다. 금액은 원 단위 · 부가세 별도다.
+- 한 업체의 전체 철거 공사뿐이라 시장 기준으로 쓸 때는 다른 자료와 함께 맞춘다.
+
 ### 수동 적재와 검증
 
 아래는 `backend/`에서 공유 가능한 가이드북 한 파일을 처리하는 예다. 로컬 CLI는 `APP_ENV=local` 또는 `test`에서만 실행하며, PostgreSQL에 마이그레이션을 적용하고 터미널의 `DATABASE_URL`을 먼저 설정한다. 이 CLI는 루트 `.env`를 자동으로 읽지 않는다. 시공일지는 `--directory ../data/local --dataset sigong_ilji_rag`를 사용하며 CSV를 저장소에 복사하지 않는다.
