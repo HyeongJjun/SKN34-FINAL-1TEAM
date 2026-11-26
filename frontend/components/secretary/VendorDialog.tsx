@@ -24,11 +24,14 @@ export function VendorDialog({ pid, open, onClose, busy, act, full }: { pid: str
   const h = useModal(ref, !!open, onClose);
   const [v, setV] = useState<Detail | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  /** 담기 · 빼기 결과(대화 줄은 창 뒤라 안 보여요) */
+  const [said, setSaid] = useState<string | null>(null);
   useEffect(() => {
     if (!open) return;
     let live = true;
     setV(null);
     setErr(null);
+    setSaid(null);
     call<Detail>("GET", `/projects/${pid}/vendors/${encodeURIComponent(open.vendorId)}?trade=${open.trade}`)
       .then((x) => { if (live) setV(x); })
       .catch((e) => { if (live) setErr(errorText(e)); });
@@ -38,7 +41,9 @@ export function VendorDialog({ pid, open, onClose, busy, act, full }: { pid: str
   const name = v?.profile.biz_name ?? "업체";
   const t = open?.trade ?? "dobae";
   const picked = !!v?.shortlisted;
-  const est = v?.estimate_v3 ?? null;
+  // 도배는 v3 가견적(보드 · 목록과 같은 값). 서버가 v3를 도배만 세서 목공은 목록과 같은 기존 가견적(estimate)을 써요
+  const est = v?.estimate_v3 ?? v?.estimate ?? null;
+  const pct = v?.estimate_v3?.vs_standard_pct ?? null;
   return (
     <dialog ref={ref} className={d.dlg} aria-labelledby={`${id}-t`} onCancel={h.onCancel} onClick={h.onClick}>
       {open ? (
@@ -60,9 +65,8 @@ export function VendorDialog({ pid, open, onClose, busy, act, full }: { pid: str
                     </div>
                     <div className={s.vdPrice}>
                       <span className={s.note}>{TRADE_WORD[t]} 가견적 · 부가세 포함</span>
-                      {/* 가견적은 v3(보드 · 업체 목록과 같은 값). 옛 v2 가견적(estimate)은 쓰지 않아요 */}
                       <b className="mj-num">{est ? won(est.total) : "준비 중"}</b>
-                      {est ? <span className={s.note}>{compareText(est.vs_standard_pct) ?? ""}</span> : null}
+                      {pct != null ? <span className={s.note}>{compareText(pct) ?? ""}</span> : null}
                     </div>
                   </div>
                   <dl className={s.vdRows}>
@@ -88,12 +92,14 @@ export function VendorDialog({ pid, open, onClose, busy, act, full }: { pid: str
             ) : null}
           </div>
           <div className={d.actions}>
+            {said ? <p className={s.note} role="status">{said}</p> : null}
             <Button size="lg" variant="secondary" href={`/projects/${pid}/vendors/${encodeURIComponent(open.vendorId)}`}>리뷰 · 견적 줄 전체 보기</Button>
             {v && v.state === "ok" ? (
               <Button size="lg" variant={picked ? "secondary" : "primary"} disabled={!picked && full} busy={busy === open.vendorId}
                 onClick={() => act(open.vendorId, async () => {
                   await (picked ? call("DELETE", `/projects/${pid}/shortlist/${encodeURIComponent(open.vendorId)}?trade=${t}`) : call("POST", `/projects/${pid}/shortlist`, { trade: t, vendor_id: open.vendorId }));
                   setV((x) => (x ? { ...x, shortlisted: !picked } : x));
+                  setSaid(picked ? "뺐어요." : "담았어요. 창을 닫고 실측 칸에서 날짜를 골라요.");
                 }, `${TRADE_WORD[t]} ${name}${picked ? " 뺐어요" : " 담았어요"}`)}>
                 {picked ? "빼기" : full ? "3곳을 다 담았어요" : "담기"}
               </Button>
