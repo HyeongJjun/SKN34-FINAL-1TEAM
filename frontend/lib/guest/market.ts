@@ -21,7 +21,11 @@ export const GROUP_KO: Record<string, string> = {
 };
 const rateText = (r: number) => r.toLocaleString("ko-KR", { style: "percent", maximumFractionDigits: 2 });
 
-/** 기본 정보 → 시장 단가 계산 입력(표준견적서, #207). 목공 할 곳을 골랐으면 목공도 켜요. 벽지: economy = 합지, basic = 실크 */
+/** 고른 목공 할 곳 → 시장 단가 선택 항목(서버 quote.service MOK_OPTIONS와 같아요). 몰딩 · 걸레받이는 기본 목공에 들어 있어요 */
+const MOK_OPTIONS: Partial<Record<string, NonNullable<MqIn["options"]>[number]>> = { door: "doors", flatten: "board" };
+
+/** 기본 정보 → 시장 단가 계산 입력(표준견적서, #207). 목공 할 곳을 골랐으면 목공도 켜요. 벽지: economy = 합지, basic = 실크.
+ *  선택 항목은 고른 목공 할 곳만 켜요(null로 보내면 235건에서 흔한 방문 · 중문 · 단열까지 켜져 가입 뒤 금액과 달라져요) */
 export function toMarketIn(c: { area_m2: string | number; area_basis: string; grade: string | null; mokgong?: readonly string[] | null }): MqIn {
   return {
     area_m2: String(c.area_m2),
@@ -31,7 +35,7 @@ export function toMarketIn(c: { area_m2: string | number; area_basis: string; gr
     wallpaper: c.grade === "economy" ? "hapji" : "silk",
     door: "abs",
     jungmun: "slim3",
-    options: null,
+    options: c.mokgong?.length ? c.mokgong.flatMap((x) => (MOK_OPTIONS[x] ? [MOK_OPTIONS[x]] : [])) : null,
   } as MqIn;
 }
 
