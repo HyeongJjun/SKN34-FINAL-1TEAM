@@ -40,7 +40,8 @@ export function StandardDialog({ open, onClose, data, pid, locked, onEdit, onPla
             ) : (
               <StandardSheet view={view} changeHref={change} onChange={onEdit} />
             )}
-            {parts.length ? <TradePartSheets parts={parts} /> : null}
+            {/* 시장 단가 견적은 목공 줄도 들어 있어요(#207). 시장 단가가 없을 때만 공정별 줄을 따로 */}
+            {parts.length && !market ? <TradePartSheets parts={parts} /> : null}
             {locked ? <p className={s.note}>실측을 요청한 뒤라 조건은 잠겼어요. 조건 바꾸기에서 넣은 값만 볼 수 있어요.</p> : null}
           </div>
           <div className={s.actions}>
