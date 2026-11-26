@@ -70,4 +70,6 @@ export type StdView = {
   condition: string;
   /** 도배 밖 공정(#193 목공). 공정마다 계산 엔진 합계 그대로, 화면에서 더하지 않아요 */
   parts?: { trade: "mokgong"; lines: QuoteLine[]; supply: number; vat: number; total: number }[];
+  /** 공정이 둘 이상이면 모든 공정 합계(서버 StandardOut.supply · vat · total 그대로). 큰 금액에 써요 */
+  sum?: { supply: number; vat: number; total: number };
 };
