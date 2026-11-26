@@ -20,7 +20,7 @@ import { Segmented } from "@/components/ui/Segmented";
 import type { Region } from "@/lib/api/project";
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { dateShort } from "@/lib/format";
-import { EMPTY_DRAFT, FACES, GRADE_WORD, SPACES, checkDraft, placeText, pyeongToM2, scopeText, toHomeInfo, type Face, type InfoDraft, type InfoErrors, type SpaceKind } from "@/lib/guest/info";
+import { EMPTY_DRAFT, FACES, GRADE_WORD, PYEONG_M2, SPACES, checkDraft, placeText, pyeongToM2, scopeText, toHomeInfo, type Face, type InfoDraft, type InfoErrors, type SpaceKind } from "@/lib/guest/info";
 import { clearGuest, draftOf, readGuest, writeGuest } from "@/lib/guest/store";
 import { termByName, termHref } from "@/lib/guide";
 import { DateSheet } from "./DateSheet";
@@ -101,7 +101,7 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
   function switchUnit(v: string) {
     const next = v === "py" ? "py" : "m2";
     if (next === unit) return;
-    if (next === "py") { const n = Number(d.area); setPy(d.area && Number.isFinite(n) ? String(Math.round(n / 3.3058)) : ""); }
+    if (next === "py") { const n = Number(d.area); setPy(d.area && Number.isFinite(n) ? String(Math.round((n / PYEONG_M2) * 10) / 10) : ""); }
     setUnit(next);
   }
 
@@ -185,7 +185,8 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
                   unit={unit === "py" ? "평" : "㎡"} value={unit === "py" ? py : d.area} onChange={(e) => setArea(e.target.value)} />
                 <Segmented legend="면적 단위" hideLegend value={unit} onChange={switchUnit} options={[{ value: "m2", label: "㎡" }, { value: "py", label: "평" }]} />
               </div>
-              {areaM2 ? <p className={s.mute}>믿집 계산 {py.trim()}평 × 3.3058 = <b className="mj-num">{areaM2}㎡</b></p> : null}
+              {/* 보이는 ㎡는 실제로 보낼 값(d.area)이에요. ㎡로 넣고 평으로 바꾸면 평은 소수 한 자리로 어림해요 */}
+              {areaM2 && d.area ? <p className={s.mute}>믿집 계산 {py.trim()}평 × {PYEONG_M2} ≈ <b className="mj-num">{d.area}㎡</b></p> : null}
             </Row>
             <Row label="공사할 때 집" error={eHome.occupied}>
               <ChoiceChips legend="공사할 때 집" hideLegend value={d.occupied === null ? null : d.occupied ? "yes" : "no"} onChange={(v) => set({ occupied: v === "yes" })}
