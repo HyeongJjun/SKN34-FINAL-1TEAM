@@ -52,5 +52,6 @@ export async function getStandardView(shell: ProjectShell): Promise<StdView | nu
   const days = q.days ?? (await getPlanView(shell.id).then((p) => (p ? String(p.work_days) : null)).catch(() => null));
   const fit = q.budget_fit ?? (q.budget && q.budget.status !== "open" ? q.budget.status : null);
   const parts = q.trades.filter((x) => x.trade === "mokgong").map((x) => ({ trade: "mokgong" as const, lines: toQuoteLines(x.lines, "full"), supply: x.supply, vat: x.vat, total: x.total }));
-  return { scope, lines: toQuoteLines(t.lines, scope), supply: t.supply, vat: t.vat, total: t.total, days, budget: budgetText(fit, shell.budgetWon), condition: cond, parts };
+  return { scope, lines: toQuoteLines(t.lines, scope), supply: t.supply, vat: t.vat, total: t.total, days, budget: budgetText(fit, shell.budgetWon), condition: cond, parts,
+    sum: parts.length ? { supply: q.supply, vat: q.vat, total: q.total } : undefined };
 }
