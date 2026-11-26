@@ -117,3 +117,8 @@
 .waitBar::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 35%; border-radius: 999px; background: var(--mj-primary); animation: jjWait 1.6s ease-in-out infinite alternate; }
 @keyframes jjWait { from { transform: translateX(0); } to { transform: translateX(186%); } }
 @media (prefers-reduced-motion: reduce) { .waitBar::after { animation: none; width: 100%; opacity: 0.4; } }
+
+/* 아직 담은 업체가 없을 때 '담기' 단추 짚기(정석 피드백 9) */
+.pickHint { outline: 2px solid var(--mj-primary); outline-offset: 2px; animation: pickHint 1.6s ease-in-out 3; }
+@keyframes pickHint { 50% { outline-offset: 5px; } }
+@media (prefers-reduced-motion: reduce) { .pickHint { animation: none; } }

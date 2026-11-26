@@ -21,7 +21,7 @@ import { AiAnswer } from "@/components/ai/AiAnswer";
 import { PreWorkCheck } from "@/components/project/PreWorkCheck";
 import { donePhotoHref } from "@/components/schedule/v3text";
 import { Button } from "@/components/ui/Button";
-import { iGa as iga } from "@/components/vendors/text";
+import { gwaWa, iGa as iga } from "@/components/vendors/text";
 import { askAi, newClientKey, type AiButton, type AiTurnOut } from "@/lib/api/chat";
 import type { ApiCompare, ApiOverview, ApiSchedule } from "@/lib/api/schedule";
 import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/lib/api/visit";
@@ -228,7 +228,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     cards.push({ key: "vendors", node: (
       <>
         <p>{ready.length ? <>이 조건으로 가견적을 낸 업체가 <b>{ready.length}곳</b> 있어요.</> : "이 지역에 가견적을 낸 업체가 아직 없어요."} <b>가견적</b>은 업체가 확인한 단가로 믿집이 계산한 <b>실측 전 금액</b>이에요.</p>
-        <p>{picked.length ? `${picked.length}곳을 담았어요. 내 도배 플랜 실측 칸에서 날짜를 골라 바로 요청해요.` : "내 도배 플랜에서 마음에 드는 곳을 담아 주세요."}</p>
+        {/* 다음에 누를 단추를 말해요(정석 피드백 9) */}
+        <p>{picked.length ? `${picked.length}곳을 담았어요. 내 도배 플랜 실측 칸에서 날짜를 골라 바로 요청해요.` : <>내 도배 플랜에서 마음에 드는 곳을 담아 주세요. 업체 줄의 <b>담기</b> 단추를 누르면 돼요.</>}</p>
         {picked.length ? go(3, "실측 날짜 고르기") : go(2)}
       </>
     ) });
@@ -339,10 +340,12 @@ export function ProjectFlow({ data }: { data: FlowData }) {
         {mokVendors && !mvs.length && mokDraft?.vendors.length ? <BoardVisitRequest pid={pid} trade="mokgong" draft={mokDraft} today={today} busy={busy} act={act} /> : null}
         {mokVendors && !mvs.length && !mokDraft?.vendors.length ? <p className={s.note}>목공 업체를 담으면 여기서 목공 실측 날짜도 골라요. <button type="button" className={s.boardLink} onClick={() => { setTrade("mokgong"); setTab(2); }}>목공 업체 칸으로</button></p> : null}
         {toPick.map((v) => <PickCard key={v.id} pid={pid} visitId={v.id} name={v.vendor_name} proposal={v.status === "proposed"} busy={busy} act={act} />)}
-        {both.filter((v) => !toPick.includes(v)).map((v) => <p key={v.id} className={s.note}>{mokVendors ? `${TRADE_WORD[v.trade as Trade] ?? ""} ` : ""}{v.vendor_name} · {VISIT_WORD[v.status] ?? "진행 중"}</p>)}
+        {/* 업체마다 카드 하나: 상태 · 큰 채팅 단추 · 취소(정석 피드백 10: 채팅 단추가 작아 찾기 어려움) */}
         {both.map((v) => (
-          <div key={`c${v.id}`} className={s.row}>
-            <button type="button" className={s.boardLink} onClick={() => setWin({ kind: "chat", vendorName: v.vendor_name })}>{v.vendor_name} 채팅</button>
+          <div key={`c${v.id}`} className={s.card}>
+            <h4>{mokVendors ? `${TRADE_WORD[v.trade as Trade] ?? ""} ` : ""}{v.vendor_name}</h4>
+            {!toPick.includes(v) ? <p className={s.note}>{VISIT_WORD[v.status] ?? "진행 중"}</p> : null}
+            <Button size="lg" block icon="chat" onClick={() => setWin({ kind: "chat", vendorName: v.vendor_name })}>{gwaWa(v.vendor_name)} 채팅하기</Button>
             {/* 답 전 요청은 '요청 취소', 잡힌 실측은 '실측 취소'(UC-VND-06). 실측을 다녀간 뒤에는 취소하지 않아요 */}
             {["requested", "offered", "picked", "proposed", "booked"].includes(v.status) ? (
               <button type="button" className={s.boardLink} onClick={() => setCancel({ id: v.id, name: v.vendor_name, request: v.status !== "booked" })}>{v.status === "booked" ? "실측 취소" : "요청 취소"}</button>
@@ -509,6 +512,8 @@ function VendorRows({ list, query, hi, trade, pid, busy, act, onOpen }: { list: 
     .filter((v) => !key || norm(`${v.name} ${v.sgg}`).includes(key))
     .sort((a, b) => Number(hi.includes(b.vendor_id)) - Number(hi.includes(a.vendor_id)));
   const full = list.filter((v) => v.shortlisted).length >= MAX_PICK;
+  // 아직 하나도 안 담았으면 '담기' 단추를 테두리로 짚어 줘요(정석 피드백 9)
+  const none = !list.some((v) => v.shortlisted);
   const first = useRef<HTMLDivElement>(null);
   const [all, setAll] = useState(false);
   // 강조가 바뀌면 그 업체가 보이게 옮겨요
@@ -524,7 +529,7 @@ function VendorRows({ list, query, hi, trade, pid, busy, act, onOpen }: { list: 
             <div className={s.vcol}><button type="button" className={s.vname} onClick={() => onOpen(v.vendor_id)} aria-label={`${v.name} 자세히`}>{v.name} ›</button>{on ? <span className={s.hiTag}>재재가 말한 업체</span> : null}<span className={s.note}>{v.rating ? `별 ${v.rating} · ` : ""}후기 {v.review_count} · 시공 {v.done_count}</span></div>
             <div className={s.row}>
               <b className="mj-num">{v.estimate_total != null ? won(v.estimate_total) : "—"}</b>
-              <Button size="sm" variant={v.shortlisted ? "secondary" : "weak"} busy={busy === v.vendor_id} disabled={!v.shortlisted && full}
+              <Button size="sm" variant={v.shortlisted ? "secondary" : "weak"} className={none ? s.pickHint : undefined} busy={busy === v.vendor_id} disabled={!v.shortlisted && full}
                 onClick={() => act(v.vendor_id, () => v.shortlisted ? call("DELETE", `/projects/${pid}/shortlist/${enc(v.vendor_id)}?trade=${trade}`) : call("POST", `/projects/${pid}/shortlist`, { trade, vendor_id: v.vendor_id }), `${TRADE_WORD[trade]} ${v.name}${v.shortlisted ? " 뺐어요" : " 담았어요"}`)}>
                 {v.shortlisted ? "빼기" : "담기"}
               </Button>

@@ -5,6 +5,7 @@
 // 하나면 상자 전체가 그 할 일로 가는 링크예요. 누를 곳은 모두 40px 이상(단계 칸 · 작은 단계 알약 · 할 일 상자).
 // 머리(AppHeader) 바로 아래, 다른 칸으로 감싸지 않게 둬요(붙는 띠라서). 단계 이름 · 할 일 글은 부르는 쪽이 9판 말로 넘겨요.
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { PROJECT_STEPS, type StepItem } from "@/components/ui/Steps";
@@ -34,6 +35,8 @@ export function ProjectBand({ name, href, steps = PROJECT_STEPS, current, sub, t
   sticky?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  // 재재 화면에서는 이미 재재와 대화 중이라 링크를 숨겨요(정석 피드백 9)
+  const onChat = usePathname()?.endsWith("/assistant") ?? false;
   const box = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
   const id = useId();
@@ -58,7 +61,7 @@ export function ProjectBand({ name, href, steps = PROJECT_STEPS, current, sub, t
       <div className={s.in}>
         <div className={s.pjBox}>
           <Link className={s.pj} href={href}><b>{name}</b></Link>
-          <Link className={s.chat} href={`${href}/assistant`}>재재와 대화 ›</Link>
+          {onChat ? null : <Link className={s.chat} href={`${href}/assistant`}>재재와 대화 ›</Link>}
           <p className={s.short}><span className="mj-num">지금 {current + 1}/{steps.length}</span> · {subNow ?? nowLabel}</p>
         </div>
         <div className={s.stp}>
