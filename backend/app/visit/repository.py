@@ -114,6 +114,16 @@ def _last_event():
     )
 
 
+async def has_event(s: AsyncSession, visit_id: uuid.UUID, code: str) -> bool:
+    """이 요청에 그 code 이력이 있나"""
+    q = (
+        select(VisitEvent.id)
+        .where(VisitEvent.visit_id == visit_id, VisitEvent.code == code)
+        .limit(1)
+    )
+    return (await s.execute(q)).first() is not None
+
+
 async def last_events(s: AsyncSession, visit_ids: list[uuid.UUID]) -> dict[uuid.UUID, datetime]:
     """요청마다 마지막 상태가 바뀐 때 (닫힌 날 · 견적서를 보낸 날)"""
     if not visit_ids:

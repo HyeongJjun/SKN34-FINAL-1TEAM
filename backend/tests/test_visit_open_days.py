@@ -294,3 +294,72 @@ def wish() -> dict:
         "wish_start": (t + timedelta(days=2)).isoformat(),
         "wish_end": (t + timedelta(days=9)).isoformat(),
     }
+
+
+def test_repick_after_accept_due_keeps_open_days(api):
+    """영업일에서 고른 요청은 업체가 수락하지 않아 다시 골라도 영업 요일 · 쉬는 날 밖은 막아요(#214 리뷰)"""
+    import asyncio
+    import uuid
+    from datetime import datetime
+
+    from app.db import SessionLocal
+    from app.jobs.models import Job
+    from app.visit import jobs as visit_jobs
+
+    token, pid, vid = setup(api)
+    t = today_seoul()
+    days = [t + timedelta(days=i) for i in range(2, 10)]
+    first = days[0]
+    shut = next(x for x in days[1:] if x.weekday() != first.weekday())
+    off = next(x for x in days[1:] if x.weekday() == first.weekday() and x != first)
+    login(api, "maru@mitjip.test")
+    weekdays = sorted({x.weekday() for x in days} - {shut.weekday()})
+    r = api.put(
+        "/vendor/open-days", json={"open_weekdays": weekdays, "off_days": [off.isoformat()]}
+    )
+    assert r.status_code == 200, r.text
+    use(api, token)
+    r = api.post(
+        f"/projects/{pid}/visits",
+        json={
+            "trade": "dobae",
+            "vendor_ids": [vid],
+            "wish_start": days[0].isoformat(),
+            "wish_end": days[-1].isoformat(),
+            "picks": [{"vendor_id": vid, "day": first.isoformat(), "half": "am"}],
+        },
+    )
+    assert r.status_code == 201, r.text
+    visit = visit_of(pid, vid)
+    until = query("select until from visit_holds where visit_id = $1::uuid", visit)[0]["until"]
+
+    async def go(now: datetime):
+        job = Job(
+            id=uuid.uuid4(),
+            kind="visit_accept_due",
+            ref_id=uuid.UUID(visit),
+            run_at=now,
+            dedup_key="t",
+            status="running",
+        )
+        async with SessionLocal() as s:
+            out = await visit_jobs.HANDLERS["visit_accept_due"](s, job, now)
+            await s.commit()
+            return out
+
+    asyncio.run(go(until + timedelta(minutes=1)))
+    assert status(visit) == "offered"
+    # 다시 고르는 화면에도 영업일 밖 · 쉬는 날은 빈 칸이 없어요
+    view = api.get(f"/projects/{pid}/visits/{visit}").json()
+    full = {x["day"] for x in view.get("full", [])}
+    assert shut.isoformat() in full and off.isoformat() in full
+    for bad in (shut, off):
+        r = api.post(
+            f"/projects/{pid}/visits/{visit}/pick", json={"day": bad.isoformat(), "half": "pm"}
+        )
+        assert code(r) == (409, "slot_taken"), r.text
+    good = next(x for x in days[1:] if x not in (shut, off) and x.weekday() != shut.weekday())
+    r = api.post(
+        f"/projects/{pid}/visits/{visit}/pick", json={"day": good.isoformat(), "half": "pm"}
+    )
+    assert r.status_code == 200, r.text

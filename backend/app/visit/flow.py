@@ -720,6 +720,10 @@ async def _pick(
     if deadline.is_over(now, w.pick_due_at):
         raise app_error("expired", "날짜를 고르는 기한이 지났어요.")
     _in_window(w, data.day, data.half, svc.today_of(now))
+    # 영업일에서 고른 요청은 수락 기한이 지나 다시 골라도 영업일 안에서만
+    f = await svc.open_day_facts(s, v)
+    if f is not None and not slots.is_open_day(data.day, f.open_weekdays, f.off_days):
+        raise app_error("slot_taken", "그 업체가 받을 수 없는 날이에요. 다른 날을 골라 주세요.")
     others = [o.id for o in await repo.of_project(s, v.project_id, None) if o.id != v.id]
     if any(
         (h.day, h.half) == (data.day, data.half)
