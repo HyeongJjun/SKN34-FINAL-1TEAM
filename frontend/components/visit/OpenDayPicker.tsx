@@ -17,8 +17,10 @@ function plusDays(iso: string, n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-export function OpenDayPicker({ projectId, vendorId, name, today, value, onChange }: {
+export function OpenDayPicker({ projectId, vendorId, name, today, value, onChange, limit = 10 }: {
   projectId: string; vendorId: string; name: string; today: string; value: DayPick | null; onChange: (v: DayPick | null) => void;
+  /** 처음 보이는 날 수(재재 보드는 짧게) */
+  limit?: number;
 }) {
   const [days, setDays] = useState<Days["days"] | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -36,7 +38,7 @@ export function OpenDayPicker({ projectId, vendorId, name, today, value, onChang
   if (err) return <p className={s.note} role="alert">{err}</p>;
   if (!days) return <p className={s.note}>{name} 영업일을 불러오는 중이에요</p>;
   if (!days.length) return <p className={s.note}>앞으로 6주 안에 {name}이 받을 수 있는 날이 없어요. 채팅으로 물어보거나 다른 업체를 골라 주세요.</p>;
-  const shown = more ? days : days.slice(0, 10);
+  const shown = more ? days : days.slice(0, limit);
   return (
     <div className={s.wrap}>
       <ul className={s.days} aria-label={`${name} 실측 가능한 날`}>
@@ -61,7 +63,7 @@ export function OpenDayPicker({ projectId, vendorId, name, today, value, onChang
           );
         })}
       </ul>
-      {days.length > 10 ? <button type="button" className={s.more} onClick={() => setMore((v) => !v)}>{more ? "접기" : `날짜 더 보기 (${days.length - 10}일)`}</button> : null}
+      {days.length > limit ? <button type="button" className={s.more} onClick={() => setMore((v) => !v)}>{more ? "접기" : `날짜 더 보기 (${days.length - limit}일)`}</button> : null}
     </div>
   );
 }
