@@ -68,3 +68,6 @@ a.pi:hover { background: var(--mj-fill); color: var(--mj-text); }
   .subs a:focus-visible { outline: none; }
   .subs li:has(a:focus-visible) { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: 2px; }
 }
+/* 어느 공사 화면에서든 재재 화면으로 돌아가는 길 */
+.chat { font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); color: var(--mj-link); text-decoration: none; }
+.chat:hover { text-decoration: underline; }

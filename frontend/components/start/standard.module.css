@@ -28,3 +28,13 @@
 .askBtn { display: inline-flex; align-items: center; min-height: var(--mj-hit); padding: 0 10px; border: 0; border-radius: var(--mj-radius-field); background: none; color: var(--mj-link); font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); cursor: pointer; white-space: nowrap; }
 .askBtn:hover { background: var(--mj-primary-weak); }
 .saved { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 6px; color: var(--mj-text-mute); font-size: var(--mj-type-caption); }
+
+/* 로그인 전 표준견적서: 왼쪽 재재 대화 · 오른쪽 견적서(재재 공사 화면과 같은 배치) */
+.split { display: flex; flex-direction: column-reverse; gap: 16px; min-width: 0; }
+.sheetCol { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.chat { display: flex; flex-direction: column; min-width: 0; border-radius: var(--mj-radius-group); background: var(--mj-surface); box-shadow: var(--mj-group-edge); padding-bottom: 12px; }
+.chatNote { margin: 8px 16px 0; font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+@media (min-width: 1024px) {
+  .split { display: grid; grid-template-columns: minmax(340px, 420px) minmax(0, 1fr); align-items: start; }
+  .chat { position: sticky; top: calc(var(--mj-sticky-top, 64px) + 16px); }
+}
