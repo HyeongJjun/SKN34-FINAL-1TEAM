@@ -314,7 +314,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
               <div key={r.visit_id} className={s.card}>
                 <h4>{r.vendor_name}</h4>
                 <b className="mj-num">{r.latest!.total != null ? won(r.latest!.total) : "—"}</b>
-                <span className={s.note}>실측 견적서 · 확정 전 금액{/* %는 서버 비교 기준(공공 기준 표준견적서 compare.standard_total) 값이에요. 위 대화의 시장 단가 표준견적서와 기준이 달라 기준 금액을 같이 보여요(11/26 QA) */}{r.vs_standard && r.vs_direction && r.vs_direction !== "same" && compare ? ` · 공공 기준 표준견적서 ${won(compare.standard_total)}보다 ${r.vs_standard}% ${r.vs_direction === "more" ? "높아요" : "낮아요"}` : ""}</span>
+                <span className={s.note}>실측 견적서 · 확정 전 금액{r.vs_standard && r.vs_direction && r.vs_direction !== "same" ? ` · 표준견적서보다 ${r.vs_standard}% ${r.vs_direction === "more" ? "높아요" : "낮아요"}` : ""}</span>
                 {r.estimate_total != null ? <span className={s.note}>가견적(실측 전) {won(r.estimate_total)}</span> : null}
                 <Button size="sm" busy={busy === `c${r.visit_id}`} disabled={r.seen_ver == null}
                   onClick={() => act(`c${r.visit_id}`, () => call("POST", `/projects/${pid}/quotes/${enc(r.visit_id)}/confirm`, { seen_ver: r.seen_ver }), `${euro(r.vendor_name)} 확정했어요`)}>{euro(r.vendor_name)} 확정</Button>

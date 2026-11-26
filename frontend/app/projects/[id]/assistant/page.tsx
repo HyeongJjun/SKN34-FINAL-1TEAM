@@ -31,8 +31,8 @@ export default async function SecretaryPage({ params, searchParams }: { params: 
   ]);
   // 표준견적서 창: 내 공사 표준견적서 화면과 같은 값(전체 도배는 시장 단가, 아니면 공공 기준)
   const view = shell ? await safe(getStandardView(shell)) : null;
-  // 목공도 하는 공사는 시장 단가(도배만)를 쓰지 않고 공정 합계가 있는 표준견적서로
-  const std = view ? { view, market: shell?.mock || view.parts?.length ? null : market } : null;
+  // 표준견적서는 업체 견적서 시장 단가(#207). 목공을 고른 공사는 서버가 목공도 켜서 줘요. 부분 공사처럼 없으면 기존 표준견적서
+  const std = view ? { view, market: shell?.mock ? null : market } : null;
   return (
     <>
       <AppHeader only="phone" phone={{ title: "재재와 진행하기", back: `/projects/${encodeURIComponent(p.id)}` }} />
