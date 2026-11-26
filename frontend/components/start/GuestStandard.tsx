@@ -30,7 +30,7 @@ export function GuestStandard({ mock }: { mock: boolean }) {
   const [st, setSt] = useState<State>({ kind: "loading" });
   const [join, setJoin] = useState(false);
   const [ask, setAsk] = useState(false);
-  /** 목공도 골랐어요(#193): 손님 계산은 도배만 세고, 목공 줄은 가입 뒤 내 공사 표준견적서에 나와요 */
+  /** 목공도 골랐어요(#193): 시장 단가 표준견적서에 목공도 같이 세요(#207) */
   const [mok, setMok] = useState(false);
 
   const load = useCallback(async () => {
@@ -96,7 +96,6 @@ export function GuestStandard({ mock }: { mock: boolean }) {
             </div>
           ) : null}
           {mok ? <TradeOrder has={["dobae", "mokgong"]} /> : null}
-          {mok ? <p className={s.guestInfo}>여기 금액은 도배만이에요. 목공 줄은 가입하면 내 공사 표준견적서에 공정별로 같이 나와요.</p> : null}
           {ok ? <StandardSheet view={ok} changeHref="/start" /> : null}
           {st.kind === "market" ? (
             <>
