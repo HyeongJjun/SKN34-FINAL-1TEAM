@@ -619,6 +619,8 @@ async def again(
             VisitPhoto(visit_id=v.id, file_id=x.file_id, sort=x.sort, label=x.label) for x in photos
         )
         await _asked(s, v, user, now)
+        # 앞 요청이 끝나 읽기만이던 (공사, 업체) 채팅을 새 요청에 잇고 다시 열어요(차단 · 관리자로 닫힌 것은 그대로)
+        await _open_threads(s, [v])
         await s.commit()
     except IntegrityError as exc:
         await s.rollback()
