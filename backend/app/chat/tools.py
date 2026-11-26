@@ -122,7 +122,7 @@ async def _standard(s: AsyncSession, user: User, project_id: uuid.UUID) -> Stand
     except AppError:
         return None
     # 전체 도배는 화면(/projects/{id}/standard)처럼 시장 단가 견적을 쓴다. 같은 함수라 금액이 같다
-    m = quote_service.market_of(st)
+    m = await quote_service.market_for(s, user, project_id)  # 고른 목공 할 곳까지 같은 계산
     if m is not None:
         return market_facts(m[0])
     lines = [
