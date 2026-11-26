@@ -23,7 +23,7 @@
 
 원본 PDF·엑셀은 프로젝트 폴더 밖에서 별도로 보관하고 저장소에 올리지 않는다. `data/raw/`는 사용하지 않으며 Git 추적에서도 제외한다. 저장소에는 `data/processed/`의 전처리 결과를 두고, 출처 파일명·페이지·해시 등 추적 정보는 유지한다.
 
-`data/processed/`에서 관리하는 공유 자료는 CSV 13개, 55,652행(정형 4개·54,936행, RAG 9개·716행)이다. 가이드북은 59행이며, 시공일지는 포함하지 않는다. `data/consult/consult_knowledge_rag.csv`는 별도 상담 자료로 이 집계에 포함하지 않는다. CSV를 추가하거나 교체하면 **이 문서의 집계·출처 표**와 [검색 평가의 자료 구성](../evaluation/rag/README.md)을 검토한다. 프로젝트 README에는 수치를 중복 기재하지 않는다.
+`data/processed/`에서 관리하는 공유 자료는 CSV 14개, 55,674행(정형 4개·54,936행, RAG 10개·738행)이다. 가이드북은 기존 59행과 바닥재 22행이며, 시공일지는 포함하지 않는다. `data/consult/consult_knowledge_rag.csv`는 별도 상담 자료로 이 집계에 포함하지 않는다. CSV를 추가하거나 교체하면 **이 문서의 집계·출처 표**와 [검색 평가의 자료 구성](../evaluation/rag/README.md)을 검토한다. 프로젝트 README에는 수치를 중복 기재하지 않는다.
 
 | CSV | 데이터 행 테이블 | 상태 처리 |
 | --- | --- | --- |
@@ -33,6 +33,7 @@
 | `06_construction_wages.csv` | `ref_wage_rows` | 적재·활성화 시 `False` 유지 |
 | `04`, `05`, `07`~`12`의 `*_rag.csv` 8개 | `rag_chunks` | 새 버전 적재 시 `False`, 검증·활성화 후 `True` |
 | `13_interior_guide_book_rag.csv` 59행 | `rag_chunks` | 새 버전 적재 시 `False`, 검증·활성화 후 `True` |
+| `14_interior_guide_floor_rag.csv` 22행 | `rag_chunks` | 새 버전 적재 시 `False`, 검증·활성화 후 `True` |
 
 ### 기준 자료 출처와 수집 예시
 
@@ -59,6 +60,7 @@
 | --- | --- | --- |
 | `data/consult/consult_knowledge_rag.csv` | `data/consult/rag5.json` → `python -m app.knowledge.json_csv` | Git에서 관리 |
 | `data/processed/13_interior_guide_book_rag.csv` | 안내서 전처리 결과 59행 | 공유 허용, Git에서 관리 |
+| `data/processed/14_interior_guide_floor_rag.csv` | 바닥재 가이드북 PDF 5면에서 전처리한 22행 | Git에서 관리 |
 | `data/local/sigong_ilji_rag.csv` | 시공일지 쪽별 JSON → 쪽 경계 합치기 → CSV 변환, 검토본 1,156행 | 로컬 전용, Git에 올리지 않음 |
 
 - 원본 PDF·엑셀은 저장소 밖에 보관한다([PR #103](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN34-FINAL-1TEAM/pull/103)). 시공일지의 이미지·쪽별 JSON·작업용 CSV는 Git에서 제외한 `data/local/`에 둔다. 전처리 방법은 [시공일지 규칙](../data/sigong_ilji/SPEC.md)과 [읽기 지시](../data/sigong_ilji/READER.md)를 따른다.

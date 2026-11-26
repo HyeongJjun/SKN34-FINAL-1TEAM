@@ -10,7 +10,7 @@
   - `from`: 질문 출처 (`book` 시공 안내서, `mokgong_qa:q-…` 팀 목공 고객 질문, `written` 직접 씀)
 - `questions_sigong.jsonl`: 시공일지(로컬 자료)로 답할 질문 60개 (도배 15 · 목공 15 · 공통 30, dev 40 · held-out 20). 책 조각을 보고 고객 말로 새로 썼다. 정답 후보 = 시공일지 있음 · 없음 · hints 뺌 세 검색 위 12개 합집합 + 쓸 때 본 조각(1,311개, 상담 · 시방서 조각 포함)
 - `gold_sigong.jsonl`: 기존 두 세트 dev 질문에 시공일지 조각을 따로 판정한 정답 225개 `{set, qid, ref, grade, why}`. 시공일지를 넣은 검색 위 10개에 든 시공일지 조각 953개를 판정했다. 기존 질문 파일은 바꾸지 않고 `metrics.py --extra-gold`로 더한다
-- `corpus.py`: 서버 적재용 CSV로 말뭉치 만들기. 기본은 **`data/processed/*_rag.csv` + `data/consult/*_rag.csv`**이고 `data/local/` 폴더가 있으면 **기본 실행에도** 그 안의 `*_rag.csv`(git 제외)를 추가한다. `--no-local`을 주면 `data/local/`만 제외한다. **공유 가이드북 59행**은 `data/processed/13_interior_guide_book_rag.csv`에 이미 있어 기본·`--no-local` 양쪽에 포함된다. 시공일지는 별도의 로컬 전용 `data/local/sigong_ilji_rag.csv`다. 번호 규칙은 `backend/app/knowledge/sources.py`, 결과는 `.cache/`(git 제외)
+- `corpus.py`: 서버 적재용 CSV로 말뭉치 만들기. 기본은 **`data/processed/*_rag.csv` + `data/consult/*_rag.csv`**이고 `data/local/` 폴더가 있으면 **기본 실행에도** 그 안의 `*_rag.csv`(git 제외)를 추가한다. `--no-local`을 주면 `data/local/`만 제외한다. **공유 가이드북**은 `data/processed/13_interior_guide_book_rag.csv` 59행과 `data/processed/14_interior_guide_floor_rag.csv` 22행이며, 기본·`--no-local` 양쪽에 포함된다. 시공일지는 별도의 로컬 전용 `data/local/sigong_ilji_rag.csv`다. 번호 규칙은 `backend/app/knowledge/sources.py`, 결과는 `.cache/`(git 제외)
 - `rank_server.py`: 서버 검색(`backend/app/knowledge/bm25.py`)으로 질문마다 순위 뽑기 (DB 없이, 의미 검색 없이)
 - `dense.py`: 질문 임베딩 → DB(pgvector)에서 의미 검색 순위 (`.cache/dense.json`, 유료: 질문 90개 약 2천 토큰)
 - `hybrid.py`: 키워드 + 의미 검색 합치기 무게를 dev로 고르고(`--final`로 held-out 한 번) 확인

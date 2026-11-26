@@ -2,10 +2,9 @@
 // 배치: 넓은 웹(≥1280) 왼쪽 글 목록 · 본문 · 오른쪽 '이 글에서', 웹(≥1024) 목록 · 본문, 그 아래는 본문만(위 '이 글에서' 펼침 · 아래 '백과 글 더 보기').
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { CHECKED, NAV_GROUPS, readMinutes, termByName, termHref, type Article } from "@/lib/guide";
+import { CHECKED, NAV_GROUPS, readMinutes, termByName, type Article } from "@/lib/guide";
 import type { Block } from "@/lib/guide/types";
 import { ArticleToc } from "./ArticleToc";
-import { CopyChecks } from "./CopyChecks";
 import { GuideNav } from "./GuideNav";
 import { NavScroll } from "./NavScroll";
 import { Rich } from "./Rich";
@@ -109,7 +108,6 @@ export function ArticleView({ a, canAsk }: { a: Article; canAsk: boolean }) {
           <section id="a-checks" className={s.sec} aria-labelledby="a-checks-h">
             <h2 id="a-checks-h">확인할 것</h2>
             <ul id="a-checks-list" className={s.checks}>{a.checks.map((x, i) => <li key={i}><span><Rich text={x} /></span></li>)}</ul>
-            <CopyChecks lines={a.checks.map((x) => x.replace(/\[\[([^\]]+)\]\]/g, "$1"))} target="a-checks-list" />
           </section>
         ) : null}
 
@@ -117,7 +115,7 @@ export function ArticleView({ a, canAsk }: { a: Article; canAsk: boolean }) {
           <section className={s.sec} aria-labelledby="a-terms-h">
             <h2 id="a-terms-h" className={s.h3}>관련 용어</h2>
             <ul className={s.rel}>
-              {terms.map((t) => <li key={t.id}><TermLink className={s.relLink} href={termHref(t)}>{t.term}</TermLink></li>)}
+              {terms.map((t) => <li key={t.id}><TermLink className={s.relLink} term={t.id}>{t.term}</TermLink></li>)}
             </ul>
           </section>
         ) : null}

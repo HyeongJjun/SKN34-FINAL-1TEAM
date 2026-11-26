@@ -12,7 +12,7 @@
     "start": "next start",
     "lint": "oxlint app components lib",
     "typecheck": "tsc --noEmit",
-    "test:unit": "node --experimental-strip-types --no-warnings --test components/pro/assist/parse.test.mts components/start/readLine.test.mts components/secretary/chips.test.mts components/secretary/boardLink.test.mts",
+    "test:unit": "node --experimental-strip-types --no-warnings --test components/pro/assist/parse.test.mts components/start/readLine.test.mts components/secretary/chips.test.mts components/secretary/boardLink.test.mts lib/guide/shared.test.mts",
     "gen:api": "openapi-typescript http://localhost:8000/openapi.json -o lib/backend/schema.d.ts"
   },
   "dependencies": {
