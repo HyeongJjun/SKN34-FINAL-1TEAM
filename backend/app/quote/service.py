@@ -47,7 +47,7 @@ from app.quote.schemas import (
     StandardTradeOut,
     VendorQuoteOut,
 )
-from app.refprice import market_book
+from app.refprice import market_basis
 from app.refprice.book import DOBAE_2026H2, MOKGONG_2026H2
 from app.refprice.house import HOUSE_2026H2
 from app.refprice.wallpaper_market import paper_market
@@ -380,9 +380,7 @@ async def standard_for(s: AsyncSession, user: User, project_id: uuid.UUID) -> St
 
 # ---- 시장 단가 견적(업체 견적서 235건 중앙값). 손님 계산 · 내 공사 화면 · AI 칸이 같은 함수를 쓴다 ----
 
-MARKET_BOOK = market_quote.Book(
-    market_book.VERSION, market_book.QUOTES, market_book.ITEMS, market_book.COEF
-)
+MARKET_BOOK = market_basis.BOOK
 
 
 def market_calc(
@@ -422,7 +420,8 @@ def market_calc(
 
 
 def market_of(st: StandardOut) -> tuple[market_quote.Quote, str] | None:
-    """내 공사 시장 단가 견적. 전체 도배만 계산하고(목공은 끔), 부분 공사 · 도배 없는 공사는 None(기존 표준견적서)."""
+    """내 공사 시장 단가 견적(표준견적서, 2026-11-26 팀 결정). 목공을 고른 공사는 목공도 켜요.
+    부분 공사 · 도배 없는 공사는 None(기존 표준견적서)."""
     if (st.scope or "full") != "full":
         return None
     d = next((t for t in st.trades if t.trade == "dobae"), None)
@@ -432,6 +431,7 @@ def market_of(st: StandardOut) -> tuple[market_quote.Quote, str] | None:
         pyeong=None,
         area_m2=st.area_m2,
         area_basis="exclusive" if st.area_basis == "exclusive" else "supply",
+        mokgong=any(t.trade == "mokgong" for t in st.trades),
         wallpaper="hapji" if d.grade == "economy" else "silk",
     )
 
