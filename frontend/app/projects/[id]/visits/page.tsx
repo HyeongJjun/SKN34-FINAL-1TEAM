@@ -1,32 +1,11 @@
-// 실측 일정 상태판(C14 board1 · C15 reqview · C18 board_exp · C20 board_prop · C32 visited · D03 d_visit).
-// 업체 답 기한(보낸 때 + 48시간) · 고르기 기한(업체 답 + 7일) · 지남은 계산 엔진 값(api.md 5장)을 그대로 보여요.
-// 웹 머리 · 공사 띠는 레이아웃(B2a), 폰 머리 · 본문 · 옆 AI 칸은 이 화면이 그려요(ui-components 1장).
-import { notFound } from "next/navigation";
-import { AppHeader } from "@/components/site/AppHeader";
-import { AsideOpenButton } from "@/components/site/AsideSlot";
-import { Main, PageHead, WithAside } from "@/components/site/Frame";
-import { AiSlot } from "@/components/visit/AiSlot";
-import { Board } from "@/components/visit/Board";
-import { BoardLive } from "@/components/visit/BoardActions";
-import { getVisitBoard, getVisitProject } from "@/lib/api/visit";
+// /projects/{id}/visits — 실측 일정
+// 2026-11-26 사용자: 옆에 옛날 AI 채팅 칸이 남아 있어서, 재재 화면(/projects/{id}/assistant)의 내 도배 플랜 실측 칸(날짜 고르기 · 요청 취소 · 업체 채팅)으로 보내요.
+// 알림 · 메일 링크 주소는 그대로 두고 여기서 넘겨요. 남의 공사 · 없는 공사는 재재 화면이 404예요.
+import { redirect } from "next/navigation";
 
 export const metadata = { title: "실측 일정" };
 
-export default async function VisitsPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [board, project] = await Promise.all([getVisitBoard(id), getVisitProject(id)]);
-  if (!board || !project) notFound();
-  const home = `/projects/${encodeURIComponent(project.id)}`;
-  return (
-    <>
-      <AppHeader only="phone" phone={{ title: "실측 일정", back: home, action: <AsideOpenButton /> }} />
-      <Main>
-        <PageHead title="실측 일정" crumbs={[{ label: "내 공사", href: "/my" }, { label: project.name, href: home }, { label: "실측 일정" }]} />
-        <WithAside aside={<AiSlot screen="visits" projectId={project.id} />}>
-          <Board board={board} project={project} />
-        </WithAside>
-      </Main>
-      <BoardLive projectId={project.id} />
-    </>
-  );
+  redirect(`/projects/${encodeURIComponent(id)}/assistant?step=3`);
 }
