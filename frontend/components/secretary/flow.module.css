@@ -86,3 +86,16 @@
 .search input { width: 100%; min-height: 40px; padding: 0 12px; border: 1px solid var(--mj-line-control); border-radius: 10px; font: inherit; font-size: var(--mj-type-label); background: var(--mj-surface); }
 .vrowHi { border-color: var(--mj-primary); box-shadow: 0 0 0 2px var(--mj-primary-weak); }
 .hiTag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--mj-primary); color: var(--mj-text-inverse); font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); }
+/* 보드 실측 요청(2026-11-26) */
+.reqVendor { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--mj-line); }
+.reqHead { margin: 0; font-size: var(--mj-type-label); }
+.vname { display: inline-flex; align-items: center; min-height: 32px; padding: 0; border: 0; background: none; font: inherit; font-weight: var(--mj-weight-bold); color: var(--mj-text); cursor: pointer; text-align: left; }
+.vname:hover { color: var(--mj-primary); text-decoration: underline; }
+/* 업체 자세히 창 */
+.vdTop { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; }
+.vdName { margin: 0; font-size: var(--mj-type-title-s); }
+.vdPrice { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.vdPrice b { font-size: var(--mj-type-amount-m, 24px); }
+.vdRows { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px 16px; margin: 0; }
+.vdRows dt { font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+.vdRows dd { margin: 0; font-size: var(--mj-type-label); }
