@@ -22,7 +22,7 @@ import { Segmented } from "@/components/ui/Segmented";
 import type { Region } from "@/lib/api/project";
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { dateShort } from "@/lib/format";
-import { EMPTY_DRAFT, FACES, GRADE_WORD, PYEONG_M2, MOK_ITEMS, SPACES, checkDraft, placeText, pyeongToM2, scopeText, toHomeInfo, type Face, type InfoDraft, type InfoErrors, type MokItem, type SpaceKind } from "@/lib/guest/info";
+import { EMPTY_DRAFT, FACES, GRADE_WORD, PYEONG_M2, MOK_ITEMS, SPACES, checkDraft, placeText, pyeongToM2, toHomeInfo, type Face, type InfoDraft, type InfoErrors, type MokItem, type SpaceKind } from "@/lib/guest/info";
 import { clearGuest, draftOf, readGuest, writeGuest } from "@/lib/guest/store";
 import { termByName, termHref } from "@/lib/guide";
 import { DateSheet } from "./DateSheet";
@@ -93,6 +93,11 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
   const eWork = tried.work ? errorsIn(all, "work") : {};
   const place = placeText(regions, d);
   const areaM2 = unit === "py" ? pyeongToM2(py) : null;
+  // ㎡로 넣으면 옆에 평을 보여 줘요(표시만, 정석 피드백 6)
+  const m2 = Number(d.area);
+  const pyText = d.area.trim() && Number.isFinite(m2) && m2 > 0 ? (Math.round((m2 / 3.3058) * 10) / 10).toFixed(1) : null;
+  // 도배 칩도 눌러서 끌 수 있어요(정석 피드백 7). 지금은 도배가 꼭 들어가서, 끄면 안내만 보이고 다음으로 못 가요
+  const [dobae, setDobae] = useState(true);
   // 비었을 때 공용 글은 '평으로 넣기' 단추를 말해서, 이 화면의 ㎡ | 평 칸에 맞춰 바꿔요
   const areaErr = !eHome.area ? undefined
     : unit === "py" && !areaM2 ? "평을 숫자로 넣어 주세요. 예: 32"
@@ -192,8 +197,9 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
               </div>
               {/* 보이는 ㎡는 실제로 보낼 값(d.area)이에요. ㎡로 넣고 평으로 바꾸면 평은 소수 한 자리로 어림해요 */}
               {areaM2 && d.area ? <p className={s.mute}>믿집 계산 {py.trim()}평 × {PYEONG_M2} ≈ <b className="mj-num">{d.area}㎡</b></p> : null}
+              {unit === "m2" && pyText ? <p className={s.mute}>약 <b className="mj-num">{pyText}평</b>이에요</p> : null}
             </Row>
-            <Row label="공사할 때 집" error={eHome.occupied}>
+            <Row label="공사할 때 집" help={<Tip label="공사할 때 집" terms={[]} note="빈 집: 짐이 없어 바로 시작해요. 기간이 짧고 짐 옮기는 일이 없어요. 살면서 공사: 짐을 방마다 옮기며 나눠 해요. 기간이 늘고 짐 덮기 · 옮기기 비용이 더 들 수 있어요." />} error={eHome.occupied}>
               <ChoiceChips legend="공사할 때 집" hideLegend value={d.occupied === null ? null : d.occupied ? "yes" : "no"} onChange={(v) => set({ occupied: v === "yes" })}
                 options={[{ value: "yes", label: "살면서 공사" }, { value: "no", label: "빈 집" }]} />
             </Row>
@@ -207,18 +213,22 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
               <div className={s.chips} role="group" aria-label="공정 고르기">
                 {/* 공사 순서대로 목공 → 도배 → 바닥(2026-11-26 사용자) */}
                 <button type="button" className={s.chip} aria-pressed={d.mok} onClick={() => set({ mok: !d.mok })}>목공</button>
-                <button type="button" className={s.chip} aria-pressed disabled>도배</button>
-                <button type="button" className={s.chip} aria-pressed={false} disabled aria-describedby="sf-floor">바닥(마루) <span className={s.soon}>준비 중</span></button>
+                <button type="button" className={s.chip} aria-pressed={dobae} onClick={() => setDobae(!dobae)}>도배</button>
+                <button type="button" className={s.chip} aria-pressed={false} disabled>바닥(마루) <span className={s.soon}>준비 중</span></button>
               </div>
+              {!dobae ? <span className={s.fieldErr}><Icon name="error" size={16} />지금은 도배가 꼭 들어가요. 도배를 다시 눌러 주세요.</span> : null}
               {d.mok ? (
                 <ChoiceChips multiple legend="목공 할 곳" value={d.mokgong} onChange={(v) => set({ mokgong: v as MokItem[] })} options={MOK_ITEMS.map((x) => ({ value: x.key, label: x.label }))} />
               ) : null}
-              <p id="sf-floor" className={s.mute}>바닥(마루)은 준비 중이에요. 마루 종류 · 기존 바닥 철거는 곧 여기서 골라요.</p>
               {d.mok ? <p className={s.order} aria-label="공사 순서">공사 순서 <b>목공</b> → <b>도배</b> → <span>바닥</span></p> : null}
             </Row>
             <Row label="벽지" help={<Tip label="벽지" terms={["실크 벽지", "합지"]} />} error={eWork.grade}>
-              <ChoiceChips legend="벽지" hideLegend value={d.grade} onChange={(v) => set({ grade: v as InfoDraft["grade"] })}
-                options={[{ value: "basic", label: GRADE_WORD.basic }, { value: "economy", label: GRADE_WORD.economy }]} />
+              {/* 공정 칩과 같은 모양(정석 피드백 7) */}
+              <div className={s.chips} role="group" aria-label="벽지">
+                {(["basic", "economy"] as const).map((g) => (
+                  <button key={g} type="button" className={s.chip} aria-pressed={d.grade === g} onClick={() => set({ grade: g })}>{GRADE_WORD[g]}</button>
+                ))}
+              </div>
             </Row>
             <Row label="도배 범위" help={<Tip label="도배 범위" terms={[]} note="전체는 집 안 벽 + 천장이에요. 방 몇 개나 벽만 하려면 부분을 골라요." />}>
               <Segmented legend="도배 범위" hideLegend value={d.scope} onChange={(v) => set(v === "partial" ? { scope: "partial" } : { scope: "full", spaces: [], faces: ["wall", "ceiling"] })}
@@ -238,10 +248,10 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
             </Row>
             {formErr ? <p className={s.err} role="alert">{formErr}</p> : null}
             {nWork ? <p className={s.err} role="alert">고를 칸이 {nWork}개 있어요</p> : null}
-            <p className={s.mute}>{d.grade ? `도배 ${GRADE_WORD[d.grade]} · ${scopeText(d)}${d.mok && d.mokgong.length ? ` + 목공 ${d.mokgong.map((k) => MOK_ITEMS.find((x) => x.key === k)?.label).join(" · ")}` : ""}` : "벽지를 고르면 표준견적서를 계산해요"}</p>
             <div className={s.actions}>
               <Button size="lg" variant="secondary" disabled={busy} onClick={() => setStep("home")}>이전</Button>
-              <Button size="lg" busy={busy} onClick={() => { void finish(); }}>{doneLabel}</Button>
+              {/* 벽지를 고르기 전에는 꺼 둬요(정석 피드백 7) */}
+              <Button size="lg" busy={busy} disabled={!d.grade || !dobae} onClick={() => { void finish(); }}>{doneLabel}</Button>
             </div>
           </section>
         )}
