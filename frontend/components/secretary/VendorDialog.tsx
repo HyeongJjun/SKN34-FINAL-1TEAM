@@ -71,7 +71,7 @@ export function VendorDialog({ pid, open, onClose, busy, act, full }: { pid: str
                     <div className={s.vdPrice}>
                       <span className={s.note}>{TRADE_WORD[t]} 가견적 · 부가세 포함</span>
                       <b className="mj-num">{est ? won(est.total) : "준비 중"}</b>
-                      {pct != null ? <span className={s.note}>{compareText(pct) ?? ""}</span> : null}
+                      {pct != null ? <span className={s.note}>{compareText(pct) ?? ""} · 기준 {TRADE_WORD[t]} 시장 단가 {won(v.standard_total)}</span> : null}
                     </div>
                   </div>
                   <dl className={s.vdRows}>
