@@ -27,4 +27,6 @@ def test_mokgong_project_market_quote_has_both_trades(api):
     a = api.get(f"/v2/projects/{dobae}/market-quote").json()
     b = api.get(f"/v2/projects/{both.json()['id']}/market-quote").json()
     assert [t["name"] for t in a["trades"]] == ["도배"]
-    assert {t["name"] for t in b["trades"]} == {"도배", "목공 (문 포함)"} and b["total"] > a["total"]
+    assert {t["name"] for t in b["trades"]} == {"도배", "목공 (문 포함)"} and b["total"] > a[
+        "total"
+    ]
