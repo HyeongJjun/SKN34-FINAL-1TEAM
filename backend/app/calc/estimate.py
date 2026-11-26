@@ -241,9 +241,11 @@ def estimate_v3(
     grade: str,
     exempt: bool = False,
     standard_total: int | None = None,
+    whole: bool = False,
 ) -> EstimateV3:
     """업체 v3 단가 × 계산 엔진 수량. 도배지는 고른 벽지 줄만, 단가가 없는 줄은 '빼기'로 본다.
-    exempt면(간이 · 면세, L02) 부가세 0. 비교 %는 표준견적서에 없는 줄을 빼고 센다."""
+    exempt면(간이 · 면세, L02) 부가세 0. 비교 %는 표준견적서에 없는 줄을 빼고 센다.
+    whole이면(기준이 시장 단가 견적, 2026-11-26) 그 견적도 퍼티 · 식대 · 운송비를 넣고 세서 가견적 전체로 견줘요."""
     out: list[EstimateV3Line] = []
     for row in V3_ROWS:
         if row.grade is not None and row.grade != grade:
@@ -254,7 +256,7 @@ def estimate_v3(
     supply = sum(x.amount for x in out)
     money = Money(supply, 0, supply) if exempt else with_vat(supply)
     same = sum(x.amount for x in out if x.row.in_standard)
-    compare = same if exempt else with_vat(same).total
+    compare = money.total if whole else same if exempt else with_vat(same).total
     pct = percent_vs(compare, standard_total) if standard_total else None
     paper_ok = all(x.mode != "excluded" for x in out if x.row.grade is not None)
     return EstimateV3(
