@@ -190,7 +190,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const picked = ready.filter((v) => v.shortlisted);
   const quoted = (compare?.vendors ?? []).filter((r) => r.latest && r.status === "quoted");
   const extras = deal ? deal.extras.items.filter((i) => (i.answer === "pending" || i.answer === "asked") && !i.superseded) : [];
-  // 표준견적서 금액은 창 · 표준견적서 화면과 같은 값 하나로 보여요(전체 도배는 시장 단가, 아니면 공공 기준)
+  // 표준견적서 금액은 창 · 비교 칸과 같은 값 하나(업체 견적서 시장 단가, #207). 부분 공사처럼 없을 때만 기존 표준견적서
   const stdTotal = std ? (std.market?.total ?? std.view.sum?.total ?? std.view.total) : compare?.standard_total ?? null;
   const toPick = vs.filter((v) => v.status === "offered" || v.status === "proposed");
   const go = (step: number, label = "플랜에서 보기") => (
