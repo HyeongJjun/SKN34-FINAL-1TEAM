@@ -1,13 +1,13 @@
 "use client";
 // 업체 자세히 창(2026-11-26 사용자): 재재 보드에서 업체 이름을 누르면 화면을 옮기지 않고 재재 화면 위 큰 창으로 봐요(표준견적서 창과 같은 틀).
 // 읽기: GET /projects/{id}/vendors/{vid}?trade=(가견적 · 별점 · 시공 사례는 서버 값 그대로, 화면은 더하지 않아요). 남의 공사 · 목록 밖 업체면 404 글.
+// 사진 주소는 lib/api/shortlist.photoSrc와 같아요(그 파일은 서버 전용이라 창에서 import하지 않아요).
 // 담기 · 빼기는 보드와 같은 act(결과 한 줄이 대화에 붙어요). 리뷰 전체 · 견적 줄은 '전체 화면으로 보기'.
 import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { useModal } from "@/components/ui/useModal";
 import { areasText, caseLabel, compareText, feeText } from "@/components/vendors/v3text";
-import { photoSrc } from "@/lib/api/shortlist";
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { won } from "@/lib/format";
 import d from "./StandardDialog.module.css";
@@ -76,8 +76,8 @@ export function VendorDialog({ pid, open, onClose, busy, act, full }: { pid: str
                   <section className={s.card}>
                     <h4>시공 사례</h4>
                     <ul className={s.pics} aria-label="시공 사례 사진">
-                      {v.profile.portfolio.slice(0, 6).map((x, i) => (
-                        <li key={x.id}><img src={photoSrc(pid, v.profile.vendor_id, x.file_id, i)} alt={caseLabel(x)} loading="lazy" /></li>
+                      {v.profile.portfolio.slice(0, 6).map((x) => (
+                        <li key={x.id}><img src={`/api/projects/${pid}/vendors/${encodeURIComponent(v.profile.vendor_id)}/photos/${encodeURIComponent(x.file_id)}`} alt={caseLabel(x)} loading="lazy" /></li>
                       ))}
                     </ul>
                   </section>
