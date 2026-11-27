@@ -10,6 +10,7 @@ import { useModal } from "@/components/ui/useModal";
 import { areasText, caseLabel, compareText, feeText } from "@/components/vendors/v3text";
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { won, wonFull } from "@/lib/format";
+import { pickRule, type PickState } from "./boardLink";
 import d from "./StandardDialog.module.css";
 import s from "./flow.module.css";
 
@@ -19,7 +20,7 @@ type Act = (key: string, fn: () => Promise<unknown>, said?: string) => Promise<v
 export type VendorOpen = { vendorId: string; trade: "dobae" | "mokgong" } | null;
 const TRADE_WORD = { dobae: "도배", mokgong: "목공" } as const;
 
-export function VendorDialog({ pid, open, onClose, busy, act, full }: { pid: string; open: VendorOpen; onClose: () => void; busy: string | null; act: Act; full: boolean }) {
+export function VendorDialog({ pid, open, onClose, busy, act, pick }: { pid: string; open: VendorOpen; onClose: () => void; busy: string | null; act: Act; pick: PickState }) {
   const ref = useRef<HTMLDialogElement>(null);
   const id = useId();
   const h = useModal(ref, !!open, onClose);
@@ -46,6 +47,9 @@ export function VendorDialog({ pid, open, onClose, busy, act, full }: { pid: str
   const name = v?.profile.biz_name ?? "업체";
   const t = open?.trade ?? "dobae";
   const picked = !!v?.shortlisted;
+  // 보드 줄과 같은 규칙(#220 리뷰): 확정 · 실측 요청 · 남은 칸에 따라 담기 · 빼기를 막아요
+  const can = open ? pickRule({ vendor_id: open.vendorId, shortlisted: picked }, pick) : { add: false, remove: false };
+  const shut = open && pick.live.has(open.vendorId) ? "실측 요청한 업체예요" : pick.locked ? `${TRADE_WORD[t]} 업체를 확정했어요` : !picked && !can.add ? "3곳을 다 담았어요" : null;
   // 도배는 v3 가견적(보드 · 목록과 같은 값). 서버가 v3를 도배만 세서 목공은 목록과 같은 기존 가견적(estimate)을 써요
   const est = v?.estimate_v3 ?? v?.estimate ?? null;
   const pct = v?.estimate_v3?.vs_standard_pct ?? null;
@@ -118,13 +122,13 @@ export function VendorDialog({ pid, open, onClose, busy, act, full }: { pid: str
           <div className={d.actions}>
             {said ? <p className={s.note} role="status">{said}</p> : null}
             {v && v.state === "ok" ? (
-              <Button size="lg" variant={picked ? "secondary" : "primary"} disabled={!picked && full} busy={busy === open.vendorId}
-                onClick={() => act(open.vendorId, async () => {
+              <Button size="lg" variant={picked ? "secondary" : "primary"} disabled={!(can.add || can.remove)} busy={busy === open.vendorId}
+                onClick={() => (can.add || can.remove) && act(open.vendorId, async () => {
                   await (picked ? call("DELETE", `/projects/${pid}/shortlist/${encodeURIComponent(open.vendorId)}?trade=${t}`) : call("POST", `/projects/${pid}/shortlist`, { trade: t, vendor_id: open.vendorId }));
                   setV((x) => (x ? { ...x, shortlisted: !picked } : x));
                   setSaid(picked ? "뺐어요." : "담았어요. 창을 닫고 실측 칸에서 날짜를 골라요.");
                 }, `${TRADE_WORD[t]} ${name}${picked ? " 뺐어요" : " 담았어요"}`)}>
-                {picked ? "빼기" : full ? "3곳을 다 담았어요" : "담기"}
+                {shut ?? (picked ? "빼기" : "담기")}
               </Button>
             ) : null}
           </div>
