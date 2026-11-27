@@ -4119,6 +4119,28 @@ export interface components {
             source: string;
         };
         /**
+         * GuestPartOut
+         * @description 도배 밖 공정 한 장(목공). 가입 뒤 표준견적서 StandardTradeOut과 같은 계산 엔진 값.
+         */
+        GuestPartOut: {
+            /**
+             * Trade
+             * @constant
+             */
+            trade: "mokgong";
+            /** Lines */
+            lines: components["schemas"]["GuestLineOut"][];
+            /** Supply */
+            supply: number;
+            /** Vat */
+            vat: number;
+            /**
+             * Total
+             * @description 부가세 포함
+             */
+            total: number;
+        };
+        /**
          * GuestStandardOut
          * @description 저장하지 않는 계산 결과. DB · 로그에 입력을 남기지 않는다.
          */
@@ -4182,6 +4204,29 @@ export interface components {
              * @description 계산에 쓴 가정 (화면 '이렇게 셌어요')
              */
             assumptions: string[];
+            /**
+             * Parts
+             * @description 목공 할 곳을 골랐으면 목공 공정 (lines · supply · total은 도배만)
+             * @default []
+             */
+            parts: components["schemas"]["GuestPartOut"][];
+            /** @description 공정이 둘 이상이면 모든 공정 합계. 예산 안/밖 · days도 이 합계 기준 */
+            sum?: components["schemas"]["GuestSumOut"] | null;
+        };
+        /**
+         * GuestSumOut
+         * @description 공정이 둘 이상일 때 모든 공정 합계 (가입 뒤 StandardOut.supply · vat · total과 같음).
+         */
+        GuestSumOut: {
+            /** Supply */
+            supply: number;
+            /** Vat */
+            vat: number;
+            /**
+             * Total
+             * @description 부가세 포함
+             */
+            total: number;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -4278,6 +4323,12 @@ export interface components {
              * @description 공사 시작 희망일 (모르면 비움)
              */
             start_date?: string | null;
+            /**
+             * Mokgong
+             * @description 목공 할 곳(몰딩 · 걸레받이 · 문 · 벽 평탄화). 비우면 도배만
+             * @default []
+             */
+            mokgong: ("molding" | "base" | "door" | "flatten")[];
         };
         /**
          * HomeInfoOut
@@ -4315,6 +4366,11 @@ export interface components {
             budget_won: number | null;
             /** Start Date */
             start_date: string | null;
+            /**
+             * Mokgong
+             * @default []
+             */
+            mokgong: ("molding" | "base" | "door" | "flatten")[];
         };
         /** InboxPageOut */
         InboxPageOut: {
@@ -9104,6 +9160,16 @@ export interface components {
             jungmun: "slim3" | "slide" | "swing";
             /** Options */
             options?: ("doors" | "jungmun" | "entry_hw" | "board" | "insulation" | "bath_board")[] | null;
+            /**
+             * Molding
+             * @default true
+             */
+            molding: boolean;
+            /**
+             * Skirting
+             * @default true
+             */
+            skirting: boolean;
         };
         /** V2MqLineOut */
         V2MqLineOut: {

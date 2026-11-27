@@ -19,7 +19,7 @@ export type MockProject = {
 
 const home = (info: S["HomeInfoIn"], emd: string, sgg = info.sgg): S["HomeInfoOut"] => ({
   trade: "dobae", scope: info.scope, spaces: info.spaces, faces: info.faces, housing: "apt", sido: info.sido, sgg, emd,
-  area_m2: String(info.area_m2), area_basis: info.area_basis, occupied: info.occupied, grade: info.grade,
+  area_m2: String(info.area_m2), area_basis: info.area_basis, occupied: info.occupied, grade: info.grade, mokgong: info.mokgong ?? [],
   budget_won: info.budget_won ?? null, start_date: info.start_date ?? null,
 });
 

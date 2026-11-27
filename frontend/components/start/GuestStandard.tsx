@@ -19,21 +19,25 @@ import { draftOf, readGuest } from "@/lib/guest/store";
 import { GUEST_ASK_EVENT, GuestAskSheet } from "./GuestAside";
 import { GuestJaejae } from "./GuestJaejae";
 import { StandardSheet, StandardSkeleton } from "./StandardSheet";
+import { TradeOrder, TradePartSheets } from "./TradeParts";
 import s from "./standard.module.css";
 
 // 전체 도배는 시장 단가 표준견적서(업체 견적서 235건 중앙값, /estimate와 같은 계산)로 보여요.
-// 부분 공사는 고른 공간만 어림하는 계산이라 기존 표준견적서 계산 그대로예요.
+// 부분 공사는 고른 공간만 어림하는 계산이라 기존 표준견적서 계산 그대로예요. 목공도 골랐으면 목공 줄 · 합계(parts · sum)도 같이 받아요.
 type State = { kind: "loading" } | { kind: "none" } | { kind: "error"; msg: string } | { kind: "ok"; view: StdView } | { kind: "market"; q: MqOut };
 
 export function GuestStandard({ mock }: { mock: boolean }) {
   const [st, setSt] = useState<State>({ kind: "loading" });
   const [join, setJoin] = useState(false);
   const [ask, setAsk] = useState(false);
+  /** 목공도 골랐어요(#193): 시장 단가 표준견적서에 목공도 같이 세요(#207) */
+  const [mok, setMok] = useState(false);
 
   const load = useCallback(async () => {
     const g = readGuest();
     const d = g ? draftOf(g) : null;
     if (!d || Object.keys(checkDraft(d)).length) { setSt({ kind: "none" }); return; }
+    setMok(d.mok && d.mokgong.length > 0);
     setSt({ kind: "loading" });
     const info = toHomeInfo(d);
     try {
@@ -42,12 +46,14 @@ export function GuestStandard({ mock }: { mock: boolean }) {
         return;
       }
       const r = await calcGuest(info, mock);
+      const parts = r.parts.map((x) => ({ trade: x.trade, lines: toQuoteLines(x.lines, "full"), supply: x.supply, vat: x.vat, total: x.total }));
       setSt({
         kind: "ok",
         view: {
           scope: r.scope, lines: toQuoteLines(r.lines, r.scope), supply: r.supply, vat: r.vat, total: r.total, days: r.days,
           budget: budgetText(r.budget_fit, info.budget_won),
           condition: conditionText({ ...info, area_m2: r.area_m2, area_basis: r.area_basis }),
+          parts, sum: r.sum ?? undefined,
         },
       });
     } catch (e) {
@@ -91,7 +97,9 @@ export function GuestStandard({ mock }: { mock: boolean }) {
               </div>
             </div>
           ) : null}
+          {mok ? <TradeOrder has={["dobae", "mokgong"]} /> : null}
           {ok ? <StandardSheet view={ok} changeHref="/start" /> : null}
+          {ok?.parts?.length ? <TradePartSheets parts={ok.parts} /> : null}
           {st.kind === "market" ? (
             <>
               <MarketTotal q={st.q} changeHref="/start" />

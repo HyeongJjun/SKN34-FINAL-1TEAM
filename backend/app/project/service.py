@@ -129,7 +129,8 @@ def _fill_home(p: Project, data: HomeInfoIn) -> None:
 
 
 async def _write_home_parts(s: AsyncSession, p: Project, data: HomeInfoIn) -> None:
-    """도배 공정 한 줄(범위 · 면 · 벽지) + 부분 공사면 고른 공간(종류)과 공정 × 공간 연결"""
+    """도배 공정 한 줄(범위 · 면 · 벽지) + 부분 공사면 고른 공간(종류)과 공정 × 공간 연결.
+    목공 할 곳을 골랐으면 목공 공정 한 줄(항목만, 공간 연결 없음)을 더한다(#193)."""
     ids: list[uuid.UUID] = []
     for i, kind in enumerate(data.spaces):
         row = ProjectSpace(project_id=p.id, name=SPACE_NAMES[kind], sort=i, kind=kind)
@@ -146,6 +147,8 @@ async def _write_home_parts(s: AsyncSession, p: Project, data: HomeInfoIn) -> No
             faces=[f for f in FACES if f in data.faces],
         )
     )
+    if data.mokgong:
+        s.add(ProjectTrade(project_id=p.id, trade="mokgong", items=list(data.mokgong)))
     await s.flush()
     s.add_all([ProjectTradeSpace(project_id=p.id, trade=data.trade, space_id=i) for i in ids])
 
@@ -337,6 +340,7 @@ def _home(p: Project, spaces: list, trades: list, links: list) -> HomeInfoOut | 
         grade=t.grade,
         budget_won=p.budget_won,
         start_date=p.start_date,
+        mokgong=next((list(x.items) for x in trades if x.trade == "mokgong"), []),
     )
 
 

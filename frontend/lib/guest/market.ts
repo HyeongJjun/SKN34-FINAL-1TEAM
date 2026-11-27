@@ -21,17 +21,25 @@ export const GROUP_KO: Record<string, string> = {
 };
 const rateText = (r: number) => r.toLocaleString("ko-KR", { style: "percent", maximumFractionDigits: 2 });
 
-/** 기본 정보 → 시장 단가 계산 입력. 기본 정보 흐름은 도배만 고르므로 목공은 끈다. 벽지: economy = 합지, basic = 실크 */
-export function toMarketIn(c: { area_m2: string | number; area_basis: string; grade: string | null }): MqIn {
+/** 고른 목공 할 곳 → 시장 단가 선택 항목(서버 quote.service MOK_OPTIONS와 같아요). 몰딩 · 걸레받이는 기본 목공에 들어 있어요 */
+const MOK_OPTIONS: Partial<Record<string, NonNullable<MqIn["options"]>[number]>> = { door: "doors", flatten: "board" };
+
+/** 기본 정보 → 시장 단가 계산 입력(표준견적서, #207). 목공 할 곳을 골랐으면 목공도 켜요. 벽지: economy = 합지, basic = 실크.
+ *  선택 항목 · 몰딩 · 걸레받이 줄은 고른 목공 할 곳만 켜요(서버 market_basis.mok_options · mok_base와 같아요.
+ *  안 맞추면 가입 뒤 내 공사 표준견적서 금액과 달라져요) */
+export function toMarketIn(c: { area_m2: string | number; area_basis: string; grade: string | null; mokgong?: readonly string[] | null }): MqIn {
+  const mok = c.mokgong?.length ? c.mokgong : null;
   return {
     area_m2: String(c.area_m2),
     area_basis: c.area_basis === "exclusive" ? "exclusive" : "supply",
     dobae: true,
-    mokgong: false,
+    mokgong: (c.mokgong?.length ?? 0) > 0,
     wallpaper: c.grade === "economy" ? "hapji" : "silk",
     door: "abs",
     jungmun: "slim3",
-    options: null,
+    options: mok ? mok.flatMap((x) => (MOK_OPTIONS[x] ? [MOK_OPTIONS[x]] : [])) : null,
+    molding: mok ? mok.includes("molding") : true,
+    skirting: mok ? mok.includes("base") : true,
   } as MqIn;
 }
 
