@@ -100,6 +100,9 @@ function stepOf(d: FlowData, trade = "dobae"): number {
   return 2;
 }
 
+/** 재재 대화 → 공정 탭(이 기기에만 적어 둬요) */
+const CHAT_TRADE_KEY = (chatId: string) => `mj_ai_chat_trade_${chatId}`;
+
 export function ProjectFlow({ data }: { data: FlowData }) {
   const router = useRouter();
   const { p, ov, compare, schedule, visits, vendors, mokVendors, draft, mokDraft, today, std } = data;
@@ -150,13 +153,47 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   });
   // 재재와 나눈 말은 공정 탭마다 따로(탭을 바꿔도 남아요)
   /** to: 이 답으로 고른 보드 칸(폰에서 '플랜에서 보기' 링크) */
-  type Ask = { q: string; out?: AiTurnOut; err?: string; to?: number };
+  /** past: 새로고침 전에 나눈 답 글(서버에 저장된 대화를 다시 읽은 것, #225) */
+  type Ask = { q: string; out?: AiTurnOut; err?: string; to?: number; past?: string };
   const [asksBy, setAsksBy] = useState<Partial<Record<Trade, Ask[]>>>({});
   const asks = asksBy[active] ?? [];
   const setAsks = (fn: (a: Ask[]) => Ask[]) => setAsksBy((m) => ({ ...m, [active]: fn(m[active] ?? []) }));
   const [chatIds, setChatIds] = useState<Partial<Record<Trade, string>>>({});
   const chatId = chatIds[active] ?? null;
-  const setChatId = (id: string) => setChatIds((m) => ({ ...m, [active]: id }));
+  const setChatId = (id: string) => {
+    setChatIds((m) => ({ ...m, [active]: id }));
+    // 이 대화가 어느 공정 탭 것인지 이 기기에 적어 둬요(새로고침 뒤 같은 탭에 다시 보여요)
+    try { window.localStorage.setItem(CHAT_TRADE_KEY(id), active); } catch { /* 못 적으면 도배 탭으로 */ }
+  };
+  // 새로고침 · 다시 들어와도 재재와 나눈 대화가 남게, 이 공사의 저장된 대화를 읽어 공정 탭마다 가장 최근 것 하나를 이어요(#225).
+  // 못 읽으면 빈 대화로 시작해요. 남의 공사 대화는 서버가 404라 오지 않아요
+  useEffect(() => {
+    let off = false;
+    (async () => {
+      try {
+        const list = await call<{ chat_id: string; updated_at: string }[]>("GET", `/ai/threads?project_id=${pid}`);
+        const latest: Partial<Record<Trade, string>> = {};
+        for (const c of [...list].sort((a, b) => b.updated_at.localeCompare(a.updated_at))) {
+          let t: Trade = "dobae";
+          try { t = window.localStorage.getItem(CHAT_TRADE_KEY(c.chat_id)) === "mokgong" ? "mokgong" : "dobae"; } catch { /* 기본 도배 */ }
+          if (!latest[t]) latest[t] = c.chat_id;
+        }
+        for (const [t, id] of Object.entries(latest) as [Trade, string][]) {
+          const d = await call<{ chat_id: string; messages: { role: "user" | "assistant"; text: string; turn: number }[] }>("GET", `/ai/threads/${enc(id)}`);
+          const past: Ask[] = [];
+          for (const m of [...d.messages].sort((a, b) => a.turn - b.turn)) {
+            if (m.role === "user") past.push({ q: m.text });
+            else if (past.length && past[past.length - 1].past == null) past[past.length - 1].past = m.text;
+          }
+          if (off) return;
+          // 새로 물은 게 없을 때만 채워요(읽는 사이에 물었으면 그 대화를 지켜요)
+          setAsksBy((m) => (m[t]?.length ? m : { ...m, [t]: past.map((x) => ({ ...x, past: x.past ?? "" })) }));
+          setChatIds((m) => (m[t] ? m : { ...m, [t]: id }));
+        }
+      } catch { /* 대화를 못 읽어도 화면은 열려요 */ }
+    })();
+    return () => { off = true; };
+  }, [pid]);
   // 탭을 바꾸면 보드의 업체 · 실측 칸도 그 공정으로
   useEffect(() => { setTrade(active); }, [active]);
   const [text, setText] = useState("");
@@ -249,7 +286,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     } catch (e) { setErr(errorText(e)); } finally { setBusy(null); }
   }
 
-  const asking = asks.length > 0 && !asks[asks.length - 1].out && !asks[asks.length - 1].err;
+  const asking = asks.length > 0 && !asks[asks.length - 1].out && !asks[asks.length - 1].err && asks[asks.length - 1].past == null;
   async function ask(q: string, button: AiButton | null = null, fromInput = false) {
     const t = q.trim().slice(0, 1000);
     if (!t || asking) return; // 답을 기다리는 동안 새 질문을 막아요(답이 엇갈리지 않게 · 대화 하나로)
@@ -604,7 +641,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
               <div key={`a${i}`} className={s.msgs} style={{ padding: 0 }}>
                 <p className={s.me}>{a.q}</p>
                 <div className={s.bot}><div className={s.face}><Jaejae mouth={a.out ? "smile" : "flat"} /></div><div className={s.bubble}><span className={s.who}>재재</span>
-                  {a.out ? <><AiAnswer answer={a.out.answer} projectId={p.id} onPick={(q, b) => void ask(q, b ?? null)} />{a.to != null ? go(a.to) : null}</> : a.err ? <p className="mj-error">{a.err}</p> : <p className={s.typing}>줄자로 재는 중…</p>}</div></div>
+                  {a.past != null ? <p className={s.past}>{a.past || "답을 다시 불러오지 못했어요."}</p> : a.out ? <><AiAnswer answer={a.out.answer} projectId={p.id} onPick={(q, b) => void ask(q, b ?? null)} />{a.to != null ? go(a.to) : null}</> : a.err ? <p className="mj-error">{a.err}</p> : <p className={s.typing}>줄자로 재는 중…</p>}</div></div>
               </div>
             ))}
           </div>

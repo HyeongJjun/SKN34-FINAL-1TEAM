@@ -129,3 +129,5 @@
 .flowTab { flex: 1; min-height: var(--mj-hit-min); border: 1px solid var(--mj-line); border-radius: var(--mj-radius-pill); background: var(--mj-surface); color: var(--mj-text-sub); font: inherit; font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); cursor: pointer; }
 .flowTabOn { border-color: var(--mj-primary); background: var(--mj-primary); color: var(--mj-on-primary); }
 @media (min-width: 768px) { .flowTabs { display: none; } }
+/* 새로고침 전에 나눈 답(저장된 글만, #225) */
+.past { margin: 4px 0 0; white-space: pre-line; color: var(--mj-text); }
