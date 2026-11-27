@@ -58,6 +58,7 @@ export function ProjectBand({ name, href, steps = PROJECT_STEPS, current, sub, t
       <div className={s.in}>
         <div className={s.pjBox}>
           <Link className={s.pj} href={href}><b>{name}</b></Link>
+          <Link className={s.chat} href={`${href}/assistant`}>재재와 대화 ›</Link>
           <p className={s.short}><span className="mj-num">지금 {current + 1}/{steps.length}</span> · {subNow ?? nowLabel}</p>
         </div>
         <div className={s.stp}>

@@ -6,11 +6,12 @@ DB · HTTP를 모른다: 프로젝트 사실(ProjectFacts)과 지식(KB)은 chat
 """
 
 import re
-from dataclasses import dataclass
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass, replace
 
 from app.agent.v3 import check, house, llm_mode, orchestrator, policy, templates
 from app.agent.v3 import gate as gate_mod
-from app.agent.v3.answer import KB, T_HIGH, Part, Task
+from app.agent.v3.answer import KB, T_HIGH, Part, Task, next_card
 from app.agent.v3.schemas import (
     TEXT_MAX,
     AgentAnswer,
@@ -20,6 +21,7 @@ from app.agent.v3.schemas import (
     TurnContext,
     UiCard,
 )
+from app.agent.v3.specialists import registered
 from app.agent.v3.trades import BY_CODE, trades_in
 
 CHITCHAT = re.compile(r"로또|주식|코인|집값|영화|점심|저녁\s*뭐|강아지|번역|날씨|심심|노래|게임")
@@ -85,6 +87,33 @@ async def _llm(part: Part, kb: KB, question: str) -> tuple[Part, list[str]]:
     return part, list(dict.fromkeys(used))
 
 
+type VectorLookup = Callable[[str], Awaitable[tuple[str, ...]]]
+
+
+async def _prepare_search(tasks: list[Task], kb: KB, lookup: VectorLookup) -> KB:
+    vectors = dict(kb.vector_rids)
+    cached: dict[str, tuple[str, ...]] = {}
+    for task in tasks:
+        if task.route != "trade" or not task.trades:
+            continue
+        code = task.trades[0]
+        specialist = registered().get(code)
+        if specialist is None or specialist.vector_query is None:
+            continue
+        pick = next_card(kb, task.slot, task.value) if task.slot and task.value else None
+        if pick and (pick.card is not None or pick.again):
+            continue
+        question = task.search_text
+        query = specialist.vector_query(question)
+        if query and question:
+            query = check.mask(query).strip()[:TEXT_MAX]
+            if query and query not in cached:
+                cached[query] = await lookup(query)
+            if query:
+                vectors[code, question] = cached[query]
+    return replace(kb, vector_rids=vectors) if vectors else kb
+
+
 async def run_turn(
     text: str,
     ctx: TurnContext,
@@ -93,6 +122,7 @@ async def run_turn(
     facts: ProjectFacts | None = None,
     waiting: dict | None = None,
     button: Button | None = None,
+    load_vectors: VectorLookup | None = None,
 ) -> TurnResult:
     masked = check.mask(text or "").strip()[:TEXT_MAX]
     w_route = waiting.get("route") if waiting else None
@@ -110,6 +140,9 @@ async def run_turn(
             g = g.model_copy(update={"route": "trade", "trades": [waiting["trade"]]})
     task = Task(text=masked, route=g.route, trades=g.trades, policy=g.policy, ctx=ctx, facts=facts,
                 slot=slot, value=value, asked=asked)  # fmt: skip
+    tasks = orchestrator.split(task) if g.route == "multi" else [task]
+    if ctx.mode == "llm" and load_vectors is not None:
+        kb = await _prepare_search(tasks, kb, load_vectors)
     names: list[str] = []
     failed_parts = 0
     if g.route == "out_of_scope":
@@ -119,7 +152,7 @@ async def run_turn(
         part.add(templates.section([templates.ASK_BACK], route="ask_back"), templates.ASK_BACK)
         part.cards.append(UiCard(kind="choices", title="궁금한 것", choices=g.candidates))
     elif g.route == "multi":
-        part, names, failed_parts = orchestrator.run(task, kb)
+        part, names, failed_parts = orchestrator.run(task, kb, tasks=tasks)
     else:
         part = orchestrator.AGENTS[g.route](task, kb)
     routes: list[str] = []

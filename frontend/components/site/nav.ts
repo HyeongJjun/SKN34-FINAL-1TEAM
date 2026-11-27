@@ -11,12 +11,12 @@ export type TabItem = NavItem & { icon: IconName; count?: "notify" };
 /** 웹 머리 메뉴(≥768). '표준견적서 받기'는 copy-fixes CF-09(믿집 견적이 셋이라 업체 견적으로 읽히지 않게) */
 export const NAV: Record<HeaderKind, NavItem[]> = {
   guest: [
-    { id: "start", href: "/start", label: "표준견적서 받기" },
+    { id: "start", href: "/assistant", label: "표준견적서 받기" },
     { id: "guide", href: "/guide", label: "백과" },
     { id: "faq", href: "/faq", label: "자주 묻는 질문" },
   ],
   customer: [
-    { id: "start", href: "/start", label: "표준견적서 받기" },
+    { id: "start", href: "/assistant", label: "표준견적서 받기" },
     { id: "my", href: "/my", label: "내 공사" },
     { id: "chat", href: "/chat", label: "채팅" },
     { id: "guide", href: "/guide", label: "백과" },
@@ -24,6 +24,7 @@ export const NAV: Record<HeaderKind, NavItem[]> = {
   // W6 B: 일정은 작업함 탭이라 머리에 따로 두지 않아요
   vendor: [
     { id: "inbox", href: "/vendor", label: "작업함" },
+    { id: "opendays", href: "/vendor/open-days", label: "영업일" },
     { id: "chat", href: "/chat", label: "채팅" },
     { id: "profile", href: "/vendor/profile", label: "업체 정보" },
   ],
@@ -63,7 +64,7 @@ export const ACCOUNT: Record<Role, NavItem[]> = {
 };
 
 // 승인 전 업체는 작업함 · 채팅을 잠가요(업체 정보는 열어요). 9판 V02 · 시안 WVHome
-export const VENDOR_LOCKED = ["inbox", "chat"];
+export const VENDOR_LOCKED = ["inbox", "opendays", "chat"];
 /** 승인 전 업체의 잠금 문구. 승인됐으면 null */
 export function vendorLock(status: string | null | undefined): string | null {
   if (status === "approved") return null;

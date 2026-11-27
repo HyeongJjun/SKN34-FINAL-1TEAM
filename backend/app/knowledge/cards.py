@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from functools import cache
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -28,10 +28,7 @@ Kind = Literal[
     "가격", "자재", "공법", "기간", "하자", "업체", "계약", "순서", "관리사무소", "셀프", "용어", "서비스",
     "준비", "안전",
 ]  # fmt: skip
-CardTrade = Literal[
-    "dobae", "mokgong", "floor", "tile", "bath", "kitchen", "paint", "film", "electric",
-    "window", "demolition", "plumbing", "common",
-]  # fmt: skip
+CardTrade = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]*$")]
 CardIntent = Literal["guide", "trade", "quote_explanation", "schedule"]
 # 믿집 서비스 규칙 카드(service.jsonl)가 인용하는 사용자 확정 화면 글 · 설계 결정. 지식 조각이 아니라 제품 규칙이다
 DOC_REFS: dict[str, str] = {
@@ -236,8 +233,12 @@ def read_dir(path: Path = CARD_DIR) -> tuple[list[AnswerCard], str]:
 
 
 @cache
-def default() -> CardSet:
+def default(known_trades: tuple[str, ...] | None = None) -> CardSet:
     cards, ver = read_dir()
+    if known_trades is not None:
+        unknown = {card.trade for card in cards} - set(known_trades)
+        if unknown:
+            raise ValueError(f"등록되지 않은 답변 카드 공종: {', '.join(sorted(unknown))}")
     return build(cards, f"cards@{ver}")
 
 

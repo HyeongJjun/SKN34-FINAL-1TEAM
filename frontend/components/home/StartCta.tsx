@@ -11,15 +11,15 @@ const shortName = (name: string) => name.replace(" 아파트 ", " ");
 
 export function StartCta({ ongoing, autoOpen = false, className }: { ongoing: Ongoing | null; autoOpen?: boolean; className?: string }) {
   const [open, setOpen] = useState(autoOpen && !!ongoing);
-  if (!ongoing) return <Button size="lg" href="/start" className={className}>표준견적서 받기</Button>;
+  if (!ongoing) return <Button size="lg" href="/assistant" className={className}>표준견적서 받기</Button>;
   return (
     <>
       <Button size="lg" className={className} onClick={() => setOpen(true)} aria-haspopup="dialog">표준견적서 받기</Button>
       <ResumeDialog
         open={open}
         onClose={() => setOpen(false)}
-        newHref="/start"
-        project={{ name: ongoing.name, short: shortName(ongoing.name), stepLabel: ongoing.step, href: ongoing.href ?? `/projects/${encodeURIComponent(ongoing.id)}` }}
+        newHref="/assistant?new=1"
+        project={{ name: ongoing.name, short: shortName(ongoing.name), stepLabel: ongoing.step, href: ongoing.href ?? `/projects/${encodeURIComponent(ongoing.id)}/assistant` }}
       />
     </>
   );

@@ -14,6 +14,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Protocol
 
 from fastapi import UploadFile
+from sqlalchemy import update as sa_update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -27,6 +28,7 @@ from app.calc.visit_view import area_text
 from app.files import service as files_service
 from app.files.models import File
 from app.notify import service as notify_service
+from app.refprice import market_basis
 from app.refprice.book import DOBAE_2026H2, MOKGONG_2026H2
 from app.refprice.house import HOUSE_2026H2
 from app.refprice.vendor_baseline import price_warning, vendor_base
@@ -63,6 +65,8 @@ from app.vendor.schemas import (
     FaqIn,
     LicenseOut,
     LinkIn,
+    OpenDaysIn,
+    OpenDaysOut,
     OpenFieldOut,
     PortfolioIn,
     PortfolioMeta,
@@ -862,6 +866,13 @@ def _estimate_v3_out(
     )
 
 
+def _basis_v3(h: dobae.HomeV3, std: dobae.StandardV3) -> tuple[int, bool]:
+    """가견적 '표준견적서보다 몇 %'의 기준과 시장 단가인지: 시장 단가 견적(2026-11-26 팀 결정).
+    부분 공사는 시장 단가로 셀 수 없어 기존 표준견적서(같은 줄끼리 비교)"""
+    got = market_basis.basis_total("dobae", h.area_m2, h.area_basis, h.grade, h.scope)
+    return (got, True) if got is not None else (std.quote.total, False)
+
+
 def _std_v3(h: dobae.HomeV3) -> dobae.StandardV3:
     """v3 표준견적서 계산 (quote.service가 저장하는 값과 같은 계산 엔진 · 판)"""
     return dobae.standard_v3(
@@ -897,12 +908,14 @@ def _v3_out(v: Vendor, ps: VendorPriceSet | None, lines: list) -> PricesV3Out:
         )
     example = None
     if ps is not None:
+        basis, market = _basis_v3(EXAMPLE_V3, ex)
         e = estimate.estimate_v3(
             prices,
             ex.qty,
             grade=EXAMPLE_V3.grade,
             exempt=v.tax_kind in NO_VAT,
-            standard_total=ex.quote.total,
+            standard_total=basis,
+            whole=market,
         )
         example = _estimate_v3_out(e, ps, v.tax_kind)
     return PricesV3Out(
@@ -1245,6 +1258,7 @@ async def estimates_v3_for(
     lines = await repo.price_lines(s, [x.id for x in sets])
     h = _home_v3(project, grade)
     std = _std_v3(h)
+    basis, market = _basis_v3(h, std)
     out: dict[uuid.UUID, EstimateV3Out] = {}
     for x in sets:
         tax = vendors[x.vendor_id].tax_kind
@@ -1253,7 +1267,8 @@ async def estimates_v3_for(
             std.qty,
             grade=h.grade,
             exempt=tax in NO_VAT,
-            standard_total=std.quote.total,
+            standard_total=basis,
+            whole=market,
         )
         out[x.vendor_id] = _estimate_v3_out(e, x, tax)
     return out
@@ -1379,3 +1394,26 @@ async def set_review_link_status(
         note=row.note,
         checked_at=row.checked_at,
     )
+
+
+# ---- 실측 영업일 (0038): 업체가 미리 등록하고, 고객은 이 안의 빈 반나절만 골라요 ----
+
+
+async def get_open_days(s: AsyncSession, vendor: User) -> OpenDaysOut:
+    v = await s.get(Vendor, vendor.id, populate_existing=True)
+    if v is None:
+        raise AppError(404, "not_found", "업체 정보를 찾을 수 없어요.")
+    return OpenDaysOut(open_weekdays=list(v.open_weekdays or []), off_days=list(v.off_days or []))
+
+
+async def save_open_days(
+    s: AsyncSession, vendor: User, data: OpenDaysIn, today: date
+) -> OpenDaysOut:
+    off = [d for d in data.off_days if d > today]  # 지난 날은 남기지 않아요
+    await s.execute(
+        sa_update(Vendor)
+        .where(Vendor.user_id == vendor.id)
+        .values(open_weekdays=data.open_weekdays, off_days=off)
+    )
+    await s.commit()
+    return await get_open_days(s, vendor)

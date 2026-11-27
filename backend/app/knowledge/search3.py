@@ -72,19 +72,20 @@ def search(
 
     ranked = sorted(((s + bonus(x), x) for x, s in fused.items()), key=lambda p: -p[0])[:k]
     best = max(bm25._coverage(qq, ranked[0][1]) for qq in qs_all) if ranked else 0.0
-    hits = [
-        bm25.Hit(
-            ref=x.chunk.ref,
-            source_type=bm25.TYPE_KO.get(x.doc.kind, "기타"),
-            title=x.doc.title,
-            publisher=x.doc.pub,
-            date=x.doc.date,
-            section=x.chunk.sec,
-            text=x.chunk.text,
-            score=round(s * 1000, 1),
-            url=x.doc.url,
-            official=bm25.TIER.get(x.doc.kind, 0.5) >= 0.8,
-        )
-        for s, x in ranked
-    ]
+    hits = [make_hit(item, score) for score, item in ranked]
     return bm25.Result(hits, best >= bm25.CONF["enough_cov"], kinds)
+
+
+def make_hit(x: bm25.Item, s: float) -> bm25.Hit:
+    return bm25.Hit(
+        ref=x.chunk.ref,
+        source_type=bm25.TYPE_KO.get(x.doc.kind, "기타"),
+        title=x.doc.title,
+        publisher=x.doc.pub,
+        date=x.doc.date,
+        section=x.chunk.sec,
+        text=x.chunk.text,
+        score=round(s * 1000, 1),
+        url=x.doc.url,
+        official=bm25.TIER.get(x.doc.kind, 0.5) >= 0.8,
+    )

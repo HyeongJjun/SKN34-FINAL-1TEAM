@@ -51,7 +51,7 @@ export default async function VendorRequestPage({ params, searchParams }: { para
     return (
       <>
         <ProHeader me={me} phone={{ title: "날짜 수락", back }} />
-        <Desk feed={feed} say={[`${title} 고객이 실측 반나절을 골랐어요.`, "오른쪽에서 수락하거나 다른 날을 제안해 주세요. 수락하면 고객과 채팅이 열려요."]}>
+        <Desk feed={feed} say={[`${title} 고객이 실측 반나절을 골랐어요.`, "현장 정보를 보고 수락 · 다른 날 제안 · 못 받아요를 골라 주세요. 궁금한 건 고객 채팅으로 물어봐요."]}>
           <AcceptForm v={v} now={vendorNow("accept")} />
         </Desk>
       </>

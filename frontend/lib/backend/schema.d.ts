@@ -1833,6 +1833,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/vendor/open-days": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 실측 영업일 (영업 요일 · 쉬는 날) */
+        get: operations["open_days_vendor_open_days_get"];
+        /** 실측 영업일 저장 (고객은 이 안의 빈 반나절만 골라요) */
+        put: operations["save_open_days_vendor_open_days_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/vendor/profile": {
         parameters: {
             query?: never;
@@ -2018,6 +2036,23 @@ export interface paths {
         };
         /** 이 집 기준 업체 자세히 · 가견적 계산 (목록 밖 업체는 404) */
         get: operations["vendor_detail_projects__project_id__vendors__vendor_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/vendors/{vendor_id}/open-days": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 업체가 등록한 영업일 중 실측을 받을 수 있는 반나절 (내 프로젝트만, 고객 정보 없음) */
+        get: operations["vendor_open_days_projects__project_id__vendors__vendor_id__open_days_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2994,7 +3029,7 @@ export interface components {
              */
             route: "guide" | "trade" | "quote_explanation" | "schedule" | "multi" | "out_of_scope" | "ask_back";
             /** Trade */
-            trade?: ("dobae" | "mokgong" | "floor" | "tile" | "bath" | "kitchen" | "paint" | "film" | "electric" | "window" | "demolition" | "plumbing" | "common") | null;
+            trade?: string | null;
             /** Slot */
             slot?: string | null;
             /** Value */
@@ -4084,6 +4119,28 @@ export interface components {
             source: string;
         };
         /**
+         * GuestPartOut
+         * @description 도배 밖 공정 한 장(목공). 가입 뒤 표준견적서 StandardTradeOut과 같은 계산 엔진 값.
+         */
+        GuestPartOut: {
+            /**
+             * Trade
+             * @constant
+             */
+            trade: "mokgong";
+            /** Lines */
+            lines: components["schemas"]["GuestLineOut"][];
+            /** Supply */
+            supply: number;
+            /** Vat */
+            vat: number;
+            /**
+             * Total
+             * @description 부가세 포함
+             */
+            total: number;
+        };
+        /**
          * GuestStandardOut
          * @description 저장하지 않는 계산 결과. DB · 로그에 입력을 남기지 않는다.
          */
@@ -4147,6 +4204,29 @@ export interface components {
              * @description 계산에 쓴 가정 (화면 '이렇게 셌어요')
              */
             assumptions: string[];
+            /**
+             * Parts
+             * @description 목공 할 곳을 골랐으면 목공 공정 (lines · supply · total은 도배만)
+             * @default []
+             */
+            parts: components["schemas"]["GuestPartOut"][];
+            /** @description 공정이 둘 이상이면 모든 공정 합계. 예산 안/밖 · days도 이 합계 기준 */
+            sum?: components["schemas"]["GuestSumOut"] | null;
+        };
+        /**
+         * GuestSumOut
+         * @description 공정이 둘 이상일 때 모든 공정 합계 (가입 뒤 StandardOut.supply · vat · total과 같음).
+         */
+        GuestSumOut: {
+            /** Supply */
+            supply: number;
+            /** Vat */
+            vat: number;
+            /**
+             * Total
+             * @description 부가세 포함
+             */
+            total: number;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -4243,6 +4323,12 @@ export interface components {
              * @description 공사 시작 희망일 (모르면 비움)
              */
             start_date?: string | null;
+            /**
+             * Mokgong
+             * @description 목공 할 곳(몰딩 · 걸레받이 · 문 · 벽 평탄화). 비우면 도배만
+             * @default []
+             */
+            mokgong: ("molding" | "base" | "door" | "flatten")[];
         };
         /**
          * HomeInfoOut
@@ -4280,6 +4366,11 @@ export interface components {
             budget_won: number | null;
             /** Start Date */
             start_date: string | null;
+            /**
+             * Mokgong
+             * @default []
+             */
+            mokgong: ("molding" | "base" | "door" | "flatten")[];
         };
         /** InboxPageOut */
         InboxPageOut: {
@@ -5055,6 +5146,23 @@ export interface components {
             items: components["schemas"]["NotificationOut"][];
             /** Unread */
             unread: number;
+        };
+        /**
+         * OpenDaysIn
+         * @description 실측 영업일 등록: 영업 요일(월 0 ~ 일 6) · 쉬는 날(120개까지)
+         */
+        OpenDaysIn: {
+            /** Open Weekdays */
+            open_weekdays: number[];
+            /** Off Days */
+            off_days?: string[];
+        };
+        /** OpenDaysOut */
+        OpenDaysOut: {
+            /** Open Weekdays */
+            open_weekdays: number[];
+            /** Off Days */
+            off_days: string[];
         };
         /** OpenFieldOut */
         OpenFieldOut: {
@@ -7695,7 +7803,7 @@ export interface components {
              */
             status: "open" | "read_only";
             /** Ro Reason */
-            ro_reason: ("other_chosen" | "cancelled" | "declined" | "withdrawn" | "blocked" | "admin") | null;
+            ro_reason: ("other_chosen" | "cancelled" | "declined" | "withdrawn" | "blocked" | "admin" | "expired") | null;
             /**
              * Blocked
              * @description 고객이 차단함
@@ -7740,7 +7848,7 @@ export interface components {
              */
             status: "open" | "read_only";
             /** Ro Reason */
-            ro_reason: ("other_chosen" | "cancelled" | "declined" | "withdrawn" | "blocked" | "admin") | null;
+            ro_reason: ("other_chosen" | "cancelled" | "declined" | "withdrawn" | "blocked" | "admin" | "expired") | null;
         };
         /**
          * TodoOut
@@ -9052,6 +9160,16 @@ export interface components {
             jungmun: "slim3" | "slide" | "swing";
             /** Options */
             options?: ("doors" | "jungmun" | "entry_hw" | "board" | "insulation" | "bath_board")[] | null;
+            /**
+             * Molding
+             * @default true
+             */
+            molding: boolean;
+            /**
+             * Skirting
+             * @default true
+             */
+            skirting: boolean;
         };
         /** V2MqLineOut */
         V2MqLineOut: {
@@ -10722,6 +10840,27 @@ export interface components {
             items: components["schemas"]["VendorSlotOut"][];
         };
         /**
+         * VendorSlotIn
+         * @description 업체 하나에 고른 반나절 (요청 때, 업체 영업일 안)
+         */
+        VendorSlotIn: {
+            /**
+             * Vendor Id
+             * Format: uuid
+             */
+            vendor_id: string;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * Half
+             * @enum {string}
+             */
+            half: "am" | "pm";
+        };
+        /**
          * VendorSlotOut
          * @description 업체 일정 반나절 한 칸 (V08 · D14 달력)
          */
@@ -11084,6 +11223,11 @@ export interface components {
              * @description v3 고른 벽지 (C11, 도배만). 비면 담을 때 고른 벽지, 그것도 없으면 공사 벽지
              */
             grade?: ("economy" | "basic") | null;
+            /**
+             * Picks
+             * @description 업체마다 고른 실측 반나절(업체 영업일 안). 있으면 그 업체는 바로 '업체 수락 기다림'
+             */
+            picks?: components["schemas"]["VendorSlotIn"][];
         };
         /** VisitCreateOut */
         VisitCreateOut: {
@@ -11206,6 +11350,24 @@ export interface components {
              * @description 12시간 안으로 남음
              */
             soon: boolean;
+        };
+        /** VisitOpenDayOut */
+        VisitOpenDayOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Halves */
+            halves: ("am" | "pm")[];
+        };
+        /**
+         * VisitOpenDaysOut
+         * @description 업체 영업일의 빈 반나절(날 순)
+         */
+        VisitOpenDaysOut: {
+            /** Days */
+            days: components["schemas"]["VisitOpenDayOut"][];
         };
         /**
          * VisitOut
@@ -15266,6 +15428,59 @@ export interface operations {
             };
         };
     };
+    open_days_vendor_open_days_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpenDaysOut"];
+                };
+            };
+        };
+    };
+    save_open_days_vendor_open_days_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpenDaysIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpenDaysOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     profile_vendor_profile_get: {
         parameters: {
             query?: never;
@@ -15654,6 +15869,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VendorDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    vendor_open_days_projects__project_id__vendors__vendor_id__open_days_get: {
+        parameters: {
+            query: {
+                start: string;
+                end: string;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                vendor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisitOpenDaysOut"];
                 };
             };
             /** @description Validation Error */

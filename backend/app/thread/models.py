@@ -17,8 +17,8 @@ from app.db import Base
 from app.shared.ids import uuid7
 
 STATUSES = ("open", "read_only")
-# 읽기만 되는 까닭: 다른 업체 확정 · 실측 취소 · 업체 못 받아요 · 고객 탈퇴 · 고객 차단 · 관리자
-RO_REASONS = ("other_chosen", "cancelled", "declined", "withdrawn", "blocked", "admin")
+# 읽기만 되는 까닭: 다른 업체 확정 · 실측 취소 · 업체 못 받아요 · 고객 탈퇴 · 고객 차단 · 관리자 · 요청 기한 지남(0039)
+RO_REASONS = ("other_chosen", "cancelled", "declined", "withdrawn", "blocked", "admin", "expired")
 SENDER_ROLES = ("customer", "vendor", "system")
 MESSAGE_KINDS = ("text", "photo", "system")
 WARNS = ("offsite",)  # 믿집 밖 거래 주의 줄 (고객 화면만, D05 A)
