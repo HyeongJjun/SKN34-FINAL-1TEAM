@@ -29,7 +29,7 @@ import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { dateShort, euro, won } from "@/lib/format";
 import { termByName } from "@/lib/guide";
-import { boardTarget, norm, pickRule, type PickState } from "./boardLink";
+import { boardTarget, CLOSED_VISITS, norm, pickRule, pickStateOf, type PickState } from "./boardLink";
 import { quickChips } from "./chips";
 import { Jaejae } from "./Jaejae";
 import { Plan, PLAN_STEPS } from "./Plan";
@@ -45,7 +45,7 @@ import { AiActionContext } from "@/components/ai/AiAnswer";
 import s from "./flow.module.css";
 
 type Pick = Schemas["VisitPickOut"];
-const CLOSED = ["declined", "expired", "cancelled", "no_show", "closed"];
+const CLOSED = CLOSED_VISITS;
 type Half = "am" | "pm";
 const HALF: Record<Half, string> = { am: "오전", pm: "오후" };
 const enc = encodeURIComponent;
@@ -169,13 +169,9 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const listOf = (t: Trade) => { const x = t === "dobae" ? vendors : mokVendors; return [...(x?.local ?? []), ...(x?.nearby ?? [])]; };
   /** 담기 · 빼기를 열지(#220 리뷰): 업체 목록은 재재가 말하면 확정 뒤에도 보여서, 단추는 그 공정 확정 · 실측 상태로 따로 막아요 */
   const pickOf = (t: Trade): PickState => {
-    const tv = visits?.visits.filter((v) => v.trade === t && !CLOSED.includes(v.status)) ?? [];
     const x = t === "dobae" ? vendors : mokVendors;
-    return {
-      locked: !!schedule?.trades.some((d) => d.deal.trade === t) || tv.some((v) => v.status === "chosen"),
-      left: x?.shortlist?.left ?? MAX_PICK - listOf(t).filter((v) => v.shortlisted).length,
-      live: new Set(tv.flatMap((v) => (v.vendor_id ? [v.vendor_id] : []))),
-    };
+    return pickStateOf(t, (schedule?.trades ?? []).map((d) => d.deal.trade), visits?.visits ?? [],
+      x?.shortlist?.left ?? MAX_PICK - listOf(t).filter((v) => v.shortlisted).length);
   };
   /** AI 답 → 보드(#197, boardLink.ts): 업체 이름이면 그 업체 강조, 아니면 물은 말로 일정 · 업체 칸 */
   function linkBoard(q: string, out: AiTurnOut): number | undefined {
