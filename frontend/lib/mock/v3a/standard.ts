@@ -9,10 +9,11 @@ export type HomeInfoBody = Schemas["HomeInfoIn"];
 export const SAMPLE_INFO: HomeInfoBody = {
   trade: "dobae", scope: "full", spaces: [], faces: ["wall", "ceiling"], housing: "apt",
   sido: "seoul", sgg: "노원구", emd: "상계동", area_m2: "69.4", area_basis: "supply",
-  occupied: false, grade: "basic", budget_won: 3_000_000, start_date: "2027-01-04",
+  occupied: false, grade: "basic", budget_won: 3_000_000, start_date: "2027-01-04", mokgong: [],
 };
 
 export const SAMPLE_STANDARD: GuestStandard = {
+  parts: [],
   formula_ver: "dobae_v3",
   price_ver: "2026H2",
   share_ver: null,
@@ -42,6 +43,7 @@ export const PART_INFO: HomeInfoBody = {
 };
 
 export const PART_STANDARD: GuestStandard = {
+  parts: [],
   formula_ver: "dobae_v3",
   price_ver: "2026H2",
   share_ver: "share_2026_1",
