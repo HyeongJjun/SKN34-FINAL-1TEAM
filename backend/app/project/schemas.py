@@ -218,7 +218,7 @@ class HomeInfoIn(BaseModel):
     mokgong: list[MokItem] = Field(
         default=[],
         max_length=4,
-        description="목공 할 곳(몰딩 · 걸레받이 · 문 · 벽 평탄화). 비우면 도배만. 손님 계산은 도배만 센다",
+        description="목공 할 곳(몰딩 · 걸레받이 · 문 · 벽 평탄화). 비우면 도배만",
     )
 
     @field_validator("emd")
