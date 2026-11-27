@@ -143,7 +143,7 @@ def test_v3_demo_builds_every_stage_with_9th_draft_numbers(api):
             st["key"]: st["on"]
             for st in api.get(f"/projects/{pid}/overview").json()["trades"][0]["steps"]
         }
-        assert all(steps[k] < today for k in ("visit", "deal", "dates")), (email, steps)
+        assert all(steps[k] < today for k in ("visit", "compare", "dates")), (email, steps)
 
     # 다시 돌리면 이미 있는 계정은 건너뛰고 아무것도 바꾸지 않는다(종 숫자 · 기한 일도 그대로)
     before = query(SAME_SQL)[0]

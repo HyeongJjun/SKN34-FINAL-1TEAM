@@ -14,26 +14,36 @@ import { won } from "@/lib/format";
 import { daysCaption, type StdView } from "@/lib/guest/standard";
 import s from "./StandardDialog.module.css";
 
-export type StdData = { view: StdView; market: Schemas["V2MqOut"] | null };
+export type StdData = { view: StdView; market: Schemas["V2MqOut"] | null; /** 공정마다 따로 계산한 표준견적서(공정 탭) */ parts?: Schemas["V2MqPartsOut"] | null };
 
-export function StandardDialog({ open, onClose, data, pid, locked, onEdit, onPlan, basis }: { open: boolean; onClose: () => void; data: StdData; pid: string; locked: boolean; /** 업체 도배 가견적 %의 기준(도배만 시장 단가, 서버 standard_total) */ basis?: number | null; /** 조건 바꾸기 · 예상 공정표를 재재 화면 창으로(옮기지 않아요) */ onEdit: () => void; onPlan: () => void }) {
+export function StandardDialog({ open, onClose, data, pid, locked, onEdit, onPlan, trade, basis }: { open: boolean; onClose: () => void; data: StdData; pid: string; locked: boolean; /** 업체 도배 가견적 %의 기준(도배만 시장 단가, 서버 값) */ basis?: number | null; /** 공정 탭에서 열면 그 공정 표준견적서만 */ trade?: "dobae" | "mokgong"; /** 조건 바꾸기 · 예상 공정표를 재재 화면 창으로(옮기지 않아요) */ onEdit: () => void; onPlan: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const id = useId();
   const h = useModal(ref, open, onClose);
   const change = `/start?edit=${pid}`;
   const { view, market } = data;
   const parts = view.parts ?? [];
+  // 공정 탭: 그 공정만 따로 계산한 표준견적서(서버 값 그대로). 공정이 하나거나 값이 없으면 전체 표준견적서
+  const all = data.parts && data.parts.parts.length > 1 ? data.parts : null;
+  const one = trade && all ? all.parts.find((x) => x.trade === trade) ?? null : null;
+  const word = (t: string) => (t === "dobae" ? "도배" : t === "mokgong" ? "목공" : t);
   return (
     <dialog ref={ref} className={s.dlg} aria-labelledby={`${id}-t`} onCancel={h.onCancel} onClick={h.onClick}>
       {open ? (
         <div className={s.card}>
           <div className={s.head}>
-            <h2 id={`${id}-t`}>표준견적서</h2>
+            <h2 id={`${id}-t`}>{one ? `${word(one.trade)} 표준견적서` : "표준견적서"}</h2>
             <button type="button" className={s.x} aria-label="닫기" onClick={onClose}><Icon name="close" /></button>
           </div>
           <div className={s.body}>
-            {parts.length ? <TradeOrder has={["dobae", ...parts.map((x) => x.trade)]} /> : null}
-            {market ? (
+            {parts.length && !one ? <TradeOrder has={["dobae", ...parts.map((x) => x.trade)]} /> : null}
+            {one && all ? (
+              <>
+                <MarketTotal q={one.quote} changeHref={change} onChange={onEdit} caption={`${word(one.trade)}만 · 부가세 포함`} />
+                <p className={s.note}>전체 표준견적서 <b className="mj-num">{won(all.total)}</b>은 공종별 금액을 합친 금액이에요({all.parts.map((x) => `${word(x.trade)} ${won(x.quote.total)}`).join(" + ")}).</p>
+                <MarketSheet q={one.quote} />
+              </>
+            ) : market ? (
               <>
                 <MarketTotal q={market} changeHref={change} onChange={onEdit} caption={["부가세 포함", daysCaption(view.days)].filter(Boolean).join(" · ")} />
                 {/* 목공도 한 공사는 합계와 가견적 % 기준이 달라서, 기준(도배만)을 서버 값 그대로 보여요(#207) */}

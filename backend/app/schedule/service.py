@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.models import User
 from app.calc import deadline, work_view
 from app.calc.common import FORMULA_VERSION, VAT_RATE, Money, add_money, from_entered, sum_won
-from app.calc.progress import TradeFacts, first_todo, progress, project_phase
+from app.calc.progress import STEPS, TradeFacts, first_todo, progress, project_phase
 from app.calc.quote_diff import budget_gap
 from app.calc.schedule import (
     JOB_MAX_DAYS,
@@ -125,6 +125,7 @@ from app.schedule.schemas import (
     TradeExtrasOut,
     TradeMoneyOut,
     TradeProgressOut,
+    TradeStepOut,
     VendorContactOut,
     VendorStepOut,
 )
@@ -2664,13 +2665,15 @@ async def _done_tab(
 
 # ---- 내 공사 한눈에 · 목록 · 서류: visit · quote · project 공개 함수로 모은다. 단계 판정은 calc ----
 
-STEP_LABEL = {
-    "house": "집 정보 · 공정",
-    "standard": "기준 금액",
-    "pick": "업체 고르기",
+STEP_LABEL = {  # 재재 보드 8칸과 같은 이름(#203)
+    "house": "집",
+    "standard": "견적",
+    "pick": "업체",
     "visit": "실측",
-    "deal": "업체 확정",
-    "dates": "공사 날짜",
+    "compare": "비교",
+    "dates": "일정",
+    "work": "공사",
+    "done": "완료",
 }
 WEEKDAY = "월화수목금토일"
 
@@ -3055,6 +3058,7 @@ async def my_projects(s: AsyncSession, user: User, today: date) -> list[MyProjec
         p = await project_service.get_for(s, user, item.id)
         rows, _, deals = await _progress_of(s, p, today, now)
         prs = [pr for pr, *_ in rows]
+        todos = {pr.trade: _todo_out(p.id, pr.todo, pr.trade, d, ctx) for pr, d, ctx, _ in rows}
         top = first_todo(prs)
         todo = None
         if top is not None:
@@ -3067,7 +3071,19 @@ async def my_projects(s: AsyncSession, user: User, today: date) -> list[MyProjec
             MyProjectOut(
                 **item.model_dump(),
                 phase=project_phase(prs),
-                current=min((pr.current for pr in prs), default=1),
+                # 지금 할 일이 있는 공정의 단계(#203: 느린 공정에 묶여 멈추지 않게). 공정별은 trade_steps
+                current=top.current
+                if top is not None
+                else min((pr.current for pr in prs), default=1),
+                trade_steps=[
+                    TradeStepOut(
+                        trade=pr.trade,
+                        current=pr.current,
+                        label=STEP_LABEL[STEPS[pr.current - 1]],
+                        todo=todos.get(pr.trade),
+                    )
+                    for pr in prs
+                ],
                 todo=todo,
                 next=_soonest(nexts),
                 updated_at=await _updated_at(s, p, deals, [f for *_, f in rows]),

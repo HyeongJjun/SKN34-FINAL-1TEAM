@@ -1472,6 +1472,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v2/projects/{project_id}/market-quotes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 내 공사 공정별 표준견적서와 합계 (전체 공사가 아니면 빈 목록)
+         * @description 공정 탭: 공정마다 그 공정만 계산한 표준견적서. 남의 공사는 404.
+         */
+        get: operations["v2_project_market_quotes_v2_projects__project_id__market_quotes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v2/market-extras": {
         parameters: {
             query?: never;
@@ -4984,9 +5004,15 @@ export interface components {
             phase: "estimate" | "progress" | "work" | "done";
             /**
              * Current
-             * @description 가장 늦은 공정의 지금 단계 번호, 1부터 (1~6, 다 마치면 6, C40)
+             * @description 지금 할 일이 있는 공정의 단계 번호, 1부터 (1~8, 다 마치면 8). 없으면 가장 늦은 공정
              */
             current: number;
+            /**
+             * Trade Steps
+             * @description 공정마다 지금 단계 (#203)
+             * @default []
+             */
+            trade_steps: components["schemas"]["TradeStepOut"][];
             todo: components["schemas"]["TodoOut"] | null;
             next: components["schemas"]["NextOut"] | null;
             /**
@@ -7572,7 +7598,7 @@ export interface components {
              * Key
              * @enum {string}
              */
-            key: "house" | "standard" | "pick" | "visit" | "deal" | "dates";
+            key: "house" | "standard" | "pick" | "visit" | "compare" | "dates" | "work" | "done";
             /** Label */
             label: string;
             /**
@@ -7587,7 +7613,7 @@ export interface components {
             on: string | null;
             /**
              * Count
-             * @description 업체 고르기: 요청한 곳 · 실측: 받은 견적서 수
+             * @description 업체: 요청한 곳 · 실측: 받은 견적서 수
              */
             count: number | null;
         };
@@ -7934,7 +7960,7 @@ export interface components {
             phase: "estimate" | "progress" | "work" | "done";
             /**
              * Current
-             * @description 지금 단계 번호, 1부터 (1~6, 다 마치면 6)
+             * @description 지금 단계 번호, 1부터 (1~8, 다 마치면 8)
              */
             current: number;
             /** Steps */
@@ -7957,6 +7983,26 @@ export interface components {
             /** Proposed End */
             proposed_end: string | null;
             next: components["schemas"]["NextOut"] | null;
+        };
+        /**
+         * TradeStepOut
+         * @description 공정 하나의 지금 단계 (재재 보드 8칸: 집 · 견적 · 업체 · 실측 · 비교 · 일정 · 공사 · 완료)
+         */
+        TradeStepOut: {
+            /** Trade */
+            trade: string;
+            /**
+             * Current
+             * @description 1~8 (다 마치면 8)
+             */
+            current: number;
+            /**
+             * Label
+             * @description 지금 칸 이름
+             */
+            label: string;
+            /** @description 그 공정의 지금 할 일 (공정 탭) */
+            todo?: components["schemas"]["TodoOut"] | null;
         };
         /** TradesIn */
         TradesIn: {
@@ -9115,6 +9161,16 @@ export interface components {
             jungmun: "slim3" | "slide" | "swing";
             /** Options */
             options?: ("doors" | "jungmun" | "entry_hw" | "board" | "insulation" | "bath_board")[] | null;
+            /**
+             * Molding
+             * @default true
+             */
+            molding: boolean;
+            /**
+             * Skirting
+             * @default true
+             */
+            skirting: boolean;
         };
         /** V2MqLineOut */
         V2MqLineOut: {
@@ -9221,6 +9277,28 @@ export interface components {
             rate: number;
             /** Amount */
             amount: number;
+        };
+        /**
+         * V2MqPartOut
+         * @description 공정 하나만 따로 계산한 시장 단가 표준견적서 (공정 탭)
+         */
+        V2MqPartOut: {
+            /**
+             * Trade
+             * @enum {string}
+             */
+            trade: "dobae" | "mokgong";
+            quote: components["schemas"]["V2MqOut"];
+        };
+        /** V2MqPartsOut */
+        V2MqPartsOut: {
+            /** Parts */
+            parts: components["schemas"]["V2MqPartOut"][];
+            /**
+             * Total
+             * @description 공종별 표준견적서 금액을 합친 값 (부가세 포함)
+             */
+            total: number;
         };
         /** V2MqTradeOut */
         V2MqTradeOut: {
@@ -14601,6 +14679,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["V2MqOut"] | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    v2_project_market_quotes_v2_projects__project_id__market_quotes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["V2MqPartsOut"];
                 };
             };
             /** @description Validation Error */

@@ -620,11 +620,11 @@ class CheckIn(BaseModel):
 
 
 class StepOut(BaseModel):
-    key: Literal["house", "standard", "pick", "visit", "deal", "dates"]
+    key: Literal["house", "standard", "pick", "visit", "compare", "dates", "work", "done"]
     label: str
     state: Literal["done", "now", "todo"]
     on: date | None = Field(description="끝난 날 · 지금 단계가 시작된 날 (서울)")
-    count: int | None = Field(description="업체 고르기: 요청한 곳 · 실측: 받은 견적서 수")
+    count: int | None = Field(description="업체: 요청한 곳 · 실측: 받은 견적서 수")
 
 
 class TodoOut(BaseModel):
@@ -657,7 +657,7 @@ class TradeProgressOut(BaseModel):
     deal_id: uuid.UUID | None
     deal_status: str | None
     phase: Literal["estimate", "progress", "work", "done"]
-    current: int = Field(description="지금 단계 번호, 1부터 (1~6, 다 마치면 6)")
+    current: int = Field(description="지금 단계 번호, 1부터 (1~8, 다 마치면 8)")
     steps: list[StepOut]
     todo: TodoOut
     overdue: bool
@@ -760,13 +760,23 @@ class LogItemOut(BaseModel):
     )
 
 
+class TradeStepOut(BaseModel):
+    """공정 하나의 지금 단계 (재재 보드 8칸: 집 · 견적 · 업체 · 실측 · 비교 · 일정 · 공사 · 완료)"""
+
+    trade: str
+    current: int = Field(description="1~8 (다 마치면 8)")
+    label: str = Field(description="지금 칸 이름")
+    todo: "TodoOut | None" = Field(default=None, description="그 공정의 지금 할 일 (공정 탭)")
+
+
 class MyProjectOut(ProjectListItem):
     """내 공사 목록 한 줄 (WMy)"""
 
     phase: Literal["estimate", "progress", "work", "done"]
     current: int = Field(
-        description="가장 늦은 공정의 지금 단계 번호, 1부터 (1~6, 다 마치면 6, C40)"
+        description="지금 할 일이 있는 공정의 단계 번호, 1부터 (1~8, 다 마치면 8). 없으면 가장 늦은 공정"
     )
+    trade_steps: list["TradeStepOut"] = Field(default=[], description="공정마다 지금 단계 (#203)")
     todo: TodoOut | None
     next: NextOut | None
     updated_at: datetime = Field(description="바뀐 날 (목록은 최근 순)")

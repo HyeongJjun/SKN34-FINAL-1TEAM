@@ -16,9 +16,24 @@ const TODO: Record<number, string[]> = {
   6: ["가구와 짐을 벽에서 떼어 두기", "추가 금액은 사진과 이유를 먼저 받기"],
   7: ["들뜬 곳 · 이음매 · 모서리 확인", "리뷰 남기기"],
 };
+/** 목공 플랜 할 일(공정 탭) */
+export const MOK_TODO: Record<number, string[]> = {
+  0: ["몰딩 · 걸레받이 · 문 상태 사진 찍어 두기", "문이 잘 닫히는지 · 문틀이 벌어졌는지 보기"],
+  1: ["목공 표준견적서 줄을 한 번 읽어 보기", "바꿀 곳(몰딩 · 걸레받이 · 문)을 다시 정하기"],
+  2: ["가견적만 보지 말고 후기 · 시공 수도 보기", "목공은 도배보다 먼저 해요. 도배 업체 일정과 같이 보기"],
+  3: ["실측 날 집에 있을 사람 정하기", "문 · 몰딩 색과 모양을 업체에 물어보기"],
+  4: ["철거 · 폐기물이 견적서에 들어 있는지", "자재 이름과 수량이 적혀 있는지"],
+  5: ["관리사무소에 공사 신고(소음 나는 날)", "엘리베이터 보양 예약"],
+  6: ["가구와 짐을 벽 · 문에서 떼어 두기", "추가 금액은 사진과 이유를 먼저 받기"],
+  7: ["이음새 · 모서리 · 문 여닫힘 확인", "리뷰 남기기"],
+};
 const KEY = (scope: string) => `mj_plan_todo_${scope}`;
 
-export function Plan({ now, scope, open, render, auto, tab: shown, onTab }: {
+export function Plan({ now, scope, open, render, auto, tab: shown, onTab, extra, title = "내 도배 플랜", todo = TODO }: {
+  /** 보드 이름(공정 탭이면 '내 목공 플랜') */
+  title?: string;
+  /** 칸마다 할 일(없으면 도배 할 일) */
+  todo?: Record<number, string[]>;
   /** 지금 단계(0~7, 다 끝나면 8) */
   now: number;
   /** 할 일 체크를 이 기기에 둘 이름(공사 id 또는 guest) */
@@ -31,6 +46,8 @@ export function Plan({ now, scope, open, render, auto, tab: shown, onTab }: {
   /** 보이는 단계를 밖에서 정할 때(대화의 '오른쪽에서 보기' · #196) */
   tab?: number;
   onTab?: (step: number) => void;
+  /** 제목 옆 작은 링크(결정 기록 · 서류) */
+  extra?: ReactNode;
 }) {
   const [own, setOwn] = useState(Math.min(now, 7));
   const tab = shown ?? own;
@@ -45,11 +62,11 @@ export function Plan({ now, scope, open, render, auto, tab: shown, onTab }: {
     try { window.localStorage.setItem(KEY(scope), JSON.stringify(n)); } catch { /* 이 기기에 못 두면 이번 화면에서만 */ }
     return n;
   });
-  const todos = TODO[tab] ?? [];
+  const todos = todo[tab] ?? [];
   const left = todos.filter((t) => !done[`${tab}:${t}`]).length;
   return (
-    <aside id="jj-board" className={open ? `${s.plan} ${s.planOpen}` : s.plan} aria-label="내 도배 플랜">
-      <h2 className={s.planT}>내 도배 플랜 <Badge tone="mute">{Math.min(now + 1, 8)}/8 단계</Badge></h2>
+    <aside id="jj-board" className={open ? `${s.plan} ${s.planOpen}` : s.plan} aria-label={title}>
+      <h2 className={s.planT}>{title} <Badge tone="mute">{Math.min(now + 1, 8)}/8 단계</Badge>{extra ? <span className={s.planExtra}>{extra}</span> : null}</h2>
       <div className={s.tabs} role="tablist" aria-label="플랜 단계">
         {PLAN_STEPS.map((label, i) => (
           <button key={label} type="button" role="tab" aria-selected={tab === i} className={[s.tab, tab === i ? s.tabOn : "", i < now ? s.tabDone : ""].join(" ")} onClick={() => setTab(i)}>

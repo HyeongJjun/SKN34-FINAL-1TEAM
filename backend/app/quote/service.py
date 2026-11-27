@@ -396,6 +396,8 @@ def market_calc(
     door: str = "abs",
     jungmun: str = "slim3",
     options: frozenset[str] | None = None,
+    molding: bool = True,
+    skirting: bool = True,
 ) -> tuple[market_quote.Quote, str]:
     """시장 단가 견적과 면적 → 평형 설명. 평형이 없으면 면적(전용이면 공급으로 바꿈)으로 센다."""
     note = ""
@@ -411,16 +413,22 @@ def market_calc(
             note = f"공급 {area_m2}㎡를 {py}평형으로 봤어요"
     r, ba = market_quote.default_rooms(py)
     inp = market_quote.Input(
-        py, rooms or r, baths or ba, dobae, mokgong, wallpaper, door, jungmun, options
+        py,
+        rooms or r,
+        baths or ba,
+        dobae,
+        mokgong,
+        wallpaper,
+        door,
+        jungmun,
+        options,
+        molding,
+        skirting,
     )
     try:
         return market_quote.build(inp, MARKET_BOOK), note
     except ValueError as e:
         raise AppError(422, "invalid", str(e)) from e
-
-
-# 고객이 고른 목공 할 곳 → 시장 단가 목공 선택 항목(몰딩 · 걸레받이는 기본 줄에 늘 있어요)
-MOK_OPTIONS = {"door": "doors", "flatten": "board"}
 
 
 def market_of(
@@ -435,9 +443,8 @@ def market_of(
     if d is None:
         return None
     mok = any(t.trade == "mokgong" for t in st.trades)
-    options = None
-    if mok and mok_items is not None:
-        options = frozenset(MOK_OPTIONS[x] for x in mok_items if x in MOK_OPTIONS)
+    options = market_basis.mok_options(mok_items) if mok else None
+    base = market_basis.mok_base(mok_items) if mok else {}
     return market_calc(
         pyeong=None,
         area_m2=st.area_m2,
@@ -445,7 +452,43 @@ def market_of(
         mokgong=mok,
         wallpaper="hapji" if d.grade == "economy" else "silk",
         options=options,
+        **base,
     )
+
+
+def market_parts_of(
+    st: StandardOut, mok_items: list[str] | None = None
+) -> list[tuple[str, market_quote.Quote, str]]:
+    """공정마다 따로 계산한 시장 단가 표준견적서(공정 탭, 2026-11-27): (공정, 견적, 면적 설명).
+    그 공정만 하는 공사로 계산해서 경비 · 부가세까지 든 금액이에요. 전체 공사가 아니면 빈 목록."""
+    if (st.scope or "full") != "full":
+        return []
+    d = next((t for t in st.trades if t.trade == "dobae"), None)
+    out = []
+    for t in st.trades:
+        if t.trade not in ("dobae", "mokgong"):
+            continue
+        q, note = market_calc(
+            pyeong=None,
+            area_m2=st.area_m2,
+            area_basis="exclusive" if st.area_basis == "exclusive" else "supply",
+            dobae=t.trade == "dobae",
+            mokgong=t.trade == "mokgong",
+            wallpaper="hapji" if d is not None and d.grade == "economy" else "silk",
+            options=market_basis.mok_options(mok_items) if t.trade == "mokgong" else None,
+            **(market_basis.mok_base(mok_items) if t.trade == "mokgong" else {}),
+        )
+        out.append((t.trade, q, note))
+    return out
+
+
+async def market_parts_for(
+    s: AsyncSession, user: User, project_id: uuid.UUID
+) -> list[tuple[str, market_quote.Quote, str]]:
+    """GET /v2/projects/{id}/market-quotes: 남의 것은 404."""
+    st = await standard_for(s, user, project_id)
+    p = await project_service.get_for(s, user, project_id)
+    return market_parts_of(st, list(p.trades.mokgong.items) if p.trades.mokgong else None)
 
 
 async def market_for(

@@ -222,9 +222,13 @@ def _estimate(
     return None if e.missing or not e.lines else e
 
 
-def _basis(std: StandardQuote) -> int:
-    """비교 기준 표준견적서 금액: 시장 단가 견적(2026-11-26 팀 결정). 부분 공사처럼 셀 수 없으면 기존 표준견적서"""
-    got = market_basis.basis_total(std.trade, std.area_m2, std.area_basis, std.grade, std.scope)
+def _basis(std: StandardQuote, p: ProjectOut) -> int:
+    """비교 기준 표준견적서 금액: 시장 단가 견적(2026-11-26 팀 결정). 부분 공사처럼 셀 수 없으면 기존 표준견적서.
+    목공은 고객이 고른 목공 할 곳만 넣어요(화면 표준견적서와 같은 값)"""
+    mok = list(p.trades.mokgong.items) if p.trades.mokgong else None
+    got = market_basis.basis_total(
+        std.trade, std.area_m2, std.area_basis, std.grade, std.scope, mok
+    )
     return got if got is not None else std.total
 
 
@@ -287,7 +291,7 @@ async def _cards(
             e = _estimate(trade, std, lines, prices.get(vid), grade) if V2_FALLBACK else None
             total = e.total if e else None
             set_id = prices[vid].set_id if e else None
-            pct = _vs(e.total, _basis(std))[0] if e else None
+            pct = _vs(e.total, _basis(std, p))[0] if e else None
         if tried.get(vid, 0) >= ATTEMPTS_MAX and vid not in live:
             state = "blocked_retry"
         elif v3 is not None and not v3.paper_ok:
@@ -379,7 +383,7 @@ async def vendors_for(
     rows = []
     for c in cards:
         e = _estimate(trade, std, lines, prices.get(c.vendor_id))
-        pct, way = _vs(e.total, _basis(std)) if e else (None, None)
+        pct, way = _vs(e.total, _basis(std, p)) if e else (None, None)
         rows.append(
             VendorRowOut(
                 vendor_id=c.vendor_id,
@@ -404,7 +408,7 @@ async def vendors_for(
         trade=trade,
         region=p.region,
         area_name=p.sgg,
-        standard_total=_basis(std),
+        standard_total=_basis(std, p),
         slots_left=SLOTS - len(await repo.live(s, p.id, trade)),
         consent_ver=CONSENT_VER,
         vendors=rows,
@@ -482,7 +486,7 @@ async def vendor_detail(
     e = _estimate(trade, std, lines, cp)
     estimate = None
     if e is not None and cp is not None:
-        pct, way = _vs(e.total, _basis(std))
+        pct, way = _vs(e.total, _basis(std, p))
         estimate = EstimateDetailOut(
             **e.model_dump(),
             set_id=cp.set_id,
@@ -502,7 +506,7 @@ async def vendor_detail(
     return VendorDetailOut(
         project_id=p.id,
         trade=trade,
-        standard_total=_basis(std),
+        standard_total=_basis(std, p),
         profile=profile,
         verified_on=_day(profile.verified_at),
         years_open=years_since(profile.opened_on, today) if profile.opened_on else None,
@@ -1277,7 +1281,7 @@ async def compare(
     for v in rows:
         sent = versions.get(v.id, [])
         latest = sent[0] if sent else None
-        pct, way = _vs(latest.total, _basis(std)) if latest else (None, None)
+        pct, way = _vs(latest.total, _basis(std, p)) if latest else (None, None)
         until = latest.valid_until if latest else None
         out.append(
             CompareRowOut(
@@ -1328,7 +1332,7 @@ async def compare(
     return CompareOut(
         project_id=p.id,
         trade=trade,
-        standard_total=_basis(std),
+        standard_total=_basis(std, p),
         formula_ver=std.formula_ver,
         price_ver=std.price_ver,
         computed_at=std.created_at,
@@ -1927,10 +1931,25 @@ async def draft_for(
 async def open_days(
     s: AsyncSession, v: Visit, w: VisitWindow, capacity: int, today: date
 ) -> list[slots.DayOpen]:
-    """업체 기간의 날마다 남은 칸 (이 요청이 잡은 칸은 빼고 센다, L03)"""
+    """업체 기간의 날마다 남은 칸 (이 요청이 잡은 칸은 빼고 센다, L03).
+    요청 때 업체 영업일에서 고른 요청(open_days)은 다시 고를 때도 영업 요일 · 쉬는 날을 빈 칸 0으로 둔다."""
     holds = await repo.vendor_holds(s, v.vendor_id, w.start_date, w.end_date)
     taken = slots.taken_count((h.day, h.half) for h in holds if h.visit_id != v.id)
-    return slots.open_halves(w.start_date, w.end_date, w.excluded or [], taken, capacity, today)
+    days = slots.open_halves(w.start_date, w.end_date, w.excluded or [], taken, capacity, today)
+    f = await open_day_facts(s, v)
+    if f is None:
+        return days
+    return [
+        d if slots.is_open_day(d.day, f.open_weekdays, f.off_days) else slots.DayOpen(d.day, 0, 0)
+        for d in days
+    ]
+
+
+async def open_day_facts(s: AsyncSession, v: Visit) -> repo.VendorFacts | None:
+    """요청 때 업체 영업일에서 날을 고른 요청이면 그 업체 영업 요일 · 쉬는 날, 아니면 None(업체가 준 기간 그대로)"""
+    if v.vendor_id is None or not await repo.has_event(s, v.id, "open_days"):
+        return None
+    return (await repo.vendor_facts(s, [v.vendor_id])).get(v.vendor_id)
 
 
 async def capacity_of(s: AsyncSession, vendor_id: uuid.UUID | None) -> int:
@@ -1952,6 +1971,11 @@ async def pick_view(
     if w is not None and v.vendor_id is not None:
         days = await open_days(s, v, w, await capacity_of(s, v.vendor_id), today)
     excluded = set(w.excluded or []) if w else set()
+    f = await open_day_facts(s, v)
+    if f is not None:  # 업체가 쉬는 날은 '마감(다른 고객이 잡음)'이 아니라 고를 수 없는 날이에요
+        excluded |= {
+            d.day for d in days if not slots.is_open_day(d.day, f.open_weekdays, f.off_days)
+        }
     full = [
         SlotOut(day=d.day, half=h)
         for d in days

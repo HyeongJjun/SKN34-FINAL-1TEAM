@@ -413,8 +413,8 @@ async def _seq(s, name: str, n: int) -> list[int]:
     """번호표(project_code_seq · vendor_quote_code_seq)에서 n개"""
     if n <= 0:
         return []
-    q = text(f"select nextval('{name}') from generate_series(1, :n)")  # 이름은 이 파일의 상수
-    return [int(x) for x in (await s.scalars(q, {"n": n}))]
+    q = text("select nextval(cast(cast(:name as text) as regclass)) from generate_series(1, :n)")
+    return [int(x) for x in (await s.scalars(q, {"name": name, "n": n}))]
 
 
 def _money(amount: int, tax_kind: str):

@@ -1,0 +1,27 @@
+.wrap { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.head { text-align: center; font-size: var(--mj-type-caption); color: var(--mj-text-mute); padding: 2px 0; }
+.sun { color: var(--mj-danger); }
+.cell {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-height: var(--mj-hit-min); min-width: 0; padding: 2px 0; border-radius: var(--mj-radius-field);
+  font-size: var(--mj-type-caption); color: var(--mj-text-mute); border: 1px solid transparent; background: none;
+}
+.open { font: inherit; font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); color: var(--mj-text); border-color: var(--mj-line); background: var(--mj-surface); cursor: pointer; }
+.open:hover { background: var(--mj-primary-weak); }
+.open:focus-visible, .half:focus-visible { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: 2px; }
+.on { border-color: var(--mj-primary); }
+.picked { background: var(--mj-primary); border-color: var(--mj-primary); color: var(--mj-on-primary); }
+.picked:hover { background: var(--mj-primary); }
+.cell small { font-size: 0.7em; line-height: 1; }
+.dot { width: 4px; height: 4px; border-radius: 50%; background: var(--mj-primary); }
+.halves { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.halves b { margin-right: auto; font-size: var(--mj-type-body); }
+.half {
+  min-height: var(--mj-hit); min-width: 72px; padding: 0 12px; border-radius: var(--mj-radius-field);
+  border: 1px solid var(--mj-line); background: var(--mj-surface); color: var(--mj-text);
+  font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); cursor: pointer;
+}
+.half:disabled { color: var(--mj-text-mute); background: var(--mj-bg); cursor: not-allowed; }
+.halfOn { border-color: var(--mj-primary); background: var(--mj-primary); color: var(--mj-on-primary); }
+.note { margin: 0; font-size: var(--mj-type-caption); color: var(--mj-text-mute); }

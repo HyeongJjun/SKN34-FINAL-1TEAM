@@ -29,11 +29,6 @@
 .askBtn:hover { background: var(--mj-primary-weak); }
 .saved { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 6px; color: var(--mj-text-mute); font-size: var(--mj-type-caption); }
 
-/* 공정 순서 띠 · 바닥 자리(#193) */
-.order { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; }
-.order li { padding: 6px 12px; border-radius: var(--mj-radius-pill); background: var(--mj-surface-sub); color: var(--mj-text-mute); font-size: var(--mj-type-caption); }
-.order .orderOn { background: var(--mj-primary-weak); color: var(--mj-on-primary-weak); font-weight: var(--mj-weight-semibold); }
-.soonRow { margin: 0; color: var(--mj-text-mute); font-size: var(--mj-type-label); }
 /* 로그인 전 표준견적서: 왼쪽 재재 대화 · 오른쪽 견적서(재재 공사 화면과 같은 배치) */
 .split { display: flex; flex-direction: column-reverse; gap: 16px; min-width: 0; }
 .sheetCol { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
@@ -43,3 +38,8 @@
   .split { display: grid; grid-template-columns: minmax(340px, 420px) minmax(0, 1fr); align-items: start; }
   .chat { position: sticky; top: calc(var(--mj-sticky-top, 64px) + 16px); }
 }
+/* 공정 순서 띠 · 바닥 자리(#193) */
+.order { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; }
+.order li { padding: 6px 12px; border-radius: var(--mj-radius-pill); background: var(--mj-surface-sub); color: var(--mj-text-mute); font-size: var(--mj-type-caption); }
+.order .orderOn { background: var(--mj-primary-weak); color: var(--mj-on-primary-weak); font-weight: var(--mj-weight-semibold); }
+.soonRow { margin: 0; color: var(--mj-text-mute); font-size: var(--mj-type-label); }

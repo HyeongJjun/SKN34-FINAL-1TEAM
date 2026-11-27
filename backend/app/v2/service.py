@@ -21,7 +21,7 @@ from app.calc import (
     v2_plan,
     v2_tools,
 )
-from app.calc.common import FORMULA_VERSION, from_entered, pyeong_to_m2
+from app.calc.common import FORMULA_VERSION, from_entered, pyeong_to_m2, sum_won
 from app.calc.plan_qty import PlanOptions, from_plan
 from app.calc.v2_quote import V2Books, V2Plan, V2QuoteInput, build, inputs, market_input
 from app.quote import service as quote_service
@@ -165,6 +165,8 @@ def market(b: v2.V2MqIn) -> v2.V2MqOut:
         door=b.door,
         jungmun=b.jungmun,
         options=None if b.options is None else frozenset(b.options),
+        molding=b.molding,
+        skirting=b.skirting,
     )
     auto = b.rooms is None or b.baths is None
     return v2.V2MqOut.model_validate(asdict(q) | {"area_note": note, "rooms_auto": auto})
@@ -177,6 +179,19 @@ async def market_for(s: AsyncSession, user: User, project_id: uuid.UUID) -> v2.V
         return None
     q, note = r
     return v2.V2MqOut.model_validate(asdict(q) | {"area_note": note, "rooms_auto": True})
+
+
+async def market_parts_for(s: AsyncSession, user: User, project_id: uuid.UUID) -> v2.V2MqPartsOut:
+    """공정마다 따로 계산한 표준견적서와 그 합계(공정 탭). 합계는 공종별 금액을 합친 값이에요."""
+    rows = await quote_service.market_parts_for(s, user, project_id)
+    parts = [
+        v2.V2MqPartOut(
+            trade=trade,
+            quote=v2.V2MqOut.model_validate(asdict(q) | {"area_note": note, "rooms_auto": True}),
+        )
+        for trade, q, note in rows
+    ]
+    return v2.V2MqPartsOut(parts=parts, total=sum_won(x.quote.total for x in parts))
 
 
 def market_extras() -> list[v2.V2MarketExtraOut]:

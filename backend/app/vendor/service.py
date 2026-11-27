@@ -908,13 +908,14 @@ def _v3_out(v: Vendor, ps: VendorPriceSet | None, lines: list) -> PricesV3Out:
         )
     example = None
     if ps is not None:
+        basis, market = _basis_v3(EXAMPLE_V3, ex)
         e = estimate.estimate_v3(
             prices,
             ex.qty,
             grade=EXAMPLE_V3.grade,
             exempt=v.tax_kind in NO_VAT,
-            standard_total=_basis_v3(EXAMPLE_V3, ex)[0],
-            whole=_basis_v3(EXAMPLE_V3, ex)[1],
+            standard_total=basis,
+            whole=market,
         )
         example = _estimate_v3_out(e, ps, v.tax_kind)
     return PricesV3Out(

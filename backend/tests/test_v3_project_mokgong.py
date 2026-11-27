@@ -44,3 +44,18 @@ def test_mokgong_errors(api):
     for bad in (["molding", "molding"], ["window"]):
         r = create(api, {**HOME, "mokgong": bad})
         assert r.status_code == 422, (bad, r.text)
+
+
+def test_guest_market_quote_matches_member_for_chosen_items(api):
+    """손님 시장 단가(/v2/market-quote)도 고른 목공 할 곳만 세요: 문만 고르면 몰딩 · 걸레받이를 빼서 가입 뒤 금액과 같아요"""
+    signup(api)
+    p = create(api, {**HOME, "mokgong": ["door"]}).json()
+    member = api.get(f"/v2/projects/{p['id']}/market-quote").json()
+    body = {"area_m2": "69.4", "area_basis": "supply", "mokgong": True, "wallpaper": "silk"}
+    guest = api.post(
+        "/v2/market-quote", json={**body, "options": ["doors"], "molding": False, "skirting": False}
+    )
+    assert guest.status_code == 200, guest.text
+    assert guest.json()["total"] == member["total"]
+    full = api.post("/v2/market-quote", json={**body, "options": ["doors"]}).json()
+    assert full["total"] > member["total"]  # 몰딩 · 걸레받이를 넣으면 더 커요

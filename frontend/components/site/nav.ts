@@ -46,6 +46,7 @@ export const TABS: Partial<Record<HeaderKind, TabItem[]>> = {
   ],
   vendor: [
     { id: "inbox", href: "/vendor", label: "작업함", icon: "box" },
+    { id: "opendays", href: "/vendor/open-days", label: "영업일", icon: "calendar" },
     { id: "chat", href: "/chat", label: "채팅", icon: "chat" },
     { id: "profile", href: "/vendor/profile", label: "업체 정보", icon: "store" },
     { id: "notifications", href: "/notifications", label: "알림", icon: "bell", count: "notify" },
