@@ -451,7 +451,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
         {terms.map((t) => <Link key={t.id} className={s.chip} href={termHref(t)}>백과<b>{t.term}</b></Link>)}
       </div>
       <VendorDialog pid={pid} open={vOpen} onClose={() => setVOpen(null)} busy={busy} act={act}
-        full={!!vOpen && listOf(vOpen.trade).filter((v) => v.shortlisted).length >= MAX_PICK} />
+        pick={pickOf(vOpen?.trade ?? "dobae")} />
       {std ? <StandardDialog open={stdOpen} onClose={() => setStdOpen(false)} onPick={() => { setStdOpen(false); toBoard(2); }} data={std} pid={pid} locked={p.locked} /> : null}
     </div>
   );
