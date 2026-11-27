@@ -25,7 +25,6 @@
 .why ul { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 0; padding: 12px 14px; list-style: none; border-radius: var(--mj-radius-card); background: var(--mj-surface-sub); }
 .why li { display: flex; flex-direction: column; gap: 2px; font-size: var(--mj-type-caption); color: var(--mj-text-sub); line-height: var(--mj-lh-body); }
 .why li b { font-size: var(--mj-type-label); color: var(--mj-text); }
-.ver { margin: 0; font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
 
 /* 목공에서 할 것 고르기 */
 .optHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
