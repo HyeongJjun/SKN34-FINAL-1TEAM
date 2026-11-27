@@ -16,3 +16,6 @@
 .todo { display: flex; flex-direction: column; gap: 8px; }
 .todoText { margin: 0; font-size: var(--mj-type-body); font-weight: var(--mj-weight-bold); color: var(--mj-text); }
 .todoBtn { display: flex; }
+/* 공정이 둘이면 공정마다 단계 한 줄(#203) */
+.track { display: flex; flex-direction: column; gap: 4px; }
+.trackName { font-size: var(--mj-type-caption); font-weight: var(--mj-weight-heavy); color: var(--mj-text); }

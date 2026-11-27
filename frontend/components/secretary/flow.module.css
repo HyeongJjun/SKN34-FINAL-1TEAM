@@ -122,3 +122,5 @@
 .pickHint { outline: 2px solid var(--mj-primary); outline-offset: 2px; animation: pickHint 1.6s ease-in-out 3; }
 @keyframes pickHint { 50% { outline-offset: 5px; } }
 @media (prefers-reduced-motion: reduce) { .pickHint { animation: none; } }
+/* 보드 머리의 목공 지금 칸(#203) */
+.planMok { font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); color: var(--mj-text-sub); white-space: nowrap; }

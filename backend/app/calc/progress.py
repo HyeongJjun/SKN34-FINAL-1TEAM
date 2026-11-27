@@ -1,7 +1,7 @@
 """공정마다 진행 단계 · 지금 할 일 판정 (순수 함수, 오늘 · 지금 시각은 인자로).
 
-단계 6개: 집 정보 · 공정 → 기준 금액(표준견적서) → 업체 고르기 → 실측 → 업체 확정 → 공사 날짜.
-공사 날짜를 수락한 뒤에는 단계를 다 마쳤고, 공사 중 · 끝냄 확인 · 끝남은 phase로 나눈다.
+단계 8개(재재 보드와 같은 칸, #203): 집 → 견적(표준견적서) → 업체(고르기 · 요청) → 실측(견적서 옴) →
+비교(업체 확정) → 일정(공사 날짜 수락) → 공사(끝냄 확인 전) → 완료. 공정마다 따로 센다(공정끼리 합치지 않는다).
 지금 할 일은 고객이 누를 일이 있는 것부터(TODO_RANK 순) 한 줄을 고른다.
 """
 
@@ -11,7 +11,7 @@ from datetime import date, datetime
 from typing import Literal
 
 StepState = Literal["done", "now", "todo"]
-STEPS = ("house", "standard", "pick", "visit", "deal", "dates")
+STEPS = ("house", "standard", "pick", "visit", "compare", "dates", "work", "done")
 # 고객이 먼저 해야 할 일 → 기다리는 일 순서. 프로젝트의 '지금 할 일'은 공정 중 가장 앞선 것
 TODO_RANK = (
     "check",  # 업체가 끝냈다고 알림 → 확인하기
@@ -68,7 +68,7 @@ class StepView:
 class Progress:
     trade: str
     steps: tuple[StepView, ...]
-    current: int  # 지금 단계 번호 1~6 (다 마쳤으면 6)
+    current: int  # 지금 단계 번호 1~8 (다 마쳤으면 8)
     phase: Phase
     todo: str
     overdue: bool  # 기한 지남 (상태가 아님)
@@ -122,17 +122,23 @@ def progress(f: TradeFacts, today: date, now: datetime) -> Progress:
         "house": True,
         "standard": f.standard_on is not None,
         "pick": f.asked > 0 or dealt,
-        "visit": dealt,
-        "deal": dealt,
-        "dates": accepted,
+        "visit": f.quotes > 0 or dealt,
+        "compare": dealt,
+        # 일정: 날짜를 수락하고 공사 시작일이 왔을 때 끝(그 전에는 공사 신고 · 보양 같은 준비 칸, 보드와 같아요)
+        "dates": accepted
+        and (f.start is None or today >= f.start or st in ("checking", "fixing", "done")),
+        "work": st in ("checking", "fixing", "done"),
+        "done": st == "done",
     }
     on = {
         "house": f.created_on,
         "standard": f.standard_on,
         "pick": f.asked_on,
         "visit": f.quoted_on,
-        "deal": f.deal_on,
+        "compare": f.deal_on,
         "dates": f.accepted_on if accepted else f.proposed_on,
+        "work": f.work_done_on if st in ("checking", "fixing", "done") else f.start,
+        "done": None,
     }
     count = {"pick": f.asked, "visit": f.quotes}
     first = next((i for i, k in enumerate(STEPS) if not done[k]), len(STEPS) - 1)

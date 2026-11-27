@@ -210,9 +210,9 @@ export function placeText(regions: RegionList, p: { sido: string; sgg: string })
   return head.filter(Boolean).join(" ");
 }
 
-export const STEP_NAMES = ["기본 정보", "표준견적서", "업체 담기", "실측 일정", "실측", "실측 뒤"];
-/** API 단계 번호(MyProjectOut.current, 1~6) → 단계 띠 칸(0~5) */
-export const stepIndex = (current: number | null | undefined): number => Math.max(0, Math.min(5, (current ?? 2) - 1));
+export const STEP_NAMES = ["집", "견적", "업체", "실측", "비교", "일정", "공사", "완료"];
+/** API 단계 번호(MyProjectOut.current, 1~8) → 단계 칸(0~7) */
+export const stepIndex = (current: number | null | undefined): number => Math.max(0, Math.min(STEP_NAMES.length - 1, (current ?? 3) - 1));
 /** API 단계 번호 → 단계 이름 '업체 담기' */
 export const stepName = (current: number | null | undefined): string => STEP_NAMES[stepIndex(current)];
 
