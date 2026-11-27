@@ -166,31 +166,37 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     try { window.localStorage.setItem(CHAT_TRADE_KEY(id), active); } catch { /* 못 적으면 도배 탭으로 */ }
   };
   // 새로고침 · 다시 들어와도 재재와 나눈 대화가 남게, 이 공사의 저장된 대화를 읽어 공정 탭마다 가장 최근 것 하나를 이어요(#225).
-  // 못 읽으면 빈 대화로 시작해요. 남의 공사 대화는 서버가 404라 오지 않아요
+  // 못 읽으면 빈 대화로 시작해요. 남의 공사 대화는 서버가 404라 오지 않아요.
+  // 다 읽기 전에는 묻지 않아요(읽는 중에 물으면 chat_id 없이 새 대화가 생겨 이전 대화가 가려져요, #244 리뷰)
+  const [restored, setRestored] = useState(false);
   useEffect(() => {
     let off = false;
     (async () => {
+      let list: { chat_id: string; updated_at: string }[] = [];
       try {
-        const list = await call<{ chat_id: string; updated_at: string }[]>("GET", `/ai/threads?project_id=${pid}`);
-        const latest: Partial<Record<Trade, string>> = {};
-        for (const c of [...list].sort((a, b) => b.updated_at.localeCompare(a.updated_at))) {
-          let t: Trade = "dobae";
-          try { t = window.localStorage.getItem(CHAT_TRADE_KEY(c.chat_id)) === "mokgong" ? "mokgong" : "dobae"; } catch { /* 기본 도배 */ }
-          if (!latest[t]) latest[t] = c.chat_id;
-        }
-        for (const [t, id] of Object.entries(latest) as [Trade, string][]) {
+        list = await call<{ chat_id: string; updated_at: string }[]>("GET", `/ai/threads?project_id=${pid}`);
+      } catch { /* 목록을 못 읽으면 빈 대화로 시작해요 */ }
+      const latest: Partial<Record<Trade, string>> = {};
+      for (const c of [...list].sort((a, b) => b.updated_at.localeCompare(a.updated_at))) {
+        let t: Trade = "dobae";
+        try { t = window.localStorage.getItem(CHAT_TRADE_KEY(c.chat_id)) === "mokgong" ? "mokgong" : "dobae"; } catch { /* 기본 도배 */ }
+        if (!latest[t]) latest[t] = c.chat_id;
+      }
+      // 공정마다 따로 읽어요(한 공정이 실패해도 다른 공정 대화는 살아요)
+      await Promise.all((Object.entries(latest) as [Trade, string][]).map(async ([t, id]) => {
+        let past: Ask[] = [];
+        try {
           const d = await call<{ chat_id: string; messages: { role: "user" | "assistant"; text: string; turn: number }[] }>("GET", `/ai/threads/${enc(id)}`);
-          const past: Ask[] = [];
           for (const m of [...d.messages].sort((a, b) => a.turn - b.turn)) {
             if (m.role === "user") past.push({ q: m.text });
             else if (past.length && past[past.length - 1].past == null) past[past.length - 1].past = m.text;
           }
-          if (off) return;
-          // 새로 물은 게 없을 때만 채워요(읽는 사이에 물었으면 그 대화를 지켜요)
-          setAsksBy((m) => (m[t]?.length ? m : { ...m, [t]: past.map((x) => ({ ...x, past: x.past ?? "" })) }));
-          setChatIds((m) => (m[t] ? m : { ...m, [t]: id }));
-        }
-      } catch { /* 대화를 못 읽어도 화면은 열려요 */ }
+        } catch { past = []; /* 글은 못 읽어도 같은 대화에 이어 물어요 */ }
+        if (off) return;
+        setAsksBy((m) => (m[t]?.length ? m : { ...m, [t]: past.map((x) => ({ ...x, past: x.past ?? "" })) }));
+        setChatIds((m) => (m[t] ? m : { ...m, [t]: id }));
+      }));
+      if (!off) setRestored(true);
     })();
     return () => { off = true; };
   }, [pid]);
@@ -289,7 +295,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const asking = asks.length > 0 && !asks[asks.length - 1].out && !asks[asks.length - 1].err && asks[asks.length - 1].past == null;
   async function ask(q: string, button: AiButton | null = null, fromInput = false) {
     const t = q.trim().slice(0, 1000);
-    if (!t || asking) return; // 답을 기다리는 동안 새 질문을 막아요(답이 엇갈리지 않게 · 대화 하나로)
+    if (!t || asking || !restored) return; // 답을 기다리는 동안 · 이전 대화를 읽는 동안 새 질문을 막아요(답이 엇갈리지 않게 · 대화 하나로)
     if (fromInput) setText(""); // 입력칸에서 보낼 때만 비워요(질문 버튼은 글이 같아도 쓰던 글을 남겨요)
     setAsks((a) => [...a, { q: t }]);
     try {
@@ -649,14 +655,14 @@ export function ProjectFlow({ data }: { data: FlowData }) {
           <div className={s.dock}>
             {quick.length ? (
               <div className={s.quick} role="group" aria-label="이런 걸 물어보세요">
-                {quick.map((q) => <button key={q} type="button" className={s.chip} disabled={asking} onClick={() => void ask(q)}>{q}</button>)}
+                {quick.map((q) => <button key={q} type="button" className={s.chip} disabled={asking || !restored} onClick={() => void ask(q)}>{q}</button>)}
               </div>
             ) : null}
             <form className={s.input} onSubmit={(e) => { e.preventDefault(); void ask(text, null, true); }}>
               <label className="mj-sr" htmlFor="pflow-in">재재에게 물을 말</label>
               <textarea id="pflow-in" rows={1} maxLength={1000} value={text} placeholder="궁금한 걸 물어보세요. 예: 가견적이 비싼데 줄일 방법 없을까요?" onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void ask(text, null, true); } }} />
-              <Button type="submit" disabled={!text.trim() || asking}>{asking ? "답 기다리는 중" : "보내기"}</Button>
+              <Button type="submit" disabled={!text.trim() || asking || !restored}>{!restored ? "대화 불러오는 중" : asking ? "답 기다리는 중" : "보내기"}</Button>
             </form>
           </div>
           {/* 새 말이 오면 여기까지 내려요. 입력칸(dock) 뒤에 두어 마지막 말풍선이 입력칸에 가려지지 않아요 */}
