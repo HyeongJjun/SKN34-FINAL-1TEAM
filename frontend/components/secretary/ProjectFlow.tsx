@@ -207,12 +207,14 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const end = useRef<HTMLDivElement>(null);
   // 보드 칸(?step) · 업체 창(?vendor)으로 넘어온 첫 화면은 대화 끝으로 내리지 않아요(폰에서 위에 펼친 플랜이 가려져요, #237 리뷰)
   const toPlanFirst = useRef(data.step != null || !!data.openVendor);
+  // 새로 물은 질문만 세요. 다시 불러온 예전 대화(past)는 넘어온 플랜을 가리지 않아요(#244 리뷰: 복원 뒤 폰에서 대화 끝으로 내려가던 것)
+  const fresh = asks.filter((a) => a.past == null).length;
   useEffect(() => {
     // 넘어온 뒤 묻거나 처리하기 전까지는 플랜이 보이게 두어요(개발 모드에서 두 번 돌아도 같아요)
-    if (toPlanFirst.current && !asks.length && !done.length) { window.scrollTo(0, 0); return; }
+    if (toPlanFirst.current && !fresh && !done.length) { window.scrollTo(0, 0); return; }
     toPlanFirst.current = false;
     end.current?.scrollIntoView({ block: "end" });
-  }, [asks.length, now, done.length]);
+  }, [asks.length, fresh, now, done.length]);
   // 비교 칸에서 재재가 말한 업체가 보이게 옮겨요(업체 칸은 VendorRows가 옮겨요)
   useEffect(() => {
     if ((tab === 3 || tab === 4) && hi.length) requestAnimationFrame(() => document.querySelector("#jj-board [data-hi]")?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
