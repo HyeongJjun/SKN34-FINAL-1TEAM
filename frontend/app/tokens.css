@@ -284,6 +284,8 @@
   }
   /* 태블릿 공사 띠는 한 줄(공사 이름 · 지금 단계 · 지금 할 일), 웹은 76 */
   :root:has([data-mj-band]) { --mj-band-h: 56px; }
+  /* 공정 탭 줄(40)이 더해지면 */
+  :root:has([data-mj-band][data-tabs]) { --mj-band-h: 96px; }
 }
 
 @media (min-width: 1024px) {
@@ -296,6 +298,7 @@
   :root:has([data-mj-band]) { --mj-band-h: 76px; }
   /* 실측 뒤 작은 단계 줄이 더해지면(누를 곳 40을 지키려고) 92 */
   :root:has([data-mj-band][data-sub]) { --mj-band-h: 92px; }
+  :root:has([data-mj-band][data-tabs]) { --mj-band-h: 116px; }
 }
 
 @media (min-width: 1280px) {

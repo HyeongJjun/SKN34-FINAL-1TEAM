@@ -766,6 +766,7 @@ class TradeStepOut(BaseModel):
     trade: str
     current: int = Field(description="1~8 (다 마치면 8)")
     label: str = Field(description="지금 칸 이름")
+    todo: "TodoOut | None" = Field(default=None, description="그 공정의 지금 할 일 (공정 탭)")
 
 
 class MyProjectOut(ProjectListItem):

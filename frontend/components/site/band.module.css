@@ -33,14 +33,43 @@ a.pi:hover { background: var(--mj-fill); color: var(--mj-text); }
 .now2 { color: var(--mj-badge-now-fg); }
 .wait { color: var(--mj-badge-wait-fg); }
 
+/* 공정 탭 줄(브라우저 탭 모양): 회색 줄 위에 탭이 서 있고, 고른 탭은 아래 흰 띠와 이어져요 */
+.tabRow { background: var(--mj-fill); }
+.tabRowIn {
+  display: flex; align-items: flex-end; gap: 14px; width: 100%; max-width: calc(var(--mj-content-max) + 2 * var(--mj-gutter)); margin: 0 auto; height: 40px;
+  padding: 0 max(var(--mj-gutter), env(safe-area-inset-right, 0px)) 0 max(var(--mj-gutter), env(safe-area-inset-left, 0px));
+}
+.tabPj { align-self: center; flex: none; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--mj-text); font-size: var(--mj-type-label); font-weight: var(--mj-weight-bold); text-decoration: none; }
+.tabPj:hover { color: var(--mj-link); }
+.tabRowIn .chat { align-self: center; margin-left: auto; }
+.tabs { display: flex; align-items: flex-end; gap: 2px; min-width: 0; }
+.tab { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 36px; min-width: 96px; padding: 0 16px; border: 0; border-radius: 10px 10px 0 0; background: transparent; color: var(--mj-text-sub); font: inherit; font-size: var(--mj-type-label); cursor: pointer; }
+.tab::after { content: ""; position: absolute; inset: -4px 0 0; }
+.tab b { font-weight: var(--mj-weight-semibold); }
+.tab:hover { background: color-mix(in srgb, var(--mj-surface) 60%, transparent); }
+.tabOn, .tabOn:hover { background: var(--mj-surface); color: var(--mj-text); }
+.tabOn b { font-weight: var(--mj-weight-heavy); color: var(--mj-link); }
+.tabNow { font-size: var(--mj-type-caption); color: var(--mj-text-mute); }
+/* 공사 순서 번호(목공 1 → 도배 2 → 바닥 3) */
+.tabNo { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--mj-line); color: var(--mj-text-sub); font-size: 11px; font-weight: var(--mj-weight-bold); }
+.tabOn .tabNo { background: var(--mj-primary); color: var(--mj-on-primary); }
+.tabDot { width: 7px; height: 7px; border-radius: 50%; background: var(--mj-danger); }
+.tab:focus-visible { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: -2px; }
+.pjNow { display: flex; align-items: baseline; gap: 6px; margin: 0; white-space: nowrap; color: var(--mj-text); font-size: var(--mj-type-body); }
+.pjNow b { font-weight: var(--mj-weight-bold); }
+.pjNow span { font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); color: var(--mj-link); }
+
 @media (min-width: 768px) {
   .band { display: block; position: sticky; top: var(--mj-header-h); z-index: calc(var(--mj-z-header) - 1); background: var(--mj-surface); box-shadow: var(--mj-edge-bottom); }
   .in { min-height: var(--mj-band-h); }
+  /* 탭 줄(40)이 있으면 그만큼 뺀 높이 */
+  .band[data-tabs] .in { min-height: calc(var(--mj-band-h) - 40px); }
   .flat { position: static; }
   .flat .in { min-height: 0; }
 }
 @media (min-width: 1024px) {
   .in { grid-template-columns: minmax(160px, auto) minmax(0, 1fr) auto; padding-top: 10px; padding-bottom: 10px; }
+  .band[data-tabs] .in { grid-template-columns: minmax(96px, auto) minmax(0, 1fr) auto; }
   .short { display: none; }
   .todo { flex-direction: column; align-items: flex-start; gap: 2px; min-height: 52px; padding: 8px 14px; }
   .stp { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
@@ -57,10 +86,6 @@ a.pi:hover { background: var(--mj-fill); color: var(--mj-text); }
   .steps a.cell:hover .label { text-decoration: underline; text-underline-offset: 3px; }
   .steps a.cell:focus-visible { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: 0; }
   /* 공정이 둘이면 공정마다 얇은 한 줄(이름 + 8칸). 높이는 작은 단계가 있을 때(92)와 같아요 */
-  .stp:has(.track) { gap: 4px; }
-  .track { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; gap: 6px; }
-  .trackName { font-size: var(--mj-type-caption); font-weight: var(--mj-weight-heavy); color: var(--mj-text); }
-  .thin .cell { min-height: 0; gap: 3px; padding: 3px 0; }
   /* 작은 단계 알약: 보이는 높이 22, 누를 곳은 위아래로 늘려 40(단계 칸과 겹치지 않게 틈 10) */
   .subs { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; margin: 0; padding: 0; list-style: none; }
   .subs li { position: relative; display: inline-flex; align-items: center; gap: 3px; min-height: 22px; padding: 0 8px; border-radius: var(--mj-radius-pill); background: var(--mj-fill); color: var(--mj-text-mute); font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); line-height: 1.3; }

@@ -6,7 +6,7 @@
 // 하나면 상자 전체가 그 할 일로 가는 링크예요. 누를 곳은 모두 40px 이상(단계 칸 · 작은 단계 알약 · 할 일 상자).
 // 머리(AppHeader) 바로 아래, 다른 칸으로 감싸지 않게 둬요(붙는 띠라서). 단계 이름 · 할 일 글은 부르는 쪽이 9판 말로 넘겨요.
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { PROJECT_STEPS, type StepItem } from "@/components/ui/Steps";
@@ -18,18 +18,28 @@ export type BandTask = {
   href?: string;
   /** '11.19(목) 21:40까지'(format.dueText 값) */
   due?: string;
+  /** 어느 공정 일인지(공정 탭에서 그 공정 것만 보여요) */
+  trade?: string;
+  /** 고객이 누를 일이 아님(기다림 · 진행 중 · 끝남) */
+  passive?: boolean;
 };
 
 export type BandTrack = {
+  /** 'dobae' · 'mokgong'(주소 ?trade= 값) */
+  trade?: string;
   /** '도배' · '목공' */
   label: string;
   /** 그 공정의 지금 단계(0부터) */
   current: number;
+  /** 그 공정의 지금 할 일(업체별 할 일이 없을 때) */
+  todo?: BandTask;
 };
 
-export function ProjectBand({ name, href, steps = PROJECT_STEPS, current, tracks = [], sub, todo = [], waiting = [], sticky = true }: {
+export function ProjectBand({ name, shortName, href, steps = PROJECT_STEPS, current, tracks = [], sub, todo: allTodo = [], waiting: allWaiting = [], sticky = true }: {
   /** 공사 이름 '상계동 아파트 도배' */
   name: string;
+  /** 공정 탭이 있을 때 쓰는 짧은 이름 '상계동 아파트'(공정 이름은 탭에 있어요) */
+  shortName?: string;
   /** 한 공사 화면 */
   href: string;
   steps?: StepItem[];
@@ -50,8 +60,7 @@ export function ProjectBand({ name, href, steps = PROJECT_STEPS, current, tracks
   const box = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
   const id = useId();
-  const many = todo.length + waiting.length > 1;
-  const first = todo[0] ?? waiting[0];
+
 
   useEffect(() => {
     if (!open) return;
@@ -66,32 +75,68 @@ export function ProjectBand({ name, href, steps = PROJECT_STEPS, current, tracks
   const nowLabel = steps[current]?.label ?? "";
   const subNow = sub ? sub.steps[sub.current]?.label : null;
   const multi = tracks.length > 1;
+  // 공정 탭: 고른 공정은 주소(?trade=)에 둬요. 재재 화면이 같은 값으로 대화 · 보드 · 표준견적서를 바꿔요
+  const pathname = usePathname();
+  const want = useSearchParams().get("trade");
+  const picked = tracks.find((t) => t.trade === want) ?? tracks.find((t) => t.trade === "dobae") ?? tracks[0];
+  // 주소만 바꿔요(서버에서 다시 읽지 않아 탭이 바로 바뀌어요)
+  // 공정 탭이면 '지금 할 일'도 고른 공정 것만(업체별 할 일이 없으면 그 공정의 할 일 한 줄)
+  const mine = (x: BandTask[]) => (multi && picked?.trade ? x.filter((t) => !t.trade || t.trade === picked.trade) : x);
+  const waiting = mine(allWaiting);
+  const own = mine(allTodo);
+  const todo = own.length || !multi ? own : picked?.todo && !waiting.length ? [picked.todo] : own;
+  const many = todo.length + waiting.length > 1;
+  const first = todo[0] ?? waiting[0];
+  /** 다른 공정 탭에 내가 할 일이 있나(탭에 점) */
+  const hasTodo = (t: BandTrack) => allTodo.some((x) => x.trade === t.trade) || (!!t.todo && !t.todo.passive && !allWaiting.some((x) => x.trade === t.trade));
+  const pick = (t: BandTrack) => { if (t.trade) window.history.replaceState(null, "", `${pathname}?trade=${t.trade}`); };
   const shortText = multi
     ? tracks.map((t) => `${t.label} ${steps[t.current]?.label ?? ""}`).join(" · ")
     : `${subNow ?? nowLabel}`;
   const head = many ? `지금 할 일 ${todo.length}${waiting.length ? ` · 기다림 ${waiting.length}` : ""}` : todo.length ? "지금 할 일" : "기다림";
   return (
-    <div className={sticky ? s.band : `${s.band} ${s.flat}`} data-mj-band={sticky ? "" : undefined} data-sub={sticky && (sub || multi) ? "" : undefined}>
+    <div className={sticky ? s.band : `${s.band} ${s.flat}`} data-mj-band={sticky ? "" : undefined} data-sub={sticky && sub && !multi ? "" : undefined} data-tabs={sticky && multi ? "" : undefined}>
+      {/* 공정 탭 줄(브라우저 탭 모양, 2026-11-27 사용자): 공정을 누르면 그 공정 대화로 바뀌고, 진행도는 아래 줄에 따로 보여요 */}
+      {multi && picked ? (
+        <div className={s.tabRow}>
+          <div className={s.tabRowIn}>
+            <Link className={s.tabPj} href={href}>{shortName ?? name}</Link>
+            <div className={s.tabs} role="tablist" aria-label="공정">
+              {tracks.map((t, i) => (
+                <button key={t.label} type="button" role="tab" aria-selected={t === picked} className={t === picked ? `${s.tab} ${s.tabOn}` : s.tab} onClick={() => pick(t)}>
+                  <span className={s.tabNo} aria-hidden="true">{i + 1}</span><b>{t.label}</b> <span className={s.tabNow}>{steps[t.current]?.label}</span>{t !== picked && hasTodo(t) ? <span className={s.tabDot}><span className="mj-sr"> 할 일 있음</span></span> : null}
+                </button>
+              ))}
+            </div>
+            {onChat ? null : <Link className={s.chat} href={`${href}/assistant`}>재재와 대화 ›</Link>}
+          </div>
+        </div>
+      ) : null}
       <div className={s.in}>
         <div className={s.pjBox}>
-          <Link className={s.pj} href={href}><b>{name}</b></Link>
-          {onChat ? null : <Link className={s.chat} href={`${href}/assistant`}>재재와 대화 ›</Link>}
-          <p className={s.short}>{multi ? shortText : <><span className="mj-num">지금 {current + 1}/{steps.length}</span> · {shortText}</>}</p>
+          {multi && picked ? (
+            <p className={s.pjNow}><b>{picked.label} 진행</b><span className="mj-num">{Math.min(picked.current + 1, steps.length)}/{steps.length}</span></p>
+          ) : (
+            <>
+              <Link className={s.pj} href={href}><b>{name}</b></Link>
+              {onChat ? null : <Link className={s.chat} href={`${href}/assistant`}>재재와 대화 ›</Link>}
+            </>
+          )}
+          <p className={s.short}>{multi ? steps[picked?.current ?? 0]?.label : <><span className="mj-num">지금 {current + 1}/{steps.length}</span> · {shortText}</>}</p>
         </div>
         <div className={s.stp} style={{ ["--n" as string]: steps.length }}>
-          {multi ? tracks.map((t) => (
-            <div key={t.label} className={s.track}>
-              <span className={s.trackName}>{t.label}</span>
-              <ol className={`${s.steps} ${s.thin}`} aria-label={`${t.label} 단계`}>
+          {multi && picked ? (
+            <>
+              <ol className={s.steps} aria-label={`${picked.label} 단계`}>
                 {steps.map((st, i) => (
-                  <li key={st.label} className={i < t.current ? s.done : i === t.current ? s.now : ""} aria-current={i === t.current ? "step" : undefined}>
+                  <li key={st.label} className={i < picked.current ? s.done : i === picked.current ? s.now : ""} aria-current={i === picked.current ? "step" : undefined}>
                     <span className={s.cell}><span className={s.label}>{st.label}</span></span>
-                    {i < t.current ? <span className="mj-sr"> 끝남</span> : null}
+                    {i < picked.current ? <span className="mj-sr"> 끝남</span> : null}
                   </li>
                 ))}
               </ol>
-            </div>
-          )) : (
+            </>
+          ) : (
           <ol className={s.steps} aria-label="공사 단계">
             {steps.map((st, i) => {
               const state = i < current ? s.done : i === current ? s.now : "";

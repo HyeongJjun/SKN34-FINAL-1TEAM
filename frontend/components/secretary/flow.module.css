@@ -124,3 +124,8 @@
 @media (prefers-reduced-motion: reduce) { .pickHint { animation: none; } }
 /* 보드 머리의 목공 지금 칸(#203) */
 .planMok { font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); color: var(--mj-text-sub); white-space: nowrap; }
+/* 공정 탭(폰). 위 공사 띠가 보이는 폭(≥768)은 띠의 탭 줄을 써요 */
+.flowTabs { display: flex; gap: 6px; padding: 8px 16px; border-bottom: 1px solid var(--mj-line); background: var(--mj-surface); }
+.flowTab { flex: 1; min-height: var(--mj-hit-min); border: 1px solid var(--mj-line); border-radius: var(--mj-radius-pill); background: var(--mj-surface); color: var(--mj-text-sub); font: inherit; font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); cursor: pointer; }
+.flowTabOn { border-color: var(--mj-primary); background: var(--mj-primary); color: var(--mj-on-primary); }
+@media (min-width: 768px) { .flowTabs { display: none; } }
