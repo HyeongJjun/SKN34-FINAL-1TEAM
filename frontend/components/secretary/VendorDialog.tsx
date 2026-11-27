@@ -97,7 +97,7 @@ export function VendorDialog({ pid, open, onClose, busy, act, pick }: { pid: str
           </div>
           <div className={d.actions}>
             {said ? <p className={s.note} role="status">{said}</p> : null}
-            <Button size="lg" variant="secondary" href={`/projects/${pid}/vendors/${encodeURIComponent(open.vendorId)}`}>리뷰 · 견적 줄 전체 보기</Button>
+            <Button size="lg" variant="secondary" href={`/projects/${pid}/vendors/${encodeURIComponent(open.vendorId)}${open.trade === "mokgong" ? "?trade=mokgong" : ""}`}>리뷰 · 견적 줄 전체 보기</Button>
             {v && v.state === "ok" ? (
               <Button size="lg" variant={picked ? "secondary" : "primary"} disabled={!(can.add || can.remove)} busy={busy === open.vendorId}
                 onClick={() => (can.add || can.remove) && act(open.vendorId, async () => {
