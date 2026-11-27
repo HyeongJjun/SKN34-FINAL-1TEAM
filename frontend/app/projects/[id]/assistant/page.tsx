@@ -15,8 +15,12 @@ import { requireRole } from "@/lib/session";
 
 export const metadata = { title: "재재와 진행하기" };
 
-export default async function SecretaryPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ open?: string; step?: string }> }) {
-  const [{ id }, { open, step }] = await Promise.all([params, searchParams]);
+export default async function SecretaryPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ open?: string; step?: string; view?: string; vendor?: string; trade?: string }> }) {
+  const [{ id }, { open, step, view: sview, vendor, trade }] = await Promise.all([params, searchParams]);
+  // 옛 화면 주소에서 넘어온 창(공정표 · 공사 일정 · 서류 · 리뷰 · 결정 기록) · 업체 자세히(#236)
+  const openWin = open === "plan" || open === "schedule" || open === "docs" || open === "review" || open === "log" ? open : null;
+  const scheduleView = sview === "dates" || sview === "extra" || sview === "done" ? sview : null;
+  const openVendor = vendor && /^[0-9a-f-]{36}$/i.test(vendor) ? { vendorId: vendor, trade: trade === "mokgong" ? ("mokgong" as const) : ("dobae" as const) } : null;
   // ?step=2(업체) · 3(실측): 업체 보기 · 실측 요청 화면에서 넘어와 그 보드 칸을 열어요
   const board = step && /^[0-7]$/.test(step) ? Number(step) : null;
   await requireRole("customer", `/projects/${encodeURIComponent(id)}/assistant`);
@@ -37,8 +41,8 @@ export default async function SecretaryPage({ params, searchParams }: { params: 
   const std = view ? { view, market: shell?.mock ? null : market, parts: shell?.mock ? null : parts } : null;
   return (
     <>
-      <AppHeader only="phone" phone={{ title: "재재와 진행하기", back: `/projects/${encodeURIComponent(p.id)}` }} />
-      <ProjectFlow data={{ p, ov, compare, schedule, visits, vendors, mokVendors, draft, mokDraft, today: todaySeoul(), std, openStd: open === "standard", step: board,
+      <AppHeader only="phone" phone={{ title: "재재와 진행하기", back: "/my" }} />
+      <ProjectFlow data={{ p, ov, compare, schedule, visits, vendors, mokVendors, draft, mokDraft, today: todaySeoul(), std, openStd: open === "standard", step: board, openWin, scheduleView, openVendor,
         win: { regions, draft: shell?.home ? fromSaved(shell.home) : null, plan, checks } }} />
       <LiveRefresh projectId={p.id} />
     </>
