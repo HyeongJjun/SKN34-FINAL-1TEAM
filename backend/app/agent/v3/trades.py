@@ -81,17 +81,6 @@ _BUILTIN_SPECS: tuple[TradeSpec, ...] = (
         calc=True,
     ),
     TradeSpec(
-        "floor",
-        "바닥",
-        "knowledge",
-        r"바닥재|강마루|강화마루|원목마루|마루|장판|데코타일|폴리싱|층간소음|바닥(?!\s*타일)",
-        ("바닥재",),
-        8,
-        cautions=("바닥재는 도배가 끝난 뒤에 깔아요.",),
-        survey=("바닥 수평 · 들뜸", "문턱 · 걸레받이 높이"),
-        prep=("바닥에 둔 짐 옮기기",),
-    ),
-    TradeSpec(
         "tile",
         "타일",
         "knowledge",
