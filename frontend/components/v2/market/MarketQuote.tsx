@@ -251,7 +251,6 @@ export function MarketSheet({ q }: { q: Out }) {
         <h3 className={s.tradeHead}><span>합계</span></h3>
         <QuoteLines lines={sumLines(q)} totals={{ supply: q.supply, vat: q.vat, total: q.total }} vatSplit caption="표준견적서 합계" />
       </div>
-      <p className={s.ver}>기준 자료 {q.version} · 업체 견적 {q.quotes}건 중앙값 · 양식 요율: 회사이윤 · 공과잡비 · 산재 · 고용보험료</p>
     </section>
   );
 }

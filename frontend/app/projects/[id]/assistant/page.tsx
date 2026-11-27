@@ -1,4 +1,4 @@
-// /projects/{id}/assistant — 재재 비서 화면(시연 영상 11~48장면): 위 칩 · 왼쪽 대화(지금 단계 카드) · 오른쪽 내 도배 플랜.
+// /projects/{id}/assistant — 재재 비서 화면(시연 영상 11~48장면): 왼쪽 대화(지금 단계 카드) · 오른쪽 내 도배 플랜.
 // 읽기: overview · quotes(비교) · schedule · visits · vendors · visits/draft · 표준견적서(창). 쓰기는 오른쪽 보드 단추가 기존 API를 불러요(ProjectFlow 머리 주석).
 // ?open=standard(인테리어 받기에서 만든 바로 뒤)면 표준견적서 창을 열고 시작해요.
 import { notFound } from "next/navigation";
@@ -23,9 +23,10 @@ export default async function SecretaryPage({ params, searchParams }: { params: 
   const [p, ov] = await Promise.all([getVisitProject(id), getOverview(id)]);
   if (!p || !ov) notFound();
   const safe = <T,>(x: Promise<T>) => x.catch(() => null);
-  const [compare, schedule, visits, vendors, draft, shell, market, mokVendors, mokVisits, regions, plan, checks] = await Promise.all([
-    safe(getCompare(p.id)), safe(getSchedule(p.id)), safe(listProjectVisits(p.id, "dobae")), safe(listProjectVendors(p.id, "dobae")), safe(getVisitDraft(p.id, "dobae")),
-    safe(getProjectShell(p.id)), safe(getMyMarketQuote(p.id)), safe(listProjectVendors(p.id, "mokgong")), safe(listProjectVisits(p.id, "mokgong")), // 목공을 고르지 않은 공사는 null
+  // 실측은 도배 · 목공 둘 다 읽어요(팀 피드백 5). 목공 초안은 목공을 고른 공사만 있어요(아니면 null)
+  const [compare, schedule, visits, vendors, draft, shell, market, mokVendors, mokDraft, regions, plan, checks] = await Promise.all([
+    safe(getCompare(p.id)), safe(getSchedule(p.id)), safe(listProjectVisits(p.id)), safe(listProjectVendors(p.id, "dobae")), safe(getVisitDraft(p.id, "dobae")),
+    safe(getProjectShell(p.id)), safe(getMyMarketQuote(p.id)), safe(listProjectVendors(p.id, "mokgong")), safe(getVisitDraft(p.id, "mokgong")), // 목공을 고르지 않은 공사는 null
     // 재재 화면 창(기본 정보 고치기 · 공정표)에 쓰는 값
     getRegions().catch(() => []), safe(getPlanView(p.id)), getChecks(p.id).catch(() => []),
   ]);
@@ -36,7 +37,7 @@ export default async function SecretaryPage({ params, searchParams }: { params: 
   return (
     <>
       <AppHeader only="phone" phone={{ title: "재재와 진행하기", back: `/projects/${encodeURIComponent(p.id)}` }} />
-      <ProjectFlow data={{ p, ov, compare, schedule, visits, vendors, mokVendors, mokVisits, draft, today: todaySeoul(), std, openStd: open === "standard", step: board,
+      <ProjectFlow data={{ p, ov, compare, schedule, visits, vendors, mokVendors, draft, mokDraft, today: todaySeoul(), std, openStd: open === "standard", step: board,
         win: { regions, draft: shell?.home ? fromSaved(shell.home) : null, plan, checks } }} />
       <LiveRefresh projectId={p.id} />
     </>
