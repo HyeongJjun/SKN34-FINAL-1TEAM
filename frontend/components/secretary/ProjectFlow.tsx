@@ -173,6 +173,17 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   useEffect(() => {
     if (tab === 4 && hi.length) requestAnimationFrame(() => document.querySelector("#jj-board [data-hi]")?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
   }, [tab, hi]);
+  // 재재 화면에 있는 채로 옛 주소(업체 · 실측 · 비교)나 ?step 주소로 오면 화면을 새로 만들지 않아 처음 값(useState)이 안 바뀌어요.
+  // 넘어온 칸 · 업체 창이 바뀔 때마다 플랜을 펼치고(폰은 대화 위) 그 칸으로 옮겨요(#237 리뷰)
+  const cameKey = data.step != null || data.openVendor ? `${data.step ?? ""}|${data.openVendor?.vendorId ?? ""}` : "";
+  useEffect(() => {
+    if (!cameKey) return;
+    if (data.step != null) setTab(data.step);
+    if (data.openVendor) setVOpen(data.openVendor);
+    setOpen(true);
+    requestAnimationFrame(() => document.getElementById("jj-board")?.scrollIntoView({ block: "start" }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 넘어온 값(cameKey)이 바뀔 때만
+  }, [cameKey]);
   // 단계가 넘어가면 보드도 지금 단계로 옮겨요
   // 처음 그릴 때는 넘어온 칸(?step)을 지켜요
   // 개발 모드(StrictMode)는 effect를 두 번 돌려서 '처음 한 번 건너뛰기'로는 넘어온 칸이 지워져요. 지금 칸 값이 실제로 바뀔 때만 옮겨요
