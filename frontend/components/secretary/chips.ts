@@ -22,6 +22,14 @@ export function starterChips(step: number, asked: readonly string[]): string[] {
   return (STARTERS[Math.min(Math.max(step, 2), 8)] ?? []).filter((q) => !done.has(q)).slice(0, 3);
 }
 
+/** 고객 공사 재재 질문 버튼: 마지막으로 받은 답의 추천 질문(suggest)이 있으면 그것, 없으면 지금 칸의 시작 질문.
+ *  물은 질문은 빼고 3개까지 */
+export function quickChips(step: number, asked: readonly string[], lastSuggest: readonly string[] | null): string[] {
+  const done = new Set(asked.map((q) => q.trim()));
+  const next = (lastSuggest ?? []).filter((q) => !done.has(q.trim())).slice(0, 3);
+  return next.length ? next : starterChips(step, asked);
+}
+
 /** 손님 재재 답 버튼: 아직 빈 칸만. 지역 · 면적은 단추가 말풍선에 있어서 넣지 않아요 */
 export function guestChips(d: Pick<InfoDraft, "scope" | "occupied" | "grade">): string[] {
   const out: string[] = [];

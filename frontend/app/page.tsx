@@ -19,15 +19,13 @@ import { MOCK_ONGOING } from "@/lib/mock/v3a/project";
 import { getSession } from "@/lib/session";
 import s from "@/components/home/home.module.css";
 
-/** 진행 중 공사 하나(가장 최근에 바뀐 것): 고객 차례인 업체가 있으면 그 일로 가요 */
+/** 진행 중 공사 하나(가장 최근에 바뀐 것): 누르면 그 공사의 재재 화면으로 가요(#176 흐름) */
 function ongoingOf(list: ApiProjectItem[]): (Ongoing & { status: string; href: string }) | null {
   const p = list.find((x) => x.phase !== "done");
   if (!p) return null;
   const mine = p.vendors.find((v) => v.next.who === "customer") ?? p.vendors[0];
   const status = mine ? `${mine.vendor_name} ${visitState(mine.status, "customer").label}` : p.todo?.text ?? stepName(p.current);
-  const pick = mine && (mine.next.kind === "pick" || mine.next.kind === "proposal");
-  const link = p.todo?.link && p.todo.link.startsWith("/") && !p.todo.link.startsWith("//") ? p.todo.link : `/projects/${p.id}`;
-  const href = pick ? `/projects/${p.id}/visits/${encodeURIComponent(mine.visit_id)}` : link;
+  const href = `/projects/${encodeURIComponent(p.id)}/assistant`;
   return { id: p.id, name: projectName(p.emd, p.region, p.trades), step: stepName(p.current), status, href };
 }
 

@@ -792,3 +792,21 @@ class SameNameOut(BaseModel):
 
 VendorAdminDetailOut.model_rebuild()
 PricesOut.model_rebuild()
+
+
+class OpenDaysIn(BaseModel):
+    """실측 영업일 등록: 영업 요일(월 0 ~ 일 6) · 쉬는 날(120개까지)"""
+
+    open_weekdays: list[Annotated[int, Field(ge=0, le=6)]] = Field(min_length=1, max_length=7)
+    off_days: list[date] = Field(default_factory=list, max_length=120)
+
+    @model_validator(mode="after")
+    def _uniq(self) -> "OpenDaysIn":
+        self.open_weekdays = sorted(set(self.open_weekdays))
+        self.off_days = sorted(set(self.off_days))
+        return self
+
+
+class OpenDaysOut(BaseModel):
+    open_weekdays: list[int]
+    off_days: list[date]

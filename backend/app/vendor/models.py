@@ -19,7 +19,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -108,6 +108,11 @@ class Vendor(Base):
         ),
         CheckConstraint("(suspended_at is null) = (suspend_scope is null)", name="suspended"),
         CheckConstraint("visit_capacity between 1 and 3", name="visit_capacity"),
+        CheckConstraint(
+            "open_weekdays <@ '{0,1,2,3,4,5,6}'::smallint[] and cardinality(open_weekdays) >= 1",
+            name="open_weekdays",
+        ),
+        CheckConstraint("cardinality(off_days) <= 120", name="off_days"),
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -155,6 +160,11 @@ class Vendor(Base):
     suspend_scope: Mapped[str | None] = mapped_column(String(4))
     # 반나절 한 칸에 받는 실측 수(L03). visit_holds.seat가 1..이 값 안에서 칸을 잡는다
     visit_capacity: Mapped[int] = mapped_column(SmallInteger, default=2, server_default="2")
+    # 0038: 업체가 미리 등록한 실측 영업 요일(월 0 ~ 일 6)과 쉬는 날. 고객은 이 안의 빈 반나절만 골라요
+    open_weekdays: Mapped[list[int]] = mapped_column(
+        ARRAY(SmallInteger), default=lambda: [0, 1, 2, 3, 4, 5], server_default="{0,1,2,3,4,5}"
+    )
+    off_days: Mapped[list[date]] = mapped_column(ARRAY(Date), default=list, server_default="{}")
 
 
 class VendorTrade(Base):

@@ -4,6 +4,7 @@
 // - 409는 서버 글을 그대로 알려요(already · slots_full · no_estimate · paper_unsupported · blocked_retry · locked).
 // - 이 구에 업체가 없으면 가까운 구 업체를 보여요(C12). 막다른 화면을 만들지 않아요.
 // - 폰: 담기 띠가 아래에 붙어요. 웹: 목록 아래 카드 + 담은 업체 칩(빼기).
+// - 위 찾기 칸: 업체 이름 · 구로 거르기(띄어쓰기 · 대소문자 무시, 화면에서만, 2026-11-25 회의).
 // - 업체가 많아져도 처음엔 5곳만 보이고 아래 '더보기'로 5곳씩 더 펼쳐요. 가견적 설명은 제목 옆 '!' 도움말에 있어요(11-19).
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
@@ -24,6 +25,8 @@ type Card = Schemas["VendorCardOut"];
 type Short = Schemas["ShortlistOut"];
 const MAX = 3;
 const PAGE = 5; // 처음 보이는 업체 수 · 더보기로 더 여는 수
+/** 찾기 비교용: 띄어쓰기 빼고 소문자 */
+const norm = (x: string) => x.replace(/\s+/g, "").toLowerCase();
 
 export function VendorList({ projectId, list, shortlist, mock, head, aside }: {
   projectId: string;
@@ -50,6 +53,7 @@ export function VendorList({ projectId, list, shortlist, mock, head, aside }: {
   });
   const [busy, setBusy] = useState<string | null>(null);
   const [shown, setShown] = useState(PAGE);
+  const [query, setQuery] = useState("");
   // 같은 틱에 두 번 눌려도 한 번만 보내요(상태는 다음 그리기에야 바뀌어서 ref로 막아요, D29)
   const lock = useRef(false);
   const count = picked.length;
@@ -101,15 +105,19 @@ export function VendorList({ projectId, list, shortlist, mock, head, aside }: {
     />
   );
 
-  const ready = list.local.filter((c) => c.state !== "no_estimate");
-  const preparing = list.local.filter((c) => c.state === "no_estimate");
+  const key = norm(query);
+  const hit = (c: Card) => !key || norm(`${c.name} ${c.sgg}`).includes(key);
+  const local = list.local.filter(hit);
+  const nearby = list.nearby.filter(hit);
+  const ready = local.filter((c) => c.state !== "no_estimate");
+  const preparing = local.filter((c) => c.state === "no_estimate");
   const zero = list.local.length === 0;
   const trayText = count === 0 ? `${MAX}곳까지 담을 수 있어요` : left > 0 ? "" : `${MAX}곳을 다 담았어요`;
   // 5곳씩: 가견적 있는 업체 → 준비 중 업체 순서로 채워요(이 구에 업체가 없으면 가까운 구 업체를 같은 식으로)
   const readyShown = ready.slice(0, shown);
   const prepShown = preparing.slice(0, Math.max(0, shown - ready.length));
-  const nearShown = list.nearby.slice(0, shown);
-  const hiddenCount = zero ? list.nearby.length - nearShown.length : ready.length + preparing.length - readyShown.length - prepShown.length;
+  const nearShown = nearby.slice(0, shown);
+  const hiddenCount = zero ? nearby.length - nearShown.length : ready.length + preparing.length - readyShown.length - prepShown.length;
   const tip = !zero ? `가견적은 업체가 확인한 단가 × 믿집 수량이에요. 부가세 포함이고, 표준견적서는 ${won(list.standard_total)}이에요.` : null;
   const go = <Button size="sm" href={`${base}/visits/new`} disabled={count === 0}>실측 일정 잡기</Button>;
 
@@ -120,6 +128,14 @@ export function VendorList({ projectId, list, shortlist, mock, head, aside }: {
           desc={tip ? <>{head.desc}<HelpTip only="phone" label="가견적 안내">{tip}</HelpTip></> : head.desc}
           badge={tip ? <HelpTip only="web" label="가견적 안내">{tip}</HelpTip> : undefined} />
         <WithAside aside={aside}>
+          {all.length ? (
+            <div className={s.search} role="search">
+              <Icon name="search" size={18} />
+              <input type="search" className={s.searchIn} value={query} onChange={(e) => { setQuery(e.target.value); setShown(PAGE); }}
+                placeholder="업체 이름 · 지역으로 찾기" aria-label="업체 찾기" />
+            </div>
+          ) : null}
+          {key && !local.length && !nearby.length ? <p className={s.sub} role="status">찾는 업체가 없어요. &lsquo;{query.trim()}&rsquo; 대신 업체 이름이나 구 이름으로 찾아 주세요.</p> : null}
           {zero ? (
             <section className={s.group} aria-labelledby="zero-t">
               <h2 id="zero-t" className={s.hs}>{list.area_name}에서 도배하는<br />믿집 업체가 아직 없어요</h2>

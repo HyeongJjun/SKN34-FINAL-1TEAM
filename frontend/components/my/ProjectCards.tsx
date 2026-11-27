@@ -70,7 +70,7 @@ function Card({ c }: { c: MyCard }) {
     <li>
       <Group as="article" className={s.card}>
         <div className={s.head}>
-          <h2 className={s.title}><Link className={s.name} href={base}>{c.name}<Icon name="chevron-right" size={18} /></Link></h2>
+          <h2 className={s.title}><Link className={s.name} href={`${base}/assistant`}>{c.name}<Icon name="chevron-right" size={18} /></Link></h2>
           <Small>{small}</Small>
         </div>
         <Steps current={current} />

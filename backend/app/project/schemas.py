@@ -215,6 +215,11 @@ class HomeInfoIn(BaseModel):
         description="예산(원, 만 원 단위). 비우면 '아직 몰라요'",
     )
     start_date: date | None = Field(default=None, description="공사 시작 희망일 (모르면 비움)")
+    mokgong: list[MokItem] = Field(
+        default=[],
+        max_length=4,
+        description="목공 할 곳(몰딩 · 걸레받이 · 문 · 벽 평탄화). 비우면 도배만",
+    )
 
     @field_validator("emd")
     @classmethod
@@ -223,8 +228,12 @@ class HomeInfoIn(BaseModel):
 
     @model_validator(mode="after")
     def _scope(self) -> "HomeInfoIn":
-        if len(set(self.spaces)) != len(self.spaces) or len(set(self.faces)) != len(self.faces):
-            raise ValueError("같은 공간 · 면을 두 번 골랐어요.")
+        if (
+            len(set(self.spaces)) != len(self.spaces)
+            or len(set(self.faces)) != len(self.faces)
+            or len(set(self.mokgong)) != len(self.mokgong)
+        ):
+            raise ValueError("같은 공간 · 면 · 목공 할 곳을 두 번 골랐어요.")
         if self.scope == "full" and (self.spaces or set(self.faces) != {"wall", "ceiling"}):
             raise ValueError("전체 공사는 공간을 고르지 않고 벽 · 천장을 모두 해요.")
         if self.scope == "partial" and not self.spaces:
@@ -284,6 +293,7 @@ class HomeInfoOut(BaseModel):
     grade: DobaeGrade | None
     budget_won: int | None
     start_date: date | None
+    mokgong: list[MokItem] = []
 
 
 class EmdOut(BaseModel):

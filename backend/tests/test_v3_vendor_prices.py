@@ -7,8 +7,10 @@ import uuid
 from decimal import Decimal
 
 from app.auth.models import User
+from app.calc.quote_diff import percent_vs
 from app.db import SessionLocal
 from app.project import service as project_service
+from app.refprice.market_basis import basis_total
 from app.shared.errors import AppError
 from app.vendor import service
 from tests.conftest import query
@@ -227,9 +229,9 @@ def test_customer_estimate_v3_for_c11(api):
         "general",
         "basic",
     )
-    assert (
-        e.vs_standard_pct == Decimal("26.6") and e.paper_ok is True
-    )  # 퍼티 · 식대 · 운송비는 비교에서 뺌
+    # 비교 기준은 시장 단가 표준견적서(2026-11-26 팀 결정). 그 견적에도 퍼티 · 식대 · 운송비가 있어 가견적 전체로 견줘요
+    market = basis_total("dobae", HOME["area_m2"], HOME["area_basis"], HOME["grade"], "full")
+    assert e.vs_standard_pct == percent_vs(3_186_150, market) and e.paper_ok is True
     assert [(x.code, x.qty, x.amount) for x in e.lines][:2] == [
         ("1201", Decimal("21.0"), 420_000),
         ("1204", Decimal("63.0"), 598_500),

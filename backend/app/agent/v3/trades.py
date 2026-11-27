@@ -10,6 +10,7 @@
 import re
 from dataclasses import dataclass, field
 
+from app.agent.v3 import specialists
 from app.agent.v3.schemas import TradeCode
 
 
@@ -38,56 +39,14 @@ class TradeSpec:
     calc: bool = False  # 믿집 계산 엔진이 금액 · 기간을 내는 공종
     risky_diy: bool = False  # 셀프 방법 대신 전문 업체를 권하는 공종(L24)
     check_where: str = "실측 때 업체"  # 모를 때 확인할 곳
+    route_priority: int = 0  # 같은 위치에서 다른 공종과 단어가 겹칠 때 우선순위
     pattern: re.Pattern = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "pattern", re.compile(self.words, re.IGNORECASE))
 
 
-SPECS: tuple[TradeSpec, ...] = (
-    TradeSpec(
-        "dobae",
-        "도배",
-        "deep",
-        r"도배|벽지|초배|정배|합지|실크|도배풀|풀자국|퍼티|빠데|광폭|소폭|띠벽지|덧방\s*도배",
-        ("도배",),
-        7,
-        cautions=(
-            "천장 평탄화 · 몰딩 같은 목공이 끝난 뒤에 도배해요.",
-            "곰팡이 · 습기가 있는 벽은 벽지보다 바탕부터 손봐요.",
-        ),
-        survey=("벽 · 천장 면적", "기존 벽지 상태(들뜸 · 곰팡이 · 결로)"),
-        prep=("벽 앞 가구 옮기기", "벽에 건 액자 · 선반 떼기"),
-        slots=(
-            Slot(
-                "dobae.grade",
-                "오래 사실 집인가요, 세 놓을 집인가요?",
-                ("오래 살 집", "세 놓을 집", "아직 몰라요"),
-                fact="grade",
-            ),
-            Slot(
-                "dobae.ceiling",
-                "천장도 같이 도배하실 건가요?",
-                ("천장도 해요", "벽만 해요", "아직 몰라요"),
-            ),
-            Slot(
-                "dobae.living",
-                "공사하는 동안 그 집에 사세요?",
-                ("살면서 해요", "빈 집이에요", "아직 몰라요"),
-                fact="living",
-            ),
-            Slot(
-                "dobae.mold", "벽에 곰팡이나 물자국이 있나요?", ("있어요", "없어요", "아직 몰라요")
-            ),
-            Slot(
-                "dobae.area_basis",
-                "넣으신 면적이 공급면적인가요, 전용면적인가요?",
-                ("공급면적이에요", "전용면적이에요", "아직 몰라요"),
-                fact="area_basis",
-            ),
-        ),
-        calc=True,
-    ),
+_BUILTIN_SPECS: tuple[TradeSpec, ...] = (
     TradeSpec(
         "mokgong",
         "목공",
@@ -237,6 +196,14 @@ SPECS: tuple[TradeSpec, ...] = (
         check_where="관리사무소 · 1372 소비자상담센터",
     ),
 )
+_folder_specs = {
+    spec.code: spec for spec in specialists.load_specs(specialists.ROOT, TradeSpec, Slot)
+}
+_builtin_codes = {spec.code for spec in _BUILTIN_SPECS}
+SPECS = (
+    *(spec for spec in _folder_specs.values() if spec.code not in _builtin_codes),
+    *(_folder_specs.get(spec.code, spec) for spec in _BUILTIN_SPECS),
+)
 BY_CODE: dict[str, TradeSpec] = {s.code: s for s in SPECS}
 TRADE_CODES: tuple[str, ...] = tuple(s.code for s in SPECS if s.code != "common")
 TAG_TO_CODE: dict[str, str] = {t: s.code for s in SPECS for t in s.tags}
@@ -311,14 +278,14 @@ WORK_OVER = {
 
 def trades_in(text: str) -> list[TradeCode]:
     """걸린 공종: 질문의 주인 공종을 맨 앞에, 나머지는 문장에 처음 나온 순서로(공통 빼고)."""
-    hits: list[tuple[int, str]] = []
+    hits: list[tuple[int, int, str]] = []
     for s in SPECS:
         if s.code == "common":
             continue
         m = s.pattern.search(text or "")
         if m:
-            hits.append((m.start(), s.code))
-    order = [c for _, c in sorted(hits)]
+            hits.append((m.start(), -s.route_priority, s.code))
+    order = [code for _, _, code in sorted(hits)]
     if len(order) >= 2 and order[0] in WORK_OVER:
         work = next((c for c in order[1:] if c in WORK_OVER[order[0]]), None)
         if work:

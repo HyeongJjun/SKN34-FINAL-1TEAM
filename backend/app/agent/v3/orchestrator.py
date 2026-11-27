@@ -184,9 +184,10 @@ def merge(parts: list[Part], kb: KB | None = None, asked: str = "") -> Part:
     return out
 
 
-def run(task: Task, kb: KB) -> tuple[Part, list[str], int]:
+def run(task: Task, kb: KB, *, tasks: list[Task] | None = None) -> tuple[Part, list[str], int]:
     """(합친 몫, 조각 담당 이름들, 실패한 조각 수)"""
-    tasks = split(task)
+    if tasks is None:
+        tasks = split(task)
     parts = [AGENTS[t.route](t, kb) for t in tasks]
     failed = sum(1 for p in parts if not p.sections and not p.calc)
     names = [f"{t.route}:{t.trades[0] if t.trades else '-'}" for t in tasks]

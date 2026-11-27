@@ -47,7 +47,7 @@ from app.quote.schemas import (
     StandardTradeOut,
     VendorQuoteOut,
 )
-from app.refprice import market_book
+from app.refprice import market_basis
 from app.refprice.book import DOBAE_2026H2, MOKGONG_2026H2
 from app.refprice.house import HOUSE_2026H2
 from app.refprice.wallpaper_market import paper_market
@@ -380,9 +380,7 @@ async def standard_for(s: AsyncSession, user: User, project_id: uuid.UUID) -> St
 
 # ---- 시장 단가 견적(업체 견적서 235건 중앙값). 손님 계산 · 내 공사 화면 · AI 칸이 같은 함수를 쓴다 ----
 
-MARKET_BOOK = market_quote.Book(
-    market_book.VERSION, market_book.QUOTES, market_book.ITEMS, market_book.COEF
-)
+MARKET_BOOK = market_basis.BOOK
 
 
 def market_calc(
@@ -398,6 +396,8 @@ def market_calc(
     door: str = "abs",
     jungmun: str = "slim3",
     options: frozenset[str] | None = None,
+    molding: bool = True,
+    skirting: bool = True,
 ) -> tuple[market_quote.Quote, str]:
     """시장 단가 견적과 면적 → 평형 설명. 평형이 없으면 면적(전용이면 공급으로 바꿈)으로 센다."""
     note = ""
@@ -413,7 +413,17 @@ def market_calc(
             note = f"공급 {area_m2}㎡를 {py}평형으로 봤어요"
     r, ba = market_quote.default_rooms(py)
     inp = market_quote.Input(
-        py, rooms or r, baths or ba, dobae, mokgong, wallpaper, door, jungmun, options
+        py,
+        rooms or r,
+        baths or ba,
+        dobae,
+        mokgong,
+        wallpaper,
+        door,
+        jungmun,
+        options,
+        molding,
+        skirting,
     )
     try:
         return market_quote.build(inp, MARKET_BOOK), note
@@ -421,26 +431,38 @@ def market_calc(
         raise AppError(422, "invalid", str(e)) from e
 
 
-def market_of(st: StandardOut) -> tuple[market_quote.Quote, str] | None:
-    """내 공사 시장 단가 견적. 전체 도배만 계산하고(목공은 끔), 부분 공사 · 도배 없는 공사는 None(기존 표준견적서)."""
+def market_of(
+    st: StandardOut, mok_items: list[str] | None = None
+) -> tuple[market_quote.Quote, str] | None:
+    """내 공사 시장 단가 견적(표준견적서, 2026-11-26 팀 결정 #207). 목공을 고른 공사는 목공도 켜고,
+    고른 목공 할 곳(mok_items)을 선택 항목으로 맞춰요(모르면 235건에서 흔한 것).
+    부분 공사 · 도배 없는 공사는 None(기존 표준견적서)."""
     if (st.scope or "full") != "full":
         return None
     d = next((t for t in st.trades if t.trade == "dobae"), None)
     if d is None:
         return None
+    mok = any(t.trade == "mokgong" for t in st.trades)
+    options = market_basis.mok_options(mok_items) if mok else None
+    base = market_basis.mok_base(mok_items) if mok else {}
     return market_calc(
         pyeong=None,
         area_m2=st.area_m2,
         area_basis="exclusive" if st.area_basis == "exclusive" else "supply",
+        mokgong=mok,
         wallpaper="hapji" if d.grade == "economy" else "silk",
+        options=options,
+        **base,
     )
 
 
 async def market_for(
     s: AsyncSession, user: User, project_id: uuid.UUID
 ) -> tuple[market_quote.Quote, str] | None:
-    """GET /v2/projects/{id}/market-quote · AI 칸: 남의 것은 404."""
-    return market_of(await standard_for(s, user, project_id))
+    """GET /v2/projects/{id}/market-quote · AI 칸: 남의 것은 404. 고른 목공 할 곳을 맞춰 넣어요."""
+    st = await standard_for(s, user, project_id)
+    p = await project_service.get_for(s, user, project_id)
+    return market_of(st, list(p.trades.mokgong.items) if p.trades.mokgong else None)
 
 
 # ---- 업체 실측 견적서: 업체 양식 파일 + 요약 칸. 실측 요청(visit) 확인 · 상태 바꾸기는 visit.service가 한다 ----

@@ -4,6 +4,7 @@
 
 import json
 import uuid
+from dataclasses import replace
 
 import asyncpg
 import pytest
@@ -226,3 +227,48 @@ def test_someone_elses_project_is_404_and_writes_no_chat(api):
     assert ask(api, context={"screen": "standard", "project_id": pid}).status_code == 404
     assert query("select count(*) as n from chats")[0]["n"] == before
     assert api.get(f"/ai/threads?project_id={pid}").status_code == 404
+
+
+def test_opted_in_trade_reads_only_active_vectors(api, monkeypatch):
+    from helpers import knowledge_chunk, knowledge_version
+
+    from app.agent import llm
+    from app.agent.v3.specialists import registered
+    from app.chat import service
+
+    active = knowledge_version("dobae-vector-active")
+    inactive = knowledge_version("dobae-vector-inactive", False)
+    knowledge_chunk(
+        active, "K9000", "도배 전에 벽의 곰팡이와 습기를 확인합니다.", embedding=[1, 0, 0]
+    )
+    knowledge_chunk(inactive, "K9001", "도배 전에 다른 기준을 확인합니다.", embedding=[1, 0, 0])
+    seen = []
+    calls = []
+    specialist = registered()["dobae"]
+    assert specialist.retrieve is not None
+
+    async def embed(question):
+        calls.append(question)
+        return "test-model", [1.0, 0.0, 0.0]
+
+    async def no_rewrite(*args, **kwargs):
+        raise llm.LLMError("test")
+
+    def retrieve(kb, question):
+        seen.extend(kb.vector_rids.get(("dobae", question), ()))
+        return specialist.retrieve(kb, question)
+
+    monkeypatch.setitem(
+        registered(),
+        "dobae",
+        replace(specialist, retrieve=retrieve, vector_query=lambda question: question),
+    )
+    monkeypatch.setattr(service, "mode", lambda: "llm")
+    monkeypatch.setattr(llm, "embed_query", embed)
+    monkeypatch.setattr(llm, "structured", no_rewrite)
+    use(api, signup(api))
+
+    out = done(ask(api, text="곰팡이가 있는 벽지는 어떻게 도배해요?"))
+    assert out["route"] == "trade"
+    assert len(calls) == 1
+    assert seen == ["dobae-vector-active/K9000"]
