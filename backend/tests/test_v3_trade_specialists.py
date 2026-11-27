@@ -101,7 +101,8 @@ def test_new_trade_folder_is_routable_without_shared_registration(tmp_path, monk
     folder.mkdir()
     (folder / "spec.py").write_text(
         "def build(spec_type, slot_type):\n"
-        '    return spec_type("waterproofing", "방수", "knowledge", "방수막", ("방수",), 5, route_priority=1)\n'
+        '    return spec_type("waterproofing", "방수", "knowledge", "방수막", ("방수",), 5, route_priority=1)\n',
+        encoding="utf-8",
     )
     (folder / "prompt_v1.md").write_text("방수 전용 지침", encoding="utf-8")
     monkeypatch.setattr(specialists, "__path__", [*specialists.__path__, str(tmp_path)])
