@@ -70,6 +70,17 @@ export function boardTarget(question: string, a: BoardAnswer, vendors: BoardVend
  *  locked: 그 공정 업체를 확정했어요(서버 409 locked) · left: 서버가 준 남은 칸(옛 요청이 쓴 칸까지 세요) ·
  *  live: 실측 요청이 살아 있는 업체(담기 409 already · 빼기 409 locked, 요청 취소부터) */
 export type PickState = { locked: boolean; left: number; live: Set<string> };
+/** 끝난 실측(이 업체는 다시 담기 · 빼기 가능) */
+export const CLOSED_VISITS = ["declined", "expired", "cancelled", "no_show", "closed"];
+/** 한 공정의 담기 상태: 그 공정 업체를 확정(공사 일정에 그 공정 계약 · 실측에서 고름)했으면 잠그고, 진행 중 실측 업체는 담기 · 빼기를 막아요 */
+export function pickStateOf(trade: string, dealTrades: string[], visits: { trade: string; status: string; vendor_id: string | null }[], left: number): PickState {
+  const tv = visits.filter((v) => v.trade === trade && !CLOSED_VISITS.includes(v.status));
+  return {
+    locked: dealTrades.includes(trade) || tv.some((v) => v.status === "chosen"),
+    left,
+    live: new Set(tv.flatMap((v) => (v.vendor_id ? [v.vendor_id] : []))),
+  };
+}
 export function pickRule(v: { vendor_id: string; shortlisted: boolean }, st: PickState): { add: boolean; remove: boolean } {
   if (st.locked || st.live.has(v.vendor_id)) return { add: false, remove: false };
   return v.shortlisted ? { add: false, remove: true } : { add: st.left > 0, remove: false };
