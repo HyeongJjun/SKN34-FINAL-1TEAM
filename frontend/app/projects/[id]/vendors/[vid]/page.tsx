@@ -34,24 +34,28 @@ const isGrade = (v: unknown): v is Grade => v === "basic" || v === "economy";
 
 export default async function VendorDetailPage({ params, searchParams }: {
   params: Promise<{ id: string; vid: string }>;
-  searchParams: Promise<{ grade?: string | string[] }>;
+  searchParams: Promise<{ grade?: string | string[]; trade?: string | string[] }>;
 }) {
   const { id, vid } = await params;
-  const { grade: asked } = await searchParams;
+  const { grade: asked, trade: tq } = await searchParams;
+  // 재재 화면 목공 업체 창의 '전체 보기'는 ?trade=mokgong으로 와요(#221 리뷰). 벽지 고르기는 도배만이에요
+  const trade = (Array.isArray(tq) ? tq[0] : tq) === "mokgong" ? "mokgong" : "dobae";
   const shell = await getProjectShell(id);
   if (!shell) notFound();
-  const want = isGrade(asked) ? asked : null;
-  const [d, short] = await Promise.all([getVendorDetail(shell.id, vid, want), getShortlist(shell.id).catch(() => null)]);
+  const want = trade === "dobae" && isGrade(asked) ? asked : null;
+  const [d, short] = await Promise.all([getVendorDetail(shell.id, vid, want, trade), getShortlist(shell.id, trade).catch(() => null)]);
   if (!d) notFound();
 
   const pr = d.profile;
   const name = pr.biz_name ?? "업체";
   const base = `/projects/${shell.id}`;
   const listHref = `${base}/vendors`;
-  const est = d.estimate_v3 ?? null;
+  const est = trade === "dobae" ? d.estimate_v3 ?? null : null;
+  // 목공은 서버가 v3 가견적을 세지 않아 목록 · 보드 업체 창과 같은 기존 가견적(estimate)을 보여요
+  const mok = trade === "mokgong" ? d.estimate ?? null : null;
   // 보여 준 벽지는 API 값(?grade= 또는 공사 벽지). 고른 벽지를 업체가 안 하면 paper_ok false · state paper_unsupported
   const grade: Grade = d.grade ?? est?.grade ?? want ?? (shell.cond?.grade === "economy" ? "economy" : "basic");
-  const state = est && est.paper_ok === false ? "paper_unsupported" : d.state ?? (est ? "ok" : "no_estimate");
+  const state = trade === "mokgong" ? (mok ? "ok" : "no_estimate") : est && est.paper_ok === false ? "paper_unsupported" : d.state ?? (est ? "ok" : "no_estimate");
   const r = d.rating ?? null;
   const avg = avgText(r);
   const reviewCount = r?.count ?? 0;
@@ -114,7 +118,9 @@ export default async function VendorDetailPage({ params, searchParams }: {
 
           <section id="est" className={s.group} aria-labelledby="est-t">
             <h2 id="est-t" className="mj-sr">가견적</h2>
-            {state === "ok" && est ? (
+            {mok ? (
+              <BigFigure label="목공 가견적 · 부가세 포함" value={mok.total} caption="업체 단가 × 믿집 수량" />
+            ) : state === "ok" && est ? (
               <BigFigure label="가견적 · 부가세 포함" value={est.total} caption={["업체 단가 × 믿집 수량", compareText(est.vs_standard_pct)].filter(Boolean).join(" · ")} />
             ) : (
               <div>
@@ -123,7 +129,7 @@ export default async function VendorDetailPage({ params, searchParams }: {
                 {state === "no_estimate" ? <p className={s.help}>업체가 단가를 확인하면 보여요</p> : null}
               </div>
             )}
-            {state === "no_estimate" ? null : (
+            {state === "no_estimate" || trade === "mokgong" ? null : (
               <>
                 <GradeToggle grade={grade} diff={state === "ok" ? d.grade_diff ?? null : null} />
                 <p className={s.help}>요청할 때 고른 벽지로 가견적이 고정돼요</p>
@@ -145,6 +151,12 @@ export default async function VendorDetailPage({ params, searchParams }: {
             </section>
           ) : null}
 
+          {mok ? (
+            <section className={s.group} aria-label="목공 가견적 줄">
+              <QuoteLines lines={mok.lines.map((l) => ({ key: l.key, name: l.name, note: l.included_in_name ? `${l.included_in_name}에 포함` : undefined, qty: l.qty, unit: l.unit, unitPrice: l.unit_price, amount: l.included_in ? null : l.amount }))}
+                totals={{ supply: mok.supply, vat: mok.vat, total: mok.total }} vatSplit caption={`${name} 목공 가견적 줄`} />
+            </section>
+          ) : null}
           {photos.length ? <CasesBlock id="cases" photos={photos} /> : null}
 
           <section id="reviews" className={s.group} aria-labelledby="rv-t">
@@ -164,7 +176,7 @@ export default async function VendorDetailPage({ params, searchParams }: {
         </WithAside>
       </Main>
       <BottomBar>
-        <DetailActions projectId={shell.id} vendorId={vid} name={name} grade={grade} canPick={state === "ok"} shortlisted={!!d.shortlisted} count={count} mock={shell.mock} />
+        <DetailActions projectId={shell.id} vendorId={vid} name={name} grade={grade} trade={trade} canPick={state === "ok"} shortlisted={!!d.shortlisted} count={count} mock={shell.mock} />
       </BottomBar>
     </>
   );
