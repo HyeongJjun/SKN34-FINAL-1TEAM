@@ -29,7 +29,7 @@ import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { dateShort, euro, won } from "@/lib/format";
 import { termByName } from "@/lib/guide";
-import { autoDone, boardStateFor, boardTarget, clampTarget, tradeStdTotal, isWaiting, tabVendors, CLOSED_VISITS, norm, pickRule, pickStateOf, type PickState } from "./boardLink";
+import { autoDone, boardStateFor, boardTarget, clampTarget, stdSource, isWaiting, tabVendors, CLOSED_VISITS, norm, pickRule, pickStateOf, type PickState } from "./boardLink";
 import { quickChips } from "./chips";
 import { Jaejae } from "./Jaejae";
 import { MOK_TODO, Plan, PLAN_STEPS } from "./Plan";
@@ -282,9 +282,9 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const showDobae = !multi || !isMok;
   const showMok = !multi || isMok;
   // 공정별 표준견적서 금액(시장 단가 견적의 그 공정 합계). 없으면 전체 금액
-  const stdParts = multi && std?.parts && std.parts.parts.length > 1 ? std.parts : null;
-  // 공정별 시장 단가 견적이 없으면(부분 공사) 기존 표준견적서의 공정별 합계를 써요(#234 리뷰)
-  const tradeStd = multi && std ? tradeStdTotal(active, stdParts?.parts.map((x) => ({ trade: x.trade, total: x.quote.total })) ?? null, std.view) : null;
+  // 표준견적서 금액은 한 출처로(공정별 금액 · 전체 금액 · 창이 같은 기준, #234 리뷰)
+  const stdSrc = std ? stdSource(std) : null;
+  const tradeStd = multi ? stdSrc?.per?.[active] ?? null : null;
   const mokPicked = listOf("mokgong").filter((v) => v.state === "ok" && v.shortlisted);
   const closed = all.filter((v) => CLOSED.includes(v.status));
   const ready = [...(vendors?.local ?? []), ...(vendors?.nearby ?? [])].filter((v) => v.state === "ok");
@@ -294,8 +294,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     .sort((a, b) => Number(!!b.vendor_id && hi.includes(b.vendor_id)) - Number(!!a.vendor_id && hi.includes(a.vendor_id)));
   const extras = deal ? deal.extras.items.filter((i) => (i.answer === "pending" || i.answer === "asked") && !i.superseded) : [];
   // 표준견적서 금액은 창 · 비교 칸과 같은 값 하나(업체 견적서 시장 단가, #207). 부분 공사처럼 없을 때만 기존 표준견적서
-  // 공정이 둘 이상이면 공종별 표준견적서를 합친 금액(서버 합계)
-  const stdTotal = std ? (std.parts && std.parts.parts.length > 1 ? std.parts.total : std.market?.total ?? std.view.sum?.total ?? std.view.total) : compare?.standard_total ?? null;
+  // 전체 표준견적서 금액(stdSource가 고른 한 출처의 합계)
+  const stdTotal = stdSrc ? stdSrc.total : compare?.standard_total ?? null;
   const toPick = both.filter((v) => v.status === "offered" || v.status === "proposed");
   // 업체 답 · 실측 · 견적서를 기다리기만 하는 때(고를 것 · 볼 견적서 · 확정이 없을 때): 기다리는 동안 할 거리를 보여요(팀 피드백 4)
   // 그 탭 공정의 확정 · 견적서만 봐요(#234 리뷰: 도배 견적서 · 확정으로 목공 기다림 카드가 사라지지 않게). 비교 칸(compare)은 도배만이라 목공은 실측 요청 상태로 봐요
@@ -438,8 +438,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             })}
           </div>
         ) : null}
-        {/* 실측을 기다리는 동안에도 다른 업체를 보고 더 담아요(공정마다 3곳까지). 확정한 뒤에는 닫되, 재재가 말한 도배 업체가 있으면 보여 강조해요(#222 리뷰 회귀) */}
-        {!(trade === "dobae" && deal) || listOf("dobae").some((v) => hi.includes(v.vendor_id)) ? (
+        {/* 실측을 기다리는 동안에도 다른 업체를 보고 더 담아요(공정마다 3곳까지). 그 공정 업체를 확정한 뒤에는 닫되(공정마다), 재재가 말한 그 공정 업체가 있으면 보여 강조해요(#222 리뷰 회귀) */}
+        {!schedule?.trades.some((d) => d.deal.trade === trade) || listOf(trade).some((v) => hi.includes(v.vendor_id)) ? (
           <>
             <div className={s.search} role="search">
               <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="업체 이름 · 지역으로 찾기" aria-label={`${TRADE_WORD[trade]} 업체 찾기`} />
@@ -448,7 +448,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             {trade === "dobae" && mokVendors && vendors ? <p className={s.note}>가견적 %는 도배만 시장 단가 <b className="mj-num">{won(vendors.standard_total)}</b>와 견줘요. 표준견적서 합계에는 목공도 들어 있어요.</p> : null}
             <VendorRows list={listOf(trade).filter((v) => v.state === "ok")} query={query} hi={hi} trade={trade} pick={pickOf(trade)} pid={pid} busy={busy} act={act} onOpen={(vendorId) => setVOpen({ vendorId, trade })} />
           </>
-        ) : <p className={s.note}>{deal ? "도배 업체를 확정했어요. 일정 칸을 봐 주세요." : "도배 업체는 이미 골랐어요. 실측 칸을 봐 주세요."}</p>}
+        ) : <p className={s.note}>{TRADE_WORD[trade]} 업체를 확정했어요. {trade === "dobae" ? "일정 칸을 봐 주세요." : "업체 채팅과 내 공사 화면에서 이어 가요."}</p>}
         {trade === "dobae" && draft?.vendors.length && !deal ? (
           <Button size="lg" block onClick={() => setTab(3)}>{vs.length ? `도배 남은 ${draft.vendors.length}곳도 실측 날짜 고르기 →` : `도배 담은 ${draft.vendors.length}곳 실측 날짜 고르기 →`}</Button>
         ) : null}

@@ -1,7 +1,7 @@
 // 재재 대화 → 보드 연동 시험(#197): pnpm test:unit
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { autoDone, boardStateFor, boardTarget, clampTarget, tradeQuery, tradeStdTotal, withTrade, isWaiting, pickRule, pickStateOf, requestSaid, tabVendors, threadOf, type BoardAnswer } from "./boardLink.ts";
+import { autoDone, boardStateFor, boardTarget, clampTarget, stdSource, tradeQuery, withTrade, isWaiting, pickRule, pickStateOf, requestSaid, tabVendors, threadOf, type BoardAnswer } from "./boardLink.ts";
 
 const A = (over: Partial<BoardAnswer> = {}): BoardAnswer => ({ notice: "", sections: [], cards: [], ...over });
 const V = [
@@ -179,16 +179,30 @@ test("공정이 주소에서 재재 화면까지 이어져요(#234 리뷰: 목�
   assert.equal(withTrade("/projects/p1/plan", null), "/projects/p1/plan");
 });
 
-test("공정 탭 표준견적서 금액(#234 리뷰): 시장 단가가 없는 부분 공사도 공정별 합계로 나눠요", () => {
-  const view = { total: 1_200_000, parts: [{ trade: "mokgong", total: 800_000 }] }; // 도배 본문 + 목공 줄
-  assert.equal(tradeStdTotal("dobae", null, view), 1_200_000);
-  assert.equal(tradeStdTotal("mokgong", null, view), 800_000);
-  // 공정별 시장 단가 견적이 있으면 그 값
-  const market = [{ trade: "dobae", total: 4_895_000 }, { trade: "mokgong", total: 1_859_000 }];
-  assert.equal(tradeStdTotal("mokgong", market, view), 1_859_000);
-  // 공정이 하나뿐이면 전체 금액을 써요(null)
-  assert.equal(tradeStdTotal("dobae", null, { total: 1_000_000 }), null);
-  assert.equal(tradeStdTotal("dobae", [{ trade: "dobae", total: 1 }], { total: 1_000_000 }), null);
+test("표준견적서 금액 출처(#234 리뷰): 공정별 금액 · 전체 금액이 늘 같은 기준", () => {
+  const pub = { total: 1_200_000, sum: { total: 2_000_000 }, parts: [{ trade: "mokgong", total: 800_000 }] }; // 공공 기준: 도배 본문 + 목공 줄
+  const mq = { total: 6_754_000 }; // 전체 시장 단가
+  const pq = { total: 6_633_000, parts: [{ trade: "dobae", quote: { total: 4_928_000 } }, { trade: "mokgong", quote: { total: 1_705_000 } }] }; // 공정별 시장 단가
+  // 공정 둘 · 공정별 시장 단가 다 옴 → 시장 단가(전체 시장 단가가 실패해도 같음)
+  for (const market of [mq, null]) {
+    const x = stdSource({ view: pub, market, parts: pq });
+    assert.deepEqual([x.src, x.total, x.per], ["parts", 6_633_000, { dobae: 4_928_000, mokgong: 1_705_000 }]);
+  }
+  // 공정 둘 · 공정별 시장 단가 실패(전체 시장 단가만 옴) → 공정별 · 전체 모두 공공 기준(섞지 않아요)
+  const y = stdSource({ view: pub, market: mq, parts: null });
+  assert.deepEqual([y.src, y.total, y.per], ["public", 2_000_000, { dobae: 1_200_000, mokgong: 800_000 }]);
+  // 공정별 시장 단가가 한 공정만 옴 → 공공 기준
+  const z = stdSource({ view: pub, market: mq, parts: { total: 4_928_000, parts: [pq.parts[0]] } });
+  assert.equal(z.src, "public");
+  assert.equal(z.total, 2_000_000);
+  // 부분 도배 + 목공(시장 단가 없음) → 공공 기준 공정별
+  assert.deepEqual(stdSource({ view: pub, market: null, parts: null }).per, { dobae: 1_200_000, mokgong: 800_000 });
+  // 공정 하나: 시장 단가가 있으면 그 값, 없으면 공공 기준. 공정별 금액은 없어요
+  assert.deepEqual(stdSource({ view: { total: 1_000_000 }, market: { total: 1_100_000 } }), { src: "market", total: 1_100_000, per: null });
+  assert.deepEqual(stdSource({ view: { total: 1_000_000 }, market: null }), { src: "public", total: 1_000_000, per: null });
+  // 각 공정 금액의 합 = 전체 금액(공공 기준)
+  const per = stdSource({ view: pub, market: null }).per!;
+  assert.equal(per.dobae + per.mokgong, 2_000_000);
 });
 
 test("재재가 챙긴 일(#234 리뷰): 고른 공정 상태로만, 그 공정 보드에 없는 칸은 비워요", () => {

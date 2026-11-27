@@ -13,6 +13,7 @@ import type { Schemas } from "@/lib/backend/client";
 import { won } from "@/lib/format";
 import { daysCaption, type StdView } from "@/lib/guest/standard";
 import { BigFigure } from "@/components/ui/Money";
+import { stdSource } from "./boardLink";
 import s from "./StandardDialog.module.css";
 
 export type StdData = { view: StdView; market: Schemas["V2MqOut"] | null; /** 공정마다 따로 계산한 표준견적서(공정 탭) */ parts?: Schemas["V2MqPartsOut"] | null };
@@ -25,12 +26,14 @@ export function StandardDialog({ open, onClose, onPick, data, pid, locked, onEdi
   const change = `/start?edit=${pid}`;
   const { view, market } = data;
   const parts = view.parts ?? [];
-  // 공정 탭: 그 공정만 따로 계산한 표준견적서(서버 값 그대로). 공정이 하나거나 값이 없으면 전체 표준견적서
-  const all = data.parts && data.parts.parts.length > 1 ? data.parts : null;
+  // 금액 출처는 재재 화면과 같은 stdSource 하나로 정해요(#234 리뷰: 시장 단가 · 공공 기준이 섞이거나 표가 겹치지 않게).
+  // 공정 탭: 모든 공정의 시장 단가가 왔으면 그 공정 시장 단가, 아니면 기존 표준견적서의 그 공정 줄
+  const src = stdSource(data).src;
+  const all = src === "parts" ? data.parts ?? null : null;
   const word = (t: string) => (t === "dobae" ? "도배" : t === "mokgong" ? "목공" : t);
   const one = trade && all ? all.parts.find((x) => x.trade === trade) ?? null : null;
   // 시장 단가 공정별 견적이 없는 공사(부분 도배 + 목공): 기존 표준견적서의 공정별 줄 · 합계로 그 공정만 보여요(#234 리뷰)
-  const sepTrade = trade && !one && parts.length && view.sum ? trade : null;
+  const sepTrade = trade && src === "public" && parts.length && view.sum ? trade : null;
   const sepPart = sepTrade === "mokgong" ? parts.find((x) => x.trade === "mokgong") ?? null : null;
   const sepWords = view.sum ? `도배 ${won(view.total)} + ${parts.map((x) => `${word(x.trade)} ${won(x.total)}`).join(" + ")}` : "";
   return (
@@ -59,7 +62,7 @@ export function StandardDialog({ open, onClose, onPick, data, pid, locked, onEdi
                 ) : <StandardSheet view={{ ...view, parts: undefined, sum: undefined }} changeHref={change} onChange={onEdit} />}
                 <p className={s.note}>전체 표준견적서 <b className="mj-num">{won(view.sum.total)}</b>은 공종별 금액을 합친 금액이에요({sepWords}).</p>
               </>
-            ) : market ? (
+            ) : src === "market" && market ? (
               <>
                 <MarketTotal q={market} changeHref={change} onChange={onEdit} caption={["부가세 포함", daysCaption(view.days)].filter(Boolean).join(" · ")} />
                 {/* 목공도 한 공사는 합계와 가견적 % 기준이 달라서, 기준(도배만)을 서버 값 그대로 보여요(#207) */}
@@ -72,7 +75,8 @@ export function StandardDialog({ open, onClose, onPick, data, pid, locked, onEdi
               <StandardSheet view={view} changeHref={change} onChange={onEdit} />
             )}
             {/* 시장 단가 견적은 목공 줄도 들어 있어요(#207). 시장 단가가 없을 때만 공정별 줄을 따로 */}
-            {parts.length && !market && !sepTrade ? <TradePartSheets parts={parts} /> : null}
+            {/* 공정 탭이 없고 공공 기준일 때만 다른 공정 줄을 아래에 붙여요(시장 단가 견적엔 이미 들어 있어요) */}
+            {!trade && src === "public" && parts.length ? <TradePartSheets parts={parts} /> : null}
             {locked ? <p className={s.note}>실측을 요청한 뒤라 조건은 잠겼어요. 조건 바꾸기에서 넣은 값만 볼 수 있어요.</p> : null}
           </div>
           <div className={s.actions}>

@@ -136,12 +136,26 @@ export function withTrade(href: string, trade: string | null | undefined): strin
   return `${href}${tradeQuery(trade, href.includes("?") ? "&" : "?")}`;
 }
 
-/** 공정 탭의 표준견적서 금액(#234 리뷰): 공정별 시장 단가 견적이 있으면 그 값, 없으면(부분 공사) 기존 표준견적서의 공정별 합계.
- *  도배는 기존 표준견적서 본문(view.total), 다른 공정은 parts. 값이 없으면 null(전체 금액을 써요) */
-export function tradeStdTotal(trade: string, market: { trade: string; total: number }[] | null, view: { total: number; parts?: { trade: string; total: number }[] }): number | null {
-  if (market && market.length > 1) return market.find((x) => x.trade === trade)?.total ?? null;
-  if (!view.parts?.length) return null;
-  return trade === "dobae" ? view.total : view.parts.find((x) => x.trade === trade)?.total ?? null;
+/** 표준견적서 금액의 출처를 한 곳에서 정해요(#234 리뷰: 공정별 금액 · 전체 금액 · 창이 같은 기준).
+ *  - 공정이 둘 이상(view.parts가 있음): 모든 공정의 공정별 시장 단가가 왔을 때만 시장 단가("parts"), 하나라도 없으면 공공 기준("public").
+ *    전체 시장 단가(market)는 쓰지 않아요(공정별 값과 기준이 섞이지 않게)
+ *  - 공정이 하나: 시장 단가가 있으면 그 값("market"), 없으면 공공 기준 */
+export type StdSource = { src: "parts" | "market" | "public"; total: number; per: Record<string, number> | null };
+export function stdSource(d: {
+  view: { total: number; sum?: { total: number }; parts?: { trade: string; total: number }[] };
+  market: { total: number } | null;
+  parts?: { total: number; parts: { trade: string; quote: { total: number } }[] } | null;
+}): StdSource {
+  const others = d.view.parts ?? [];
+  if (others.length) {
+    const want = ["dobae", ...others.map((x) => x.trade)];
+    const got = d.parts?.parts ?? [];
+    if (d.parts && want.every((t) => got.some((x) => x.trade === t))) {
+      return { src: "parts", total: d.parts.total, per: Object.fromEntries(got.map((x) => [x.trade, x.quote.total])) };
+    }
+    return { src: "public", total: d.view.sum?.total ?? d.view.total, per: { dobae: d.view.total, ...Object.fromEntries(others.map((x) => [x.trade, x.total])) } };
+  }
+  return d.market ? { src: "market", total: d.market.total, per: null } : { src: "public", total: d.view.sum?.total ?? d.view.total, per: null };
 }
 
 /** 보드 칸마다 '재재가 챙긴 일'(#234 리뷰): 고른 공정 상태로만 채우고, 그 공정 보드에 없는 칸(maxTab 넘음)은 비워요 */
