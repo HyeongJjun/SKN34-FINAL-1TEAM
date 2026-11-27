@@ -803,6 +803,8 @@ class V2MqIn(BaseModel):
     door: Literal["abs", "emboss"] = "abs"
     jungmun: Literal["slim3", "slide", "swing"] = "slim3"
     options: list[MqOption] | None = Field(default=None, max_length=6)  # 비우면 235건에서 흔한 것
+    molding: StrictBool = True  # 목공 몰딩 줄. 고른 목공 할 곳에 몰딩이 없으면 끈다(#193)
+    skirting: StrictBool = True  # 목공 걸레받이 줄. 고른 목공 할 곳에 걸레받이가 없으면 끈다
 
     @model_validator(mode="after")
     def _size(self):
