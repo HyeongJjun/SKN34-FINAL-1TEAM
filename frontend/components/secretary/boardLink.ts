@@ -1,6 +1,7 @@
 // 재재 대화 → 오른쪽 보드 연동(#197): AI 답과 물은 말을 보고 보드 어느 칸을 보여 줄지, 어떤 업체를 강조할지 골라요.
 // 화면에서만 써요(API · AI 카드 모양은 그대로). 금액 · 날짜를 만들지 않아요.
-// 1) 답 글 · 표 · 초안에 이 공사 업체 이름이 나오면 그 업체를 강조하고 업체 칸(견적서가 왔으면 비교 칸)
+// 1) 물은 말 · 답 글 · 표 · 초안에 이 공사 업체 이름이 나오면 그 업체를 강조하고 업체 칸(견적서가 왔으면 비교 칸)
+//    (무료 모드 답은 업체 이름을 거의 안 꺼내서 물은 말도 봐요)
 // 2) 이름이 없으면 낱말로: 일정 말(실측 날짜 · 반나절 · 공사 날짜 · 공정표 · 일정)이면 일정 칸, 업체 말이면 업체 칸
 // 3) 둘 다 없으면 그대로
 
@@ -25,7 +26,7 @@ const SCHEDULE = /실측\s*(날짜|일정|날)|반나절|공사\s*(날짜|일정
 const VENDOR = /업체|가견적|담기|담아/;
 
 export function boardTarget(question: string, a: BoardAnswer, vendors: BoardVendor[], st: BoardState): BoardTarget {
-  const t = norm(answerText(a));
+  const t = norm(`${question} ${answerText(a)}`);
   const hit = vendors.filter((v) => norm(v.name).length >= 2 && t.includes(norm(v.name)));
   if (hit.length) {
     return { tab: st.quoted && !st.deal ? 4 : 2, hi: [...new Set(hit.map((v) => v.vendor_id))], trade: hit.some((v) => v.trade === "dobae") ? "dobae" : "mokgong" };
