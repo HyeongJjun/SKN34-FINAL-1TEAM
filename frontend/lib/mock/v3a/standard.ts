@@ -13,6 +13,7 @@ export const SAMPLE_INFO: HomeInfoBody = {
 };
 
 export const SAMPLE_STANDARD: GuestStandard = {
+  parts: [],
   formula_ver: "dobae_v3",
   price_ver: "2026H2",
   share_ver: null,
@@ -42,6 +43,7 @@ export const PART_INFO: HomeInfoBody = {
 };
 
 export const PART_STANDARD: GuestStandard = {
+  parts: [],
   formula_ver: "dobae_v3",
   price_ver: "2026H2",
   share_ver: "share_2026_1",

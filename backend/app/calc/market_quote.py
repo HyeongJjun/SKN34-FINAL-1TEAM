@@ -93,6 +93,8 @@ class Input:
     door: DoorKind = "abs"
     jungmun: Jungmun = "slim3"
     options: frozenset[str] | None = None  # 켠 선택 항목. None이면 235건에서 흔한 것
+    molding: bool = True  # 천장 몰딩 줄(고객이 고른 목공 할 곳에 없으면 False)
+    skirting: bool = True  # 걸레받이 줄
 
 
 @dataclass(frozen=True)
@@ -263,8 +265,12 @@ def _lines(inp: Input, book: Book) -> tuple[list[QLine], list[QLine], int]:
     if inp.mokgong:
         crew, crew_why = per_py("품_목공", _up, "올림", "품")
         mok = [
-            line("1302", "base", *per_py("몰딩", _up, "올림", "개")),
-            line("1304", "base", *per_py("걸레받이", _up, "올림", "개")),
+            *([line("1302", "base", *per_py("몰딩", _up, "올림", "개"))] if inp.molding else []),
+            *(
+                [line("1304", "base", *per_py("걸레받이", _up, "올림", "개"))]
+                if inp.skirting
+                else []
+            ),
             line("1306", "base", crew, f"목수 {crew_why}"),
             line("1307", "base", crew, "인력 수만큼"),
             line("1305", "base", *one),
