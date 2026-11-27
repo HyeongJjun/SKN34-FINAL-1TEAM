@@ -3058,6 +3058,7 @@ async def my_projects(s: AsyncSession, user: User, today: date) -> list[MyProjec
         p = await project_service.get_for(s, user, item.id)
         rows, _, deals = await _progress_of(s, p, today, now)
         prs = [pr for pr, *_ in rows]
+        todos = {pr.trade: _todo_out(p.id, pr.todo, pr.trade, d, ctx) for pr, d, ctx, _ in rows}
         top = first_todo(prs)
         todo = None
         if top is not None:
@@ -3076,7 +3077,10 @@ async def my_projects(s: AsyncSession, user: User, today: date) -> list[MyProjec
                 else min((pr.current for pr in prs), default=1),
                 trade_steps=[
                     TradeStepOut(
-                        trade=pr.trade, current=pr.current, label=STEP_LABEL[STEPS[pr.current - 1]]
+                        trade=pr.trade,
+                        current=pr.current,
+                        label=STEP_LABEL[STEPS[pr.current - 1]],
+                        todo=todos.get(pr.trade),
                     )
                     for pr in prs
                 ],
