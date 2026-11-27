@@ -1,7 +1,7 @@
 // 재재 대화 → 보드 연동 시험(#197): pnpm test:unit
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { boardTarget, pickRule, pickStateOf, requestSaid, threadOf, type BoardAnswer } from "./boardLink.ts";
+import { boardTarget, isWaiting, pickRule, pickStateOf, requestSaid, tabVendors, threadOf, type BoardAnswer } from "./boardLink.ts";
 
 const A = (over: Partial<BoardAnswer> = {}): BoardAnswer => ({ notice: "", sections: [], cards: [], ...over });
 const V = [
@@ -124,4 +124,28 @@ test("업체 채팅 창: 상호명이 아니라 실측 · 채팅 ID로 대화를
   assert.equal(threadOf(heads, "p1", { visitId: "v9", threadId: null }), null); // 다른 공사 실측
   assert.equal(threadOf(heads, "p1", { visitId: null, threadId: "t3" }), null); // 다른 공사 대화
   assert.equal(threadOf(heads, "p1", { visitId: null, threadId: null }), null);
+});
+
+// 공정 탭(#234 리뷰): 보드 업체 칸은 늘 고른 탭 공정이에요
+test("공정이 둘이면 재재 답 업체도 고른 탭 공정 업체만 맞춰 봐요", () => {
+  const mok = tabVendors(V, true, "mokgong");
+  assert.deepEqual(mok.map((v) => v.vendor_id), ["m1", "b1"]);
+  assert.ok(mok.every((v) => v.trade === "mokgong"));
+  // 목공 탭에서 도배 업체 이름을 물어도 보드를 도배로 바꾸지 않아요
+  assert.equal(boardTarget("마루와벽 어때요?", A(), mok, st), null);
+  // 둘 다 하는 업체는 그 탭 공정으로
+  assert.equal(boardTarget("솜씨공방 도배는요?", A(), mok, st)?.trade, "mokgong");
+  // 공정이 하나면 그대로
+  assert.equal(tabVendors(V, false, "dobae").length, V.length);
+});
+
+// 기다림 카드(#234 리뷰): 다른 공정의 견적서 · 확정으로 사라지지 않아요
+test("기다림 카드는 그 공정의 확정 · 견적서 · 고를 날만 봐요", () => {
+  const req = [{ status: "requested" }];
+  assert.equal(isWaiting(req, { deal: false, quoted: 0, toPick: 0 }), true);
+  assert.equal(isWaiting(req, { deal: true, quoted: 0, toPick: 0 }), false);
+  assert.equal(isWaiting(req, { deal: false, quoted: 1, toPick: 0 }), false);
+  assert.equal(isWaiting(req, { deal: false, quoted: 0, toPick: 1 }), false);
+  assert.equal(isWaiting([{ status: "offered" }], { deal: false, quoted: 0, toPick: 0 }), false);
+  assert.equal(isWaiting([], { deal: false, quoted: 0, toPick: 0 }), false);
 });

@@ -101,3 +101,16 @@ export function threadOf<T extends { thread_id: string; project_id: string | nul
   if (!want.visitId) return null;
   return heads.find((t) => t.project_id === projectId && t.visit_id === want.visitId) ?? null;
 }
+
+/** 공정 탭(#234 리뷰): 공정이 둘 이상이면 재재 답의 업체도 고른 탭 공정 업체만 맞춰 봐요.
+ *  보드 업체 칸이 탭과 다른 공정을 보이지 않게 해요(둘 다 하는 업체는 그 탭 공정으로) */
+export function tabVendors(vs: BoardVendor[], multi: boolean, active: "dobae" | "mokgong"): BoardVendor[] {
+  return multi ? vs.filter((v) => v.trade === active) : vs;
+}
+
+/** 기다림 카드(#234 리뷰): 그 공정에 업체 답 · 실측 · 견적서를 기다리는 요청만 있고,
+ *  그 공정의 확정 · 온 견적서 · 고를 날이 없을 때. 다른 공정 상태는 넣지 않아요 */
+export function isWaiting(visits: { status: string }[], st: { deal: boolean; quoted: number; toPick: number }): boolean {
+  if (st.deal || st.quoted || st.toPick) return false;
+  return visits.some((v) => ["requested", "picked", "booked", "visited"].includes(v.status));
+}

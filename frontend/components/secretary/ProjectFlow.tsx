@@ -29,7 +29,7 @@ import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { dateShort, euro, won } from "@/lib/format";
 import { termByName } from "@/lib/guide";
-import { boardTarget, CLOSED_VISITS, norm, pickRule, pickStateOf, type PickState } from "./boardLink";
+import { boardTarget, isWaiting, tabVendors, CLOSED_VISITS, norm, pickRule, pickStateOf, type PickState } from "./boardLink";
 import { quickChips } from "./chips";
 import { Jaejae } from "./Jaejae";
 import { MOK_TODO, Plan, PLAN_STEPS } from "./Plan";
@@ -114,7 +114,10 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const [open, setOpen] = useState(data.step != null);
   const [tab, setTab] = useState(data.step ?? Math.min(now, 7));
   const [stdOpen, setStdOpen] = useState(data.openStd && !!std);
-  const [trade, setTrade] = useState<Trade>("dobae");
+  // 보드 업체 · 실측 칸 공정: 공정 탭이 있으면 늘 고른 탭 공정(#234 리뷰: 탭과 보드가 어긋나지 않게), 하나면 보드 안 전환 단추로 골라요
+  const [tradeSel, setTradeSel] = useState<Trade>("dobae");
+  const trade: Trade = multi ? active : tradeSel;
+  const setTrade = (t: Trade) => { if (!multi) setTradeSel(t); };
   const [query, setQuery] = useState("");
   /** AI 답에 나온 업체(보드에서 강조) */
   const [hi, setHi] = useState<string[]>([]);
@@ -147,8 +150,6 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const [chatIds, setChatIds] = useState<Partial<Record<Trade, string>>>({});
   const chatId = chatIds[active] ?? null;
   const setChatId = (id: string) => setChatIds((m) => ({ ...m, [active]: id }));
-  // 탭을 바꾸면 보드의 업체 · 실측 칸도 그 공정으로
-  useEffect(() => { setTrade(active); }, [active]);
   const [text, setText] = useState("");
   const end = useRef<HTMLDivElement>(null);
   // 보드 칸 주소로 넘어온 첫 화면은 대화 끝으로 내리지 않아요(폰에서 위에 펼친 플랜이 가려져요). 묻거나 처리하면 다시 내려요
@@ -205,7 +206,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     const stage = (id: string) => (got.has(id) ? "quoted" as const : going.has(id) ? "visit" as const : undefined);
     const sent = (compare?.vendors ?? []).flatMap((r) => (r.vendor_id ? [{ vendor_id: r.vendor_id, name: r.vendor_name, trade: "dobae" as Trade, stage: stage(r.vendor_id) }] : []));
     const names = [...(["dobae", "mokgong"] as Trade[]).flatMap((t) => listOf(t).map((v) => ({ vendor_id: v.vendor_id, name: v.name, trade: t, stage: t === "dobae" ? stage(v.vendor_id) : undefined }))), ...sent];
-    const to = boardTarget(q, out.answer, names, { quoted: got.size > 0, deal: !!deal, chosen: vs.length > 0 }); // 비교 칸 · 실측 칸 · 공정표는 도배 기준
+    // 공정 탭이면 그 탭 공정 업체만 맞춰 봐요(다른 공정 업체 이름으로 보드가 탭과 다른 공정이 되지 않게)
+    const to = boardTarget(q, out.answer, tabVendors(names, multi, active), { quoted: got.size > 0, deal: !!deal, chosen: vs.length > 0 }); // 비교 칸 · 실측 칸 · 공정표는 도배 기준
     if (!to) return undefined;
     setTab(to.tab);
     setHi(to.hi);
@@ -286,7 +288,10 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const stdTotal = std ? (std.parts && std.parts.parts.length > 1 ? std.parts.total : std.market?.total ?? std.view.sum?.total ?? std.view.total) : compare?.standard_total ?? null;
   const toPick = both.filter((v) => v.status === "offered" || v.status === "proposed");
   // 업체 답 · 실측 · 견적서를 기다리기만 하는 때(고를 것 · 볼 견적서 · 확정이 없을 때): 기다리는 동안 할 거리를 보여요(팀 피드백 4)
-  const waiting = !deal && !toPick.length && !quoted.length && both.some((v) => ["requested", "picked", "booked", "visited"].includes(v.status));
+  // 그 탭 공정의 확정 · 견적서만 봐요(#234 리뷰: 도배 견적서 · 확정으로 목공 기다림 카드가 사라지지 않게). 비교 칸(compare)은 도배만이라 목공은 실측 요청 상태로 봐요
+  const myDeal = multi ? (schedule?.trades.find((t) => t.deal.trade === active) ?? null) : deal;
+  const myQuoted = multi && isMok ? both.filter((v) => v.status === "quoted").length : quoted.length;
+  const waiting = isWaiting(both, { deal: !!myDeal, quoted: myQuoted, toPick: toPick.length });
   const go = (step: number, label = "플랜에서 보기") => (
     <button type="button" className={s.boardLink} onClick={() => toBoard(step)}>{label} · {PLAN_STEPS[step]} 칸</button>
   );
@@ -341,6 +346,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
       ? <><p><b>{v.vendor_name}</b> 실측이 잡혔어요. 실측 때 업체가 몰딩 · 걸레받이 · 문 치수와 상태를 재고 견적서를 보내요.</p><p className={s.why}>실측 전날: 문과 벽 아래가 보이게 짐을 떼어 두고, 철거 · 폐기물이 견적에 들어가는지 물어보세요.</p></>
       : <><p><b>{v.vendor_name}</b> 실측이 잡혔어요. 실측 때 업체가 벽 크기와 상태를 재고 견적서를 보내요.</p><p className={s.why}>실측 전날: 가구 앞 벽이 보이게 비워 두고, 벽지 철거 · 폐기물이 견적에 들어가는지 물어보세요.</p></>}</> });
     else if (v.status === "visited") cards.push({ key: v.id, node: <p><b>{v.vendor_name}</b> 실측을 마쳤어요. 실측 견적서를 기다리고 있어요.</p> });
+    // 목공 견적서는 비교 칸이 아직 도배만이라 여기서 알려요(보드 목공 4칸부터는 준비 중 안내)
+    else if (v.status === "quoted" && v.trade === "mokgong") cards.push({ key: v.id, alert: true, node: <p><b>{iga(v.vendor_name)} 목공 실측 견적서를 보냈어요.</b> 목공 견적서 비교 · 확정은 이 화면에서 아직 준비 중이라 업체 채팅과 내 공사 화면에서 이어 가요.</p> });
   }
   if (waiting) {
     cards.push({ key: "wait", node: (
