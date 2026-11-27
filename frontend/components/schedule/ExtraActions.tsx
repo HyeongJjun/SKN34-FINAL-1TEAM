@@ -8,12 +8,15 @@ import { send } from "@/lib/mock/v3b/client";
 import { BottomBar } from "@/components/ui/BottomBar";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { useScheduleGo } from "./nav";
 import s from "./v3.module.css";
 
 type Answer = "approve" | "reject" | "ask";
 
 export function ExtraActions({ projectId, dealId, extraId, threadId }: { projectId: string; dealId: string; extraId: string; threadId: string | null }) {
   const router = useRouter();
+  // 재재 화면 창 안이면 채팅 창으로 바꿔요
+  const go = useScheduleGo();
   const toast = useToast();
   const [busy, setBusy] = useState<Answer | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -25,7 +28,8 @@ export function ExtraActions({ projectId, dealId, extraId, threadId }: { project
       const path = `/projects/${encodeURIComponent(projectId)}/deals/${encodeURIComponent(dealId)}/extras/${encodeURIComponent(extraId)}/answer`;
       await send("POST", path, { answer: a }, a === "approve" ? { step: "extra_ok" } : a === "ask" ? {} : undefined);
       if (a === "ask") {
-        router.push(threadId ? `/chat/${encodeURIComponent(threadId)}` : "/chat");
+        if (go) go({ kind: "chat", threadId });
+        else router.push(threadId ? `/chat/${encodeURIComponent(threadId)}` : "/chat");
         return;
       }
       toast.show(a === "approve" ? "추가 금액을 승인했어요" : "추가 금액을 거절했어요");
