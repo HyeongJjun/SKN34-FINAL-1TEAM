@@ -14,7 +14,8 @@ import s from "./StandardDialog.module.css";
 
 export type StdData = { view: StdView; market: Schemas["V2MqOut"] | null };
 
-export function StandardDialog({ open, onClose, data, pid, locked }: { open: boolean; onClose: () => void; data: StdData; pid: string; locked: boolean }) {
+/** onPick: '업체 고르기' — 창을 닫고 플랜의 업체 칸으로 옮겨요(폰은 플랜을 펼쳐요) */
+export function StandardDialog({ open, onClose, onPick, data, pid, locked }: { open: boolean; onClose: () => void; onPick: () => void; data: StdData; pid: string; locked: boolean }) {
   const ref = useRef<HTMLDialogElement>(null);
   const id = useId();
   const h = useModal(ref, open, onClose);
@@ -42,7 +43,7 @@ export function StandardDialog({ open, onClose, data, pid, locked }: { open: boo
           </div>
           <div className={s.actions}>
             {view.scope === "partial" ? null : <Button size="lg" variant="secondary" href={`${base}/plan`}>예상 공정표</Button>}
-            <Button size="lg" onClick={onClose}>업체 고르기</Button>
+            <Button size="lg" onClick={onPick}>업체 고르기</Button>
           </div>
         </div>
       ) : null}
