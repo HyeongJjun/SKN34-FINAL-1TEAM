@@ -233,7 +233,7 @@ class HomeInfoIn(BaseModel):
             or len(set(self.faces)) != len(self.faces)
             or len(set(self.mokgong)) != len(self.mokgong)
         ):
-            raise ValueError("같은 공간 · 면을 두 번 골랐어요.")
+            raise ValueError("같은 공간 · 면 · 목공 할 곳을 두 번 골랐어요.")
         if self.scope == "full" and (self.spaces or set(self.faces) != {"wall", "ceiling"}):
             raise ValueError("전체 공사는 공간을 고르지 않고 벽 · 천장을 모두 해요.")
         if self.scope == "partial" and not self.spaces:
