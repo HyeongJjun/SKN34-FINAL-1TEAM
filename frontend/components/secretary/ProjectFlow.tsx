@@ -294,9 +294,11 @@ export function ProjectFlow({ data }: { data: FlowData }) {
               <h4>{iga(deal.deal.vendor_name)} 올린 공사 날짜</h4>
               <p>{dateShort(x.start)} ~ {dateShort(x.end)} · {x.workdays}일 · {x.crew}명</p>
               <div className={s.row}>
-                <Button size="sm" busy={busy === "accept"} onClick={() => act("accept", () => call("POST", `/projects/${pid}/deals/${enc(deal.deal.id)}/dates/${enc(x.id)}/accept`, { seen_version: schedule!.final_version }), "공사 날짜를 수락했어요")}>이 날짜로 수락</Button>
+                {/* 수락에는 본 공정표 버전이 있어야 해요. 공정표를 못 읽었으면 막고 공사 화면으로 보내요 */}
+                <Button size="sm" busy={busy === "accept"} disabled={!schedule} onClick={() => schedule && act("accept", () => call("POST", `/projects/${pid}/deals/${enc(deal.deal.id)}/dates/${enc(x.id)}/accept`, { seen_version: schedule.final_version }), "공사 날짜를 수락했어요")}>이 날짜로 수락</Button>
                 <Button size="sm" variant="secondary" href={`/projects/${pid}/schedule`}>다른 날짜 요청</Button>
               </div>
+              {!schedule ? <p className={s.note}>공정표를 불러오지 못해 여기서는 수락할 수 없어요. <Link href={`/projects/${pid}/schedule`}>공사 화면</Link>에서 수락해 주세요.</p> : null}
             </div>
           ) : null}
           {ov.checks.length ? <PreWorkCheck projectId={p.id} checks={ov.checks} start={deal?.deal.start_date ?? null} /> : null}
