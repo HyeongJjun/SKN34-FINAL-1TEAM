@@ -333,7 +333,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             })}
           </div>
         ) : null}
-        {trade === "mokgong" || !deal ? (
+        {/* 재재가 말한 도배 업체가 있으면 업체를 고른 · 확정한 뒤에도 목록을 보여 강조해요(#197 · #222 리뷰 회귀) */}
+        {trade === "mokgong" || (!vs.length && !deal) || listOf("dobae").some((v) => hi.includes(v.vendor_id)) ? (
           <>
             <div className={s.search} role="search">
               <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="업체 이름 · 지역으로 찾기" aria-label={`${TRADE_WORD[trade]} 업체 찾기`} />
@@ -342,7 +343,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             {trade === "dobae" && mokVendors && vendors ? <p className={s.note}>가견적 %는 도배만 시장 단가 <b className="mj-num">{won(vendors.standard_total)}</b>와 견줘요. 표준견적서 합계에는 목공도 들어 있어요.</p> : null}
             <VendorRows list={listOf(trade).filter((v) => v.state === "ok")} query={query} hi={hi} trade={trade} pick={pickOf(trade)} pid={pid} busy={busy} act={act} onOpen={(vendorId) => setVOpen({ vendorId, trade })} />
           </>
-        ) : <p className={s.note}>도배 업체를 확정했어요. 일정 칸을 봐 주세요.</p>}
+        ) : <p className={s.note}>{deal ? "도배 업체를 확정했어요. 일정 칸을 봐 주세요." : "도배 업체는 이미 골랐어요. 실측 칸을 봐 주세요."}</p>}
         {trade === "dobae" && draft?.vendors.length && !deal ? (
           <Button size="lg" block onClick={() => setTab(3)}>{vs.length ? `남은 ${draft.vendors.length}곳도 실측 날짜 고르기 →` : `담은 ${draft.vendors.length}곳 실측 날짜 고르기 →`}</Button>
         ) : null}
