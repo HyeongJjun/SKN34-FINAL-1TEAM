@@ -4,7 +4,7 @@ from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
-from app.calc.progress import TradeFacts, first_todo, progress, project_phase
+from app.calc.progress import STEPS, TradeFacts, first_todo, progress, project_phase
 
 TODAY = date(2026, 11, 8)
 NOW = datetime(2026, 11, 8, 3, 0, tzinfo=UTC)  # 서울 11.08 12:00
@@ -31,7 +31,7 @@ def states(p) -> list[str]:
 def test_before_any_request_is_estimate_and_pick():
     p = progress(BASE, TODAY, NOW)
     assert (p.phase, p.current, p.todo) == ("estimate", 3, "pick")
-    assert states(p) == ["done", "done", "now", "todo", "todo", "todo"]
+    assert states(p) == ["done", "done", "now"] + ["todo"] * 5
     assert p.steps[0].on == date(2026, 11, 2) and p.steps[3].on is None
 
 
@@ -43,7 +43,11 @@ def test_requests_then_quotes():
     assert progress(part, TODAY, NOW).todo == "quotes_partial"
     full = at(asked=2, asked_on=date(2026, 11, 2), quotes=2, quoted_on=date(2026, 11, 7))
     p = progress(full, TODAY, NOW)
-    assert (p.todo, p.current, p.steps[3].count) == ("quotes_arrived", 4, 2)
+    assert (p.todo, p.current, p.steps[3].count) == (
+        "quotes_arrived",
+        5,
+        2,
+    )  # 견적서가 오면 비교 칸
 
 
 def confirmed(**over) -> TradeFacts:
@@ -62,7 +66,7 @@ def confirmed(**over) -> TradeFacts:
 def test_dates_waiting_received_requested_and_overdue():
     p = progress(confirmed(), TODAY, NOW)
     assert (p.current, p.todo, p.overdue) == (6, "dates_waiting", False)
-    assert states(p) == ["done"] * 5 + ["now"]
+    assert states(p) == ["done"] * 5 + ["now", "todo", "todo"]
     late = NOW.replace(day=10, hour=10)  # 기한 지남 (상태가 아님)
     p = progress(confirmed(), TODAY, late)
     assert (p.todo, p.overdue) == ("dates_overdue", True)
@@ -86,8 +90,11 @@ def scheduled(**over) -> TradeFacts:
 def test_after_dates_are_accepted():
     s = scheduled(deal_status="scheduled")
     p = progress(s, TODAY, NOW)
-    assert (p.phase, p.current, p.todo) == ("work", 6, "before_work")
-    assert states(p) == ["done"] * 6 and p.steps[5].on == date(2026, 11, 8)
+    assert (p.phase, p.current, p.todo) == ("work", 6, "before_work")  # 시작일 전은 일정(준비) 칸
+    assert states(p) == ["done"] * 5 + ["now", "todo", "todo"] and p.steps[5].on == date(
+        2026, 11, 8
+    )
+    assert progress(s, date(2026, 11, 20), NOW).current == 7  # 시작일부터 공사 칸
     assert progress(s, date(2026, 11, 20), NOW).todo == "working"
     assert (
         progress(scheduled(deal_status="scheduled", extras_pending=1), TODAY, NOW).todo == "extra"
@@ -98,6 +105,26 @@ def test_after_dates_are_accepted():
     assert progress(scheduled(deal_status="fixing"), TODAY, NOW).todo == "fixing"
     done = progress(scheduled(deal_status="done"), TODAY, NOW)
     assert (done.phase, done.todo) == ("done", "done")
+    assert (done.current, states(done)) == (8, ["done"] * 8)
+
+
+def test_eight_steps_follow_the_board():
+    """재재 보드 8칸(집 · 견적 · 업체 · 실측 · 비교 · 일정 · 공사 · 완료)과 같은 칸이 '지금'이에요(#203)"""
+    assert [st.key for st in progress(at(), TODAY, NOW).steps] == list(STEPS)
+    cases = [
+        (at(), 3),  # 업체 고르기 전
+        (at(asked=1, asked_on=date(2026, 11, 2), waiting=1), 4),  # 실측 요청함
+        (at(asked=1, asked_on=date(2026, 11, 2), quotes=1, quoted_on=date(2026, 11, 6)), 5),
+        (confirmed(), 6),  # 업체 확정 · 공사 날짜 기다림
+        (scheduled(deal_status="scheduled"), 6),  # 날짜 수락 · 공사 시작 전(준비)
+        (scheduled(deal_status="checking"), 8),  # 끝냄 확인
+        (scheduled(deal_status="fixing"), 8),  # 남은 일 손보는 중
+        (scheduled(deal_status="done"), 8),
+    ]
+    for facts, want in cases:
+        p = progress(facts, TODAY, NOW)
+        assert p.current == want, (facts.deal_status, p.current)
+        assert sum(st.state == "now" for st in p.steps) == (0 if facts.deal_status == "done" else 1)
 
 
 def test_project_phase_and_first_todo():

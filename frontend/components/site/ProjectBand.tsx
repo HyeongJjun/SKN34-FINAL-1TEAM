@@ -1,5 +1,6 @@
 "use client";
-// 위쪽 공사 띠(W1 A · 9판 w-band). 웹 ≥1024: 공사 이름 · 6단계(+ 실측 뒤 작은 단계) · 지금 할 일.
+// 위쪽 공사 띠(W1 A · 9판 w-band). 웹 ≥1024: 공사 이름 · 8단계(재재 보드와 같은 칸) · 지금 할 일.
+// 공정이 둘(도배 · 목공)이면 공정마다 한 줄씩 그려요(#203: 한 공정이 늦어도 다른 공정 단계가 멈춰 보이지 않게).
 // 768~1023: 한 줄(공사 이름 · 지금 단계 · 지금 할 일). 폰: 숨겨요(머리 제목 + 화면 안 Steps가 대신).
 // 할 일 · 기다림이 둘 이상이면 상자 전체가 '지금 할 일 n · 기다림 n ▾' 펼침 단추가 돼요(업체별 할 일 · 기다림, 작은 메뉴 모양).
 // 하나면 상자 전체가 그 할 일로 가는 링크예요. 누를 곳은 모두 40px 이상(단계 칸 · 작은 단계 알약 · 할 일 상자).
@@ -19,7 +20,14 @@ export type BandTask = {
   due?: string;
 };
 
-export function ProjectBand({ name, href, steps = PROJECT_STEPS, current, sub, todo = [], waiting = [], sticky = true }: {
+export type BandTrack = {
+  /** '도배' · '목공' */
+  label: string;
+  /** 그 공정의 지금 단계(0부터) */
+  current: number;
+};
+
+export function ProjectBand({ name, href, steps = PROJECT_STEPS, current, tracks = [], sub, todo = [], waiting = [], sticky = true }: {
   /** 공사 이름 '상계동 아파트 도배' */
   name: string;
   /** 한 공사 화면 */
@@ -27,6 +35,8 @@ export function ProjectBand({ name, href, steps = PROJECT_STEPS, current, sub, t
   steps?: StepItem[];
   /** 지금 단계(0부터) */
   current: number;
+  /** 공정이 둘 이상이면 공정마다 한 줄(이때 current는 한 줄 요약에만 써요) */
+  tracks?: BandTrack[];
   /** 실측 뒤 작은 단계(견적서 비교 · 업체 확정 · 공사 날짜 · 공사 · 끝 확인) */
   sub?: { steps: StepItem[]; current: number };
   todo?: BandTask[];
@@ -55,16 +65,33 @@ export function ProjectBand({ name, href, steps = PROJECT_STEPS, current, sub, t
 
   const nowLabel = steps[current]?.label ?? "";
   const subNow = sub ? sub.steps[sub.current]?.label : null;
+  const multi = tracks.length > 1;
+  const shortText = multi
+    ? tracks.map((t) => `${t.label} ${steps[t.current]?.label ?? ""}`).join(" · ")
+    : `${subNow ?? nowLabel}`;
   const head = many ? `지금 할 일 ${todo.length}${waiting.length ? ` · 기다림 ${waiting.length}` : ""}` : todo.length ? "지금 할 일" : "기다림";
   return (
-    <div className={sticky ? s.band : `${s.band} ${s.flat}`} data-mj-band={sticky ? "" : undefined} data-sub={sticky && sub ? "" : undefined}>
+    <div className={sticky ? s.band : `${s.band} ${s.flat}`} data-mj-band={sticky ? "" : undefined} data-sub={sticky && (sub || multi) ? "" : undefined}>
       <div className={s.in}>
         <div className={s.pjBox}>
           <Link className={s.pj} href={href}><b>{name}</b></Link>
           {onChat ? null : <Link className={s.chat} href={`${href}/assistant`}>재재와 대화 ›</Link>}
-          <p className={s.short}><span className="mj-num">지금 {current + 1}/{steps.length}</span> · {subNow ?? nowLabel}</p>
+          <p className={s.short}>{multi ? shortText : <><span className="mj-num">지금 {current + 1}/{steps.length}</span> · {shortText}</>}</p>
         </div>
-        <div className={s.stp}>
+        <div className={s.stp} style={{ ["--n" as string]: steps.length }}>
+          {multi ? tracks.map((t) => (
+            <div key={t.label} className={s.track}>
+              <span className={s.trackName}>{t.label}</span>
+              <ol className={`${s.steps} ${s.thin}`} aria-label={`${t.label} 단계`}>
+                {steps.map((st, i) => (
+                  <li key={st.label} className={i < t.current ? s.done : i === t.current ? s.now : ""} aria-current={i === t.current ? "step" : undefined}>
+                    <span className={s.cell}><span className={s.label}>{st.label}</span></span>
+                    {i < t.current ? <span className="mj-sr"> 끝남</span> : null}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )) : (
           <ol className={s.steps} aria-label="공사 단계">
             {steps.map((st, i) => {
               const state = i < current ? s.done : i === current ? s.now : "";
@@ -78,7 +105,8 @@ export function ProjectBand({ name, href, steps = PROJECT_STEPS, current, sub, t
               );
             })}
           </ol>
-          {sub ? (
+          )}
+          {sub && !multi ? (
             <ol className={s.subs} aria-label="실측 뒤 단계">
               {sub.steps.map((st, i) => (
                 <li key={st.label} className={i < sub.current ? s.done : i === sub.current ? s.now : ""} aria-current={i === sub.current ? "step" : undefined}>

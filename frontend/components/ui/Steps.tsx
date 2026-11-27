@@ -1,4 +1,4 @@
-// 단계 표시(design-system 3.1 Steps · 9판 k-steps). 6단계: 기본 정보 · 표준견적서 · 업체 담기 · 실측 일정 · 실측 · 실측 뒤.
+// 단계 표시(design-system 3.1 Steps · 9판 k-steps). 8단계: 집 · 견적 · 업체 · 실측 · 비교 · 일정 · 공사 · 완료(#203).
 // 폰: 막대 6칸 + '지금 3/6 · 업체 담기' 한 줄(13px 단계 이름 여섯은 360px에 안 들어가서, 이름은 화면 읽기용 목록으로).
 // 웹(≥768): 막대 아래 이름 여섯(13). 끝남 blue-400 · 지금 blue-600 + 굵게 · 남음 gray-200.
 // 실측 뒤 작은 단계는 SubSteps(알약)로 따로 그려요.
@@ -6,7 +6,8 @@ import { Icon } from "./Icon";
 import s from "./Steps.module.css";
 
 export type StepItem = { label: string; href?: string };
-export const PROJECT_STEPS: StepItem[] = ["기본 정보", "표준견적서", "업체 담기", "실측 일정", "실측", "실측 뒤"].map((label) => ({ label }));
+// 공사 단계 8칸: 재재 보드 · 위 띠 · 내 공사 목록 · 공사 요약이 같은 칸을 써요(#203, 서버 calc/progress STEPS 순서)
+export const PROJECT_STEPS: StepItem[] = ["집", "견적", "업체", "실측", "비교", "일정", "공사", "완료"].map((label) => ({ label }));
 export const AFTER_VISIT_STEPS: StepItem[] = ["견적서 비교", "업체 확정", "공사 날짜", "공사", "끝 확인"].map((label) => ({ label }));
 
 export function Steps({ steps = PROJECT_STEPS, current, label = "공사 단계" }: { steps?: StepItem[]; current: number; label?: string }) {

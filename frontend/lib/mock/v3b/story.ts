@@ -468,15 +468,16 @@ export function mockSchedule(step: StepKey, projectId: string): S["ScheduleOut"]
 
 // ───── 한 공사 화면 · 기록 · 내 공사 ─────
 function projectSteps(c: Ctx): { current: number; phase: S["OverviewOut"]["phase"] } {
-  if (c.past("review")) return { current: 5, phase: "done" };
-  if (c.past("scheduled")) return { current: 5, phase: "work" };
+  // 서버와 같은 8단계 번호(1부터, #203)
+  if (c.past("review")) return { current: 8, phase: "done" };
+  if (c.past("scheduled")) return { current: 7, phase: "work" };
   if (c.past("quotes")) return { current: 5, phase: "progress" };
   if (c.past("visited")) return { current: 4, phase: "progress" };
   return { current: 3, phase: "progress" };
 }
-const STEP_KEYS6: S["StepOut"]["key"][] = ["house", "standard", "pick", "visit", "deal", "dates"];
-const STEP_LABEL6 = ["기본 정보", "표준견적서", "업체 담기", "실측 일정", "실측", "실측 뒤"];
-const stepList = (current: number): S["StepOut"][] => STEP_KEYS6.map((key, i) => ({ key, label: STEP_LABEL6[i], state: i < current ? "done" : i === current ? "now" : "todo", on: null, count: null }));
+const STEP_KEYS8: S["StepOut"]["key"][] = ["house", "standard", "pick", "visit", "compare", "dates", "work", "done"];
+const STEP_LABEL8 = ["집", "견적", "업체", "실측", "비교", "일정", "공사", "완료"];
+const stepList = (current: number, allDone = false): S["StepOut"][] => STEP_KEYS8.map((key, i) => ({ key, label: STEP_LABEL8[i], state: allDone || i < current - 1 ? "done" : i === current - 1 ? "now" : "todo", on: null, count: null }));
 
 /** 지금 할 일(서버가 정해 줘요) */
 function todoOf(c: Ctx, pid: string): S["TodoOut"] | null {
@@ -526,7 +527,7 @@ export function mockOverview(step: StepKey, projectId: string): S["OverviewOut"]
     next: deal?.start_date ? { kind: "start", trade: "dobae", day: deal.start_date, at: null } : null,
     trades: [{
       trade: "dobae", vendor_name: deal?.vendor_name ?? null, deal_id: deal?.id ?? null, deal_status: deal?.status ?? null, phase, current,
-      steps: stepList(current), todo: todo ?? { code: "none", trade: "dobae", text: "", action: "", link: `/projects/${projectId}`, days: [] }, overdue: false,
+      steps: stepList(current, phase === "done"), todo: todo ?? { code: "none", trade: "dobae", text: "", action: "", link: `/projects/${projectId}`, days: [] }, overdue: false,
       start_date: deal?.start_date ?? null, end_date: deal?.end_date ?? null, proposed_start: null, proposed_end: null, next: null,
     }],
     money: { total: deal ? 3267000 : 1974069, by_trade: [{ trade: "dobae", total: deal ? 3267000 : 1974069, source: deal ? "deal" : "standard" }], all_confirmed: Boolean(deal), budget: null },
@@ -578,13 +579,13 @@ export function mockMyProjects(step: StepKey, ids: string[]): S["MyProjectOut"][
     const { current, phase } = projectSteps(c);
     out.push({
       id: ids[0], code: "MJ-2611-2692", region: "서울 노원구", size: { band: null, basis: "supply", m2: "69.4" }, trades: ["dobae"], created_at: "2026-11-17T21:00:00+09:00",
-      phase, current, todo: todoOf(c, ids[0]), next: null, updated_at: c.now, grades: { dobae: "basic" }, emd: "상계동", vendors: vendorSteps(c),
+      phase, current, trade_steps: [{ trade: "dobae", current, label: STEP_LABEL8[current - 1] }], todo: todoOf(c, ids[0]), next: null, updated_at: c.now, grades: { dobae: "basic" }, emd: "상계동", vendors: vendorSteps(c),
     });
   }
   if (ids[1]) {
     out.push({
       id: ids[1], code: "MJ-2611-1810", region: "서울 노원구", size: { band: null, basis: "supply", m2: "79.3" }, trades: ["dobae"], created_at: "2026-11-10T20:00:00+09:00",
-      phase: "estimate", current: 2, todo: { code: "shortlist", trade: "dobae", text: "업체를 담을 차례예요", action: "업체 보기", link: `/projects/${ids[1]}/vendors`, days: [] },
+      phase: "estimate", current: 3, trade_steps: [{ trade: "dobae", current: 3, label: "업체" }], todo: { code: "shortlist", trade: "dobae", text: "업체를 담을 차례예요", action: "업체 보기", link: `/projects/${ids[1]}/vendors`, days: [] },
       next: null, updated_at: "2026-11-10T20:30:00+09:00", grades: { dobae: "basic" }, emd: "중계동", vendors: [],
     });
   }

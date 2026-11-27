@@ -45,7 +45,7 @@ a.pi:hover { background: var(--mj-fill); color: var(--mj-text); }
   .todo { flex-direction: column; align-items: flex-start; gap: 2px; min-height: 52px; padding: 8px 14px; }
   .stp { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
   /* 단계 칸 하나가 누를 곳 하나: 링크(막대 + 이름) 자체가 40px 칸이에요(띠 높이 76은 그대로) */
-  .steps { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; margin: 0; padding: 0; list-style: none; }
+  .steps { display: grid; grid-template-columns: repeat(var(--n, 8), minmax(0, 1fr)); gap: 4px; margin: 0; padding: 0; list-style: none; }
   .steps li { min-width: 0; font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); line-height: 1.3; color: var(--mj-text-mute); white-space: nowrap; }
   .steps .cell { display: flex; flex-direction: column; gap: 5px; min-height: var(--mj-hit-min); padding: 7px 0; color: inherit; text-decoration: none; border-radius: 6px; }
   .steps .cell::before { content: ""; flex: none; height: 4px; border-radius: 2px; background: var(--mj-step-todo); }
@@ -56,6 +56,11 @@ a.pi:hover { background: var(--mj-fill); color: var(--mj-text); }
   .steps .label { overflow: hidden; text-overflow: ellipsis; }
   .steps a.cell:hover .label { text-decoration: underline; text-underline-offset: 3px; }
   .steps a.cell:focus-visible { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: 0; }
+  /* 공정이 둘이면 공정마다 얇은 한 줄(이름 + 8칸). 높이는 작은 단계가 있을 때(92)와 같아요 */
+  .stp:has(.track) { gap: 4px; }
+  .track { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; gap: 6px; }
+  .trackName { font-size: var(--mj-type-caption); font-weight: var(--mj-weight-heavy); color: var(--mj-text); }
+  .thin .cell { min-height: 0; gap: 3px; padding: 3px 0; }
   /* 작은 단계 알약: 보이는 높이 22, 누를 곳은 위아래로 늘려 40(단계 칸과 겹치지 않게 틈 10) */
   .subs { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; margin: 0; padding: 0; list-style: none; }
   .subs li { position: relative; display: inline-flex; align-items: center; gap: 3px; min-height: 22px; padding: 0 8px; border-radius: var(--mj-radius-pill); background: var(--mj-fill); color: var(--mj-text-mute); font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); line-height: 1.3; }

@@ -12,8 +12,8 @@ function Check() {
 }
 
 function Steps({ p }: { p: ApiProjectItem }) {
-  // 공사 날짜를 수락한 뒤(공사 · 끝남)는 여섯 단계를 다 마친 것이다
-  const allDone = p.phase === "work" || p.phase === "done";
+  // 8단계는 공사 · 완료까지 들어 있어서 공사가 끝났을 때만 다 마친 것이다(#203)
+  const allDone = p.phase === "done";
   const note = stepNote(p, allDone);
   return (
     <ol className={s.stp}>

@@ -46,8 +46,8 @@ def test_overview_of_two_trades(api):
         "done",
         "done",
     )
-    assert [st["state"] for st in mok["steps"]] == ["done"] * 6
-    assert mok["steps"][4]["label"] == "업체 확정" and mok["vendor_name"] == "바름집수리"
+    assert [st["state"] for st in mok["steps"]] == ["done"] * 8
+    assert mok["steps"][4]["label"] == "비교" and mok["vendor_name"] == "바름집수리"
     until = contact_until(TODAY)
     assert mok["todo"]["text"] == "공사가 끝났어요 · 하자가 보이면 바름집수리에 전화해요"
     assert (dob["trade"], dob["phase"], dob["current"], dob["todo"]["code"]) == (
@@ -101,6 +101,11 @@ def test_my_projects_list(api):
     new, old = rows
     assert (new["phase"], new["current"], new["todo"]["code"]) == ("estimate", 3, "pick")
     assert (old["phase"], old["current"], old["todo"]["code"]) == ("progress", 3, "pick")
+    # 공정마다 따로: 목공은 끝났고(8) 도배는 다시 고르는 중(3). 목공이 끝나도 도배에 묶여 멈춘 것처럼 안 보여요(#203)
+    assert {t["trade"]: (t["current"], t["label"]) for t in old["trade_steps"]} == {
+        "dobae": (3, "업체"),
+        "mokgong": (8, "완료"),
+    }
     assert old["grades"] == {"dobae": "basic", "mokgong": None}
     assert old["code"].startswith("MJ-")
     assert datetime.fromisoformat(old["updated_at"]) > datetime.fromisoformat(old["created_at"])
