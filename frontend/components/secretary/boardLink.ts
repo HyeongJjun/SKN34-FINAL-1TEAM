@@ -12,7 +12,7 @@ export type BoardAnswer = {
 };
 /** stage: 도배 실측 견적서를 보냈어요(quoted · 비교 칸) · 실측 요청이 진행 중이에요(visit · 실측 칸) */
 export type BoardVendor = { vendor_id: string; name: string; trade: "dobae" | "mokgong"; stage?: "quoted" | "visit" };
-/** 도배 기준: quoted 견적서가 왔어요 · deal 업체를 확정했어요 · chosen 도배 업체에 실측을 이미 보냈어요 */
+/** 그 공정 기준(boardStateFor): quoted 견적서가 왔어요 · deal 업체를 확정했어요 · chosen 실측을 이미 보냈어요 */
 export type BoardState = { quoted: boolean; deal: boolean; chosen?: boolean };
 export type BoardTarget = { tab: number; hi: string[]; trade: "dobae" | "mokgong" | null } | null;
 
@@ -113,4 +113,14 @@ export function tabVendors(vs: BoardVendor[], multi: boolean, active: "dobae" | 
 export function isWaiting(visits: { status: string }[], st: { deal: boolean; quoted: number; toPick: number }): boolean {
   if (st.deal || st.quoted || st.toPick) return false;
   return visits.some((v) => ["requested", "picked", "booked", "visited"].includes(v.status));
+}
+
+/** 보드 이동을 판단할 공정 상태(#234 리뷰): 목공 탭이면 목공의 확정 · 진행 실측만 봐요(도배 견적서 · 확정을 섞지 않아요).
+ *  목공은 비교 · 일정 칸이 아직 없어 보드가 실측 칸(3)까지예요 */
+export function boardStateFor(mokTab: boolean, dobae: BoardState, mok: { deal: boolean; chosen: boolean }): BoardState & { maxTab: number } {
+  return mokTab ? { quoted: false, deal: mok.deal, chosen: mok.chosen, maxTab: 3 } : { ...dobae, maxTab: 7 };
+}
+/** 고른 칸을 그 공정 보드에 있는 칸으로 맞춰요 */
+export function clampTarget<T extends { tab: number }>(to: T | null, maxTab: number): T | null {
+  return to ? { ...to, tab: Math.min(to.tab, maxTab) } : null;
 }

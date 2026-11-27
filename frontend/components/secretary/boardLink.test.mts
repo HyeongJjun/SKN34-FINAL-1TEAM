@@ -1,7 +1,7 @@
 // 재재 대화 → 보드 연동 시험(#197): pnpm test:unit
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { boardTarget, isWaiting, pickRule, pickStateOf, requestSaid, tabVendors, threadOf, type BoardAnswer } from "./boardLink.ts";
+import { boardStateFor, boardTarget, clampTarget, isWaiting, pickRule, pickStateOf, requestSaid, tabVendors, threadOf, type BoardAnswer } from "./boardLink.ts";
 
 const A = (over: Partial<BoardAnswer> = {}): BoardAnswer => ({ notice: "", sections: [], cards: [], ...over });
 const V = [
@@ -148,4 +148,22 @@ test("기다림 카드는 그 공정의 확정 · 견적서 · 고를 날만 봐
   assert.equal(isWaiting(req, { deal: false, quoted: 0, toPick: 1 }), false);
   assert.equal(isWaiting([{ status: "offered" }], { deal: false, quoted: 0, toPick: 0 }), false);
   assert.equal(isWaiting([], { deal: false, quoted: 0, toPick: 0 }), false);
+});
+
+test("보드 이동은 고른 공정 탭 상태로(#234 리뷰): 목공 탭은 도배 견적서 · 확정을 보지 않고 실측 칸까지만", () => {
+  const dobae = { quoted: true, deal: true, chosen: true };
+  const mok = { deal: false, chosen: false };
+  const mokSt = boardStateFor(true, dobae, mok);
+  // 도배가 견적서를 받고 확정했어도 목공 탭 질문은 목공 기준
+  assert.equal(clampTarget(boardTarget("업체 추천해 줘", A(), [], mokSt), mokSt.maxTab)?.tab, 2);
+  assert.equal(clampTarget(boardTarget("실측 날짜는 언제 잡아요?", A(), [], mokSt), mokSt.maxTab)?.tab, 3);
+  // 목공을 확정했어도 목공 보드는 실측 칸(3)까지
+  const mokDeal = boardStateFor(true, dobae, { deal: true, chosen: true });
+  assert.equal(clampTarget(boardTarget("공사 일정 알려 줘", A(), [], mokDeal), mokDeal.maxTab)?.tab, 3);
+  // 도배 탭은 그대로 도배 기준(견적서 받으면 비교 칸, 확정이면 공정표)
+  const dob = boardStateFor(false, { quoted: true, deal: false, chosen: true }, mok);
+  assert.equal(clampTarget(boardTarget("업체 추천해 줘", A(), [], dob), dob.maxTab)?.tab, 4);
+  const dobDeal = boardStateFor(false, dobae, mok);
+  assert.equal(clampTarget(boardTarget("공사 일정 알려 줘", A(), [], dobDeal), dobDeal.maxTab)?.tab, 5);
+  assert.equal(clampTarget(null, 3), null);
 });

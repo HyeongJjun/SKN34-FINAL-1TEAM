@@ -29,7 +29,7 @@ import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { dateShort, euro, won } from "@/lib/format";
 import { termByName } from "@/lib/guide";
-import { boardTarget, isWaiting, tabVendors, CLOSED_VISITS, norm, pickRule, pickStateOf, type PickState } from "./boardLink";
+import { boardStateFor, boardTarget, clampTarget, isWaiting, tabVendors, CLOSED_VISITS, norm, pickRule, pickStateOf, type PickState } from "./boardLink";
 import { quickChips } from "./chips";
 import { Jaejae } from "./Jaejae";
 import { MOK_TODO, Plan, PLAN_STEPS } from "./Plan";
@@ -121,6 +121,9 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const [query, setQuery] = useState("");
   /** AI 답에 나온 업체(보드에서 강조) */
   const [hi, setHi] = useState<string[]>([]);
+  // 지금 보는 공정 탭(답이 늦게 와도 그때 탭과 견줘요). 탭을 바꾸면 다른 공정 업체 강조는 지워요(#234 리뷰)
+  const activeRef = useRef(active);
+  useEffect(() => { activeRef.current = active; setHi([]); }, [active]);
   /** 업체 자세히 창(보드에서 업체 이름을 누르면) */
   const [vOpen, setVOpen] = useState<VendorOpen>(null);
   /** 재재 화면 창(기본 정보 · 공정표 · 채팅 · 리뷰 · 공사 일정 · 용어). 다른 화면으로 옮기지 않아요 */
@@ -197,8 +200,9 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     return pickStateOf(t, (schedule?.trades ?? []).map((d) => d.deal.trade), visits?.visits ?? [],
       x?.shortlist?.left ?? MAX_PICK - listOf(t).filter((v) => v.shortlisted).length);
   };
-  /** AI 답 → 보드(#197, boardLink.ts): 업체 이름이면 그 업체 강조, 아니면 물은 말로 일정 · 업체 칸 */
-  function linkBoard(q: string, out: AiTurnOut): number | undefined {
+  /** AI 답 → 보드(#197, boardLink.ts): 업체 이름이면 그 업체 강조, 아니면 물은 말로 일정 · 업체 칸.
+   *  apply가 false면 칸만 골라요(답을 기다리는 사이 다른 공정 탭으로 바꿨으면 그 탭 보드를 건드리지 않아요, #234 리뷰) */
+  function linkBoard(q: string, out: AiTurnOut, apply = true): number | undefined {
     // 견적서를 낸 업체는 업체 목록에 없을 수도 있어 비교 줄 이름도 같이 봐요
     // 도배 업체 상태: 견적서를 보냄(비교 칸) · 실측 진행 중(실측 칸)
     const got = new Set((compare?.vendors ?? []).filter((r) => r.latest && r.status === "quoted" && r.vendor_id).map((r) => r.vendor_id!));
@@ -207,8 +211,12 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     const sent = (compare?.vendors ?? []).flatMap((r) => (r.vendor_id ? [{ vendor_id: r.vendor_id, name: r.vendor_name, trade: "dobae" as Trade, stage: stage(r.vendor_id) }] : []));
     const names = [...(["dobae", "mokgong"] as Trade[]).flatMap((t) => listOf(t).map((v) => ({ vendor_id: v.vendor_id, name: v.name, trade: t, stage: t === "dobae" ? stage(v.vendor_id) : undefined }))), ...sent];
     // 공정 탭이면 그 탭 공정 업체만 맞춰 봐요(다른 공정 업체 이름으로 보드가 탭과 다른 공정이 되지 않게)
-    const to = boardTarget(q, out.answer, tabVendors(names, multi, active), { quoted: got.size > 0, deal: !!deal, chosen: vs.length > 0 }); // 비교 칸 · 실측 칸 · 공정표는 도배 기준
+    // 칸 판단은 고른 공정 탭의 상태로(목공 탭이면 목공 확정 · 실측만, 보드는 실측 칸까지, #234 리뷰)
+    const st = boardStateFor(multi && isMok, { quoted: got.size > 0, deal: !!deal, chosen: vs.length > 0 },
+      { deal: !!schedule?.trades.some((d) => d.deal.trade === "mokgong"), chosen: mvs.length > 0 });
+    const to = clampTarget(boardTarget(q, out.answer, tabVendors(names, multi, active), st), st.maxTab);
     if (!to) return undefined;
+    if (!apply) return to.tab;
     setTab(to.tab);
     setHi(to.hi);
     if (to.hi.length) setQuery("");
@@ -252,10 +260,11 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     if (!t || asking) return; // 답을 기다리는 동안 새 질문을 막아요(답이 엇갈리지 않게 · 대화 하나로)
     if (fromInput) setText(""); // 입력칸에서 보낼 때만 비워요(질문 버튼은 글이 같아도 쓰던 글을 남겨요)
     setAsks((a) => [...a, { q: t }]);
+    const from = active; // 물은 공정 탭(답이 올 때 지금 탭과 견줘요)
     try {
       const out = await askAi({ client_key: newClientKey(), text: t, chat_id: chatId, context: { screen: now <= 2 ? "vendors" : now <= 4 ? "quotes" : "plan", project_id: p.id, ids: [] }, button }); // 선택지의 길(route) · 칸 정보를 그대로 넘겨요
       if (out.chat_id) setChatId(out.chat_id);
-      const to = linkBoard(t, out);
+      const to = linkBoard(t, out, activeRef.current === from);
       setAsks((a) => a.map((x, i) => (i === a.length - 1 ? { ...x, out, to } : x)));
     } catch (e) {
       setAsks((a) => a.map((x, i) => (i === a.length - 1 ? { ...x, err: errorText(e) } : x)));
