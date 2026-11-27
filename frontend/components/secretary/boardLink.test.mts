@@ -5,14 +5,17 @@ import { boardTarget, type BoardAnswer } from "./boardLink.ts";
 
 const A = (over: Partial<BoardAnswer> = {}): BoardAnswer => ({ notice: "", sections: [], cards: [], ...over });
 const V = [
-  { vendor_id: "d1", name: "마루와벽", trade: "dobae" as const, quoted: true },
+  { vendor_id: "d1", name: "마루와벽", trade: "dobae" as const },
   { vendor_id: "d2", name: "결 도배", trade: "dobae" as const },
   { vendor_id: "m1", name: "나무손", trade: "mokgong" as const },
-  // 도배 · 목공을 둘 다 하는 업체(도배 견적서는 안 보냄)
+  // 도배 · 목공을 둘 다 하는 업체
   { vendor_id: "b1", name: "솜씨공방", trade: "dobae" as const },
   { vendor_id: "b1", name: "솜씨공방", trade: "mokgong" as const },
 ];
 const st = { quoted: false, deal: false };
+// 도배 견적서가 온 공사: 마루와벽은 견적서를 보냈고, 결도배는 실측 진행 중, 솜씨공방(도배)은 아직 없음
+const Q = V.map((v) => (v.vendor_id === "d1" ? { ...v, stage: "quoted" as const } : v.vendor_id === "d2" ? { ...v, stage: "visit" as const } : v));
+const sq = { quoted: true, deal: false, chosen: true };
 
 test("답 글 · 표에 나온 업체를 강조하고 업체 칸으로", () => {
   const a = A({ sections: [{ title: "", sentences: ["마루와벽은 후기가 많아요."], caution: "", tip: "" }], cards: [{ title: "비교", text: "", table: { cols: ["업체"], rows: [{ cells: ["결도배"] }] } }] });
@@ -24,26 +27,33 @@ test("목공 업체만 나오면 목공 탭", () => {
   assert.deepEqual(boardTarget("초안", a, V, st)?.trade, "mokgong");
 });
 
-test("견적서가 왔으면 업체 이름은 비교 칸으로", () => {
-  const a = A({ lead: "마루와벽 견적서가 표준견적서보다 높아요" });
-  assert.equal(boardTarget("왜 비싸요?", a, V, { quoted: true, deal: false })?.tab, 4);
-});
-
-test("물은 말에 업체 이름이 있으면 답에 없어도 강조(견적서가 왔으면 비교 칸)", () => {
-  assert.deepEqual(boardTarget("결도배 견적서 어때요?", A({ notice: "도배 부자재 줄은 합계에 들어가요." }), V, { quoted: true, deal: false }), { tab: 4, hi: ["d2"], trade: "dobae" });
+test("도배 업체는 그 업체 상태대로: 견적서 보냄 → 비교 칸, 실측 진행 중 → 실측 칸", () => {
+  assert.deepEqual(boardTarget("왜 비싸요?", A({ lead: "마루와벽 견적서가 표준견적서보다 높아요" }), Q, sq), { tab: 4, hi: ["d1"], trade: "dobae" });
+  // 리뷰(#220): 견적서를 안 보낸 업체를 비교 칸으로 보내 안 보이던 것
+  assert.deepEqual(boardTarget("결도배 견적서 어때요?", A({ notice: "도배 부자재 줄은 합계에 들어가요." }), Q, sq), { tab: 3, hi: ["d2"], trade: "dobae" });
 });
 
 test("도배 견적서가 와도 목공 업체를 물으면 업체 칸 목공 탭", () => {
-  const quoted = { quoted: true, deal: false };
-  assert.deepEqual(boardTarget("나무손은 어때요?", A(), V, quoted), { tab: 2, hi: ["m1"], trade: "mokgong" });
+  assert.deepEqual(boardTarget("나무손은 어때요?", A(), Q, sq), { tab: 2, hi: ["m1"], trade: "mokgong" });
   // 답이 도배 업체를 같이 말해도 물은 목공 업체로
-  assert.deepEqual(boardTarget("나무손 가견적 봐 줘", A({ lead: "마루와벽 견적서도 왔어요" }), V, quoted), { tab: 2, hi: ["m1"], trade: "mokgong" });
+  assert.deepEqual(boardTarget("나무손 가견적 봐 줘", A({ lead: "마루와벽 견적서도 왔어요" }), Q, sq), { tab: 2, hi: ["m1"], trade: "mokgong" });
 });
 
-test("도배 · 목공을 둘 다 하는 업체: 도배 견적서가 왔으면 목공 탭, 아니면 도배", () => {
-  assert.deepEqual(boardTarget("솜씨공방은 어때요?", A(), V, { quoted: true, deal: false }), { tab: 2, hi: ["b1"], trade: "mokgong" });
-  assert.deepEqual(boardTarget("솜씨공방은 어때요?", A(), V, st), { tab: 2, hi: ["b1"], trade: "dobae" });
+test("도배 · 목공을 둘 다 하는 업체: 물은 공종이 먼저", () => {
+  // 리뷰(#220): '도배'라고 물었는데 목공 탭으로 가던 것 → 도배 업체 칸(아직 실측 · 견적서 없음)
+  assert.deepEqual(boardTarget("솜씨공방 도배 가견적은요?", A(), Q, sq), { tab: 2, hi: ["b1"], trade: "dobae" });
   assert.deepEqual(boardTarget("솜씨공방 목공 가견적은요?", A(), V, st), { tab: 2, hi: ["b1"], trade: "mokgong" });
+  // 공종을 안 말하면: 도배 업체를 이미 골랐으면 목공, 아니면 도배
+  assert.deepEqual(boardTarget("솜씨공방은 어때요?", A(), Q, sq), { tab: 2, hi: ["b1"], trade: "mokgong" });
+  assert.deepEqual(boardTarget("솜씨공방은 어때요?", A(), V, st), { tab: 2, hi: ["b1"], trade: "dobae" });
+  // 둘 다 하는 업체가 도배 견적서를 보냈으면 공종을 안 말해도 비교 칸
+  const sent = V.map((v) => (v.vendor_id === "b1" && v.trade === "dobae" ? { ...v, stage: "quoted" as const } : v));
+  assert.deepEqual(boardTarget("솜씨공방은 어때요?", A(), sent, sq), { tab: 4, hi: ["b1"], trade: "dobae" });
+});
+
+test("업체 이름 속 공종 낱말은 묻는 공종으로 보지 않아요", () => {
+  const both = [...V, { vendor_id: "x1", name: "한빛도배", trade: "mokgong" as const }, { vendor_id: "x1", name: "한빛도배", trade: "dobae" as const }];
+  assert.equal(boardTarget("한빛도배는 어때요?", A(), both, sq)?.trade, "mokgong");
 });
 
 test("이름이 없으면 물은 말로: 일정은 실측(확정 뒤면 일정) 칸, 업체 말은 업체 칸", () => {
