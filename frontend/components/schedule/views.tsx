@@ -3,7 +3,6 @@
 // 9판의 '바뀌면 332만 2,000원'(승인하면 합계) · '공사 금액 · 추가 포함 합계'는 API에 값이 없어 따로 보여요(합치지 않아요).
 import type { ReactNode } from "react";
 import { dateLong, dateShort, dueText, listStamp, won } from "@/lib/format";
-import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Money } from "@/components/ui/Money";
 import { Eyebrow, Group, Notice, Pics, Quote, Row, Rows, Small, Sub, Title } from "@/components/project/Kit";
@@ -11,6 +10,7 @@ import { iGa } from "@/components/visit/text";
 import { DatesActions } from "./DatesActions";
 import { DoneActions } from "./DoneActions";
 import { ExtraActions } from "./ExtraActions";
+import { GoButton } from "./nav";
 import { WorkDays } from "./WorkDays";
 import { currentExtra, daysText, donePhotoHref, extraPhotoHref, type TradeDatesV3 } from "./v3text";
 import s from "./v3.module.css";
@@ -88,7 +88,7 @@ export function datesView({ projectId, t, holidays, finalVersion, today, startDa
             <Eyebrow>{v} 공사 날짜 · 확정</Eyebrow>
             <p className={`${s.big} mj-num`}>{daysText(days)}</p>
             <Sub>확정 공정표가 만들어졌어요</Sub>
-            <div><Button variant="text" arrow href={`${base(projectId)}/plan`}>확정 공정표 보기</Button></div>
+            <div><GoButton to={{ kind: "plan" }} href={`${base(projectId)}/plan`}>확정 공정표 보기</GoButton></div>
           </Group>
           {days.length ? <Group><div className={s.cal}><WorkDays days={days} holidays={holidays} today={today} /></div></Group> : null}
           <Group list><Rows>{dealRow(t)}</Rows></Group>
@@ -98,7 +98,7 @@ export function datesView({ projectId, t, holidays, finalVersion, today, startDa
     };
   }
   if (t.dates_state === "closed") {
-    return { body: <EmptyState icon="calendar" title="이 공사는 닫혔어요" action={<Button variant="text" arrow href={base(projectId)}>공사 보기</Button>} />, bar: null };
+    return { body: <EmptyState icon="calendar" title="이 공사는 닫혔어요" action={<GoButton to={{ kind: "project" }} href={base(projectId)}>공사 보기</GoButton>} />, bar: null };
   }
   // waiting: 업체가 공사 날짜를 올리기 전
   return {
@@ -121,7 +121,7 @@ export function extraView({ projectId, t }: Ctx): View {
   const x = currentExtra(t);
   const v = t.deal.vendor_name;
   if (!x) {
-    return { body: <EmptyState icon="doc" title="올라온 추가 금액이 없어요" action={<Button variant="text" arrow href={`${base(projectId)}/schedule?view=dates`}>공사 날짜 보기</Button>}>업체가 추가 금액을 올리면 여기서 승인하거나 거절해요</EmptyState>, bar: null };
+    return { body: <EmptyState icon="doc" title="올라온 추가 금액이 없어요" action={<GoButton to={{ kind: "dates" }} href={`${base(projectId)}/schedule?view=dates`}>공사 날짜 보기</GoButton>}>업체가 추가 금액을 올리면 여기서 승인하거나 거절해요</EmptyState>, bar: null };
   }
   const pending = x.answer === "pending";
   const state = x.answer === "approved" ? `승인했어요${x.acked_at ? ` · ${listStamp(x.acked_at)}` : ""}`
@@ -202,7 +202,7 @@ export function doneView({ projectId, t }: Ctx): View {
             <Eyebrow>고칠 곳을 알렸어요</Eyebrow>
             <Title>{iGa(v)} 고친 뒤 다시 공사 끝을 알려요</Title>
             {d.fixing_note ? <Quote>{d.fixing_note}</Quote> : null}
-            {d.thread_id ? <div><Button variant="text" arrow href={`/chat/${encodeURIComponent(d.thread_id)}`}>채팅 열기</Button></div> : null}
+            {d.thread_id ? <div><GoButton to={{ kind: "chat", threadId: d.thread_id }} href={`/chat/${encodeURIComponent(d.thread_id)}`}>채팅 열기</GoButton></div> : null}
           </Group>
           {money}
         </>
@@ -219,9 +219,9 @@ export function doneView({ projectId, t }: Ctx): View {
             <Title>공사가 끝났어요</Title>
             {d.work_done_on ? <Sub>{dateLong(d.work_done_on)} 공사 끝</Sub> : null}
             <div className={s.links}>
-              {d.review_open ? <Button variant="text" arrow href={`${base(projectId)}/review`}>리뷰 쓰기</Button> : null}
+              {d.review_open ? <GoButton to={{ kind: "review" }} href={`${base(projectId)}/review`}>리뷰 쓰기</GoButton> : null}
               {d.review_id ? <Small>리뷰를 썼어요</Small> : null}
-              {d.thread_id ? <Button variant="text" arrow href={`/chat/${encodeURIComponent(d.thread_id)}`}>하자 접수</Button> : null}
+              {d.thread_id ? <GoButton to={{ kind: "chat", threadId: d.thread_id }} href={`/chat/${encodeURIComponent(d.thread_id)}`}>하자 접수</GoButton> : null}
             </div>
           </Group>
           {money}
@@ -230,5 +230,5 @@ export function doneView({ projectId, t }: Ctx): View {
       bar: null,
     };
   }
-  return { body: <EmptyState icon="check" title="공사가 끝나면 여기서 확인해요" action={<Button variant="text" arrow href={`${base(projectId)}/schedule?view=dates`}>공사 날짜 보기</Button>}>{iGa(v)} 공사를 끝냈다고 알리면 와요</EmptyState>, bar: null };
+  return { body: <EmptyState icon="check" title="공사가 끝나면 여기서 확인해요" action={<GoButton to={{ kind: "dates" }} href={`${base(projectId)}/schedule?view=dates`}>공사 날짜 보기</GoButton>}>{iGa(v)} 공사를 끝냈다고 알리면 와요</EmptyState>, bar: null };
 }
