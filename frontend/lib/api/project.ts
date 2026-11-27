@@ -58,6 +58,8 @@ export type ProjectShell = {
   sub: number | null;
   todo: BandTask[];
   waiting: BandTask[];
+  /** 공정 이름을 뺀 짧은 이름 '상계동 아파트'(공정 탭이 있는 띠) */
+  shortName: string;
   /** 예시 공사(개발 미리 보기) */
   mock: boolean;
 };
@@ -110,7 +112,7 @@ export const getProjectShell = cache(async (id: string): Promise<ProjectShell | 
     const m = mockProject(k);
     const h = m.home;
     const cond: Condition = { scope: h.scope, spaces: h.spaces, faces: h.faces, area_m2: String(h.area_m2), area_basis: h.area_basis, grade: h.grade, occupied: h.occupied };
-    return { id, name: m.name, region: m.region, locked: m.locked, home: h, cond, budgetWon: h.budget_won, current: m.current, tracks: [], sub: m.after ?? null, todo: m.todo, waiting: [], mock: true };
+    return { id, name: m.name, region: m.region, locked: m.locked, home: h, cond, budgetWon: h.budget_won, current: m.current, tracks: [], sub: m.after ?? null, todo: m.todo, waiting: [], shortName: m.name, mock: true };
   }
   if (!isUuid(id)) return null;
   const [p, list] = await Promise.all([getMyProject(id), listMyProjects().catch(() => [] as ApiProjectItem[])]);
@@ -128,6 +130,7 @@ export const getProjectShell = cache(async (id: string): Promise<ProjectShell | 
   return {
     id: p.id, name: projectName(h?.emd ?? p.emd ?? item?.emd, p.region, trades), region: p.region, locked: p.locked,
     home: h, cond, budgetWon: h?.budget_won ?? p.budget_won ?? null, ...band, sub, mock: false,
+    shortName: `${(h?.emd ?? p.emd ?? item?.emd) || p.region.split(" ").at(-1) || p.region} 아파트`,
   };
 });
 
