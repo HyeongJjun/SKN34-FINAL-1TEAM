@@ -460,7 +460,9 @@ export function ProjectFlow({ data }: { data: FlowData }) {
               <h4>{iga(deal.deal.vendor_name)} 올린 공사 날짜</h4>
               <p>{dateShort(x.start)} ~ {dateShort(x.end)} · {x.workdays}일 · {x.crew}명</p>
               <div className={s.row}>
-                <Button size="sm" busy={busy === "accept"} onClick={() => act("accept", () => call("POST", `/projects/${pid}/deals/${enc(deal.deal.id)}/dates/${enc(x.id)}/accept`, { seen_version: schedule!.final_version }), "공사 날짜를 수락했어요")}>이 날짜로 수락</Button>
+                {/* 수락에는 본 공정표 버전이 있어야 해요. 공정표를 못 읽었으면 막고 공사 화면으로 보내요 */}
+                <Button size="sm" busy={busy === "accept"} disabled={!schedule} onClick={() => schedule && act("accept", () => call("POST", `/projects/${pid}/deals/${enc(deal.deal.id)}/dates/${enc(x.id)}/accept`, { seen_version: schedule!.final_version }), "공사 날짜를 수락했어요")}>이 날짜로 수락</Button>
+                {!schedule ? <p className={s.note}>공정표를 불러오지 못해 여기서는 수락할 수 없어요. <Link href={`/projects/${pid}/schedule`}>공사 화면</Link>에서 수락해 주세요.</p> : null}
                 <Button size="sm" variant="secondary" onClick={() => setWin({ kind: "schedule", view: "dates" })}>다른 날짜 요청</Button>
               </div>
             </div>
@@ -578,7 +580,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
       ) : null}
       <VendorDialog pid={pid} open={vOpen} onClose={() => setVOpen(null)} busy={busy} act={act}
         full={!!vOpen && listOf(vOpen.trade).filter((v) => v.shortlisted).length >= MAX_PICK} />
-      {std ? <StandardDialog open={stdOpen} onClose={() => setStdOpen(false)} data={std} pid={pid} locked={p.locked} trade={multi ? active : undefined}
+      {std ? <StandardDialog open={stdOpen} onClose={() => setStdOpen(false)} data={std} pid={pid} locked={p.locked} basis={vendors?.standard_total ?? null} trade={multi ? active : undefined}
         onEdit={() => { setStdOpen(false); setWin({ kind: "edit" }); }} onPlan={() => { setStdOpen(false); setWin({ kind: "plan" }); }} /> : null}
       <Windows win={win} onClose={() => setWin(null)} data={{ ...data.win, pid, projectId: p.id, today, locked: p.locked, schedule, startDate: deal?.deal.start_date ?? null }}
         onDone={(said) => { setWin(null); setDone((x) => [...x, said]); startRefresh(() => router.refresh()); }} />
