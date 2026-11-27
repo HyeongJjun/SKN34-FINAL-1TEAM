@@ -1,7 +1,7 @@
 // 재재 대화 → 보드 연동 시험(#197): pnpm test:unit
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { boardTarget, pickRule, pickStateOf, requestSaid, type BoardAnswer } from "./boardLink.ts";
+import { boardTarget, pickRule, pickStateOf, requestSaid, threadOf, type BoardAnswer } from "./boardLink.ts";
 
 const A = (over: Partial<BoardAnswer> = {}): BoardAnswer => ({ notice: "", sections: [], cards: [], ...over });
 const V = [
@@ -111,4 +111,17 @@ test("담기 상태: 공정별로 확정 · 진행 중 실측 · 남은 칸을 �
   assert.deepEqual(pickRule({ vendor_id: "m3", shortlisted: false }, pickStateOf("mokgong", [], visits, 0)), { add: false, remove: false });
   assert.equal(pickStateOf("dobae", [], visits, 2).locked, true); // 실측에서 고른 공정
   assert.equal(pickStateOf("mokgong", ["mokgong"], [], 2).locked, true); // 공사 일정에 계약
+});
+
+test("업체 채팅 창: 상호명이 아니라 실측 · 채팅 ID로 대화를 골라요(이름이 같은 다른 업체 대화를 열지 않아요)", () => {
+  const heads = [
+    { thread_id: "t1", project_id: "p1", visit_id: "v1", title: "정담도배" },
+    { thread_id: "t2", project_id: "p1", visit_id: "v2", title: "정담도배 상계점" },
+    { thread_id: "t3", project_id: "p2", visit_id: "v9", title: "정담도배" },
+  ];
+  assert.equal(threadOf(heads, "p1", { visitId: "v2", threadId: null })?.thread_id, "t2");
+  assert.equal(threadOf(heads, "p1", { visitId: null, threadId: "t1" })?.thread_id, "t1");
+  assert.equal(threadOf(heads, "p1", { visitId: "v9", threadId: null }), null); // 다른 공사 실측
+  assert.equal(threadOf(heads, "p1", { visitId: null, threadId: "t3" }), null); // 다른 공사 대화
+  assert.equal(threadOf(heads, "p1", { visitId: null, threadId: null }), null);
 });
