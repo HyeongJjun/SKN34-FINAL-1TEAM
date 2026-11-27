@@ -5,6 +5,7 @@
 // 할 일 · 기다림이 둘 이상이면 상자 전체가 '지금 할 일 n · 기다림 n ▾' 펼침 단추가 돼요(업체별 할 일 · 기다림, 작은 메뉴 모양).
 // 하나면 상자 전체가 그 할 일로 가는 링크예요. 누를 곳은 모두 40px 이상(단계 칸 · 작은 단계 알약 · 할 일 상자).
 // 머리(AppHeader) 바로 아래, 다른 칸으로 감싸지 않게 둬요(붙는 띠라서). 단계 이름 · 할 일 글은 부르는 쪽이 9판 말로 넘겨요.
+import { withTrade } from "@/components/secretary/boardLink";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
@@ -108,7 +109,8 @@ export function ProjectBand({ name, shortName, href, steps = PROJECT_STEPS, curr
                 </button>
               ))}
             </div>
-            {onChat ? null : <Link className={s.chat} href={`${href}/assistant`}>재재와 대화 ›</Link>}
+            {/* 고른 공정 탭 그대로 재재 화면으로(#234 리뷰: 다른 화면에서 넘어가면 도배 탭으로 바뀌지 않게) */}
+            {onChat ? null : <Link className={s.chat} href={withTrade(`${href}/assistant`, picked.trade)}>재재와 대화 ›</Link>}
           </div>
         </div>
       ) : null}
