@@ -249,6 +249,42 @@ def test_same_half_after_window_answer_is_409(api):
     assert choose(api, f["pid"], visit2, 6, "pm").status_code == 200  # 다른 반나절은 돼요
 
 
+def test_same_half_on_proposal_pick_is_409(api):
+    """업체가 제안한 날을 고를 때도 한 집 같은 반나절 업체 둘은 409예요"""
+    token, pid, vid = setup(api)
+    vid2 = vendor(api, "gyeol@mitjip.test", "결도배")
+    use(api, token)
+    assert add(api, pid, vid2).status_code == 201
+    both = open_days(api, pid, vid2)
+    day, other = [d for d in open_days(api, pid, vid) if {"am", "pm"} <= set(both.get(d, []))][:2]
+    one = {
+        "trade": "dobae",
+        "vendor_ids": [vid],
+        "picks": [{"vendor_id": vid, "day": day, "half": "am"}],
+    }
+    assert api.post(f"/projects/{pid}/visits", json=one).status_code == 201
+    two = {
+        "trade": "dobae",
+        "vendor_ids": [vid2],
+        "picks": [{"vendor_id": vid2, "day": day, "half": "pm"}],
+    }
+    assert api.post(f"/projects/{pid}/visits", json=two).status_code == 201
+    visit2 = visit_of(pid, vid2)
+    login(api, "gyeol@mitjip.test")
+    slots_ = [{"day": day, "half": "am"}, {"day": other, "half": "am"}]
+    r = api.post(
+        f"/vendor/visits/{visit2}/propose",
+        json={"reason_code": "other", "note": "", "slots": slots_},
+    )
+    assert r.status_code == 200, r.text
+    use(api, token)
+    url = f"/projects/{pid}/visits/{visit2}/proposal/pick"
+    assert code(api.post(url, json={"day": day, "half": "am"})) == (409, "slot_taken")
+    assert status(visit2) == "proposed"
+    assert api.post(url, json={"day": other, "half": "am"}).status_code == 200  # 다른 날은 돼요
+    assert status(visit2) == "booked"
+
+
 def test_reply_due_expiry_makes_request_chat_read_only(api):
     """요청 때 연 채팅은 업체 답 기한이 지나 요청이 끝나면 읽기만(expired)이에요(리뷰 3)"""
     import asyncio

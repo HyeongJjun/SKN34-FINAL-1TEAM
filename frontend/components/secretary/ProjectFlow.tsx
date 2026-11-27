@@ -29,7 +29,7 @@ import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { dateShort, euro, won } from "@/lib/format";
 import { termByName } from "@/lib/guide";
-import { boardTarget, norm } from "./boardLink";
+import { boardTarget, norm, pickRule, type PickState } from "./boardLink";
 import { quickChips } from "./chips";
 import { Jaejae } from "./Jaejae";
 import { MOK_TODO, Plan, PLAN_STEPS } from "./Plan";
@@ -64,6 +64,7 @@ export type FlowData = {
   mokDraft: VisitDraft | null;
   /** 목공 업체 목록(목공을 고른 공사만, 아니면 null) */
   mokVendors: ProjectVendors | null;
+  /** 목공 실측 요청(목공을 고른 공사만, 담기 · 빼기 막을 때 봐요) */
   today: string;
   /** 표준견적서 창 값(서버가 읽어 넘겨요). 못 읽으면 표준견적서 화면 링크로 가요 */
   std: StdData | null;
@@ -206,6 +207,16 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   }
 
   const listOf = (t: Trade) => { const x = t === "dobae" ? vendors : mokVendors; return [...(x?.local ?? []), ...(x?.nearby ?? [])]; };
+  /** 담기 · 빼기를 열지(#220 리뷰): 업체 목록은 재재가 말하면 확정 뒤에도 보여서, 단추는 그 공정 확정 · 실측 상태로 따로 막아요 */
+  const pickOf = (t: Trade): PickState => {
+    const tv = visits?.visits.filter((v) => v.trade === t && !CLOSED.includes(v.status)) ?? [];
+    const x = t === "dobae" ? vendors : mokVendors;
+    return {
+      locked: !!schedule?.trades.some((d) => d.deal.trade === t) || tv.some((v) => v.status === "chosen"),
+      left: x?.shortlist?.left ?? MAX_PICK - listOf(t).filter((v) => v.shortlisted).length,
+      live: new Set(tv.flatMap((v) => (v.vendor_id ? [v.vendor_id] : []))),
+    };
+  };
   /** AI 답 → 보드(#197, boardLink.ts): 업체 이름이면 그 업체 강조, 아니면 물은 말로 일정 · 업체 칸 */
   function linkBoard(q: string, out: AiTurnOut): number | undefined {
     // 견적서를 낸 업체는 업체 목록에 없을 수도 있어 비교 줄 이름도 같이 봐요
@@ -437,7 +448,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             </div>
             {/* 표준견적서 합계에는 목공도 들어 있어서, 가견적 % 기준(도배만 시장 단가 · 서버 값)을 따로 보여요 */}
             {trade === "dobae" && mokVendors && vendors ? <p className={s.note}>가견적 %는 도배만 시장 단가 <b className="mj-num">{won(vendors.standard_total)}</b>와 견줘요. 표준견적서 합계에는 목공도 들어 있어요.</p> : null}
-            <VendorRows list={listOf(trade).filter((v) => v.state === "ok")} query={query} hi={hi} trade={trade} pid={pid} busy={busy} act={act} onOpen={(vendorId) => setVOpen({ vendorId, trade })} />
+            <VendorRows list={listOf(trade).filter((v) => v.state === "ok")} query={query} hi={hi} trade={trade} pick={pickOf(trade)} pid={pid} busy={busy} act={act} onOpen={(vendorId) => setVOpen({ vendorId, trade })} />
           </>
         ) : <p className={s.note}>도배 업체를 확정했어요. 일정 칸을 봐 주세요.</p>}
         {trade === "dobae" && draft?.vendors.length && !deal ? (
@@ -639,7 +650,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
           onDone={() => { setDone((x) => [...x, `${cancel.name} ${cancel.request ? "요청" : "실측"}을 취소했어요`]); setCancel(null); startRefresh(() => router.refresh()); }} />
       ) : null}
       <VendorDialog pid={pid} open={vOpen} onClose={() => setVOpen(null)} busy={busy} act={act}
-        full={!!vOpen && listOf(vOpen.trade).filter((v) => v.shortlisted).length >= MAX_PICK} />
+        pick={pickOf(vOpen?.trade ?? "dobae")} />
       {std ? <StandardDialog open={stdOpen} onClose={() => setStdOpen(false)} onPick={() => { setStdOpen(false); toBoard(2); }} data={std} pid={pid} locked={p.locked} basis={vendors?.standard_total ?? null} trade={multi ? active : undefined}
         onEdit={() => { setStdOpen(false); setWin({ kind: "edit" }); }} onPlan={() => { setStdOpen(false); setWin({ kind: "plan" }); }} /> : null}
       <Windows win={win} onClose={() => setWin(null)} data={{ ...data.win, pid, projectId: p.id, today, locked: p.locked, schedule, startDate: deal?.deal.start_date ?? null }}
@@ -653,12 +664,12 @@ const VISIT_WORD: Record<string, string> = { requested: "날짜 묻는 중", pic
 
 type Card = ProjectVendors["local"][number];
 /** 보드 업체 줄(#197): 찾기 낱말로 거르고, AI 답에 나온 업체는 위로 올려 강조해요. 공정마다 3곳까지 담아요 */
-function VendorRows({ list, query, hi, trade, pid, busy, act, onOpen }: { list: Card[]; query: string; hi: string[]; trade: Trade; pid: string; busy: string | null; act: Act; onOpen: (vendorId: string) => void }) {
+function VendorRows({ list, query, hi, trade, pick, pid, busy, act, onOpen }: { list: Card[]; query: string; hi: string[]; trade: Trade; pick: PickState; pid: string; busy: string | null; act: Act; onOpen: (vendorId: string) => void }) {
   const key = norm(query);
   const shown = list
     .filter((v) => !key || norm(`${v.name} ${v.sgg}`).includes(key))
     .sort((a, b) => Number(hi.includes(b.vendor_id)) - Number(hi.includes(a.vendor_id)));
-  const full = list.filter((v) => v.shortlisted).length >= MAX_PICK;
+  const full = !pick.locked && pick.left <= 0;
   // 아직 하나도 안 담았으면 '담기' 단추를 테두리로 짚어 줘요(정석 피드백 9)
   const none = !list.some((v) => v.shortlisted);
   const first = useRef<HTMLDivElement>(null);
@@ -671,19 +682,23 @@ function VendorRows({ list, query, hi, trade, pid, busy, act, onOpen }: { list: 
     <div className={s.vlist}>
       {shown.slice(0, all ? shown.length : 8).map((v, i) => {
         const on = hi.includes(v.vendor_id);
+        const can = pickRule(v, pick);
         return (
           <div key={v.vendor_id} ref={on && i === 0 ? first : undefined} className={[s.vrow, v.shortlisted ? s.vrowOn : "", on ? s.vrowHi : ""].join(" ")}>
             <div className={s.vcol}><button type="button" className={s.vname} onClick={() => onOpen(v.vendor_id)} aria-label={`${v.name} 자세히`}>{v.name} ›</button>{on ? <span className={s.hiTag}>재재가 말한 업체</span> : null}<span className={s.note}>{v.rating ? `별 ${v.rating} · ` : ""}후기 {v.review_count} · 시공 {v.done_count}</span></div>
             <div className={s.row}>
               <b className="mj-num">{v.estimate_total != null ? won(v.estimate_total) : "—"}</b>
-              <Button size="sm" variant={v.shortlisted ? "secondary" : "weak"} className={none ? s.pickHint : undefined} busy={busy === v.vendor_id} disabled={!v.shortlisted && full}
-                onClick={() => act(v.vendor_id, () => v.shortlisted ? call("DELETE", `/projects/${pid}/shortlist/${enc(v.vendor_id)}?trade=${trade}`) : call("POST", `/projects/${pid}/shortlist`, { trade, vendor_id: v.vendor_id }), `${TRADE_WORD[trade]} ${v.name}${v.shortlisted ? " 뺐어요" : " 담았어요"}`)}>
+              {pick.live.has(v.vendor_id) ? <span className={s.note}>실측 요청한 업체</span> : (
+              <Button size="sm" variant={v.shortlisted ? "secondary" : "weak"} className={none && can.add ? s.pickHint : undefined} busy={busy === v.vendor_id} disabled={!(can.add || can.remove)}
+                onClick={() => (can.add || can.remove) && act(v.vendor_id, () => v.shortlisted ? call("DELETE", `/projects/${pid}/shortlist/${enc(v.vendor_id)}?trade=${trade}`) : call("POST", `/projects/${pid}/shortlist`, { trade, vendor_id: v.vendor_id }), `${TRADE_WORD[trade]} ${v.name}${v.shortlisted ? " 뺐어요" : " 담았어요"}`)}>
                 {v.shortlisted ? "빼기" : "담기"}
               </Button>
+              )}
             </div>
           </div>
         );
       })}
+      {pick.locked ? <p className={s.note}>{TRADE_WORD[trade]} 업체를 확정해서 더 담거나 뺄 수 없어요. 업체 정보는 볼 수 있어요.</p> : null}
       {shown.length > 8 ? <button type="button" className={s.boardLink} onClick={() => setAll((x) => !x)}>{all ? "접기" : `업체 ${shown.length - 8}곳 더 보기`}</button> : null}
       {full ? <p className={s.note}>{TRADE_WORD[trade]}는 {MAX_PICK}곳을 다 담았어요. 바꾸려면 하나를 빼 주세요.</p> : null}
     </div>
