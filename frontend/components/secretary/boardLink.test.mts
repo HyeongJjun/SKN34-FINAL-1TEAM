@@ -1,7 +1,7 @@
 // 재재 대화 → 보드 연동 시험(#197): pnpm test:unit
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { boardTarget, type BoardAnswer } from "./boardLink.ts";
+import { boardTarget, pickRule, type BoardAnswer } from "./boardLink.ts";
 
 const A = (over: Partial<BoardAnswer> = {}): BoardAnswer => ({ notice: "", sections: [], cards: [], ...over });
 const V = [
@@ -65,4 +65,26 @@ test("이름이 없으면 물은 말로: 일정은 실측(확정 뒤면 일정) 
 
 test("한 글자 이름은 맞추지 않아요(아무 글에나 걸리지 않게)", () => {
   assert.equal(boardTarget("뭐예요?", A({ lead: "벽은 이렇게 해요" }), [{ vendor_id: "x", name: "벽", trade: "dobae" }], st), null);
+});
+
+// 담기 · 빼기 단추(#220 리뷰): 업체 표시 · 강조와 따로, 서버가 받는 상태에서만 열어요
+const R = (shortlisted = false) => ({ vendor_id: "d1", shortlisted });
+const open = { locked: false, left: 2, live: new Set<string>() };
+
+test("담기: 칸이 남으면 열고, 서버 남은 칸이 0이면 막아요", () => {
+  assert.deepEqual(pickRule(R(), open), { add: true, remove: false });
+  assert.deepEqual(pickRule(R(), { ...open, left: 0 }), { add: false, remove: false });
+  assert.deepEqual(pickRule(R(true), open), { add: false, remove: true });
+});
+
+test("도배 업체를 확정하면 다른 업체 담기 · 빼기를 막아요", () => {
+  const locked = { ...open, locked: true, left: 2 };
+  assert.deepEqual(pickRule(R(), locked), { add: false, remove: false });
+  assert.deepEqual(pickRule(R(true), locked), { add: false, remove: false });
+});
+
+test("실측을 요청한 업체는 담기 · 빼기를 막아요(요청 취소부터)", () => {
+  const live = { ...open, live: new Set(["d1"]) };
+  assert.deepEqual(pickRule(R(true), live), { add: false, remove: false });
+  assert.deepEqual(pickRule(R(false), live), { add: false, remove: false });
 });

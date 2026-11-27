@@ -65,3 +65,12 @@ export function boardTarget(question: string, a: BoardAnswer, vendors: BoardVend
   if (VENDOR.test(question)) return { tab: st.quoted && !st.deal ? 4 : 2, hi: [], trade: null };
   return null;
 }
+
+/** 담기 · 빼기 단추(#220 리뷰): 업체를 보여 주고 강조하는 것과 따로, 서버가 받는 상태에서만 열어요.
+ *  locked: 그 공정 업체를 확정했어요(서버 409 locked) · left: 서버가 준 남은 칸(옛 요청이 쓴 칸까지 세요) ·
+ *  live: 실측 요청이 살아 있는 업체(담기 409 already · 빼기 409 locked, 요청 취소부터) */
+export type PickState = { locked: boolean; left: number; live: Set<string> };
+export function pickRule(v: { vendor_id: string; shortlisted: boolean }, st: PickState): { add: boolean; remove: boolean } {
+  if (st.locked || st.live.has(v.vendor_id)) return { add: false, remove: false };
+  return v.shortlisted ? { add: false, remove: true } : { add: st.left > 0, remove: false };
+}

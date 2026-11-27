@@ -23,9 +23,9 @@ export default async function SecretaryPage({ params, searchParams }: { params: 
   const [p, ov] = await Promise.all([getVisitProject(id), getOverview(id)]);
   if (!p || !ov) notFound();
   const safe = <T,>(x: Promise<T>) => x.catch(() => null);
-  const [compare, schedule, visits, vendors, draft, shell, market, mokVendors, regions, plan, checks] = await Promise.all([
+  const [compare, schedule, visits, vendors, draft, shell, market, mokVendors, mokVisits, regions, plan, checks] = await Promise.all([
     safe(getCompare(p.id)), safe(getSchedule(p.id)), safe(listProjectVisits(p.id, "dobae")), safe(listProjectVendors(p.id, "dobae")), safe(getVisitDraft(p.id, "dobae")),
-    safe(getProjectShell(p.id)), safe(getMyMarketQuote(p.id)), safe(listProjectVendors(p.id, "mokgong")), // 목공을 고르지 않은 공사는 null
+    safe(getProjectShell(p.id)), safe(getMyMarketQuote(p.id)), safe(listProjectVendors(p.id, "mokgong")), safe(listProjectVisits(p.id, "mokgong")), // 목공을 고르지 않은 공사는 null
     // 재재 화면 창(기본 정보 고치기 · 공정표)에 쓰는 값
     getRegions().catch(() => []), safe(getPlanView(p.id)), getChecks(p.id).catch(() => []),
   ]);
@@ -36,7 +36,7 @@ export default async function SecretaryPage({ params, searchParams }: { params: 
   return (
     <>
       <AppHeader only="phone" phone={{ title: "재재와 진행하기", back: `/projects/${encodeURIComponent(p.id)}` }} />
-      <ProjectFlow data={{ p, ov, compare, schedule, visits, vendors, mokVendors, draft, today: todaySeoul(), std, openStd: open === "standard", step: board,
+      <ProjectFlow data={{ p, ov, compare, schedule, visits, vendors, mokVendors, mokVisits, draft, today: todaySeoul(), std, openStd: open === "standard", step: board,
         win: { regions, draft: shell?.home ? fromSaved(shell.home) : null, plan, checks } }} />
       <LiveRefresh projectId={p.id} />
     </>
