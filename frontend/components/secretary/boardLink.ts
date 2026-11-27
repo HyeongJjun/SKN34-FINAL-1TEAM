@@ -74,3 +74,10 @@ export function pickRule(v: { vendor_id: string; shortlisted: boolean }, st: Pic
   if (st.locked || st.live.has(v.vendor_id)) return { add: false, remove: false };
   return v.shortlisted ? { add: false, remove: true } : { add: st.left > 0, remove: false };
 }
+
+/** 실측 요청 결과 한 줄: 서버가 실제로 만든 요청(created)의 업체만 넣어요. 하나도 못 보냈으면 null(#221 리뷰: 실패한 업체까지 성공 안내에 넣지 않게) */
+export function requestSaid(picked: { vendor_id: string; text: string }[], created: { vendor_id: string | null }[]): string | null {
+  const ok = new Set(created.map((c) => c.vendor_id));
+  const sent = picked.filter((x) => ok.has(x.vendor_id)).map((x) => x.text);
+  return sent.length ? `실측을 요청했어요 · ${sent.join(" · ")}` : null;
+}

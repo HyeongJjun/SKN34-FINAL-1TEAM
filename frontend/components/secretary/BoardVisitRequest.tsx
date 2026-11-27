@@ -10,10 +10,11 @@ import { OpenDayPicker, type DayPick } from "@/components/visit/OpenDayPicker";
 import type { VisitDraft } from "@/lib/api/visit";
 import { call, type Schemas } from "@/lib/backend/client";
 import { HALF_LABEL, dateShort, won } from "@/lib/format";
+import { requestSaid } from "./boardLink";
 import s from "./flow.module.css";
 
 type Created = Schemas["VisitCreateOut"];
-type Act = (key: string, fn: () => Promise<unknown>, said?: string) => Promise<void>;
+type Act = (key: string, fn: () => Promise<unknown>, said?: string | ((out: unknown) => string | null)) => Promise<void>;
 
 export function BoardVisitRequest({ pid, draft, today, busy, act }: { pid: string; draft: VisitDraft; today: string; busy: string | null; act: Act }) {
   const [days, setDays] = useState<Record<string, DayPick | null>>({});
@@ -22,7 +23,7 @@ export function BoardVisitRequest({ pid, draft, today, busy, act }: { pid: strin
   // 같은 반나절에 업체 둘은 안 돼요(서버도 409). 보내기 전에 먼저 알려요
   const halves = picks.map((x) => `${x.day}-${x.half}`);
   const clash = new Set(halves).size !== halves.length;
-  const said = picks.map((x) => `${x.name} ${dateShort(x.day)} ${HALF_LABEL[x.half]}`).join(" · ");
+  const lines = picks.map((x) => ({ vendor_id: x.vendor_id, text: `${x.name} ${dateShort(x.day)} ${HALF_LABEL[x.half]}` }));
   return (
     <div className={s.card}>
       <h4>실측 날짜 고르고 바로 요청하기</h4>
@@ -41,7 +42,8 @@ export function BoardVisitRequest({ pid, draft, today, busy, act }: { pid: strin
           setFailed(null);
           const out = await call<Created>("POST", `/projects/${pid}/visits`, { trade: "dobae", vendor_ids: picks.map((x) => x.vendor_id), picks: picks.map(({ vendor_id, day, half }) => ({ vendor_id, day, half })) });
           if (out.failed.length) setFailed(`${out.failed.length}곳에는 보내지 못했어요. 업체 칸에서 다시 확인해 주세요.`);
-        }, `실측을 요청했어요 · ${said}`)}>
+          return out;
+        }, (out) => requestSaid(lines, (out as Created).created))}>
         {picks.length ? `${picks.length}곳에 실측 요청 보내기` : "반나절을 골라 주세요"}
       </Button>
       <p className={s.note}>주차 · 엘리베이터를 적어 두면 업체가 날짜를 정하기 쉬워요. <Link href={`/projects/${pid}`}>현장 정보 적기</Link> (안 적어도 돼요)</p>
