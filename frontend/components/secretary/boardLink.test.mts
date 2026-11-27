@@ -1,7 +1,7 @@
 // 재재 대화 → 보드 연동 시험(#197): pnpm test:unit
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { boardTarget, pickRule, type BoardAnswer } from "./boardLink.ts";
+import { boardTarget, pickRule, pickStateOf, requestSaid, type BoardAnswer } from "./boardLink.ts";
 
 const A = (over: Partial<BoardAnswer> = {}): BoardAnswer => ({ notice: "", sections: [], cards: [], ...over });
 const V = [
@@ -87,4 +87,28 @@ test("실측을 요청한 업체는 담기 · 빼기를 막아요(요청 취소�
   const live = { ...open, live: new Set(["d1"]) };
   assert.deepEqual(pickRule(R(true), live), { add: false, remove: false });
   assert.deepEqual(pickRule(R(false), live), { add: false, remove: false });
+});
+
+test("실측 요청 안내: 실제로 보낸 업체만(일부 실패면 실패한 업체는 빼요)", () => {
+  const picked = [{ vendor_id: "d1", text: "마루와벽 12.1(월) 오전" }, { vendor_id: "d2", text: "정담도배 12.2(화) 오후" }];
+  assert.equal(requestSaid(picked, [{ vendor_id: "d1" }, { vendor_id: "d2" }]), "실측을 요청했어요 · 마루와벽 12.1(월) 오전 · 정담도배 12.2(화) 오후");
+  assert.equal(requestSaid(picked, [{ vendor_id: "d2" }]), "실측을 요청했어요 · 정담도배 12.2(화) 오후");
+  assert.equal(requestSaid(picked, []), null);
+  assert.equal(requestSaid(picked, [{ vendor_id: null }]), null);
+});
+
+test("담기 상태: 공정별로 확정 · 진행 중 실측 · 남은 칸을 봐요(보드 · 업체 창 · 전체 상세 화면 같이)", () => {
+  const visits = [
+    { trade: "mokgong", status: "requested", vendor_id: "m1" },
+    { trade: "mokgong", status: "declined", vendor_id: "m2" },
+    { trade: "dobae", status: "chosen", vendor_id: "d1" },
+  ];
+  const mok = pickStateOf("mokgong", [], visits, 1);
+  assert.equal(mok.locked, false);
+  assert.deepEqual([...mok.live], ["m1"]); // 거절된 실측 업체는 다시 담기 · 빼기 가능
+  assert.deepEqual(pickRule({ vendor_id: "m1", shortlisted: true }, mok), { add: false, remove: false });
+  assert.deepEqual(pickRule({ vendor_id: "m2", shortlisted: true }, mok), { add: false, remove: true });
+  assert.deepEqual(pickRule({ vendor_id: "m3", shortlisted: false }, pickStateOf("mokgong", [], visits, 0)), { add: false, remove: false });
+  assert.equal(pickStateOf("dobae", [], visits, 2).locked, true); // 실측에서 고른 공정
+  assert.equal(pickStateOf("mokgong", ["mokgong"], [], 2).locked, true); // 공사 일정에 계약
 });

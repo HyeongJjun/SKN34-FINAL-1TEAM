@@ -9,20 +9,25 @@ import { Icon } from "@/components/ui/Icon";
 import { useToast } from "@/components/ui/Toast";
 import { ApiError, call, errorText } from "@/lib/backend/client";
 import { eulReul } from "@/lib/format";
+import { pickRule } from "@/components/secretary/boardLink";
 
 const MAX = 3;
 
-export function DetailActions({ projectId, vendorId, name, grade, canPick, shortlisted, count, mock }: {
+export function DetailActions({ projectId, vendorId, name, grade, trade = "dobae", canPick, shortlisted, count, mock, pick }: {
   projectId: string;
   vendorId: string;
   name: string;
   /** 지금 보는 벽지 */
   grade: "basic" | "economy";
+  /** 담는 공정(벽지는 도배만 보내요) */
+  trade?: "dobae" | "mokgong";
   /** 가견적이 있고 고른 벽지를 하는 업체(state ok) */
   canPick: boolean;
   shortlisted: boolean;
   /** 이 공사에 담은 업체 수 */
   count: number;
+  /** 보드 · 업체 창과 같은 담기 규칙(#221 리뷰): 그 공정 확정 · 이 업체 실측 요청 중 · 남은 칸 */
+  pick?: { locked: boolean; left: number; live: boolean };
   mock: boolean;
 }) {
   const router = useRouter();
@@ -37,8 +42,8 @@ export function DetailActions({ projectId, vendorId, name, grade, canPick, short
     setBusy(true);
     try {
       if (!mock) {
-        if (on) await call("DELETE", `/projects/${pid}/shortlist/${encodeURIComponent(vendorId)}?trade=dobae`);
-        else await call("POST", `/projects/${pid}/shortlist`, { trade: "dobae", vendor_id: vendorId, grade });
+        if (on) await call("DELETE", `/projects/${pid}/shortlist/${encodeURIComponent(vendorId)}?trade=${trade}`);
+        else await call("POST", `/projects/${pid}/shortlist`, trade === "dobae" ? { trade, vendor_id: vendorId, grade } : { trade, vendor_id: vendorId });
       }
       setOn(!on);
       setN((x) => Math.max(0, x + (on ? -1 : 1)));
@@ -52,11 +57,15 @@ export function DetailActions({ projectId, vendorId, name, grade, canPick, short
     }
   }
 
-  const blocked = !on && (!canPick || n >= MAX);
+  // 이 화면에서 담고 뺀 만큼 남은 칸을 맞춰요
+  const left = pick ? pick.left - (n - count) : MAX - n;
+  const can = pickRule({ vendor_id: vendorId, shortlisted: on }, { locked: !!pick?.locked, left, live: new Set(pick?.live ? [vendorId] : []) });
+  const shut = pick?.live ? "실측 요청한 업체예요" : pick?.locked ? `${trade === "mokgong" ? "목공" : "도배"} 업체를 확정했어요` : !on && left <= 0 ? "3곳을 다 담았어요" : !on && !canPick ? "담을 수 없어요" : null;
+  const blocked = on ? !can.remove : !(can.add && canPick);
   return (
     <>
       {blocked ? (
-        <Button variant="weak" size="lg" disabled>담을 수 없어요</Button>
+        <Button variant="weak" size="lg" disabled>{shut ?? "담을 수 없어요"}</Button>
       ) : (
         <Button variant="weak" size="lg" aria-pressed={on} busy={busy} onClick={() => void toggle()}>
           {on ? <>담음 <Icon name="check" size={18} strokeWidth={2.6} /></> : "담기"}
