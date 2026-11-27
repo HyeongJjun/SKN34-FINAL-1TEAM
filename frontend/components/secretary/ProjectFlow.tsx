@@ -18,6 +18,7 @@ import { useEffect, useRef, useState, useTransition, type ReactNode } from "reac
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AiAnswer } from "@/components/ai/AiAnswer";
+import { vsPct } from "@/components/compare/text";
 import { PreWorkCheck } from "@/components/project/PreWorkCheck";
 import { donePhotoHref } from "@/components/schedule/v3text";
 import { Button } from "@/components/ui/Button";
@@ -451,7 +452,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
               <div key={r.visit_id} data-hi={on ? "1" : undefined} className={on ? `${s.card} ${s.vrowHi}` : s.card}>
                 <h4>{r.vendor_name}{on ? <span className={s.hiTag}>재재가 말한 업체</span> : null}</h4>
                 <b className="mj-num">{r.latest!.total != null ? won(r.latest!.total) : "—"}</b>
-                <span className={s.note}>실측 견적서 · 확정 전 금액{r.vs_standard && r.vs_direction && r.vs_direction !== "same" ? ` · 표준견적서보다 ${r.vs_standard}% ${r.vs_direction === "more" ? "높아요" : "낮아요"}` : ""}</span>
+                <span className={s.note}>실측 견적서 · 확정 전 금액{r.vs_direction !== "same" && vsPct(r.vs_standard, r.vs_direction) ? ` · 표준견적서보다 ${vsPct(r.vs_standard, r.vs_direction)}` : ""}</span>
                 {r.estimate_total != null ? <span className={s.note}>가견적(실측 전) {won(r.estimate_total)}</span> : null}
                 <Button size="sm" busy={busy === `c${r.visit_id}`} disabled={r.seen_ver == null}
                   onClick={() => act(`c${r.visit_id}`, () => call("POST", `/projects/${pid}/quotes/${enc(r.visit_id)}/confirm`, { seen_ver: r.seen_ver }), `${euro(r.vendor_name)} 확정했어요`)}>{euro(r.vendor_name)} 확정</Button>
