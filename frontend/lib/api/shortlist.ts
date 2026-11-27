@@ -22,13 +22,13 @@ export async function getVendorList(projectId: string): Promise<VendorList | nul
   return isUuid(projectId) ? serverGet<VendorList>(`/projects/${seg(projectId)}/vendors?trade=dobae&sort=estimate`) : null;
 }
 
-/** 업체 자세히. grade를 주면 그 벽지로 미리 보기(C11 '합지 −31만 1,850원'). 목록 밖 업체면 null */
-export async function getVendorDetail(projectId: string, vendorId: string, grade?: Grade | null): Promise<VendorDetail | null> {
+/** 업체 자세히. grade를 주면 그 벽지로 미리 보기(C11 '합지 −31만 1,850원', 도배만). 목록 밖 업체면 null */
+export async function getVendorDetail(projectId: string, vendorId: string, grade?: Grade | null, trade: "dobae" | "mokgong" = "dobae"): Promise<VendorDetail | null> {
   const k = mockKeyOf(projectId);
   if (k) return mockVendorDetail(k, vendorId, grade);
   if (!isUuid(projectId) || !isUuid(vendorId)) return null;
-  const q = new URLSearchParams({ trade: "dobae" });
-  if (grade) q.set("grade", grade);
+  const q = new URLSearchParams({ trade });
+  if (grade && trade === "dobae") q.set("grade", grade);
   return serverGet<VendorDetail>(`/projects/${seg(projectId)}/vendors/${seg(vendorId)}?${q.toString()}`);
 }
 
@@ -42,10 +42,10 @@ export async function getVendorReviews(projectId: string, vendorId: string, sort
 }
 
 /** 담은 업체(공사 · 공종마다 3칸). 남의 공사면 null */
-export async function getShortlist(projectId: string): Promise<Shortlist | null> {
+export async function getShortlist(projectId: string, trade: "dobae" | "mokgong" = "dobae"): Promise<Shortlist | null> {
   const k = mockKeyOf(projectId);
   if (k) return mockShortlist(k);
-  return isUuid(projectId) ? serverGet<Shortlist>(`/projects/${seg(projectId)}/shortlist?trade=dobae`) : null;
+  return isUuid(projectId) ? serverGet<Shortlist>(`/projects/${seg(projectId)}/shortlist?trade=${trade}`) : null;
 }
 
 /** 시공 사진 주소(같은 주소 /api, 권한은 API가 봐요). 예시 공사면 그린 자리 그림(index번째) */
