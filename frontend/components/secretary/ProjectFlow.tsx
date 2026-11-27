@@ -99,11 +99,16 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const [err, setErr] = useState<string | null>(null);
   /** 보드에서 처리한 결과 한 줄(대화에 붙어요) */
   const [done, setDone] = useState<string[]>([]);
-  const [asks, setAsks] = useState<{ q: string; out?: AiTurnOut; err?: string }[]>([]);
+  /** to: 이 답으로 고른 보드 칸(폰에서 '플랜에서 보기' 링크) */
+  const [asks, setAsks] = useState<{ q: string; out?: AiTurnOut; err?: string; to?: number }[]>([]);
   const [chatId, setChatId] = useState<string | null>(null);
   const [text, setText] = useState("");
   const end = useRef<HTMLDivElement>(null);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [asks.length, now, done.length]);
+  // 비교 칸에서 재재가 말한 업체가 보이게 옮겨요(업체 칸은 VendorRows가 옮겨요)
+  useEffect(() => {
+    if (tab === 4 && hi.length) requestAnimationFrame(() => document.querySelector("#jj-board [data-hi]")?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+  }, [tab, hi]);
   // 단계가 넘어가면 보드도 지금 단계로 옮겨요
   // 처음 그릴 때는 넘어온 칸(?step)을 지켜요
   const firstNow = useRef(true);
@@ -120,15 +125,20 @@ export function ProjectFlow({ data }: { data: FlowData }) {
 
   const listOf = (t: Trade) => { const x = t === "dobae" ? vendors : mokVendors; return [...(x?.local ?? []), ...(x?.nearby ?? [])]; };
   /** AI 답 → 보드(#197, boardLink.ts): 업체 이름이면 그 업체 강조, 아니면 물은 말로 일정 · 업체 칸 */
-  function linkBoard(q: string, out: AiTurnOut) {
-    const names = (["dobae", "mokgong"] as Trade[]).flatMap((t) => listOf(t).map((v) => ({ vendor_id: v.vendor_id, name: v.name, trade: t })));
-    const quotedNow = (compare?.vendors ?? []).some((r) => r.latest && r.status === "quoted");
-    const to = boardTarget(q, out.answer, names, { quoted: quotedNow, deal: !!schedule?.trades.length });
-    if (!to) return;
+  function linkBoard(q: string, out: AiTurnOut): number | undefined {
+    // 견적서를 낸 업체는 업체 목록에 없을 수도 있어 비교 줄 이름도 같이 봐요
+    const got = new Set((compare?.vendors ?? []).filter((r) => r.latest && r.status === "quoted" && r.vendor_id).map((r) => r.vendor_id!));
+    const sent = (compare?.vendors ?? []).flatMap((r) => (r.vendor_id ? [{ vendor_id: r.vendor_id, name: r.vendor_name, trade: "dobae" as Trade, quoted: got.has(r.vendor_id) }] : []));
+    const names = [...(["dobae", "mokgong"] as Trade[]).flatMap((t) => listOf(t).map((v) => ({ vendor_id: v.vendor_id, name: v.name, trade: t, quoted: t === "dobae" && got.has(v.vendor_id) }))), ...sent];
+    const quotedNow = got.size > 0;
+    const to = boardTarget(q, out.answer, names, { quoted: quotedNow, deal: !!deal }); // 비교 칸 · 공정표는 도배 기준
+    if (!to) return undefined;
     setTab(to.tab);
     setHi(to.hi);
     if (to.hi.length) setQuery("");
     if (to.trade && (to.trade === "dobae" || mokVendors)) setTrade(to.trade);
+    setOpen(true); // 폰 · 태블릿은 플랜을 펼쳐요(대화 위에 열려 읽던 답은 그대로예요)
+    return to.tab;
   }
 
   async function act(key: string, fn: () => Promise<unknown>, said?: string) {
@@ -151,8 +161,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     try {
       const out = await askAi({ client_key: newClientKey(), text: t, chat_id: chatId, context: { screen: now <= 2 ? "vendors" : now <= 4 ? "quotes" : "plan", project_id: p.id, ids: [] }, button }); // 선택지의 길(route) · 칸 정보를 그대로 넘겨요
       if (out.chat_id) setChatId(out.chat_id);
-      setAsks((a) => a.map((x, i) => (i === a.length - 1 ? { ...x, out } : x)));
-      linkBoard(t, out);
+      const to = linkBoard(t, out);
+      setAsks((a) => a.map((x, i) => (i === a.length - 1 ? { ...x, out, to } : x)));
     } catch (e) {
       setAsks((a) => a.map((x, i) => (i === a.length - 1 ? { ...x, err: errorText(e) } : x)));
     }
@@ -165,10 +175,13 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const closed = all.filter((v) => CLOSED.includes(v.status));
   const ready = [...(vendors?.local ?? []), ...(vendors?.nearby ?? [])].filter((v) => v.state === "ok");
   const picked = ready.filter((v) => v.shortlisted);
-  const quoted = (compare?.vendors ?? []).filter((r) => r.latest && r.status === "quoted");
+  // 재재가 말한 업체(hi)를 앞으로
+  const quoted = (compare?.vendors ?? []).filter((r) => r.latest && r.status === "quoted")
+    .sort((a, b) => Number(!!b.vendor_id && hi.includes(b.vendor_id)) - Number(!!a.vendor_id && hi.includes(a.vendor_id)));
   const extras = deal ? deal.extras.items.filter((i) => (i.answer === "pending" || i.answer === "asked") && !i.superseded) : [];
   // 표준견적서 금액은 창 · 표준견적서 화면과 같은 값 하나로 보여요(전체 도배는 시장 단가, 아니면 공공 기준)
-  const stdTotal = std ? (std.market?.total ?? std.view.total) : compare?.standard_total ?? null;
+  // 목공도 하는 공사는 모든 공정 합계(부분 공사는 시장 단가가 없어 공정별 합계 sum)
+  const stdTotal = std ? (std.market?.total ?? std.view.sum?.total ?? std.view.total) : compare?.standard_total ?? null;
   const toPick = vs.filter((v) => v.status === "offered" || v.status === "proposed");
   const go = (step: number, label = "플랜에서 보기") => (
     <button type="button" className={s.boardLink} onClick={() => toBoard(step)}>{label} · {PLAN_STEPS[step]} 칸</button>
@@ -241,7 +254,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     if (step === 0) return <><Link href={`/start?edit=${pid}`}>기본 정보 고치기{p.locked ? " (요청 뒤라 잠겼어요)" : ""}</Link><Link href={`/projects/${pid}`}>현장 정보 고치기</Link></>;
     if (step === 1) return (
       <>
-        {std ? <Button size="sm" onClick={() => setStdOpen(true)}>표준견적서 보기 · {won(std.market?.total ?? std.view.total)}</Button> : <Link href={`/projects/${pid}/standard`}>표준견적서 보기 · {stdTotal != null ? won(stdTotal) : "—"}</Link>}
+        {std ? <Button size="sm" onClick={() => setStdOpen(true)}>표준견적서 보기 · {won(stdTotal ?? std.view.total)}</Button> : <Link href={`/projects/${pid}/standard`}>표준견적서 보기 · {stdTotal != null ? won(stdTotal) : "—"}</Link>}
         <Link href={`/projects/${pid}/plan`}>예상 공정표 보기</Link>
       </>
     );
@@ -283,16 +296,19 @@ export function ProjectFlow({ data }: { data: FlowData }) {
       <>
         {quoted.length && !deal ? (
           <>
-            {quoted.map((r) => (
-              <div key={r.visit_id} className={s.card}>
-                <h4>{r.vendor_name}</h4>
+            {quoted.map((r) => {
+              const on = !!r.vendor_id && hi.includes(r.vendor_id);
+              return (
+              <div key={r.visit_id} data-hi={on ? "1" : undefined} className={on ? `${s.card} ${s.vrowHi}` : s.card}>
+                <h4>{r.vendor_name}{on ? <span className={s.hiTag}>재재가 말한 업체</span> : null}</h4>
                 <b className="mj-num">{r.latest!.total != null ? won(r.latest!.total) : "—"}</b>
                 <span className={s.note}>실측 견적서 · 확정 전 금액{r.vs_standard && r.vs_direction && r.vs_direction !== "same" ? ` · 표준견적서보다 ${r.vs_standard}% ${r.vs_direction === "more" ? "높아요" : "낮아요"}` : ""}</span>
                 {r.estimate_total != null ? <span className={s.note}>가견적(실측 전) {won(r.estimate_total)}</span> : null}
                 <Button size="sm" busy={busy === `c${r.visit_id}`} disabled={r.seen_ver == null}
                   onClick={() => act(`c${r.visit_id}`, () => call("POST", `/projects/${pid}/quotes/${enc(r.visit_id)}/confirm`, { seen_ver: r.seen_ver }), `${euro(r.vendor_name)} 확정했어요`)}>{euro(r.vendor_name)} 확정</Button>
               </div>
-            ))}
+              );
+            })}
             <p className={s.why}>확정은 직접 눌러요. 확정하면 다른 업체 견적서는 닫혀요.</p>
           </>
         ) : null}
@@ -386,7 +402,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
               <div key={`a${i}`} className={s.msgs} style={{ padding: 0 }}>
                 <p className={s.me}>{a.q}</p>
                 <div className={s.bot}><div className={s.face}><Jaejae mouth={a.out ? "smile" : "flat"} /></div><div className={s.bubble}><span className={s.who}>재재</span>
-                  {a.out ? <AiAnswer answer={a.out.answer} projectId={p.id} onPick={(q, b) => void ask(q, b ?? null)} /> : a.err ? <p className="mj-error">{a.err}</p> : <p className={s.typing}>줄자로 재는 중…</p>}</div></div>
+                  {a.out ? <><AiAnswer answer={a.out.answer} projectId={p.id} onPick={(q, b) => void ask(q, b ?? null)} />{a.to != null ? go(a.to) : null}</> : a.err ? <p className="mj-error">{a.err}</p> : <p className={s.typing}>줄자로 재는 중…</p>}</div></div>
               </div>
             ))}
           </div>
@@ -413,7 +429,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
       </div>
       <VendorDialog pid={pid} open={vOpen} onClose={() => setVOpen(null)} busy={busy} act={act}
         full={!!vOpen && listOf(vOpen.trade).filter((v) => v.shortlisted).length >= MAX_PICK} />
-      {std ? <StandardDialog open={stdOpen} onClose={() => setStdOpen(false)} data={std} pid={pid} locked={p.locked} /> : null}
+      {std ? <StandardDialog open={stdOpen} onClose={() => setStdOpen(false)} onPick={() => { setStdOpen(false); toBoard(2); }} data={std} pid={pid} locked={p.locked} /> : null}
     </div>
   );
 }
