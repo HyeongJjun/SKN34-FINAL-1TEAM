@@ -119,7 +119,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [asks.length, now, done.length]);
   // 비교 칸에서 재재가 말한 업체가 보이게 옮겨요(업체 칸은 VendorRows가 옮겨요)
   useEffect(() => {
-    if (tab === 4 && hi.length) requestAnimationFrame(() => document.querySelector("#jj-board [data-hi]")?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+    if ((tab === 3 || tab === 4) && hi.length) requestAnimationFrame(() => document.querySelector("#jj-board [data-hi]")?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
   }, [tab, hi]);
   // 단계가 넘어가면 보드도 지금 단계로 옮겨요
   // 처음 그릴 때는 넘어온 칸(?step)을 지켜요
@@ -139,11 +139,13 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   /** AI 답 → 보드(#197, boardLink.ts): 업체 이름이면 그 업체 강조, 아니면 물은 말로 일정 · 업체 칸 */
   function linkBoard(q: string, out: AiTurnOut): number | undefined {
     // 견적서를 낸 업체는 업체 목록에 없을 수도 있어 비교 줄 이름도 같이 봐요
+    // 도배 업체 상태: 견적서를 보냄(비교 칸) · 실측 진행 중(실측 칸)
     const got = new Set((compare?.vendors ?? []).filter((r) => r.latest && r.status === "quoted" && r.vendor_id).map((r) => r.vendor_id!));
-    const sent = (compare?.vendors ?? []).flatMap((r) => (r.vendor_id ? [{ vendor_id: r.vendor_id, name: r.vendor_name, trade: "dobae" as Trade, quoted: got.has(r.vendor_id) }] : []));
-    const names = [...(["dobae", "mokgong"] as Trade[]).flatMap((t) => listOf(t).map((v) => ({ vendor_id: v.vendor_id, name: v.name, trade: t, quoted: t === "dobae" && got.has(v.vendor_id) }))), ...sent];
-    const quotedNow = got.size > 0;
-    const to = boardTarget(q, out.answer, names, { quoted: quotedNow, deal: !!deal }); // 비교 칸 · 공정표는 도배 기준
+    const going = new Set(vs.flatMap((v) => (v.vendor_id ? [v.vendor_id] : [])));
+    const stage = (id: string) => (got.has(id) ? "quoted" as const : going.has(id) ? "visit" as const : undefined);
+    const sent = (compare?.vendors ?? []).flatMap((r) => (r.vendor_id ? [{ vendor_id: r.vendor_id, name: r.vendor_name, trade: "dobae" as Trade, stage: stage(r.vendor_id) }] : []));
+    const names = [...(["dobae", "mokgong"] as Trade[]).flatMap((t) => listOf(t).map((v) => ({ vendor_id: v.vendor_id, name: v.name, trade: t, stage: t === "dobae" ? stage(v.vendor_id) : undefined }))), ...sent];
+    const to = boardTarget(q, out.answer, names, { quoted: got.size > 0, deal: !!deal, chosen: vs.length > 0 }); // 비교 칸 · 실측 칸 · 공정표는 도배 기준
     if (!to) return undefined;
     setTab(to.tab);
     setHi(to.hi);
@@ -326,8 +328,16 @@ export function ProjectFlow({ data }: { data: FlowData }) {
           </>
         ) : null}
         {!vs.length && !deal && !draft?.vendors.length ? <p className={s.note}>먼저 업체 칸에서 업체를 담아 주세요. <button type="button" className={s.boardLink} onClick={() => setTab(2)}>업체 칸으로</button></p> : null}
-        {toPick.map((v) => <PickCard key={v.id} pid={pid} visitId={v.id} name={v.vendor_name} proposal={v.status === "proposed"} busy={busy} act={act} />)}
-        {vs.filter((v) => !toPick.includes(v)).map((v) => <p key={v.id} className={s.note}>{v.vendor_name} · {VISIT_WORD[v.status] ?? "진행 중"}</p>)}
+        {toPick.map((v) => (
+          <div key={v.id} data-hi={v.vendor_id && hi.includes(v.vendor_id) ? "1" : undefined}>
+            {v.vendor_id && hi.includes(v.vendor_id) ? <span className={s.hiTag}>재재가 말한 업체</span> : null}
+            <PickCard pid={pid} visitId={v.id} name={v.vendor_name} proposal={v.status === "proposed"} busy={busy} act={act} />
+          </div>
+        ))}
+        {vs.filter((v) => !toPick.includes(v)).map((v) => {
+          const on = !!v.vendor_id && hi.includes(v.vendor_id);
+          return <p key={v.id} data-hi={on ? "1" : undefined} className={on ? `${s.note} ${s.vrowHi}` : s.note}>{v.vendor_name} · {VISIT_WORD[v.status] ?? "진행 중"}{on ? <span className={s.hiTag}>재재가 말한 업체</span> : null}</p>;
+        })}
         {vs.map((v) => (
           <div key={`c${v.id}`} className={s.row}>
             <button type="button" className={s.boardLink} onClick={() => setWin({ kind: "chat", vendorName: v.vendor_name })}>{v.vendor_name} 채팅</button>
