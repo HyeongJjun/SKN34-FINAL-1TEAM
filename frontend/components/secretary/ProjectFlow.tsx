@@ -29,7 +29,7 @@ import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { dateShort, euro, won } from "@/lib/format";
 import { termByName } from "@/lib/guide";
-import { boardStateFor, boardTarget, clampTarget, isWaiting, tabVendors, CLOSED_VISITS, norm, pickRule, pickStateOf, type PickState } from "./boardLink";
+import { autoDone, boardStateFor, boardTarget, clampTarget, tradeStdTotal, isWaiting, tabVendors, CLOSED_VISITS, norm, pickRule, pickStateOf, type PickState } from "./boardLink";
 import { quickChips } from "./chips";
 import { Jaejae } from "./Jaejae";
 import { MOK_TODO, Plan, PLAN_STEPS } from "./Plan";
@@ -283,7 +283,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const showMok = !multi || isMok;
   // 공정별 표준견적서 금액(시장 단가 견적의 그 공정 합계). 없으면 전체 금액
   const stdParts = multi && std?.parts && std.parts.parts.length > 1 ? std.parts : null;
-  const tradeStd = stdParts?.parts.find((x) => x.trade === active)?.quote.total ?? null;
+  // 공정별 시장 단가 견적이 없으면(부분 공사) 기존 표준견적서의 공정별 합계를 써요(#234 리뷰)
+  const tradeStd = multi && std ? tradeStdTotal(active, stdParts?.parts.map((x) => ({ trade: x.trade, total: x.quote.total })) ?? null, std.view) : null;
   const mokPicked = listOf("mokgong").filter((v) => v.state === "ok" && v.shortlisted);
   const closed = all.filter((v) => CLOSED.includes(v.status));
   const ready = [...(vendors?.local ?? []), ...(vendors?.nearby ?? [])].filter((v) => v.state === "ok");
@@ -580,7 +581,10 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     );
   }
 
-  const auto: Record<number, string[]> = { 0: ["집 정보 정리"], 1: ["표준견적서 계산"], 2: vs.length ? ["업체에 실측 날짜 물어보기"] : [], 4: quoted.length ? ["견적서를 표준견적서와 비교"] : [], 5: deal ? ["확정 공정표 만들기"] : [] };
+  // 재재가 챙긴 일은 고른 공정 탭 상태로(목공 탭은 목공 실측 · 확정, 보드는 실측 칸까지, #234 리뷰)
+  const auto = multi && isMok
+    ? autoDone({ asked: mvs.length > 0, quoted: false, deal: !!myDeal, maxTab: 3 })
+    : autoDone({ asked: vs.length > 0, quoted: quoted.length > 0, deal: !!deal, maxTab: 7 });
   const terms = (multi && isMok ? ["천장 몰딩", "걸레받이", "가견적", "실측 견적서", "하자담보책임기간"] : ["실크 벽지", "가견적", "실측 견적서", "보양", "하자담보책임기간"]).map((n) => termByName(n)).filter((t) => t !== undefined);
   // 입력칸 위 질문 버튼(#180): 마지막 답의 추천 질문, 없으면 지금 칸의 시작 질문. 물은 건 빼요
   const lastOut = [...asks].reverse().find((a) => a.out)?.out ?? null;

@@ -124,3 +124,33 @@ export function boardStateFor(mokTab: boolean, dobae: BoardState, mok: { deal: b
 export function clampTarget<T extends { tab: number }>(to: T | null, maxTab: number): T | null {
   return to ? { ...to, tab: Math.min(to.tab, maxTab) } : null;
 }
+
+/** 주소의 공정(?trade=) 그대로 넘길 꼬리(#234 리뷰: 업체 · 실측 · 견적서 주소에서 재재 화면으로 갈 때 공정이 빠지지 않게). 모르는 값이면 빈 글 */
+export function tradeQuery(raw: string | string[] | undefined | null, lead: "?" | "&" = "&"): string {
+  const t = Array.isArray(raw) ? raw[0] : raw;
+  return t === "dobae" || t === "mokgong" ? `${lead}trade=${t}` : "";
+}
+/** 사이트 안 주소에 공정을 붙여요(이미 있으면 그대로) */
+export function withTrade(href: string, trade: string | null | undefined): string {
+  if (!trade || /[?&]trade=/.test(href)) return href;
+  return `${href}${tradeQuery(trade, href.includes("?") ? "&" : "?")}`;
+}
+
+/** 공정 탭의 표준견적서 금액(#234 리뷰): 공정별 시장 단가 견적이 있으면 그 값, 없으면(부분 공사) 기존 표준견적서의 공정별 합계.
+ *  도배는 기존 표준견적서 본문(view.total), 다른 공정은 parts. 값이 없으면 null(전체 금액을 써요) */
+export function tradeStdTotal(trade: string, market: { trade: string; total: number }[] | null, view: { total: number; parts?: { trade: string; total: number }[] }): number | null {
+  if (market && market.length > 1) return market.find((x) => x.trade === trade)?.total ?? null;
+  if (!view.parts?.length) return null;
+  return trade === "dobae" ? view.total : view.parts.find((x) => x.trade === trade)?.total ?? null;
+}
+
+/** 보드 칸마다 '재재가 챙긴 일'(#234 리뷰): 고른 공정 상태로만 채우고, 그 공정 보드에 없는 칸(maxTab 넘음)은 비워요 */
+export function autoDone(st: { asked: boolean; quoted: boolean; deal: boolean; maxTab: number }): Record<number, string[]> {
+  const all: Record<number, string[]> = {
+    0: ["집 정보 정리"], 1: ["표준견적서 계산"],
+    2: st.asked ? ["업체에 실측 날짜 물어보기"] : [],
+    4: st.quoted ? ["견적서를 표준견적서와 비교"] : [],
+    5: st.deal ? ["확정 공정표 만들기"] : [],
+  };
+  return Object.fromEntries(Object.entries(all).filter(([k]) => Number(k) <= st.maxTab));
+}

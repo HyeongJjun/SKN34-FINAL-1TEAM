@@ -5,6 +5,7 @@ import { serverGet, type Schemas } from "@/lib/backend/server";
 import type { BandTask } from "@/components/site/ProjectBand";
 import { dueText } from "@/lib/format";
 import { tradeLabel } from "@/lib/labels";
+import { withTrade } from "@/components/secretary/boardLink";
 import { projectName, stepIndex } from "@/lib/guest/info";
 import { mockKeyOf } from "@/lib/mock/v3a/mode";
 import { MOCK_CHECKS, mockPlan, mockProject } from "@/lib/mock/v3a/project";
@@ -84,12 +85,14 @@ function bandOf(id: string, item: ApiProjectItem | undefined): Pick<ProjectShell
     const due = v.next.due_at ? dueText(v.next.due_at) : undefined;
     if (v.next.who === "customer" && CUSTOMER_NEXT[v.next.kind]) {
       const href = v.next.kind === "pick" || v.next.kind === "proposal" ? `/projects/${id}/visits/${seg(v.visit_id)}` : v.next.kind === "confirm" ? `/projects/${id}/quotes` : `/projects/${id}/visits`;
-      todo.push({ label: `${v.vendor_name} ${CUSTOMER_NEXT[v.next.kind]}`, href, due, trade: v.trade });
+      // 업체 공정을 주소에 붙여 그 공정 탭 보드로 가요(#234 리뷰)
+      todo.push({ label: `${v.vendor_name} ${CUSTOMER_NEXT[v.next.kind]}`, href: withTrade(href, v.trade), due, trade: v.trade });
     } else if (v.next.who === "vendor" && VENDOR_NEXT[v.next.kind]) {
       waiting.push({ label: `${v.vendor_name} ${VENDOR_NEXT[v.next.kind]}`, due, trade: v.trade });
     }
   }
-  if (!todo.length && item?.todo) todo.push({ label: item.todo.action || item.todo.text, href: safeHref(item.todo.link), trade: item.todo.trade ?? undefined });
+  const linkOf = (link: string | null | undefined, trade: string | null | undefined) => { const h = safeHref(link); return h ? withTrade(h, trade) : undefined; };
+  if (!todo.length && item?.todo) todo.push({ label: item.todo.action || item.todo.text, href: linkOf(item.todo.link, item.todo.trade), trade: item.todo.trade ?? undefined });
   // 공정마다 지금 칸(#203). 목공 → 도배 → 바닥 공사 순서로
   const order = ["mokgong", "dobae", "floor"];
   const tracks = [...(item?.trade_steps ?? [])]
@@ -97,7 +100,7 @@ function bandOf(id: string, item: ApiProjectItem | undefined): Pick<ProjectShell
     .map((t) => ({
       trade: t.trade, label: tradeLabel(t.trade), current: stepIndex(t.current),
       // 그 공정의 지금 할 일(업체별 할 일이 없을 때 띠에 보여요)
-      todo: t.todo && (t.todo.action || t.todo.text) ? { label: t.todo.action || t.todo.text, href: safeHref(t.todo.link), trade: t.trade, passive: WAIT_CODES.includes(t.todo.code) } : undefined,
+      todo: t.todo && (t.todo.action || t.todo.text) ? { label: t.todo.action || t.todo.text, href: linkOf(t.todo.link, t.trade), trade: t.trade, passive: WAIT_CODES.includes(t.todo.code) } : undefined,
     }));
   return { current: stepIndex(item?.current), tracks, todo, waiting };
 }

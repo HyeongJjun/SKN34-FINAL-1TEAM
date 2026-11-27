@@ -1,7 +1,7 @@
 // 재재 대화 → 보드 연동 시험(#197): pnpm test:unit
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { boardStateFor, boardTarget, clampTarget, isWaiting, pickRule, pickStateOf, requestSaid, tabVendors, threadOf, type BoardAnswer } from "./boardLink.ts";
+import { autoDone, boardStateFor, boardTarget, clampTarget, tradeQuery, tradeStdTotal, withTrade, isWaiting, pickRule, pickStateOf, requestSaid, tabVendors, threadOf, type BoardAnswer } from "./boardLink.ts";
 
 const A = (over: Partial<BoardAnswer> = {}): BoardAnswer => ({ notice: "", sections: [], cards: [], ...over });
 const V = [
@@ -166,4 +166,41 @@ test("보드 이동은 고른 공정 탭 상태로(#234 리뷰): 목공 탭은 �
   const dobDeal = boardStateFor(false, dobae, mok);
   assert.equal(clampTarget(boardTarget("공사 일정 알려 줘", A(), [], dobDeal), dobDeal.maxTab)?.tab, 5);
   assert.equal(clampTarget(null, 3), null);
+});
+
+test("공정이 주소에서 재재 화면까지 이어져요(#234 리뷰: 목공 할 일 링크가 도배 보드로 가지 않게)", () => {
+  assert.equal(tradeQuery("mokgong"), "&trade=mokgong");
+  assert.equal(tradeQuery(["dobae", "mokgong"]), "&trade=dobae");
+  assert.equal(tradeQuery("floor"), ""); // 모르는 공정은 넘기지 않아요
+  assert.equal(tradeQuery(undefined), "");
+  assert.equal(withTrade("/projects/p1/visits/v1", "mokgong"), "/projects/p1/visits/v1?trade=mokgong");
+  assert.equal(withTrade("/projects/p1/vendors?trade=mokgong", "dobae"), "/projects/p1/vendors?trade=mokgong"); // 서버가 붙인 공정은 그대로
+  assert.equal(withTrade("/projects/p1/schedule?view=dates", "mokgong"), "/projects/p1/schedule?view=dates&trade=mokgong");
+  assert.equal(withTrade("/projects/p1/plan", null), "/projects/p1/plan");
+});
+
+test("공정 탭 표준견적서 금액(#234 리뷰): 시장 단가가 없는 부분 공사도 공정별 합계로 나눠요", () => {
+  const view = { total: 1_200_000, parts: [{ trade: "mokgong", total: 800_000 }] }; // 도배 본문 + 목공 줄
+  assert.equal(tradeStdTotal("dobae", null, view), 1_200_000);
+  assert.equal(tradeStdTotal("mokgong", null, view), 800_000);
+  // 공정별 시장 단가 견적이 있으면 그 값
+  const market = [{ trade: "dobae", total: 4_895_000 }, { trade: "mokgong", total: 1_859_000 }];
+  assert.equal(tradeStdTotal("mokgong", market, view), 1_859_000);
+  // 공정이 하나뿐이면 전체 금액을 써요(null)
+  assert.equal(tradeStdTotal("dobae", null, { total: 1_000_000 }), null);
+  assert.equal(tradeStdTotal("dobae", [{ trade: "dobae", total: 1 }], { total: 1_000_000 }), null);
+});
+
+test("재재가 챙긴 일(#234 리뷰): 고른 공정 상태로만, 그 공정 보드에 없는 칸은 비워요", () => {
+  // 목공 탭: 도배 실측 · 견적서 · 확정이 있어도 목공 실측을 안 했으면 업체 칸에 완료 없음
+  const mok = autoDone({ asked: false, quoted: false, deal: false, maxTab: 3 });
+  assert.deepEqual(mok[2], []);
+  assert.equal(mok[4], undefined);
+  assert.equal(mok[5], undefined);
+  // 목공을 확정해도 목공 보드는 실측 칸까지라 공정표 칸 완료는 없어요
+  assert.equal(autoDone({ asked: true, quoted: false, deal: true, maxTab: 3 })[5], undefined);
+  assert.deepEqual(autoDone({ asked: true, quoted: false, deal: false, maxTab: 3 })[2], ["업체에 실측 날짜 물어보기"]);
+  // 도배 탭은 예전 그대로
+  const dob = autoDone({ asked: true, quoted: true, deal: true, maxTab: 7 });
+  assert.deepEqual([dob[2], dob[4], dob[5]], [["업체에 실측 날짜 물어보기"], ["견적서를 표준견적서와 비교"], ["확정 공정표 만들기"]]);
 });
