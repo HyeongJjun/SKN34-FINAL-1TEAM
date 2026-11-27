@@ -37,6 +37,16 @@ export function FirstDay({ done, waiting }: { done: FirstDone; /** 답글 기다
               </Link>
             </li>
           ))}
+          {/* 폰은 아래 탭이 넷이라 영업일을 업체 정보 목록에 둬요(웹은 머리 메뉴에도 있어요) */}
+          <li>
+            <Link className={s.ti} href="/vendor/open-days">
+              <span className={s.tt}>
+                <b>실측 영업일</b>
+                <span>실측 받는 요일 · 쉬는 날. 고객은 이 날만 고를 수 있어요</span>
+              </span>
+              <Icon name="chevron-right" size={18} className={s.chev} />
+            </Link>
+          </li>
           <li>
             <Link className={s.ti} href="/vendor/reviews">
               <span className={s.tt}>

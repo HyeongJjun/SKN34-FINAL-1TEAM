@@ -396,6 +396,8 @@ def market_calc(
     door: str = "abs",
     jungmun: str = "slim3",
     options: frozenset[str] | None = None,
+    molding: bool = True,
+    skirting: bool = True,
 ) -> tuple[market_quote.Quote, str]:
     """시장 단가 견적과 면적 → 평형 설명. 평형이 없으면 면적(전용이면 공급으로 바꿈)으로 센다."""
     note = ""
@@ -411,7 +413,17 @@ def market_calc(
             note = f"공급 {area_m2}㎡를 {py}평형으로 봤어요"
     r, ba = market_quote.default_rooms(py)
     inp = market_quote.Input(
-        py, rooms or r, baths or ba, dobae, mokgong, wallpaper, door, jungmun, options
+        py,
+        rooms or r,
+        baths or ba,
+        dobae,
+        mokgong,
+        wallpaper,
+        door,
+        jungmun,
+        options,
+        molding,
+        skirting,
     )
     try:
         return market_quote.build(inp, MARKET_BOOK), note
@@ -432,6 +444,7 @@ def market_of(
         return None
     mok = any(t.trade == "mokgong" for t in st.trades)
     options = market_basis.mok_options(mok_items) if mok else None
+    base = market_basis.mok_base(mok_items) if mok else {}
     return market_calc(
         pyeong=None,
         area_m2=st.area_m2,
@@ -439,6 +452,7 @@ def market_of(
         mokgong=mok,
         wallpaper="hapji" if d.grade == "economy" else "silk",
         options=options,
+        **base,
     )
 
 

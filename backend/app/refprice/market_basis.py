@@ -26,6 +26,13 @@ def mok_options(items: list[str] | None) -> frozenset[str] | None:
     return frozenset(MOK_OPTIONS[x] for x in items if x in MOK_OPTIONS)
 
 
+def mok_base(items: list[str] | None) -> dict[str, bool]:
+    """고른 목공 할 곳 → 몰딩 · 걸레받이 줄을 넣을지. 모르면(None) 둘 다"""
+    if items is None:
+        return {"molding": True, "skirting": True}
+    return {"molding": "molding" in items, "skirting": "base" in items}
+
+
 def basis_total(
     trade: str,
     area_m2: Decimal | str,
@@ -49,5 +56,6 @@ def basis_total(
         mokgong=trade == "mokgong",
         wallpaper="hapji" if grade == "economy" else "silk",
         options=mok_options(mok_items) if trade == "mokgong" else None,
+        **(mok_base(mok_items) if trade == "mokgong" else {}),
     )
     return market_quote.build(inp, BOOK).total

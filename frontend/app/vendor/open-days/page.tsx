@@ -13,7 +13,7 @@ export default async function VendorOpenDaysPage() {
   const days = await serverGet<Schemas["OpenDaysOut"]>("/vendor/open-days");
   return (
     <>
-      <ProHeader me={me} phone={{ title: "실측 영업일", back: "/vendor" }} />
+      <ProHeader me={me} phone={{ title: "실측 영업일", back: "/vendor/profile" }} />
       <Main narrow>
         <PageHead title="실측 영업일" />
         <OpenDaysForm initial={days ?? { open_weekdays: [0, 1, 2, 3, 4, 5], off_days: [] }} today={todaySeoul()} />
