@@ -117,10 +117,11 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   /** AI 답 → 보드(#197, boardLink.ts): 업체 이름이면 그 업체 강조, 아니면 물은 말로 일정 · 업체 칸 */
   function linkBoard(q: string, out: AiTurnOut): number | undefined {
     // 견적서를 낸 업체는 업체 목록에 없을 수도 있어 비교 줄 이름도 같이 봐요
-    const sent = (compare?.vendors ?? []).flatMap((r) => (r.vendor_id ? [{ vendor_id: r.vendor_id, name: r.vendor_name, trade: "dobae" as Trade }] : []));
-    const names = [...(["dobae", "mokgong"] as Trade[]).flatMap((t) => listOf(t).map((v) => ({ vendor_id: v.vendor_id, name: v.name, trade: t }))), ...sent];
-    const quotedNow = (compare?.vendors ?? []).some((r) => r.latest && r.status === "quoted");
-    const to = boardTarget(q, out.answer, names, { quoted: quotedNow, deal: !!schedule?.trades.length });
+    const got = new Set((compare?.vendors ?? []).filter((r) => r.latest && r.status === "quoted" && r.vendor_id).map((r) => r.vendor_id!));
+    const sent = (compare?.vendors ?? []).flatMap((r) => (r.vendor_id ? [{ vendor_id: r.vendor_id, name: r.vendor_name, trade: "dobae" as Trade, quoted: got.has(r.vendor_id) }] : []));
+    const names = [...(["dobae", "mokgong"] as Trade[]).flatMap((t) => listOf(t).map((v) => ({ vendor_id: v.vendor_id, name: v.name, trade: t, quoted: t === "dobae" && got.has(v.vendor_id) }))), ...sent];
+    const quotedNow = got.size > 0;
+    const to = boardTarget(q, out.answer, names, { quoted: quotedNow, deal: !!deal }); // 비교 칸 · 공정표는 도배 기준
     if (!to) return undefined;
     setTab(to.tab);
     setHi(to.hi);

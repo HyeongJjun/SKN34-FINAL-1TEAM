@@ -5,9 +5,12 @@ import { boardTarget, type BoardAnswer } from "./boardLink.ts";
 
 const A = (over: Partial<BoardAnswer> = {}): BoardAnswer => ({ notice: "", sections: [], cards: [], ...over });
 const V = [
-  { vendor_id: "d1", name: "마루와벽", trade: "dobae" as const },
+  { vendor_id: "d1", name: "마루와벽", trade: "dobae" as const, quoted: true },
   { vendor_id: "d2", name: "결 도배", trade: "dobae" as const },
   { vendor_id: "m1", name: "나무손", trade: "mokgong" as const },
+  // 도배 · 목공을 둘 다 하는 업체(도배 견적서는 안 보냄)
+  { vendor_id: "b1", name: "솜씨공방", trade: "dobae" as const },
+  { vendor_id: "b1", name: "솜씨공방", trade: "mokgong" as const },
 ];
 const st = { quoted: false, deal: false };
 
@@ -28,6 +31,19 @@ test("견적서가 왔으면 업체 이름은 비교 칸으로", () => {
 
 test("물은 말에 업체 이름이 있으면 답에 없어도 강조(견적서가 왔으면 비교 칸)", () => {
   assert.deepEqual(boardTarget("결도배 견적서 어때요?", A({ notice: "도배 부자재 줄은 합계에 들어가요." }), V, { quoted: true, deal: false }), { tab: 4, hi: ["d2"], trade: "dobae" });
+});
+
+test("도배 견적서가 와도 목공 업체를 물으면 업체 칸 목공 탭", () => {
+  const quoted = { quoted: true, deal: false };
+  assert.deepEqual(boardTarget("나무손은 어때요?", A(), V, quoted), { tab: 2, hi: ["m1"], trade: "mokgong" });
+  // 답이 도배 업체를 같이 말해도 물은 목공 업체로
+  assert.deepEqual(boardTarget("나무손 가견적 봐 줘", A({ lead: "마루와벽 견적서도 왔어요" }), V, quoted), { tab: 2, hi: ["m1"], trade: "mokgong" });
+});
+
+test("도배 · 목공을 둘 다 하는 업체: 도배 견적서가 왔으면 목공 탭, 아니면 도배", () => {
+  assert.deepEqual(boardTarget("솜씨공방은 어때요?", A(), V, { quoted: true, deal: false }), { tab: 2, hi: ["b1"], trade: "mokgong" });
+  assert.deepEqual(boardTarget("솜씨공방은 어때요?", A(), V, st), { tab: 2, hi: ["b1"], trade: "dobae" });
+  assert.deepEqual(boardTarget("솜씨공방 목공 가견적은요?", A(), V, st), { tab: 2, hi: ["b1"], trade: "mokgong" });
 });
 
 test("이름이 없으면 물은 말로: 일정은 실측(확정 뒤면 일정) 칸, 업체 말은 업체 칸", () => {
