@@ -1,7 +1,7 @@
 // 재재 대화 → 보드 연동 시험(#197): pnpm test:unit
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { boardTarget, pickRule, type BoardAnswer } from "./boardLink.ts";
+import { boardTarget, pickRule, requestSaid, type BoardAnswer } from "./boardLink.ts";
 
 const A = (over: Partial<BoardAnswer> = {}): BoardAnswer => ({ notice: "", sections: [], cards: [], ...over });
 const V = [
@@ -87,4 +87,12 @@ test("실측을 요청한 업체는 담기 · 빼기를 막아요(요청 취소�
   const live = { ...open, live: new Set(["d1"]) };
   assert.deepEqual(pickRule(R(true), live), { add: false, remove: false });
   assert.deepEqual(pickRule(R(false), live), { add: false, remove: false });
+});
+
+test("실측 요청 안내: 실제로 보낸 업체만(일부 실패면 실패한 업체는 빼요)", () => {
+  const picked = [{ vendor_id: "d1", text: "마루와벽 12.1(월) 오전" }, { vendor_id: "d2", text: "정담도배 12.2(화) 오후" }];
+  assert.equal(requestSaid(picked, [{ vendor_id: "d1" }, { vendor_id: "d2" }]), "실측을 요청했어요 · 마루와벽 12.1(월) 오전 · 정담도배 12.2(화) 오후");
+  assert.equal(requestSaid(picked, [{ vendor_id: "d2" }]), "실측을 요청했어요 · 정담도배 12.2(화) 오후");
+  assert.equal(requestSaid(picked, []), null);
+  assert.equal(requestSaid(picked, [{ vendor_id: null }]), null);
 });

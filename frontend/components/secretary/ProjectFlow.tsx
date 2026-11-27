@@ -97,7 +97,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const { p, ov, compare, schedule, visits, vendors, mokVendors, draft, mokDraft, today, std } = data;
   const pid = enc(p.id);
   const now = stepOf(data);
-  const [open, setOpen] = useState(false);
+  // 보드 칸 주소(?step, 옛 업체 · 실측 화면에서 넘어옴)로 오면 폰에서도 플랜을 펼쳐 그 칸을 바로 보여요(#221 리뷰)
+  const [open, setOpen] = useState(data.step != null);
   const [tab, setTab] = useState(data.step ?? Math.min(now, 7));
   const [stdOpen, setStdOpen] = useState(data.openStd && !!std);
   const [trade, setTrade] = useState<Trade>("dobae");
@@ -122,18 +123,36 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const [chatId, setChatId] = useState<string | null>(null);
   const [text, setText] = useState("");
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [asks.length, now, done.length]);
+  // 보드 칸 주소로 넘어온 첫 화면은 대화 끝으로 내리지 않아요(폰에서 위에 펼친 플랜이 가려져요). 묻거나 처리하면 다시 내려요
+  const toPlanFirst = useRef(data.step != null);
+  useEffect(() => {
+    if (toPlanFirst.current && !asks.length && !done.length) { window.scrollTo(0, 0); return; }
+    toPlanFirst.current = false;
+    end.current?.scrollIntoView({ block: "end" });
+  }, [asks.length, now, done.length]);
   // 비교 칸에서 재재가 말한 업체가 보이게 옮겨요(업체 칸은 VendorRows가 옮겨요)
   useEffect(() => {
     if ((tab === 3 || tab === 4) && hi.length) requestAnimationFrame(() => document.querySelector("#jj-board [data-hi]")?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
   }, [tab, hi]);
-  // 단계가 넘어가면 보드도 지금 단계로 옮겨요
-  // 처음 그릴 때는 넘어온 칸(?step)을 지켜요
-  // 개발 모드(StrictMode)는 effect를 두 번 돌려서 '처음 한 번 건너뛰기'로는 넘어온 칸이 지워져요. 지금 칸 값이 실제로 바뀔 때만 옮겨요
+  // 주소로 넘어온 값(?step 보드 칸 · ?open=standard 표준견적서 창)은 여기 한 곳에서 적용해요(#221 리뷰).
+  // 재재 화면에 있는 채로 이런 주소로 다시 오면 화면을 새로 만들지 않아 useState 처음 값이 안 바뀌어요. 그래서 값이 바뀔 때마다
+  // 그 칸 · 창을 열고(폰은 플랜을 펼쳐요), 지금 단계 자동 이동이 덮지 않게 맞춘 뒤, 주소를 정리해요(새로고침 · 뒤로 가기에 다시 열리지 않게)
   const lastNow = useRef(now);
+  const cameKey = data.step != null || data.openStd ? JSON.stringify([data.step, data.openStd]) : "";
+  useEffect(() => {
+    if (!cameKey) return;
+    lastNow.current = now;
+    if (data.step != null) {
+      setTab(data.step);
+      setOpen(true);
+      requestAnimationFrame(() => document.getElementById("jj-board")?.scrollIntoView({ block: "start" }));
+    }
+    if (data.openStd && std) setStdOpen(true);
+    router.replace(`/projects/${pid}/assistant`, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 넘어온 값(cameKey)이 바뀔 때만
+  }, [cameKey]);
+  // 단계가 넘어가면 보드도 지금 단계로 옮겨요. 지금 칸 값이 실제로 바뀔 때만(개발 모드 StrictMode는 effect를 두 번 돌려서 '처음 한 번 건너뛰기'로는 넘어온 칸이 지워져요)
   useEffect(() => { if (lastNow.current === now) return; lastNow.current = now; setTab(Math.min(now, 7)); }, [now]);
-  // ?open=standard는 한 번만 써요(새로고침 · 뒤로 가기에 다시 열리지 않게)
-  useEffect(() => { if (data.openStd || data.step != null) router.replace(`/projects/${pid}/assistant`, { scroll: false }); }, [data.openStd, data.step, pid, router]);
 
   /** 대화의 '오른쪽에서 보기': 보드를 그 단계로 바꾸고(폰은 펼쳐) 그 자리로 옮겨요 */
   function toBoard(step: number) {
@@ -188,13 +207,15 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     return true;
   }
 
-  async function act(key: string, fn: () => Promise<unknown>, said?: string) {
+  /** said: 처리 결과 한 줄. 서버 결과를 보고 정해야 하면 함수로 줘요(null이면 안 붙여요, 예: 실측 요청 일부 실패) */
+  async function act(key: string, fn: () => Promise<unknown>, said?: string | ((out: unknown) => string | null)) {
     if (busy) return;
     setBusy(key);
     setErr(null);
     try {
-      await fn();
-      if (said) setDone((x) => [...x, said]);
+      const out = await fn();
+      const line = typeof said === "function" ? said(out) : said;
+      if (line) setDone((x) => [...x, line]);
       startRefresh(() => router.refresh());
     } catch (e) { setErr(errorText(e)); } finally { setBusy(null); }
   }
