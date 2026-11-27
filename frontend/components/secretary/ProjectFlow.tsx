@@ -252,13 +252,15 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     return true;
   }
 
-  async function act(key: string, fn: () => Promise<unknown>, said?: string) {
+  /** said: 처리 결과 한 줄. 서버 결과를 보고 정해야 하면 함수로 줘요(null이면 안 붙여요, 예: 실측 요청 일부 실패) */
+  async function act(key: string, fn: () => Promise<unknown>, said?: string | ((out: unknown) => string | null)) {
     if (busy) return;
     setBusy(key);
     setErr(null);
     try {
-      await fn();
-      if (said) setDone((x) => [...x, said]);
+      const out = await fn();
+      const line = typeof said === "function" ? said(out) : said;
+      if (line) setDone((x) => [...x, line]);
       startRefresh(() => router.refresh());
     } catch (e) { setErr(errorText(e)); } finally { setBusy(null); }
   }

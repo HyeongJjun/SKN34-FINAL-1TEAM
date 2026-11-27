@@ -12,12 +12,14 @@ import { eulReul } from "@/lib/format";
 
 const MAX = 3;
 
-export function DetailActions({ projectId, vendorId, name, grade, canPick, shortlisted, count, mock }: {
+export function DetailActions({ projectId, vendorId, name, grade, trade = "dobae", canPick, shortlisted, count, mock }: {
   projectId: string;
   vendorId: string;
   name: string;
   /** 지금 보는 벽지 */
   grade: "basic" | "economy";
+  /** 담는 공정(벽지는 도배만 보내요) */
+  trade?: "dobae" | "mokgong";
   /** 가견적이 있고 고른 벽지를 하는 업체(state ok) */
   canPick: boolean;
   shortlisted: boolean;
@@ -37,8 +39,8 @@ export function DetailActions({ projectId, vendorId, name, grade, canPick, short
     setBusy(true);
     try {
       if (!mock) {
-        if (on) await call("DELETE", `/projects/${pid}/shortlist/${encodeURIComponent(vendorId)}?trade=dobae`);
-        else await call("POST", `/projects/${pid}/shortlist`, { trade: "dobae", vendor_id: vendorId, grade });
+        if (on) await call("DELETE", `/projects/${pid}/shortlist/${encodeURIComponent(vendorId)}?trade=${trade}`);
+        else await call("POST", `/projects/${pid}/shortlist`, trade === "dobae" ? { trade, vendor_id: vendorId, grade } : { trade, vendor_id: vendorId });
       }
       setOn(!on);
       setN((x) => Math.max(0, x + (on ? -1 : 1)));
