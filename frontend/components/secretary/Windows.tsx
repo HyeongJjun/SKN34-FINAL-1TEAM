@@ -8,6 +8,7 @@ import { FinalPlanAside, FinalPlanBody } from "@/components/plan/FinalPlanView";
 import { DocsTable } from "@/components/docs/DocsTable";
 import { LogList } from "@/components/project/LogList";
 import { ReviewForm } from "@/components/schedule/ReviewForm";
+import { ScheduleGoProvider, type ScheduleGo } from "@/components/schedule/nav";
 import { datesView, doneView, extraView } from "@/components/schedule/views";
 import type { ScheduleView } from "@/components/schedule/v3text";
 import { InfoLocked } from "@/components/start/InfoLocked";
@@ -21,13 +22,15 @@ import type { Message, Thread } from "@/lib/api/thread";
 import { call, errorText } from "@/lib/backend/client";
 import { placeText, type InfoDraft } from "@/lib/guest/info";
 import { termByName } from "@/lib/guide";
+import { threadOf } from "./boardLink";
 import d from "./StandardDialog.module.css";
 import s from "./flow.module.css";
 
 export type Win =
   | { kind: "edit" }
   | { kind: "plan" }
-  | { kind: "chat"; vendorName: string }
+  /** 업체 채팅: 상호명이 아니라 실측(visitId) · 채팅(threadId)으로 찾아요(#222 리뷰: 이름이 같거나 비슷한 다른 업체 채팅이 열리지 않게) */
+  | { kind: "chat"; vendorName: string | null; visitId?: string | null; threadId?: string | null }
   | { kind: "review" }
   | { kind: "schedule"; view: ScheduleView }
   | { kind: "term"; name: string }
@@ -70,15 +73,23 @@ export type WinData = {
 
 const TITLE: Record<NonNullable<Win>["kind"], string> = { edit: "기본 정보 고치기", plan: "공정표", chat: "업체 채팅", review: "리뷰 쓰기", schedule: "공사 일정", term: "믿집 백과", log: "결정 기록", docs: "서류" };
 
-export function Windows({ win, onClose, onDone, data }: { win: Win; onClose: () => void; onDone: (said: string) => void; data: WinData }) {
-  const title = win ? (win.kind === "chat" ? `${win.vendorName} 채팅` : win.kind === "term" ? `백과 · ${win.name}` : TITLE[win.kind]) : "";
+export function Windows({ win, onClose, onDone, onOpen, data }: { win: Win; onClose: () => void; onDone: (said: string) => void; onOpen: (w: Win) => void; data: WinData }) {
+  // 공사 일정 창에서 공정표 · 리뷰 · 채팅 · 공사 날짜로 갈 때 재재 화면 밖으로 나가지 않고 창만 바꿔요(#222 리뷰)
+  const go = (to: ScheduleGo) => {
+    if (to.kind === "plan") onOpen({ kind: "plan" });
+    else if (to.kind === "review") onOpen({ kind: "review" });
+    else if (to.kind === "chat") onOpen(to.threadId ? { kind: "chat", vendorName: null, threadId: to.threadId } : null);
+    else if (to.kind === "dates") onOpen({ kind: "schedule", view: "dates" });
+    else onClose();
+  };
+  const title = win ? (win.kind === "chat" ? `${win.vendorName ?? "업체"} 채팅` : win.kind === "term" ? `백과 · ${win.name}` : TITLE[win.kind]) : "";
   return (
     <JjWindow open={!!win} title={title} onClose={onClose}>
       {win?.kind === "edit" ? <EditBody data={data} onDone={() => onDone("기본 정보를 고쳤어요")} /> : null}
       {win?.kind === "plan" ? <PlanBody data={data} /> : null}
-      {win?.kind === "chat" ? <ChatBody data={data} vendorName={win.vendorName} /> : null}
+      {win?.kind === "chat" ? <ChatBody key={`${win.visitId ?? ""}|${win.threadId ?? ""}`} data={data} vendorName={win.vendorName} visitId={win.visitId ?? null} threadId={win.threadId ?? null} /> : null}
       {win?.kind === "review" ? <ReviewBody data={data} onDone={() => onDone("리뷰를 올렸어요")} /> : null}
-      {win?.kind === "schedule" ? <ScheduleBody data={data} view={win.view} /> : null}
+      {win?.kind === "schedule" ? <ScheduleGoProvider value={go}><ScheduleBody data={data} view={win.view} /></ScheduleGoProvider> : null}
       {win?.kind === "term" ? <TermBody name={win.name} /> : null}
       {win?.kind === "log" ? <LogBody data={data} /> : null}
       {win?.kind === "docs" ? <DocsBody data={data} /> : null}
@@ -112,25 +123,30 @@ function PlanBody({ data }: { data: WinData }) {
 }
 
 /** 이 공사 · 이 업체 채팅을 찾아 그대로 띄워요(GET /threads → /threads/{id} · 글). 실측을 요청해야 열려요 */
-function ChatBody({ data, vendorName }: { data: WinData; vendorName: string }) {
+function ChatBody({ data, vendorName, visitId, threadId }: { data: WinData; vendorName: string | null; visitId: string | null; threadId: string | null }) {
   const [got, setGot] = useState<{ thread: Thread; msgs: Message[]; label: string | null } | null>(null);
   const [err, setErr] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
     (async () => {
       const rows = await call<{ thread_id: string; title: string; visit_label: string | null }[]>("GET", "/threads");
-      for (const r of rows) {
+      // 채팅 ID가 있으면 바로, 없으면 이 공사 · 이 실측의 채팅을 찾아요(상호명으로 고르지 않아요)
+      const heads: Thread[] = [];
+      for (const r of threadId ? rows.filter((x) => x.thread_id === threadId) : rows) {
         const t = await call<Thread>("GET", `/threads/${encodeURIComponent(r.thread_id)}`);
-        if (t.project_id === data.projectId && (t.title.includes(vendorName) || r.title.includes(vendorName))) {
-          const msgs = await call<Message[]>("GET", `/threads/${encodeURIComponent(t.thread_id)}/messages?limit=50`);
-          if (live) setGot({ thread: t, msgs, label: r.visit_label });
-          return;
-        }
+        heads.push(t);
+        if (threadOf([t], data.projectId, { visitId, threadId })) break;
       }
-      if (live) setErr(`${vendorName} 채팅은 실측을 요청하면 열려요.`);
+      const t = threadOf(heads, data.projectId, { visitId, threadId });
+      if (t) {
+        const msgs = await call<Message[]>("GET", `/threads/${encodeURIComponent(t.thread_id)}/messages?limit=50`);
+        if (live) setGot({ thread: t, msgs, label: rows.find((r) => r.thread_id === t.thread_id)?.visit_label ?? null });
+        return;
+      }
+      if (live) setErr(`${vendorName ?? "업체"} 채팅은 실측을 요청하면 열려요.`);
     })().catch((e) => { if (live) setErr(errorText(e)); });
     return () => { live = false; };
-  }, [data.projectId, vendorName]);
+  }, [data.projectId, vendorName, visitId, threadId]);
   if (err) return <p className={s.note}>{err}</p>;
   if (!got) return <p className={s.note}>채팅을 여는 중이에요</p>;
   return <div className={s.chatWin}><Conversation role="customer" thread={got.thread} visit={null} visitLabel={got.label} initial={got.msgs} today={data.today} /></div>;

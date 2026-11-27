@@ -8,6 +8,7 @@ import { BottomBar } from "@/components/ui/BottomBar";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { DateRequestSheet } from "./DateRequestSheet";
+import { useScheduleGo } from "./nav";
 import s from "./v3.module.css";
 
 export function DatesActions({ projectId, dealId, proposalId, seenVersion, vendorName, requestsLeft, options, today, requestDue = null }: {
@@ -22,6 +23,7 @@ export function DatesActions({ projectId, dealId, proposalId, seenVersion, vendo
   today: string;
 }) {
   const router = useRouter();
+  const go = useScheduleGo();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -34,7 +36,9 @@ export function DatesActions({ projectId, dealId, proposalId, seenVersion, vendo
     try {
       await send("POST", `/projects/${pid}/deals/${encodeURIComponent(dealId)}/dates/${encodeURIComponent(proposalId)}/accept`, { seen_version: seenVersion }, { step: "scheduled" });
       toast.show("공사 날짜를 수락했어요");
-      router.push(`/projects/${pid}/plan`);
+      // 재재 화면 창 안이면 공정표 창으로 바꿔요(밖으로 나가지 않아요)
+      if (go) go({ kind: "plan" });
+      else router.push(`/projects/${pid}/plan`);
       router.refresh();
     } catch (e) {
       setErr(errorText(e));
