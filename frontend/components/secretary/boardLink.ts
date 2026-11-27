@@ -1,6 +1,8 @@
 // 재재 대화 → 오른쪽 보드 연동(#197): AI 답과 물은 말을 보고 보드 어느 칸을 보여 줄지, 어떤 업체를 강조할지 골라요.
 // 화면에서만 써요(API · AI 카드 모양은 그대로). 금액 · 날짜를 만들지 않아요.
-// 1) 답 글 · 표 · 초안에 이 공사 업체 이름이 나오면 그 업체를 강조하고 업체 칸(견적서가 왔으면 비교 칸)
+// 1) 물은 말(먼저) · 답 글 · 표 · 초안에 이 공사 업체 이름이 나오면 그 업체를 강조하고 업체 칸
+//    (도배 견적서가 왔으면 도배 업체는 비교 칸, 목공 업체는 업체 칸 목공 탭)
+//    (무료 모드 답은 업체 이름을 거의 안 꺼내서 물은 말도 봐요)
 // 2) 이름이 없으면 낱말로: 일정 말(실측 날짜 · 반나절 · 공사 날짜 · 공정표 · 일정)이면 일정 칸, 업체 말이면 업체 칸
 // 3) 둘 다 없으면 그대로
 
@@ -9,7 +11,8 @@ export type BoardAnswer = {
   sections: { title: string; sentences: string[]; caution: string; tip: string }[];
   cards: { title: string; text: string; draft?: { vendors: string[]; recommend?: { vendor: string } | null } | null; table?: { cols: string[]; rows: { cells: string[] }[] } | null }[];
 };
-export type BoardVendor = { vendor_id: string; name: string; trade: "dobae" | "mokgong" };
+/** quoted: 이 업체가 도배 실측 견적서를 보냈어요(비교 칸에 있어요) */
+export type BoardVendor = { vendor_id: string; name: string; trade: "dobae" | "mokgong"; quoted?: boolean };
 export type BoardState = { quoted: boolean; deal: boolean };
 export type BoardTarget = { tab: number; hi: string[]; trade: "dobae" | "mokgong" | null } | null;
 
@@ -24,11 +27,25 @@ export function answerText(a: BoardAnswer): string {
 const SCHEDULE = /실측\s*(날짜|일정|날)|반나절|공사\s*(날짜|일정)|공정표|일정|언제\s*(와|오|해|시작)/;
 const VENDOR = /업체|가견적|담기|담아/;
 
+const MOK_WORD = /목공|몰딩|걸레받이|방문|목수/;
+
+/** st는 도배 기준이에요(비교 칸 · 공정표는 도배 견적서 · 계약만 보여요).
+ *  - 도배 견적서를 보낸 업체 → 비교 칸
+ *  - 목공 업체 → 업체 칸 목공 탭. 도배 · 목공을 둘 다 하는 업체는 목공 말이 있거나 도배 업체를 이미 고른 뒤(견적서 · 계약)면 목공으로 봐요
+ *  - 그 밖의 도배 업체 → 업체 칸(견적서가 왔으면 비교 칸) */
 export function boardTarget(question: string, a: BoardAnswer, vendors: BoardVendor[], st: BoardState): BoardTarget {
-  const t = norm(answerText(a));
-  const hit = vendors.filter((v) => norm(v.name).length >= 2 && t.includes(norm(v.name)));
+  const pick = (text: string) => vendors.filter((v) => norm(v.name).length >= 2 && text.includes(norm(v.name)));
+  // 물은 말에 나온 업체가 먼저예요(답이 다른 공정 업체를 같이 말해도 물은 업체 칸으로)
+  const asked = pick(norm(question));
+  const hit = asked.length ? asked : pick(norm(answerText(a)));
   if (hit.length) {
-    return { tab: st.quoted && !st.deal ? 4 : 2, hi: [...new Set(hit.map((v) => v.vendor_id))], trade: hit.some((v) => v.trade === "dobae") ? "dobae" : "mokgong" };
+    const ids = (xs: BoardVendor[]) => [...new Set(xs.map((v) => v.vendor_id))];
+    const sent = hit.filter((v) => v.trade === "dobae" && v.quoted);
+    if (sent.length && st.quoted && !st.deal) return { tab: 4, hi: ids(sent), trade: "dobae" };
+    const mok = hit.filter((v) => v.trade === "mokgong");
+    const dobae = hit.filter((v) => v.trade === "dobae");
+    if (mok.length && (!dobae.length || MOK_WORD.test(question) || st.quoted || st.deal)) return { tab: 2, hi: ids(mok), trade: "mokgong" };
+    return { tab: st.quoted && !st.deal ? 4 : 2, hi: ids(dobae), trade: "dobae" };
   }
   if (SCHEDULE.test(question)) return { tab: st.deal ? 5 : 3, hi: [], trade: null };
   if (VENDOR.test(question)) return { tab: st.quoted && !st.deal ? 4 : 2, hi: [], trade: null };
