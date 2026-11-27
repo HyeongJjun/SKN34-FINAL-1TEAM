@@ -165,6 +165,8 @@ def market(b: v2.V2MqIn) -> v2.V2MqOut:
         door=b.door,
         jungmun=b.jungmun,
         options=None if b.options is None else frozenset(b.options),
+        molding=b.molding,
+        skirting=b.skirting,
     )
     auto = b.rooms is None or b.baths is None
     return v2.V2MqOut.model_validate(asdict(q) | {"area_note": note, "rooms_auto": auto})
