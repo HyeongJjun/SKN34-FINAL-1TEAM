@@ -23,7 +23,10 @@ import { ReviewLinks } from "@/components/vendors/ReviewLinks";
 import { areasText, caseLabel, compareText, estimateLines, feeText, monthText, replyText, safeLinks } from "@/components/vendors/v3text";
 import { VendorMenu } from "@/components/vendors/VendorMenu";
 import s from "@/components/vendors/vendors3.module.css";
+import { pickStateOf } from "@/components/secretary/boardLink";
 import { getProjectShell } from "@/lib/api/project";
+import { getSchedule } from "@/lib/api/schedule";
+import { listProjectVisits } from "@/lib/api/visit";
 import { getShortlist, getVendorDetail, photoSrc, type Grade } from "@/lib/api/shortlist";
 import { areaText } from "@/lib/format";
 import { bizNoText } from "@/lib/labels";
@@ -43,7 +46,11 @@ export default async function VendorDetailPage({ params, searchParams }: {
   const shell = await getProjectShell(id);
   if (!shell) notFound();
   const want = trade === "dobae" && isGrade(asked) ? asked : null;
-  const [d, short] = await Promise.all([getVendorDetail(shell.id, vid, want, trade), getShortlist(shell.id, trade).catch(() => null)]);
+  const [d, short, sched, vis] = await Promise.all([
+    getVendorDetail(shell.id, vid, want, trade), getShortlist(shell.id, trade).catch(() => null),
+    // 담기 · 빼기는 보드 · 업체 창과 같은 규칙(확정 · 실측 요청 · 남은 칸, #221 리뷰)
+    getSchedule(shell.id).catch(() => null), listProjectVisits(shell.id, trade).catch(() => null),
+  ]);
   if (!d) notFound();
 
   const pr = d.profile;
@@ -75,6 +82,9 @@ export default async function VendorDetailPage({ params, searchParams }: {
   const reply = replyText(d.reply_hours);
   const lines = est ? estimateLines(est.lines, grade) : null;
   const count = short?.count ?? (d.shortlisted ? 1 : 0);
+  const pick = pickStateOf(trade, (sched?.trades ?? []).map((x) => x.deal.trade), vis?.visits ?? [], short?.left ?? Math.max(0, 3 - count));
+  // 리뷰 · 정렬 · 뒤로 가기에서도 목공을 지켜요(#221 리뷰)
+  const keep = trade === "mokgong" ? "?trade=mokgong" : "";
 
   const tabs: TabItem[] = [
     { id: "est", label: "가견적" },
@@ -162,7 +172,7 @@ export default async function VendorDetailPage({ params, searchParams }: {
           <section id="reviews" className={s.group} aria-labelledby="rv-t">
             <div className={s.gh}>
               <h2 id="rv-t">리뷰 <span className="mj-num">{reviewCount}</span>{avg ? <> · <Stars value={Number(avg)} /></> : null}</h2>
-              {reviewCount ? <Button variant="text" arrow href={`${listHref}/${encodeURIComponent(vid)}/reviews`}>모두 보기</Button> : null}
+              {reviewCount ? <Button variant="text" arrow href={`${listHref}/${encodeURIComponent(vid)}/reviews${keep}`}>모두 보기</Button> : null}
             </div>
             {tags.length ? <p className={s.quote}>{tags.map((t) => `"${t}"`).join(" · ")}</p> : reviewCount ? null : <p className={s.sub}>아직 리뷰가 없어요</p>}
             <ReviewRulesLine />
@@ -176,7 +186,8 @@ export default async function VendorDetailPage({ params, searchParams }: {
         </WithAside>
       </Main>
       <BottomBar>
-        <DetailActions projectId={shell.id} vendorId={vid} name={name} grade={grade} trade={trade} canPick={state === "ok"} shortlisted={!!d.shortlisted} count={count} mock={shell.mock} />
+        <DetailActions projectId={shell.id} vendorId={vid} name={name} grade={grade} trade={trade} canPick={state === "ok"} shortlisted={!!d.shortlisted} count={count}
+          pick={{ locked: pick.locked, left: pick.left, live: pick.live.has(vid) }} mock={shell.mock} />
       </BottomBar>
     </>
   );

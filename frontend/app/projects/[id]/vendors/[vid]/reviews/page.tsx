@@ -17,20 +17,24 @@ export const metadata = { title: "리뷰" };
 
 export default async function VendorReviewsPage({ params, searchParams }: {
   params: Promise<{ id: string; vid: string }>;
-  searchParams: Promise<{ sort?: string | string[] }>;
+  searchParams: Promise<{ sort?: string | string[]; trade?: string | string[] }>;
 }) {
   const { id, vid } = await params;
-  const { sort: asked } = await searchParams;
+  const { sort: asked, trade: tq } = await searchParams;
+  // 목공 업체 리뷰는 ?trade=mokgong으로 와요. 업체 조회 · 정렬 · 뒤로 가기에서도 목공을 지켜요(#221 리뷰)
+  const trade = (Array.isArray(tq) ? tq[0] : tq) === "mokgong" ? "mokgong" : "dobae";
+  const amp = trade === "mokgong" ? "&trade=mokgong" : "";
   const shell = await getProjectShell(id);
   if (!shell) notFound();
   const sort = asked === "low" ? "low" : "latest";
-  const [d, page] = await Promise.all([getVendorDetail(shell.id, vid), getVendorReviews(shell.id, vid, sort)]);
+  const [d, page] = await Promise.all([getVendorDetail(shell.id, vid, null, trade), getVendorReviews(shell.id, vid, sort)]);
   if (!d || !page) notFound();
 
   const name = d.profile.biz_name ?? "업체";
   const base = `/projects/${shell.id}`;
-  const detail = `${base}/vendors/${encodeURIComponent(vid)}`;
-  const here = `${detail}/reviews`;
+  const detailPath = `${base}/vendors/${encodeURIComponent(vid)}`;
+  const detail = `${detailPath}${trade === "mokgong" ? "?trade=mokgong" : ""}`;
+  const here = `${detailPath}/reviews`;
   const links = safeLinks(page.links);
   const title = `${name} 리뷰`;
 
@@ -43,8 +47,8 @@ export default async function VendorReviewsPage({ params, searchParams }: {
           <RatingSummary rating={page.rating} />
           {page.rating.count > 0 ? (
             <Tabs variant="pill" label="리뷰 순서" value={sort} items={[
-              { key: "latest", label: "최신순", href: `${here}?sort=latest` },
-              { key: "low", label: "낮은 별점부터", href: `${here}?sort=low` },
+              { key: "latest", label: "최신순", href: `${here}?sort=latest${amp}` },
+              { key: "low", label: "낮은 별점부터", href: `${here}?sort=low${amp}` },
             ]} />
           ) : null}
           <ReviewRulesLine />
