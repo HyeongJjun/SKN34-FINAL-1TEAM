@@ -4,6 +4,7 @@
 // 전체 도배는 시장 단가(내 공사 표준견적서 화면과 같은 값), 부분 공사는 공공 기준 표준견적서예요.
 import { useId, useRef } from "react";
 import { StandardSheet } from "@/components/start/StandardSheet";
+import { TradeOrder, TradePartSheets } from "@/components/start/TradeParts";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { useModal } from "@/components/ui/useModal";
@@ -31,6 +32,7 @@ export function StandardDialog({ open, onClose, onPick, data, pid, locked }: { o
             <button type="button" className={s.x} aria-label="닫기" onClick={onClose}><Icon name="close" /></button>
           </div>
           <div className={s.body}>
+            {view.parts?.length ? <TradeOrder has={["dobae", ...view.parts.map((x) => x.trade)]} /> : null}
             {market ? (
               <>
                 <MarketTotal q={market} changeHref={change} caption={["부가세 포함", daysCaption(view.days)].filter(Boolean).join(" · ")} />
@@ -39,6 +41,8 @@ export function StandardDialog({ open, onClose, onPick, data, pid, locked }: { o
             ) : (
               <StandardSheet view={view} changeHref={change} />
             )}
+            {/* 시장 단가 견적엔 목공 줄도 들어 있어요. 부분 공사(시장 단가 없음)만 공정별 줄을 따로(표준견적서 화면과 같아요) */}
+            {view.parts?.length && !market ? <TradePartSheets parts={view.parts} /> : null}
             {locked ? <p className={s.note}>실측을 요청한 뒤라 조건은 잠겼어요. 조건 바꾸기에서 넣은 값만 볼 수 있어요.</p> : null}
           </div>
           <div className={s.actions}>

@@ -170,7 +170,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     .sort((a, b) => Number(!!b.vendor_id && hi.includes(b.vendor_id)) - Number(!!a.vendor_id && hi.includes(a.vendor_id)));
   const extras = deal ? deal.extras.items.filter((i) => (i.answer === "pending" || i.answer === "asked") && !i.superseded) : [];
   // 표준견적서 금액은 창 · 표준견적서 화면과 같은 값 하나로 보여요(전체 도배는 시장 단가, 아니면 공공 기준)
-  const stdTotal = std ? (std.market?.total ?? std.view.total) : compare?.standard_total ?? null;
+  // 목공도 하는 공사는 모든 공정 합계(부분 공사는 시장 단가가 없어 공정별 합계 sum)
+  const stdTotal = std ? (std.market?.total ?? std.view.sum?.total ?? std.view.total) : compare?.standard_total ?? null;
   const toPick = vs.filter((v) => v.status === "offered" || v.status === "proposed");
   const go = (step: number, label = "플랜에서 보기") => (
     <button type="button" className={s.boardLink} onClick={() => toBoard(step)}>{label} · {PLAN_STEPS[step]} 칸</button>
@@ -243,7 +244,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     if (step === 0) return <><Link href={`/start?edit=${pid}`}>기본 정보 고치기{p.locked ? " (요청 뒤라 잠겼어요)" : ""}</Link><Link href={`/projects/${pid}`}>현장 정보 고치기</Link></>;
     if (step === 1) return (
       <>
-        {std ? <Button size="sm" onClick={() => setStdOpen(true)}>표준견적서 보기 · {won(std.market?.total ?? std.view.total)}</Button> : <Link href={`/projects/${pid}/standard`}>표준견적서 보기 · {stdTotal != null ? won(stdTotal) : "—"}</Link>}
+        {std ? <Button size="sm" onClick={() => setStdOpen(true)}>표준견적서 보기 · {won(stdTotal ?? std.view.total)}</Button> : <Link href={`/projects/${pid}/standard`}>표준견적서 보기 · {stdTotal != null ? won(stdTotal) : "—"}</Link>}
         <Link href={`/projects/${pid}/plan`}>예상 공정표 보기</Link>
       </>
     );
