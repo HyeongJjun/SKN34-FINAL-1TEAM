@@ -371,7 +371,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
       <div className={s.chips} aria-label="믿집 백과">
         {terms.map((t) => <Link key={t.id} className={s.chip} href={termHref(t)}>백과<b>{t.term}</b></Link>)}
       </div>
-      {std ? <StandardDialog open={stdOpen} onClose={() => setStdOpen(false)} data={std} pid={pid} locked={p.locked} /> : null}
+      {std ? <StandardDialog open={stdOpen} onClose={() => setStdOpen(false)} onPick={() => { setStdOpen(false); toBoard(2); }} data={std} pid={pid} locked={p.locked} /> : null}
     </div>
   );
 }
