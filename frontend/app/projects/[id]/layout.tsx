@@ -23,7 +23,7 @@ export default async function ProjectLayout({ children, params }: { children: Re
       <ProjectBand
         name={shell.name}
         shortName={shell.shortName}
-        href={`/projects/${shell.id}`}
+        href={`/projects/${shell.id}/assistant`}
         steps={steps}
         current={shell.current}
         tracks={shell.tracks}

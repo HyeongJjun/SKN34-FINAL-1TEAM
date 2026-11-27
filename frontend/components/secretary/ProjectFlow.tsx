@@ -68,6 +68,12 @@ export type FlowData = {
   std: StdData | null;
   /** 만든 바로 뒤(?open=standard)면 표준견적서 창을 열고 시작해요 */
   openStd: boolean;
+  /** 옛 화면 주소에서 넘어오면 처음에 열 창(#236) */
+  openWin?: "plan" | "schedule" | "docs" | "review" | "log" | null;
+  /** 공사 일정 창의 보기(공사 날짜 · 추가 금액 · 끝 확인) */
+  scheduleView?: "dates" | "extra" | "done" | null;
+  /** 업체 자세히 창(옛 업체 화면 주소) */
+  openVendor?: VendorOpen;
   /** 다른 화면에서 넘어올 때 열 보드 칸(?step=2 업체 · 3 실측). 업체 보기 · 실측 요청 화면은 이 화면으로 와요(2026-11-26) */
   step: number | null;
   /** 창에 쓰는 값: 기본 정보 고치기(지역 · 저장된 답 · 잠김) · 공정표 · 공사 전 체크(서버가 읽어 넘겨요) */
@@ -116,9 +122,14 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   /** AI 답에 나온 업체(보드에서 강조) */
   const [hi, setHi] = useState<string[]>([]);
   /** 업체 자세히 창(보드에서 업체 이름을 누르면) */
-  const [vOpen, setVOpen] = useState<VendorOpen>(null);
+  const [vOpen, setVOpen] = useState<VendorOpen>(data.openVendor ?? null);
   /** 재재 화면 창(기본 정보 · 공정표 · 채팅 · 리뷰 · 공사 일정 · 용어). 다른 화면으로 옮기지 않아요 */
-  const [win, setWin] = useState<Win>(null);
+  const [win, setWin] = useState<Win>(() => {
+    const w = data.openWin;
+    if (!w) return null;
+    if (w === "schedule") return { kind: "schedule", view: data.scheduleView ?? "dates" };
+    return { kind: w };
+  });
   /** 실측 요청 · 실측 취소 창(UC-VND-06) */
   const [cancel, setCancel] = useState<{ id: string; name: string; request: boolean } | null>(null);
   const [busyKey, setBusy] = useState<string | null>(null);
@@ -154,7 +165,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   const lastNow = useRef(now);
   useEffect(() => { if (lastNow.current === now) return; lastNow.current = now; setTab(Math.min(now, 7)); }, [now]);
   // ?open=standard는 한 번만 써요(새로고침 · 뒤로 가기에 다시 열리지 않게)
-  useEffect(() => { if (data.openStd || data.step != null) router.replace(`/projects/${pid}/assistant${multi ? `?trade=${active}` : ""}`, { scroll: false }); }, [data.openStd, data.step, pid, router, multi, active]);
+  useEffect(() => { if (data.openStd || data.step != null || data.openWin || data.openVendor) router.replace(`/projects/${pid}/assistant${multi ? `?trade=${active}` : ""}`, { scroll: false }); }, [data.openStd, data.step, data.openWin, data.openVendor, pid, router, multi, active]);
 
   /** 대화의 '오른쪽에서 보기': 보드를 그 단계로 바꾸고(폰은 펼쳐) 그 자리로 옮겨요 */
   function toBoard(step: number) {

@@ -40,7 +40,7 @@ export function ProjectBand({ name, shortName, href, steps = PROJECT_STEPS, curr
   name: string;
   /** 공정 탭이 있을 때 쓰는 짧은 이름 '상계동 아파트'(공정 이름은 탭에 있어요) */
   shortName?: string;
-  /** 한 공사 화면 */
+  /** 한 공사 화면(재재 화면) */
   href: string;
   steps?: StepItem[];
   /** 지금 단계(0부터) */
@@ -108,7 +108,7 @@ export function ProjectBand({ name, shortName, href, steps = PROJECT_STEPS, curr
                 </button>
               ))}
             </div>
-            {onChat ? null : <Link className={s.chat} href={`${href}/assistant`}>재재와 대화 ›</Link>}
+            {onChat ? null : <Link className={s.chat} href={href}>재재와 대화 ›</Link>}
           </div>
         </div>
       ) : null}
@@ -119,7 +119,7 @@ export function ProjectBand({ name, shortName, href, steps = PROJECT_STEPS, curr
           ) : (
             <>
               <Link className={s.pj} href={href}><b>{name}</b></Link>
-              {onChat ? null : <Link className={s.chat} href={`${href}/assistant`}>재재와 대화 ›</Link>}
+              {onChat ? null : <Link className={s.chat} href={href}>재재와 대화 ›</Link>}
             </>
           )}
           <p className={s.short}>{multi ? steps[picked?.current ?? 0]?.label : <><span className="mj-num">지금 {current + 1}/{steps.length}</span> · {shortText}</>}</p>
