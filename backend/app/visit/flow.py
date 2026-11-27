@@ -472,6 +472,15 @@ async def request(
 SAME_HALF = "같은 반나절에 업체 둘이 올 수 없어요. 업체마다 다른 반나절을 골라 주세요."
 
 
+async def _no_same_half(s: AsyncSession, v: Visit, day: date, half: str) -> None:
+    """한 집에 같은 반나절 업체 둘은 안 돼요. 같은 집 다른 요청이 그 반나절을 잡고 있으면 409"""
+    others = [o.id for o in await repo.of_project(s, v.project_id, None) if o.id != v.id]
+    if any(
+        (h.day, h.half) == (day, half) for h in (await repo.holds_of_visits(s, others)).values()
+    ):
+        raise app_error("slot_taken", SAME_HALF)
+
+
 async def _open_threads(s: AsyncSession, rows: list[Visit]) -> None:
     """실측 요청 때 (공사, 업체) 채팅을 열어요(2026-11-25 회의: 주차 · 엘리베이터 같은 현장 사정으로 날짜를
     바꾸거나 거절할 때 주고받게). 연락처는 자동으로 보내지 않아요(고객이 채팅에 직접 적을 때만 가요)."""
@@ -726,12 +735,7 @@ async def _pick(
     f = await svc.open_day_facts(s, v)
     if f is not None and not slots.is_open_day(data.day, f.open_weekdays, f.off_days):
         raise app_error("slot_taken", "그 업체가 받을 수 없는 날이에요. 다른 날을 골라 주세요.")
-    others = [o.id for o in await repo.of_project(s, v.project_id, None) if o.id != v.id]
-    if any(
-        (h.day, h.half) == (data.day, data.half)
-        for h in (await repo.holds_of_visits(s, others)).values()
-    ):  # 한 집에 같은 반나절 업체 둘은 안 돼요(요청 때 고르기 · 기간 답 뒤 고르기 둘 다)
-        raise app_error("slot_taken", SAME_HALF)
+    await _no_same_half(s, v, data.day, data.half)  # 요청 때 고르기 · 기간 답 뒤 고르기 둘 다
     cap = await svc.capacity_of(s, v.vendor_id)
     tid = None
     if w.instant:
@@ -865,6 +869,7 @@ async def pick_proposal(
         raise _invalid("업체가 제안한 날에서 골라 주세요.", ["day"])
     if data.day <= svc.today_of(now):
         raise app_error("expired", "제안한 날이 지났어요. 다시 골라 주세요.")
+    await _no_same_half(s, v, data.day, data.half)
     cap = await svc.capacity_of(s, v.vendor_id)
     hold = await take_seat(
         s, v, data.day, data.half, kind="booked", until=None, now=now, capacity=cap
