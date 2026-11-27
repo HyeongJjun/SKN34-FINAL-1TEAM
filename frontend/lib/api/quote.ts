@@ -20,6 +20,11 @@ export async function getMyMarketQuote(projectId: string) {
   return isUuid(projectId) ? serverGet<Schemas["V2MqOut"]>(`/v2/projects/${seg(projectId)}/market-quote`) : null;
 }
 
+/** 공정마다 따로 계산한 표준견적서와 합계(공정 탭). 전체 공사가 아니면 parts가 비어요 */
+export async function getMyMarketQuotes(projectId: string) {
+  return isUuid(projectId) ? serverGet<Schemas["V2MqPartsOut"]>(`/v2/projects/${seg(projectId)}/market-quotes`) : null;
+}
+
 export type VendorQuoteBoard = Schemas["QuoteBoardOut"];
 /** 업체: 이 요청의 실측 견적서(임시 저장본 · 보낸 버전 · 칸 한도). 내 요청이 아니면 null */
 export async function getMyQuoteBoard(visitId: string) {

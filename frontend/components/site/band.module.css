@@ -57,9 +57,15 @@ a.pi:hover { background: var(--mj-fill); color: var(--mj-text); }
   .steps a.cell:hover .label { text-decoration: underline; text-underline-offset: 3px; }
   .steps a.cell:focus-visible { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: 0; }
   /* 공정이 둘이면 공정마다 얇은 한 줄(이름 + 8칸). 높이는 작은 단계가 있을 때(92)와 같아요 */
-  .stp:has(.track) { gap: 4px; }
-  .track { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; gap: 6px; }
-  .trackName { font-size: var(--mj-type-caption); font-weight: var(--mj-weight-heavy); color: var(--mj-text); }
+  .stp:has(.tabs) { gap: 4px; }
+  /* 공정 탭: 알약은 28px로 보이고 누를 곳은 위아래로 늘려 40px(띠 높이는 그대로) */
+  .tabs { display: flex; gap: 6px; }
+  .tab { position: relative; display: inline-flex; align-items: center; gap: 5px; min-height: 28px; padding: 0 12px; border: 1px solid var(--mj-line); border-radius: var(--mj-radius-pill); background: var(--mj-surface); color: var(--mj-text-sub); font: inherit; font-size: var(--mj-type-caption); font-weight: var(--mj-weight-semibold); cursor: pointer; }
+  .tab::after { content: ""; position: absolute; inset: -6px 0; }
+  .tabOn { border-color: var(--mj-primary); background: var(--mj-primary); color: var(--mj-on-primary); }
+  .tabNow { font-weight: var(--mj-weight-regular, 400); opacity: 0.85; }
+  .tabDot { width: 7px; height: 7px; border-radius: 50%; background: var(--mj-danger); }
+  .tab:focus-visible { outline: var(--mj-focus-w) solid var(--mj-focus); outline-offset: 2px; }
   .thin .cell { min-height: 0; gap: 3px; padding: 3px 0; }
   /* 작은 단계 알약: 보이는 높이 22, 누를 곳은 위아래로 늘려 40(단계 칸과 겹치지 않게 틈 10) */
   .subs { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; margin: 0; padding: 0; list-style: none; }

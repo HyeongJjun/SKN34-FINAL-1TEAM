@@ -16,18 +16,30 @@ const STARTERS: Record<number, string[]> = {
   8: ["하자담보책임기간은 뭐예요?", "벽지가 들뜨면 어떻게 해요?", "이음매가 벌어지면 하자예요?"],
 };
 
-/** 고객 공사 재재 질문 버튼: 지금 칸의 시작 질문 중 아직 안 물은 것(최대 3개) */
-export function starterChips(step: number, asked: readonly string[]): string[] {
+/** 목공 탭 시작 질문(공정 탭, 2026-11-27). 도배 목록에서 AI 칸이 자료로 답한다고 확인된 질문 중 목공 · 공통 것만 골랐어요 */
+const MOK_STARTERS: Record<number, string[]> = {
+  2: ["몰딩은 뭐예요?", "표준견적서는 뭐예요?", "가견적은 뭐예요?"],
+  3: ["몰딩은 뭐예요?", "걸레받이는 언제 달아요?", "가견적은 뭐예요?"],
+  4: ["표준견적서와 업체 견적서는 왜 달라요?", "몰딩은 뭐예요?", "걸레받이는 언제 달아요?"],
+  5: ["걸레받이는 언제 달아요?", "몰딩은 뭐예요?", "하자담보책임기간은 뭐예요?"],
+  6: ["걸레받이는 언제 달아요?", "하자담보책임기간은 뭐예요?", "몰딩은 뭐예요?"],
+  7: ["하자담보책임기간은 뭐예요?", "걸레받이는 언제 달아요?", "몰딩은 뭐예요?"],
+  8: ["하자담보책임기간은 뭐예요?", "걸레받이는 언제 달아요?", "몰딩은 뭐예요?"],
+};
+
+/** 고객 공사 재재 질문 버튼: 지금 칸의 시작 질문 중 아직 안 물은 것(최대 3개). trade가 목공이면 목공 질문 */
+export function starterChips(step: number, asked: readonly string[], trade: string = "dobae"): string[] {
   const done = new Set(asked.map((q) => q.trim()));
-  return (STARTERS[Math.min(Math.max(step, 2), 8)] ?? []).filter((q) => !done.has(q)).slice(0, 3);
+  const list = trade === "mokgong" ? MOK_STARTERS : STARTERS;
+  return (list[Math.min(Math.max(step, 2), 8)] ?? []).filter((q) => !done.has(q)).slice(0, 3);
 }
 
 /** 고객 공사 재재 질문 버튼: 마지막으로 받은 답의 추천 질문(suggest)이 있으면 그것, 없으면 지금 칸의 시작 질문.
  *  물은 질문은 빼고 3개까지 */
-export function quickChips(step: number, asked: readonly string[], lastSuggest: readonly string[] | null): string[] {
+export function quickChips(step: number, asked: readonly string[], lastSuggest: readonly string[] | null, trade: string = "dobae"): string[] {
   const done = new Set(asked.map((q) => q.trim()));
   const next = (lastSuggest ?? []).filter((q) => !done.has(q.trim())).slice(0, 3);
-  return next.length ? next : starterChips(step, asked);
+  return next.length ? next : starterChips(step, asked, trade);
 }
 
 /** 손님 재재 답 버튼: 아직 빈 칸만. 지역 · 면적은 단추가 말풍선에 있어서 넣지 않아요 */

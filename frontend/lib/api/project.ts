@@ -54,7 +54,7 @@ export type ProjectShell = {
   budgetWon: number | null;
   /** 단계 띠 지금 단계(0~7, 지금 할 일이 있는 공정) · 공정마다 지금 칸 · 실측 뒤 작은 단계(8칸이 된 뒤로는 늘 null) */
   current: number;
-  tracks: { trade: string; label: string; current: number }[];
+  tracks: { trade: string; label: string; current: number; todo?: BandTask }[];
   sub: number | null;
   todo: BandTask[];
   waiting: BandTask[];
@@ -72,6 +72,9 @@ const safeHref = (v: string | null | undefined) => (v && v.startsWith("/") && !v
 const CUSTOMER_NEXT: Record<string, string> = { pick: "날짜 고르기", proposal: "제안한 날 고르기", change: "일정 바꾸기 답하기", visit: "실측 받았는지 알려 주기", confirm: "견적서 보고 확정" };
 const VENDOR_NEXT: Record<string, string> = { reply: "답 기다림", accept: "수락 기다림", change: "일정 바꾸기 답 기다림", quote: "견적서 기다림", visit: "실측 기다림" };
 
+/** 고객이 누를 일이 아닌 할 일 코드(기다림 · 진행 중 · 끝남). 공정 탭에 '할 일 있음' 점을 찍지 않아요 */
+const WAIT_CODES = ["before_work", "dates_waiting", "dates_requested", "working", "fixing", "done"];
+
 function bandOf(id: string, item: ApiProjectItem | undefined): Pick<ProjectShell, "current" | "tracks" | "todo" | "waiting"> {
   const todo: BandTask[] = [];
   const waiting: BandTask[] = [];
@@ -79,17 +82,21 @@ function bandOf(id: string, item: ApiProjectItem | undefined): Pick<ProjectShell
     const due = v.next.due_at ? dueText(v.next.due_at) : undefined;
     if (v.next.who === "customer" && CUSTOMER_NEXT[v.next.kind]) {
       const href = v.next.kind === "pick" || v.next.kind === "proposal" ? `/projects/${id}/visits/${seg(v.visit_id)}` : v.next.kind === "confirm" ? `/projects/${id}/quotes` : `/projects/${id}/visits`;
-      todo.push({ label: `${v.vendor_name} ${CUSTOMER_NEXT[v.next.kind]}`, href, due });
+      todo.push({ label: `${v.vendor_name} ${CUSTOMER_NEXT[v.next.kind]}`, href, due, trade: v.trade });
     } else if (v.next.who === "vendor" && VENDOR_NEXT[v.next.kind]) {
-      waiting.push({ label: `${v.vendor_name} ${VENDOR_NEXT[v.next.kind]}`, due });
+      waiting.push({ label: `${v.vendor_name} ${VENDOR_NEXT[v.next.kind]}`, due, trade: v.trade });
     }
   }
-  if (!todo.length && item?.todo) todo.push({ label: item.todo.action || item.todo.text, href: safeHref(item.todo.link) });
+  if (!todo.length && item?.todo) todo.push({ label: item.todo.action || item.todo.text, href: safeHref(item.todo.link), trade: item.todo.trade ?? undefined });
   // 공정마다 지금 칸(#203). 목공 → 도배 → 바닥 공사 순서로
   const order = ["mokgong", "dobae", "floor"];
   const tracks = [...(item?.trade_steps ?? [])]
     .sort((a, b) => order.indexOf(a.trade) - order.indexOf(b.trade))
-    .map((t) => ({ trade: t.trade, label: tradeLabel(t.trade), current: stepIndex(t.current) }));
+    .map((t) => ({
+      trade: t.trade, label: tradeLabel(t.trade), current: stepIndex(t.current),
+      // 그 공정의 지금 할 일(업체별 할 일이 없을 때 띠에 보여요)
+      todo: t.todo && (t.todo.action || t.todo.text) ? { label: t.todo.action || t.todo.text, href: safeHref(t.todo.link), trade: t.trade, passive: WAIT_CODES.includes(t.todo.code) } : undefined,
+    }));
   return { current: stepIndex(item?.current), tracks, todo, waiting };
 }
 
