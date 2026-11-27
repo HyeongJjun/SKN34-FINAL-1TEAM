@@ -2,12 +2,15 @@
 // 숫자는 계산 엔진 값(calc)만 상자로 보이고, 이 조각은 계산하지 않아요. 링크는 믿집 화면 주소만 만들어요.
 "use client";
 
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { CalcBox, type CalcLine } from "@/components/ui/CalcBox";
 import { md } from "@/lib/format";
 import type { AiAnswer as Answer, AiButton, AiCalc, AiCard, AiChoice, AiTable } from "@/lib/api/chat";
 import s from "./ai.module.css";
+
+/** 재재 화면처럼 그 자리에서 여는 화면이 있으면 버튼 동작을 넘겨받아요(true면 옮기지 않아요, 2026-11-26) */
+export const AiActionContext = createContext<((action: string) => boolean) | null>(null);
 
 const ACTION_PATH: Record<string, (id?: string) => string> = {
   start: () => "/start",
@@ -34,9 +37,15 @@ function calcLine(c: AiCalc): CalcLine | null {
 }
 
 function Choices({ choices, projectId, onPick }: { choices: AiChoice[]; projectId?: string; onPick?: (text: string, b?: AiButton) => void }) {
+  const handle = useContext(AiActionContext);
+  // dry=true면 다룰 수 있는지만 봐요
+  const onAction = handle ? (a: string, dry: boolean) => (dry ? handle(`?${a}`) : handle(a)) : null;
   return (
     <div className={s.choices}>
       {choices.map((c, i) => {
+        if (c.action && onAction?.(c.action, true)) {
+          return <Button key={i} variant="secondary" size="sm" onClick={() => onAction(c.action!, false)}>{c.text}</Button>;
+        }
         if (c.action && ACTION_PATH[c.action]) {
           return <Button key={i} variant="secondary" size="sm" href={ACTION_PATH[c.action](projectId)}>{c.text}</Button>;
         }

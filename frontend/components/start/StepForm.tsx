@@ -49,7 +49,7 @@ function Tip({ label, terms, note }: { label: string; terms: string[]; note?: st
   );
 }
 
-export function StepForm({ regions, today, mode, projectId, initial, mock, crumbs }: {
+export function StepForm({ regions, today, mode, projectId, initial, mock, crumbs, bare = false, onDone }: {
   regions: Region[];
   today: string;
   mode: StepMode;
@@ -57,6 +57,10 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
   initial?: InfoDraft;
   mock: boolean;
   crumbs: Crumb[];
+  /** 재재 화면 창 안(머리 · 페이지 틀 없이, 2026-11-26) */
+  bare?: boolean;
+  /** 고치기 저장 뒤(창이면 닫고 새로 읽기). 없으면 재재 화면으로 가요 */
+  onDone?: () => void;
 }) {
   const router = useRouter();
   const [d, setD] = useState<InfoDraft>(initial ?? EMPTY_DRAFT);
@@ -127,6 +131,7 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
     try {
       if (mode === "edit" && projectId) {
         if (!mock) await call("PATCH", `/projects/${encodeURIComponent(projectId)}`, toHomeInfo(d));
+        if (onDone) { setBusy(false); onDone(); return; }
         router.push(`/projects/${encodeURIComponent(projectId)}/assistant`);
         router.refresh();
         return;
@@ -153,10 +158,8 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
   const nWork = Object.keys(eWork).length;
   const nHome = Object.keys(eHome).length;
 
-  return (
+  const body = (
     <>
-      <Main narrow>
-        <PageHead title={mode === "edit" ? "기본 정보 고치기" : "인테리어 받기"} crumbs={crumbs} />
         <ol className={s.steps} aria-label="인테리어 받기 단계">
           {STEPS.map((label, i) => {
             const now = step === "home" ? 0 : 1;
@@ -242,7 +245,17 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
             </div>
           </section>
         )}
+          </>
+  );
+
+  return (
+    <>
+      {bare ? <div className={s.bare}>{body}</div> : (
+      <Main narrow>
+        <PageHead title={mode === "edit" ? "기본 정보 고치기" : "인테리어 받기"} crumbs={crumbs} />
+        {body}
       </Main>
+      )}
 
       <RegionSheet open={sheet === "region"} regions={regions} value={{ sido: d.sido, sgg: d.sgg }} onClose={() => setSheet(null)} onApply={(p) => { set({ ...p, emd: "" }); setSheet(null); }} />
       <DateSheet open={sheet === "date"} value={d.start} today={today} onClose={() => setSheet(null)} onApply={(day) => { set({ start: day }); setSheet(null); }} />

@@ -2,19 +2,20 @@
 // 업체 자세히 창(2026-11-26 사용자): 재재 보드에서 업체 이름을 누르면 화면을 옮기지 않고 재재 화면 위 큰 창으로 봐요(표준견적서 창과 같은 틀).
 // 읽기: GET /projects/{id}/vendors/{vid}?trade=(가견적 · 별점 · 시공 사례는 서버 값 그대로, 화면은 더하지 않아요). 남의 공사 · 목록 밖 업체면 404 글.
 // 사진 주소는 lib/api/shortlist.photoSrc와 같아요(그 파일은 서버 전용이라 창에서 import하지 않아요).
-// 담기 · 빼기는 보드와 같은 act(결과 한 줄이 대화에 붙어요). 리뷰 전체 · 견적 줄은 '전체 화면으로 보기'.
+// 담기 · 빼기는 보드와 같은 act(결과 한 줄이 대화에 붙어요). 가견적 줄 · 최근 리뷰도 창 안에서 봐요(옮기지 않아요).
 import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { useModal } from "@/components/ui/useModal";
 import { areasText, caseLabel, compareText, feeText } from "@/components/vendors/v3text";
 import { call, errorText, type Schemas } from "@/lib/backend/client";
-import { won } from "@/lib/format";
+import { won, wonFull } from "@/lib/format";
 import { pickRule, type PickState } from "./boardLink";
 import d from "./StandardDialog.module.css";
 import s from "./flow.module.css";
 
 type Detail = Schemas["VendorDetailOut"];
+type Reviews = Schemas["ReviewPageOut"];
 type Act = (key: string, fn: () => Promise<unknown>, said?: string) => Promise<void>;
 export type VendorOpen = { vendorId: string; trade: "dobae" | "mokgong" } | null;
 const TRADE_WORD = { dobae: "도배", mokgong: "목공" } as const;
@@ -27,6 +28,7 @@ export function VendorDialog({ pid, open, onClose, busy, act, pick }: { pid: str
   const [err, setErr] = useState<string | null>(null);
   /** 담기 · 빼기 결과(대화 줄은 창 뒤라 안 보여요) */
   const [said, setSaid] = useState<string | null>(null);
+  const [rv, setRv] = useState<Reviews | null>(null);
   useEffect(() => {
     if (!open) return;
     let live = true;
@@ -36,6 +38,9 @@ export function VendorDialog({ pid, open, onClose, busy, act, pick }: { pid: str
     call<Detail>("GET", `/projects/${pid}/vendors/${encodeURIComponent(open.vendorId)}?trade=${open.trade}`)
       .then((x) => { if (live) setV(x); })
       .catch((e) => { if (live) setErr(errorText(e)); });
+    setRv(null);
+    // 최근 리뷰(숨긴 리뷰 빠짐). 못 읽어도 창은 그대로
+    call<Reviews>("GET", `/projects/${pid}/vendors/${encodeURIComponent(open.vendorId)}/reviews?sort=latest`).then((x) => { if (live) setRv(x); }).catch(() => {});
     return () => { live = false; };
   }, [open, pid]);
 
@@ -70,7 +75,7 @@ export function VendorDialog({ pid, open, onClose, busy, act, pick }: { pid: str
                     <div className={s.vdPrice}>
                       <span className={s.note}>{TRADE_WORD[t]} 가견적 · 부가세 포함</span>
                       <b className="mj-num">{est ? won(est.total) : "준비 중"}</b>
-                      {pct != null ? <span className={s.note}>{compareText(pct) ?? ""}</span> : null}
+                      {pct != null ? <span className={s.note}>{compareText(pct) ?? ""} · 기준 {TRADE_WORD[t]} 시장 단가 {won(v.standard_total)}</span> : null}
                     </div>
                   </div>
                   <dl className={s.vdRows}>
@@ -82,6 +87,25 @@ export function VendorDialog({ pid, open, onClose, busy, act, pick }: { pid: str
                   </dl>
                   {v.not_included.length ? <p className={s.why}>가견적에 없는 것: {v.not_included.join(" · ")}. 실측 때 물어보세요.</p> : null}
                 </section>
+                {est?.lines.length ? (
+                  <details className={s.card}>
+                    <summary className={s.site}>가견적 줄 보기 · 업체 단가 × 믿집 수량</summary>
+                    <ul className={s.vlines}>
+                      {est.lines.filter((x) => x.amount).map((x) => <li key={x.key}><span>{x.name} <span className={s.note}>{x.qty}{x.unit}</span></span><b className="mj-num">{wonFull(x.amount)}</b></li>)}
+                    </ul>
+                  </details>
+                ) : null}
+                {rv?.items.length ? (
+                  <section className={s.card}>
+                    <h4>최근 리뷰</h4>
+                    {rv.items.slice(0, 4).map((x) => (
+                      <div key={x.id} className={s.rv}>
+                        <span><b>별 {x.rating}</b> <span className={s.note}>{x.author_label}{x.context_label ? ` · ${x.context_label}` : ""}</span></span>
+                        {x.body ? <span>{x.body}</span> : null}
+                      </div>
+                    ))}
+                  </section>
+                ) : null}
                 {v.profile.portfolio.length ? (
                   <section className={s.card}>
                     <h4>시공 사례</h4>
@@ -97,7 +121,6 @@ export function VendorDialog({ pid, open, onClose, busy, act, pick }: { pid: str
           </div>
           <div className={d.actions}>
             {said ? <p className={s.note} role="status">{said}</p> : null}
-            <Button size="lg" variant="secondary" href={`/projects/${pid}/vendors/${encodeURIComponent(open.vendorId)}${open.trade === "mokgong" ? "?trade=mokgong" : ""}`}>리뷰 · 견적 줄 전체 보기</Button>
             {v && v.state === "ok" ? (
               <Button size="lg" variant={picked ? "secondary" : "primary"} disabled={!(can.add || can.remove)} busy={busy === open.vendorId}
                 onClick={() => (can.add || can.remove) && act(open.vendorId, async () => {

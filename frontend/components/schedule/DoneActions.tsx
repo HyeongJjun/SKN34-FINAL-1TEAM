@@ -8,10 +8,13 @@ import { send } from "@/lib/mock/v3b/client";
 import { BottomBar } from "@/components/ui/BottomBar";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { useScheduleGo } from "./nav";
 import s from "./v3.module.css";
 
 export function DoneActions({ projectId, dealId, threadId }: { projectId: string; dealId: string; threadId: string | null }) {
   const router = useRouter();
+  // 재재 화면 창 안이면 리뷰 · 채팅 창으로 바꿔요
+  const go = useScheduleGo();
   const toast = useToast();
   const [busy, setBusy] = useState<"done" | "fixing" | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -24,9 +27,11 @@ export function DoneActions({ projectId, dealId, threadId }: { projectId: string
       await send("POST", `/projects/${pid}/deals/${encodeURIComponent(dealId)}/check`, { result }, result === "done" ? { step: "review" } : undefined);
       if (result === "done") {
         toast.show("공사가 끝났어요");
-        router.push(`/projects/${pid}/review`);
+        if (go) go({ kind: "review" });
+        else router.push(`/projects/${pid}/review`);
       } else {
-        router.push(threadId ? `/chat/${encodeURIComponent(threadId)}` : "/chat");
+        if (go) go({ kind: "chat", threadId });
+        else router.push(threadId ? `/chat/${encodeURIComponent(threadId)}` : "/chat");
       }
       router.refresh();
     } catch (e) {

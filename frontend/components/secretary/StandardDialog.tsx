@@ -10,19 +10,20 @@ import { Icon } from "@/components/ui/Icon";
 import { useModal } from "@/components/ui/useModal";
 import { MarketSheet, MarketTotal } from "@/components/v2/market/MarketQuote";
 import type { Schemas } from "@/lib/backend/client";
+import { won } from "@/lib/format";
 import { daysCaption, type StdView } from "@/lib/guest/standard";
 import s from "./StandardDialog.module.css";
 
 export type StdData = { view: StdView; market: Schemas["V2MqOut"] | null };
 
 /** onPick: '업체 고르기' — 창을 닫고 플랜의 업체 칸으로 옮겨요(폰은 플랜을 펼쳐요) */
-export function StandardDialog({ open, onClose, onPick, data, pid, locked }: { open: boolean; onClose: () => void; onPick: () => void; data: StdData; pid: string; locked: boolean }) {
+export function StandardDialog({ open, onClose, onPick, data, pid, locked, onEdit, onPlan, basis }: { open: boolean; onClose: () => void; onPick: () => void; data: StdData; pid: string; locked: boolean; /** 업체 도배 가견적 %의 기준(도배만 시장 단가, 서버 standard_total) */ basis?: number | null; /** 조건 바꾸기 · 예상 공정표를 재재 화면 창으로(옮기지 않아요) */ onEdit: () => void; onPlan: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const id = useId();
   const h = useModal(ref, open, onClose);
-  const base = `/projects/${pid}`;
   const change = `/start?edit=${pid}`;
   const { view, market } = data;
+  const parts = view.parts ?? [];
   return (
     <dialog ref={ref} className={s.dlg} aria-labelledby={`${id}-t`} onCancel={h.onCancel} onClick={h.onClick}>
       {open ? (
@@ -32,21 +33,25 @@ export function StandardDialog({ open, onClose, onPick, data, pid, locked }: { o
             <button type="button" className={s.x} aria-label="닫기" onClick={onClose}><Icon name="close" /></button>
           </div>
           <div className={s.body}>
-            {view.parts?.length ? <TradeOrder has={["dobae", ...view.parts.map((x) => x.trade)]} /> : null}
+            {parts.length ? <TradeOrder has={["dobae", ...parts.map((x) => x.trade)]} /> : null}
             {market ? (
               <>
-                <MarketTotal q={market} changeHref={change} caption={["부가세 포함", daysCaption(view.days)].filter(Boolean).join(" · ")} />
+                <MarketTotal q={market} changeHref={change} onChange={onEdit} caption={["부가세 포함", daysCaption(view.days)].filter(Boolean).join(" · ")} />
+                {/* 목공도 한 공사는 합계와 가견적 % 기준이 달라서, 기준(도배만)을 서버 값 그대로 보여요(#207) */}
+                {basis != null && market.trades.some((t) => t.key === "mokgong") ? (
+                  <p className={s.note}>도배만 시장 단가 <b className="mj-num">{won(basis)}</b> · 업체 도배 가견적의 &lsquo;표준견적서보다 몇 %&rsquo;는 이 금액과 견줘요.</p>
+                ) : null}
                 <MarketSheet q={market} />
               </>
             ) : (
-              <StandardSheet view={view} changeHref={change} />
+              <StandardSheet view={view} changeHref={change} onChange={onEdit} />
             )}
-            {/* 시장 단가 견적엔 목공 줄도 들어 있어요. 부분 공사(시장 단가 없음)만 공정별 줄을 따로(표준견적서 화면과 같아요) */}
-            {view.parts?.length && !market ? <TradePartSheets parts={view.parts} /> : null}
+            {/* 시장 단가 견적은 목공 줄도 들어 있어요(#207). 시장 단가가 없을 때만 공정별 줄을 따로 */}
+            {parts.length && !market ? <TradePartSheets parts={parts} /> : null}
             {locked ? <p className={s.note}>실측을 요청한 뒤라 조건은 잠겼어요. 조건 바꾸기에서 넣은 값만 볼 수 있어요.</p> : null}
           </div>
           <div className={s.actions}>
-            {view.scope === "partial" ? null : <Button size="lg" variant="secondary" href={`${base}/plan`}>예상 공정표</Button>}
+            {view.scope === "partial" ? null : <Button size="lg" variant="secondary" onClick={onPlan}>예상 공정표</Button>}
             <Button size="lg" onClick={onPick}>업체 고르기</Button>
           </div>
         </div>
