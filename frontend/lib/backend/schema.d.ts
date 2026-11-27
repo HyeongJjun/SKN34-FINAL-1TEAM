@@ -9115,6 +9115,16 @@ export interface components {
             jungmun: "slim3" | "slide" | "swing";
             /** Options */
             options?: ("doors" | "jungmun" | "entry_hw" | "board" | "insulation" | "bath_board")[] | null;
+            /**
+             * Molding
+             * @default true
+             */
+            molding: boolean;
+            /**
+             * Skirting
+             * @default true
+             */
+            skirting: boolean;
         };
         /** V2MqLineOut */
         V2MqLineOut: {
