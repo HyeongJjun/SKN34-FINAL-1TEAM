@@ -523,7 +523,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
       ) : null}
       <VendorDialog pid={pid} open={vOpen} onClose={() => setVOpen(null)} busy={busy} act={act}
         full={!!vOpen && listOf(vOpen.trade).filter((v) => v.shortlisted).length >= MAX_PICK} />
-      {std ? <StandardDialog open={stdOpen} onClose={() => setStdOpen(false)} onPick={() => { setStdOpen(false); toBoard(2); }} data={std} pid={pid} locked={p.locked}
+      {std ? <StandardDialog open={stdOpen} onClose={() => setStdOpen(false)} onPick={() => { setStdOpen(false); toBoard(2); }} data={std} pid={pid} locked={p.locked} basis={vendors?.standard_total ?? null}
         onEdit={() => { setStdOpen(false); setWin({ kind: "edit" }); }} onPlan={() => { setStdOpen(false); setWin({ kind: "plan" }); }} /> : null}
       <Windows win={win} onClose={() => setWin(null)} data={{ ...data.win, pid, projectId: p.id, today, locked: p.locked, schedule, startDate: deal?.deal.start_date ?? null }}
         onDone={(said) => { setWin(null); setDone((x) => [...x, said]); startRefresh(() => router.refresh()); }} />
