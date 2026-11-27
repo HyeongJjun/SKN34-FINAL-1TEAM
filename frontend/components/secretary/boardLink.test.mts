@@ -26,6 +26,10 @@ test("견적서가 왔으면 업체 이름은 비교 칸으로", () => {
   assert.equal(boardTarget("왜 비싸요?", a, V, { quoted: true, deal: false })?.tab, 4);
 });
 
+test("물은 말에 업체 이름이 있으면 답에 없어도 강조(견적서가 왔으면 비교 칸)", () => {
+  assert.deepEqual(boardTarget("결도배 견적서 어때요?", A({ notice: "도배 부자재 줄은 합계에 들어가요." }), V, { quoted: true, deal: false }), { tab: 4, hi: ["d2"], trade: "dobae" });
+});
+
 test("이름이 없으면 물은 말로: 일정은 실측(확정 뒤면 일정) 칸, 업체 말은 업체 칸", () => {
   assert.equal(boardTarget("실측 날짜는 언제 정해요?", A(), V, st)?.tab, 3);
   assert.equal(boardTarget("공사 날짜 언제 잡혀요?", A(), V, { quoted: false, deal: true })?.tab, 5);
