@@ -173,27 +173,30 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   useEffect(() => {
     if ((tab === 3 || tab === 4) && hi.length) requestAnimationFrame(() => document.querySelector("#jj-board [data-hi]")?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
   }, [tab, hi]);
-  // 재재 화면에 있는 채로 옛 주소(업체 · 실측 · 비교)나 ?step 주소로 오면 화면을 새로 만들지 않아 처음 값(useState)이 안 바뀌어요.
-  // 넘어온 칸 · 업체 창이 바뀔 때마다 플랜을 펼치고(폰은 대화 위) 그 칸으로 옮겨요(#237 리뷰)
-  // 지금 단계(now)가 실제로 바뀔 때만 보드를 따라 옮겨요(아래 now effect). 주소로 넘어온 칸이 먼저예요
+  // 주소로 넘어온 값(?step 보드 칸 · ?vendor 업체 창 · ?open 창 · ?view 공사 일정 화면 · ?open=standard)은 여기 한 곳에서만 적용해요(#237 리뷰).
+  // 재재 화면에 있는 채로 이런 주소로 다시 오면 화면을 새로 만들지 않아 useState 처음 값이 안 바뀌어요. 그래서 값이 바뀔 때마다
+  // ① 주소가 가리키는 칸 · 창만 열고(다른 창은 닫아요) ② 지금 단계(now) 자동 이동이 덮지 않게 맞춘 뒤 ③ 주소를 정리해요
   const lastNow = useRef(now);
-  const cameKey = data.step != null || data.openVendor ? `${data.step ?? ""}|${data.openVendor?.vendorId ?? ""}` : "";
+  const came = data.step != null || data.openVendor || data.openWin || data.openStd;
+  const cameKey = came ? JSON.stringify([data.step, data.openVendor?.vendorId, data.openVendor?.trade, data.openWin, data.scheduleView, data.openStd]) : "";
   useEffect(() => {
     if (!cameKey) return;
-    // 다른 공정 업체 주소로 오면 공정 탭이 바뀌어 now도 같이 바뀌어요. 바로 뒤 now effect가 이 칸을 지금 단계로 덮지 않게 맞춰 둬요(#237 리뷰)
+    // 다른 공정 주소로 오면 공정 탭이 바뀌어 now도 같이 바뀌어요. 바로 뒤 now effect가 주소 칸을 지금 단계로 덮지 않게 맞춰 둬요
     lastNow.current = now;
     if (data.step != null) setTab(data.step);
-    if (data.openVendor) setVOpen(data.openVendor);
-    setOpen(true);
-    requestAnimationFrame(() => document.getElementById("jj-board")?.scrollIntoView({ block: "start" }));
+    setVOpen(data.openVendor ?? null);
+    setWin(data.openWin ? (data.openWin === "schedule" ? { kind: "schedule", view: data.scheduleView ?? "dates" } : { kind: data.openWin }) : null);
+    setStdOpen(data.openStd && !!std);
+    if (data.step != null || data.openVendor) {
+      setOpen(true); // 폰은 대화 위에 플랜을 펼쳐요
+      requestAnimationFrame(() => document.getElementById("jj-board")?.scrollIntoView({ block: "start" }));
+    }
+    // 한 번만 써요(새로고침 · 뒤로 가기에 다시 열리지 않게)
+    router.replace(`/projects/${pid}/assistant${multi ? `?trade=${active}` : ""}`, { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 넘어온 값(cameKey)이 바뀔 때만
   }, [cameKey]);
-  // 단계가 넘어가면 보드도 지금 단계로 옮겨요
-  // 처음 그릴 때는 넘어온 칸(?step)을 지켜요
-  // 개발 모드(StrictMode)는 effect를 두 번 돌려서 '처음 한 번 건너뛰기'로는 넘어온 칸이 지워져요. 지금 칸 값이 실제로 바뀔 때만 옮겨요
+  // 단계가 넘어가면 보드도 지금 단계로 옮겨요. 지금 칸 값이 실제로 바뀔 때만(개발 모드 StrictMode는 effect를 두 번 돌려요)
   useEffect(() => { if (lastNow.current === now) return; lastNow.current = now; setTab(Math.min(now, 7)); }, [now]);
-  // ?open=standard는 한 번만 써요(새로고침 · 뒤로 가기에 다시 열리지 않게)
-  useEffect(() => { if (data.openStd || data.step != null || data.openWin || data.openVendor) router.replace(`/projects/${pid}/assistant${multi ? `?trade=${active}` : ""}`, { scroll: false }); }, [data.openStd, data.step, data.openWin, data.openVendor, pid, router, multi, active]);
 
   /** 대화의 '오른쪽에서 보기': 보드를 그 단계로 바꾸고(폰은 펼쳐) 그 자리로 옮겨요 */
   function toBoard(step: number) {
