@@ -175,9 +175,13 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   }, [tab, hi]);
   // 재재 화면에 있는 채로 옛 주소(업체 · 실측 · 비교)나 ?step 주소로 오면 화면을 새로 만들지 않아 처음 값(useState)이 안 바뀌어요.
   // 넘어온 칸 · 업체 창이 바뀔 때마다 플랜을 펼치고(폰은 대화 위) 그 칸으로 옮겨요(#237 리뷰)
+  // 지금 단계(now)가 실제로 바뀔 때만 보드를 따라 옮겨요(아래 now effect). 주소로 넘어온 칸이 먼저예요
+  const lastNow = useRef(now);
   const cameKey = data.step != null || data.openVendor ? `${data.step ?? ""}|${data.openVendor?.vendorId ?? ""}` : "";
   useEffect(() => {
     if (!cameKey) return;
+    // 다른 공정 업체 주소로 오면 공정 탭이 바뀌어 now도 같이 바뀌어요. 바로 뒤 now effect가 이 칸을 지금 단계로 덮지 않게 맞춰 둬요(#237 리뷰)
+    lastNow.current = now;
     if (data.step != null) setTab(data.step);
     if (data.openVendor) setVOpen(data.openVendor);
     setOpen(true);
@@ -187,7 +191,6 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   // 단계가 넘어가면 보드도 지금 단계로 옮겨요
   // 처음 그릴 때는 넘어온 칸(?step)을 지켜요
   // 개발 모드(StrictMode)는 effect를 두 번 돌려서 '처음 한 번 건너뛰기'로는 넘어온 칸이 지워져요. 지금 칸 값이 실제로 바뀔 때만 옮겨요
-  const lastNow = useRef(now);
   useEffect(() => { if (lastNow.current === now) return; lastNow.current = now; setTab(Math.min(now, 7)); }, [now]);
   // ?open=standard는 한 번만 써요(새로고침 · 뒤로 가기에 다시 열리지 않게)
   useEffect(() => { if (data.openStd || data.step != null || data.openWin || data.openVendor) router.replace(`/projects/${pid}/assistant${multi ? `?trade=${active}` : ""}`, { scroll: false }); }, [data.openStd, data.step, data.openWin, data.openVendor, pid, router, multi, active]);
