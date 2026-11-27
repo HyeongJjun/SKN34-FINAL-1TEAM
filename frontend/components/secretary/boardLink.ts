@@ -92,3 +92,12 @@ export function requestSaid(picked: { vendor_id: string; text: string }[], creat
   const sent = picked.filter((x) => ok.has(x.vendor_id)).map((x) => x.text);
   return sent.length ? `실측을 요청했어요 · ${sent.join(" · ")}` : null;
 }
+
+/** 업체 채팅 창이 열 대화: 채팅 ID가 있으면 그 대화, 없으면 이 공사의 그 실측 대화(#222 리뷰: 상호명으로 고르지 않아요). 없으면 null */
+export function threadOf<T extends { thread_id: string; project_id: string | null; visit_id: string | null }>(
+  heads: T[], projectId: string, want: { visitId: string | null; threadId: string | null },
+): T | null {
+  if (want.threadId) return heads.find((t) => t.thread_id === want.threadId && (t.project_id == null || t.project_id === projectId)) ?? null;
+  if (!want.visitId) return null;
+  return heads.find((t) => t.project_id === projectId && t.visit_id === want.visitId) ?? null;
+}

@@ -288,9 +288,9 @@ export function ProjectFlow({ data }: { data: FlowData }) {
     cards.push({ key: "mok", node: <><p>목공 <b>{mokPicked.length}곳</b>을 담았어요. 실측 칸에서 목공 날짜도 골라 바로 요청해요.</p>{go(3, "목공 실측 날짜 고르기")}</> });
   }
   for (const v of both) {
-    if (v.status === "requested") cards.push({ key: v.id, node: <p><b>{v.vendor_name}</b>에 실측 날짜를 물어봤어요. 업체가 되는 기간을 보내면 먼저 알려 드릴게요. 궁금한 건 <button type="button" className={s.inlineLink} onClick={() => setWin({ kind: "chat", vendorName: v.vendor_name })}>업체 채팅</button>으로 물어보세요.</p> });
+    if (v.status === "requested") cards.push({ key: v.id, node: <p><b>{v.vendor_name}</b>에 실측 날짜를 물어봤어요. 업체가 되는 기간을 보내면 먼저 알려 드릴게요. 궁금한 건 <button type="button" className={s.inlineLink} onClick={() => setWin({ kind: "chat", vendorName: v.vendor_name, visitId: v.id })}>업체 채팅</button>으로 물어보세요.</p> });
     else if (v.status === "offered" || v.status === "proposed") cards.push({ key: v.id, alert: true, node: <><p><b>{iga(v.vendor_name)} {v.status === "proposed" ? "다른 실측 날을 제안했어요." : "실측 되는 날을 보냈어요."}</b> 내 도배 플랜에서 집에 계실 반나절을 골라 주세요.</p>{go(3)}</> });
-    else if (v.status === "picked") cards.push({ key: v.id, node: <><p><b>{v.vendor_name}</b>에 고른 날을 보냈어요. 업체가 현장 정보를 보고 수락하면 실측이 확정돼요.</p><p className={s.why}>주차 · 엘리베이터 사정으로 업체가 다른 날을 제안하면 먼저 알려 드릴게요. 그 사이 <button type="button" className={s.inlineLink} onClick={() => setWin({ kind: "chat", vendorName: v.vendor_name })}>업체 채팅</button>으로 주고받을 수 있어요.</p></> });
+    else if (v.status === "picked") cards.push({ key: v.id, node: <><p><b>{v.vendor_name}</b>에 고른 날을 보냈어요. 업체가 현장 정보를 보고 수락하면 실측이 확정돼요.</p><p className={s.why}>주차 · 엘리베이터 사정으로 업체가 다른 날을 제안하면 먼저 알려 드릴게요. 그 사이 <button type="button" className={s.inlineLink} onClick={() => setWin({ kind: "chat", vendorName: v.vendor_name, visitId: v.id })}>업체 채팅</button>으로 주고받을 수 있어요.</p></> });
     else if (v.status === "booked") cards.push({ key: v.id, node: <><p><b>{v.vendor_name}</b> 실측이 잡혔어요. 실측 때 업체가 벽 크기와 상태를 재고 견적서를 보내요.</p><p className={s.why}>실측 전날: 가구 앞 벽이 보이게 비워 두고, 벽지 철거 · 폐기물이 견적에 들어가는지 물어보세요.</p></> });
     else if (v.status === "visited") cards.push({ key: v.id, node: <p><b>{v.vendor_name}</b> 실측을 마쳤어요. 실측 견적서를 기다리고 있어요.</p> });
   }
@@ -366,8 +366,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             })}
           </div>
         ) : null}
-        {/* 실측을 기다리는 동안에도 다른 업체를 보고 더 담아요(공정마다 3곳까지). 확정한 뒤에만 닫아요 */}
-        {!(trade === "dobae" && deal) ? (
+        {/* 실측을 기다리는 동안에도 다른 업체를 보고 더 담아요(공정마다 3곳까지). 확정한 뒤에는 닫되, 재재가 말한 도배 업체가 있으면 보여 강조해요(#222 리뷰 회귀) */}
+        {!(trade === "dobae" && deal) || listOf("dobae").some((v) => hi.includes(v.vendor_id)) ? (
           <>
             <div className={s.search} role="search">
               <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="업체 이름 · 지역으로 찾기" aria-label={`${TRADE_WORD[trade]} 업체 찾기`} />
@@ -376,7 +376,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
             {trade === "dobae" && mokVendors && vendors ? <p className={s.note}>가견적 %는 도배만 시장 단가 <b className="mj-num">{won(vendors.standard_total)}</b>와 견줘요. 표준견적서 합계에는 목공도 들어 있어요.</p> : null}
             <VendorRows list={listOf(trade).filter((v) => v.state === "ok")} query={query} hi={hi} trade={trade} pick={pickOf(trade)} pid={pid} busy={busy} act={act} onOpen={(vendorId) => setVOpen({ vendorId, trade })} />
           </>
-        ) : <p className={s.note}>도배 업체를 확정했어요. 일정 칸을 봐 주세요.</p>}
+        ) : <p className={s.note}>{deal ? "도배 업체를 확정했어요. 일정 칸을 봐 주세요." : "도배 업체는 이미 골랐어요. 실측 칸을 봐 주세요."}</p>}
         {trade === "dobae" && draft?.vendors.length && !deal ? (
           <Button size="lg" block onClick={() => setTab(3)}>{vs.length ? `도배 남은 ${draft.vendors.length}곳도 실측 날짜 고르기 →` : `도배 담은 ${draft.vendors.length}곳 실측 날짜 고르기 →`}</Button>
         ) : null}
@@ -415,7 +415,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
           <div key={`c${v.id}`} data-hi={on ? "1" : undefined} className={on ? `${s.card} ${s.vrowHi}` : s.card}>
             <h4>{mokVendors ? `${TRADE_WORD[v.trade as Trade] ?? ""} ` : ""}{v.vendor_name}{on ? <span className={s.hiTag}>재재가 말한 업체</span> : null}</h4>
             {!toPick.includes(v) ? <p className={s.note}>{VISIT_WORD[v.status] ?? "진행 중"}</p> : null}
-            <Button size="lg" block icon="chat" onClick={() => setWin({ kind: "chat", vendorName: v.vendor_name })}>{gwaWa(v.vendor_name)} 채팅하기</Button>
+            <Button size="lg" block icon="chat" onClick={() => setWin({ kind: "chat", vendorName: v.vendor_name, visitId: v.id })}>{gwaWa(v.vendor_name)} 채팅하기</Button>
             {/* 답 전 요청은 '요청 취소', 잡힌 실측은 '실측 취소'(UC-VND-06). 실측을 다녀간 뒤에는 취소하지 않아요 */}
             {["requested", "offered", "picked", "proposed", "booked"].includes(v.status) ? (
               <button type="button" className={s.boardLink} onClick={() => setCancel({ id: v.id, name: v.vendor_name, request: v.status !== "booked" })}>{v.status === "booked" ? "실측 취소" : "요청 취소"}</button>
@@ -569,7 +569,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
         pick={pickOf(vOpen?.trade ?? "dobae")} />
       {std ? <StandardDialog open={stdOpen} onClose={() => setStdOpen(false)} onPick={() => { setStdOpen(false); toBoard(2); }} data={std} pid={pid} locked={p.locked} basis={vendors?.standard_total ?? null}
         onEdit={() => { setStdOpen(false); setWin({ kind: "edit" }); }} onPlan={() => { setStdOpen(false); setWin({ kind: "plan" }); }} /> : null}
-      <Windows win={win} onClose={() => setWin(null)} data={{ ...data.win, pid, projectId: p.id, today, locked: p.locked, schedule, startDate: deal?.deal.start_date ?? null }}
+      <Windows win={win} onClose={() => setWin(null)} onOpen={setWin} data={{ ...data.win, pid, projectId: p.id, today, locked: p.locked, schedule, startDate: deal?.deal.start_date ?? null }}
         onDone={(said) => { setWin(null); setDone((x) => [...x, said]); startRefresh(() => router.refresh()); }} />
     </div>
   );
