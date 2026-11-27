@@ -7,6 +7,7 @@ import { AppHeader } from "@/components/site/AppHeader";
 import { AsideOpenButton } from "@/components/site/AsideSlot";
 import { Main, PageHead, WithAside } from "@/components/site/Frame";
 import { StandardSheet } from "@/components/start/StandardSheet";
+import { TradeOrder, TradePartSheets } from "@/components/start/TradeParts";
 import { BottomBar } from "@/components/ui/BottomBar";
 import { Button } from "@/components/ui/Button";
 import { MarketSheet, MarketTotal, MarketTrust } from "@/components/v2/market/MarketQuote";
@@ -24,6 +25,7 @@ export default async function StandardPage({ params }: { params: Promise<{ id: s
   if (!view) notFound();
   // 전체 도배는 시장 단가(업체 견적서 235건 중앙값)로 보여요. 서버가 이 공사 값으로 계산하고 AI 칸도 같은 값을 읽어요.
   // 부분 공사 · 시장 단가를 못 받으면 기존 표준견적서 그대로예요
+  // 표준견적서는 업체 견적서 시장 단가(#207). 목공을 고른 공사는 서버가 목공도 켜서 줘요
   const market = shell.mock ? null : await getMyMarketQuote(shell.id);
   const base = `/projects/${shell.id}`;
   const changeHref = `/start?edit=${shell.id}`;
@@ -33,6 +35,7 @@ export default async function StandardPage({ params }: { params: Promise<{ id: s
       <Main>
         <PageHead title="표준견적서" crumbs={[{ label: "내 공사", href: "/my" }, { label: shell.name, href: base }, { label: "표준견적서" }]} />
         <WithAside aside={<AiPanel screen="standard" projectId={shell.id} />}>
+          {view.parts?.length ? <TradeOrder has={["dobae", ...view.parts.map((x) => x.trade)]} /> : null}
           {market ? (
             <>
               <MarketTotal q={market} changeHref={changeHref} caption={["부가세 포함", daysCaption(view.days)].filter(Boolean).join(" · ")} />
@@ -42,6 +45,8 @@ export default async function StandardPage({ params }: { params: Promise<{ id: s
           ) : (
             <StandardSheet view={view} changeHref={changeHref} />
           )}
+          {/* 시장 단가 견적엔 목공 줄도 들어 있어요. 시장 단가가 없을 때(부분 공사)만 공정별 줄을 따로 */}
+          {view.parts?.length && !market ? <TradePartSheets parts={view.parts} /> : null}
         </WithAside>
       </Main>
       <BottomBar>

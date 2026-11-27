@@ -10,6 +10,11 @@ export type SpaceKind = HomeInfo["spaces"][number];
 export type Face = HomeInfo["faces"][number];
 export type Grade = HomeInfo["grade"];
 export type Basis = HomeInfo["area_basis"];
+/** 목공 할 곳(#193): 몰딩 · 걸레받이 · 문 · 벽 평탄화 */
+export type MokItem = NonNullable<HomeInfo["mokgong"]>[number];
+export const MOK_ITEMS: { key: MokItem; label: string }[] = [
+  { key: "molding", label: "몰딩" }, { key: "base", label: "걸레받이" }, { key: "door", label: "문 · 문틀" }, { key: "flatten", label: "벽 평탄화" },
+];
 
 /** 넣는 중인 답(기기에 저장하는 모양). 다 차면 toHomeInfo로 API 몸통이 돼요 */
 export type InfoDraft = {
@@ -28,11 +33,14 @@ export type InfoDraft = {
   budget: string;
   /** 서울 날짜 "2027-01-04". 비우면 '아직 몰라요' */
   start: string | null;
+  /** 목공도 해요(#193). 켜면 할 곳을 하나 이상 골라요 */
+  mok: boolean;
+  mokgong: MokItem[];
 };
 
 export const EMPTY_DRAFT: InfoDraft = {
   scope: "full", spaces: [], faces: ["wall", "ceiling"], sido: "", sgg: "", emd: "",
-  area: "", basis: "supply", occupied: null, grade: null, budget: "", start: null,
+  area: "", basis: "supply", occupied: null, grade: null, budget: "", start: null, mok: false, mokgong: [],
 };
 
 export const SPACES: { key: SpaceKind; label: string }[] = [
@@ -80,10 +88,10 @@ export function budgetWon(budget: string): number | null {
   return t ? Number(t) * 10000 : null;
 }
 
-export type InfoErrors = Partial<Record<"spaces" | "faces" | "region" | "area" | "occupied" | "grade" | "budget", string>>;
+export type InfoErrors = Partial<Record<"spaces" | "faces" | "region" | "area" | "occupied" | "grade" | "budget" | "mokgong", string>>;
 /** 틀린 칸 순서(첫 칸으로 초점을 옮겨요, I6 B) */
-export const ERROR_ORDER: (keyof InfoErrors)[] = ["spaces", "faces", "region", "area", "occupied", "grade", "budget"];
-export const ERROR_NAME: Record<keyof InfoErrors, string> = { spaces: "공간", faces: "면", region: "지역", area: "면적", occupied: "공사할 때 집", grade: "벽지", budget: "예산" };
+export const ERROR_ORDER: (keyof InfoErrors)[] = ["spaces", "faces", "region", "area", "occupied", "grade", "mokgong", "budget"];
+export const ERROR_NAME: Record<keyof InfoErrors, string> = { spaces: "공간", faces: "면", region: "지역", area: "면적", occupied: "공사할 때 집", grade: "벽지", budget: "예산", mokgong: "목공 할 곳" };
 
 /** 제출할 때 한 번 검사해요(I6 B). 오류 글은 [무엇이 문제] + [고치는 법](U5) */
 export function checkDraft(d: InfoDraft): InfoErrors {
@@ -107,6 +115,7 @@ export function checkDraft(d: InfoDraft): InfoErrors {
   } else if (!AREA_RE.test(a)) e.area = "소수점은 한 자리까지 넣어 주세요. 예: 69.4";
   if (d.occupied === null) e.occupied = "공사할 때 집에 사는지 골라 주세요.";
   if (!d.grade) e.grade = "벽지를 골라 주세요. 합지 · 실크 중 하나예요.";
+  if (d.mok && !d.mokgong.length) e.mokgong = "목공 할 곳을 하나 이상 골라 주세요.";
   const b = d.budget.replace(/[,\s]/g, "");
   if (b) {
     if (!/^\d{1,6}$/.test(b)) e.budget = "예산은 만 원 단위 숫자로 넣어 주세요. 예: 300";
@@ -132,6 +141,7 @@ export function toHomeInfo(d: InfoDraft): HomeInfo {
     grade: d.grade ?? "basic",
     budget_won: budgetWon(d.budget),
     start_date: d.start,
+    mokgong: d.mok ? d.mokgong : [],
   };
 }
 
@@ -150,6 +160,8 @@ export function fromSaved(h: HomeInfoSaved): InfoDraft {
     grade: h.grade,
     budget: h.budget_won ? String(Math.round(h.budget_won / 10000)) : "",
     start: h.start_date,
+    mok: (h.mokgong ?? []).length > 0,
+    mokgong: h.mokgong ?? [],
   };
 }
 
