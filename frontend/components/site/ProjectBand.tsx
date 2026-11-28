@@ -102,7 +102,7 @@ export function ProjectBand({ name, shortName, href, steps = PROJECT_STEPS, curr
       {multi && picked ? (
         <div className={s.tabRow}>
           <div className={s.tabRowIn}>
-            <Link className={s.tabPj} href={href}>{shortName ?? name}</Link>
+            <Link className={s.tabPj} href={withTrade(href, picked.trade)}>{shortName ?? name}</Link>
             <div className={s.tabs} role="tablist" aria-label="공정" onKeyDown={(e) => picked && moveTab(e, tracks, picked, pick)}>
               {tracks.map((t, i) => (
                 <button key={t.label} type="button" role="tab" aria-selected={t === picked} tabIndex={t === picked ? 0 : -1} className={t === picked ? `${s.tab} ${s.tabOn}` : s.tab} onClick={() => pick(t)}>
