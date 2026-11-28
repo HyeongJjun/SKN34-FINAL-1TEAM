@@ -168,3 +168,15 @@ export function autoDone(st: { asked: boolean; quoted: boolean; deal: boolean; m
   };
   return Object.fromEntries(Object.entries(all).filter(([k]) => Number(k) <= st.maxTab));
 }
+
+/** 내 공사 목록 업체 줄: 담은 업체마다 한 줄, 상태판 줄이 있으면 그 상태. 링크는 그 업체 공정 탭으로(#234 리뷰) */
+export function myVendorRows<V extends { visit_id: string; trade: string }, R extends { visit_id: string; status: string }>(
+  base: string, vendors: readonly V[], rows: readonly R[] | null,
+): { vendor: V; row: R | null; href: string }[] {
+  const got = new Map((rows ?? []).map((r) => [r.visit_id, r]));
+  return vendors.map((v) => {
+    const row = got.get(v.visit_id) ?? null;
+    const to = row && (row.status === "offered" || row.status === "proposed") ? `${base}/visits/${encodeURIComponent(v.visit_id)}` : `${base}/visits`;
+    return { vendor: v, row, href: withTrade(to, v.trade) };
+  });
+}

@@ -1,7 +1,7 @@
 // 재재 대화 → 보드 연동 시험(#197): pnpm test:unit
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { autoDone, boardStateFor, boardTarget, clampTarget, stdSource, tradeQuery, withTrade, isWaiting, pickRule, pickStateOf, requestSaid, tabVendors, threadOf, type BoardAnswer } from "./boardLink.ts";
+import { autoDone, boardStateFor, myVendorRows, boardTarget, clampTarget, stdSource, tradeQuery, withTrade, isWaiting, pickRule, pickStateOf, requestSaid, tabVendors, threadOf, type BoardAnswer } from "./boardLink.ts";
 
 const A = (over: Partial<BoardAnswer> = {}): BoardAnswer => ({ notice: "", sections: [], cards: [], ...over });
 const V = [
@@ -217,4 +217,32 @@ test("재재가 챙긴 일(#234 리뷰): 고른 공정 상태로만, 그 공정 
   // 도배 탭은 예전 그대로
   const dob = autoDone({ asked: true, quoted: true, deal: true, maxTab: 7 });
   assert.deepEqual([dob[2], dob[4], dob[5]], [["업체에 실측 날짜 물어보기"], ["견적서를 표준견적서와 비교"], ["확정 공정표 만들기"]]);
+});
+
+// 내 공사 목록 업체 줄(#234 리뷰): 도배 + 목공 공사에서 두 업체가 다 나오고, 링크는 그 업체 공정 탭으로
+const MV = [
+  { visit_id: "vm", vendor_name: "한뼘목공", trade: "mokgong" },
+  { visit_id: "vd", vendor_name: "마루와벽", trade: "dobae" },
+];
+const B = "/projects/p1";
+test("내 공사 목록: 상태판 줄이 다 오면 두 업체 · 각 공정 탭 링크", () => {
+  const rows = [{ visit_id: "vd", status: "offered" }, { visit_id: "vm", status: "requested" }];
+  assert.deepEqual(myVendorRows(B, MV, rows).map((x) => [x.vendor.vendor_name, x.row?.status ?? null, x.href]), [
+    ["한뼘목공", "requested", "/projects/p1/visits?trade=mokgong"],
+    ["마루와벽", "offered", "/projects/p1/visits/vd?trade=dobae"],
+  ]);
+});
+test("내 공사 목록: 상태판에 한 공정만 와도 다른 공정 업체를 빼지 않아요", () => {
+  const got = myVendorRows(B, MV, [{ visit_id: "vm", status: "proposed" }]);
+  assert.deepEqual(got.map((x) => [x.vendor.vendor_name, x.row?.status ?? null, x.href]), [
+    ["한뼘목공", "proposed", "/projects/p1/visits/vm?trade=mokgong"],
+    ["마루와벽", null, "/projects/p1/visits?trade=dobae"],
+  ]);
+});
+test("내 공사 목록: 상태판이 없으면 담은 업체 그대로 · 이 공사 밖 줄은 안 그려요", () => {
+  assert.deepEqual(myVendorRows(B, MV, null).map((x) => [x.vendor.visit_id, x.row, x.href]), [
+    ["vm", null, "/projects/p1/visits?trade=mokgong"],
+    ["vd", null, "/projects/p1/visits?trade=dobae"],
+  ]);
+  assert.equal(myVendorRows(B, MV, [{ visit_id: "other", status: "booked" }]).some((x) => x.row), false);
 });

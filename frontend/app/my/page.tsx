@@ -28,8 +28,8 @@ export default async function MyPage() {
   }));
   const cards: MyCard[] = await Promise.all(
     mine.map(async (p) => {
-      const trade = p.vendors[0]?.trade === "mokgong" ? "mokgong" : "dobae";
-      const board = p.vendors.length ? await getVisitBoard(p.id, trade).catch(() => null) : null;
+      // 공정 없이 불러 이 공사 모든 공정의 업체 상태를 받아요(#234 리뷰: 도배 + 목공 공사에서 한 공정 업체가 빠짐)
+      const board = p.vendors.length ? await getVisitBoard(p.id).catch(() => null) : null;
       return { p, name: names.get(p.id) ?? projectName(p.emd, p.region, p.trades), rows: board?.board ?? null };
     }),
   );

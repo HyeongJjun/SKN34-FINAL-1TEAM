@@ -12,7 +12,7 @@ import { StateTag } from "@/components/ui/StateTag";
 import { Steps } from "@/components/ui/Steps";
 import { Group, Row, Rows, Small } from "@/components/project/Kit";
 import { boardState, slotText, windowText } from "@/components/visit/text";
-import { withTrade } from "@/components/secretary/boardLink";
+import { myVendorRows, withTrade } from "@/components/secretary/boardLink";
 import s from "./cards.module.css";
 
 export type MyCard = { p: ApiMyProject; name: string; rows: BoardRow[] | null };
@@ -37,26 +37,13 @@ function rowSub(r: BoardRow): string | undefined {
 }
 
 function VendorRows({ c, base }: { c: MyCard; base: string }) {
-  const ids = new Set(c.p.vendors.map((v) => v.visit_id));
-  // 업체 줄 링크에 그 업체 공정을 붙여 재재 화면의 그 공정 탭 보드로 가요(#234 리뷰)
-  const tradeOf = new Map(c.p.vendors.map((v) => [v.visit_id, v.trade]));
-  const rows = (c.rows ?? []).filter((r) => ids.has(r.visit_id));
-  if (rows.length) {
-    return (
-      <Rows label="담은 업체">
-        {rows.map((r) => {
-          const st = boardState(r);
-          const href = withTrade(r.status === "offered" || r.status === "proposed" ? `${base}/visits/${encodeURIComponent(r.visit_id)}` : `${base}/visits`, tradeOf.get(r.visit_id));
-          return <Row key={r.visit_id} list label={r.vendor_name} sub={rowSub(r)} value={<StateTag tone={st.tone}>{st.label}</StateTag>} href={href} />;
-        })}
-      </Rows>
-    );
-  }
+  // 담은 업체마다 한 줄: 상태판 줄이 있으면 그 상태, 없으면 업체 상태. 링크는 그 업체 공정 탭으로(#234 리뷰)
   return (
     <Rows label="담은 업체">
-      {c.p.vendors.map((v) => {
-        const st = visitState(v.status, "customer");
-        return <Row key={v.visit_id} list label={v.vendor_name} sub={v.next.due_at ? dueText(v.next.due_at) : undefined} value={<StateTag tone={st.tone}>{st.label}</StateTag>} href={withTrade(`${base}/visits`, v.trade)} />;
+      {myVendorRows(base, c.p.vendors, c.rows).map(({ vendor: v, row: r, href }) => {
+        const st = r ? boardState(r) : visitState(v.status, "customer");
+        const sub = r ? rowSub(r) : v.next.due_at ? dueText(v.next.due_at) : undefined;
+        return <Row key={v.visit_id} list label={r?.vendor_name ?? v.vendor_name} sub={sub} value={<StateTag tone={st.tone}>{st.label}</StateTag>} href={href} />;
       })}
     </Rows>
   );
