@@ -10,5 +10,6 @@ export default async function Page({ params, searchParams }: { params: Promise<{
   const { id } = await params;
   // 공정(?trade=)을 그대로 넘겨 그 공정 탭 보드로 가요(#234 리뷰)
   const t = tradeQuery((await searchParams).trade);
-  redirect(`/projects/${encodeURIComponent(id)}/assistant?step=4${t}`);
+  // 목공 견적서 비교 · 확정은 아직 도배만이라(#206) 목공은 실측 칸으로 가요(4칸은 준비 중 안내뿐)
+  redirect(`/projects/${encodeURIComponent(id)}/assistant?step=${t.includes("mokgong") ? 3 : 4}${t}`);
 }

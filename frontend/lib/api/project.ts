@@ -86,7 +86,9 @@ function bandOf(id: string, item: ApiProjectItem | undefined): Pick<ProjectShell
     if (v.next.who === "customer" && CUSTOMER_NEXT[v.next.kind]) {
       const href = v.next.kind === "pick" || v.next.kind === "proposal" ? `/projects/${id}/visits/${seg(v.visit_id)}` : v.next.kind === "confirm" ? `/projects/${id}/quotes` : `/projects/${id}/visits`;
       // 업체 공정을 주소에 붙여 그 공정 탭 보드로 가요(#234 리뷰)
-      todo.push({ label: `${v.vendor_name} ${CUSTOMER_NEXT[v.next.kind]}`, href: withTrade(href, v.trade), due, trade: v.trade });
+      // 목공 견적서 확정은 아직 준비 중이라(#206) '확정'을 말하지 않아요
+      const what = v.next.kind === "confirm" && v.trade === "mokgong" ? "견적서 도착" : CUSTOMER_NEXT[v.next.kind];
+      todo.push({ label: `${v.vendor_name} ${what}`, href: withTrade(href, v.trade), due, trade: v.trade });
     } else if (v.next.who === "vendor" && VENDOR_NEXT[v.next.kind]) {
       waiting.push({ label: `${v.vendor_name} ${VENDOR_NEXT[v.next.kind]}`, due, trade: v.trade });
     }

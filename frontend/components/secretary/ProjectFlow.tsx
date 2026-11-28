@@ -357,7 +357,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
       : <><p><b>{v.vendor_name}</b> 실측이 잡혔어요. 실측 때 업체가 벽 크기와 상태를 재고 견적서를 보내요.</p><p className={s.why}>실측 전날: 가구 앞 벽이 보이게 비워 두고, 벽지 철거 · 폐기물이 견적에 들어가는지 물어보세요.</p></>}</> });
     else if (v.status === "visited") cards.push({ key: v.id, node: <p><b>{v.vendor_name}</b> 실측을 마쳤어요. 실측 견적서를 기다리고 있어요.</p> });
     // 목공 견적서는 비교 칸이 아직 도배만이라 여기서 알려요(보드 목공 4칸부터는 준비 중 안내)
-    else if (v.status === "quoted" && v.trade === "mokgong") cards.push({ key: v.id, alert: true, node: <p><b>{iga(v.vendor_name)} 목공 실측 견적서를 보냈어요.</b> 목공 견적서 비교 · 확정은 이 화면에서 아직 준비 중이라 업체 채팅과 내 공사 화면에서 이어 가요.</p> });
+    else if (v.status === "quoted" && v.trade === "mokgong") cards.push({ key: v.id, alert: true, node: <p><b>{iga(v.vendor_name)} 목공 실측 견적서를 보냈어요.</b> 목공 견적서 비교 · 확정은 아직 준비 중이에요. 견적서 내용은 <button type="button" className={s.inlineLink} onClick={() => setWin({ kind: "chat", vendorName: v.vendor_name, visitId: v.id })}>업체 채팅</button>으로 물어봐 주세요.</p> });
   }
   if (waiting) {
     cards.push({ key: "wait", node: (
