@@ -29,6 +29,7 @@ import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { dateShort, euro, won } from "@/lib/format";
 import { termByName } from "@/lib/guide";
+import { moveTab } from "@/components/ui/tabKeys";
 import { autoDone, boardStateFor, boardTarget, clampTarget, stdSource, isWaiting, tabVendors, CLOSED_VISITS, norm, pickRule, pickStateOf, type PickState } from "./boardLink";
 import { quickChips } from "./chips";
 import { Jaejae } from "./Jaejae";
@@ -595,9 +596,9 @@ export function ProjectFlow({ data }: { data: FlowData }) {
       <button type="button" className={s.planBar} aria-expanded={open} aria-controls="jj-board" onClick={() => setOpen((v) => !v)}><b>{Math.min(now + 1, 8)}/8 · 내 {TRADE_WORD[active]} 플랜</b><span>{open ? "접기" : "보기"}</span></button>
       {/* 폰 · 태블릿: 위 띠가 숨겨져서 공정 탭을 여기 둬요(웹은 위 띠의 탭) */}
       {multi ? (
-        <div className={s.flowTabs} role="tablist" aria-label="공정">
+        <div className={s.flowTabs} role="tablist" aria-label="공정" onKeyDown={(e) => moveTab(e, tradeKeys, active, pickTrade)}>
           {tradeKeys.map((t) => (
-            <button key={t} type="button" role="tab" aria-selected={active === t} className={active === t ? `${s.flowTab} ${s.flowTabOn}` : s.flowTab} onClick={() => pickTrade(t)}>
+            <button key={t} type="button" role="tab" aria-selected={active === t} tabIndex={active === t ? 0 : -1} className={active === t ? `${s.flowTab} ${s.flowTabOn}` : s.flowTab} onClick={() => pickTrade(t)}>
               {TRADE_WORD[t]} <span className="mj-num">{Math.min(stepOf(data, t) + 1, 8)}/8</span>
             </button>
           ))}

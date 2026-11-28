@@ -27,6 +27,8 @@ import { clearGuest, draftOf, readGuest, writeGuest } from "@/lib/guest/store";
 import { termByName, termHref } from "@/lib/guide";
 import { DateSheet } from "./DateSheet";
 import { RegionSheet } from "./RegionSheet";
+import { moveTab } from "@/components/ui/tabKeys";
+import { badTabs, errorTab, WORK_TABS, type WorkTab } from "./workTab";
 import s from "./StepForm.module.css";
 
 export type StepMode = "guest" | "member" | "edit";
@@ -72,7 +74,7 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
   const [py, setPy] = useState("");
   const [sheet, setSheet] = useState<null | "region" | "date">(null);
   /** 원하는 공사의 공정 탭 */
-  const [wtab, setWtab] = useState<"mokgong" | "dobae" | "floor">("dobae");
+  const [wtab, setWtab] = useState<WorkTab>("dobae");
   const [busy, setBusy] = useState(false);
   const [formErr, setFormErr] = useState<string | null>(null);
   const head = useRef<HTMLHeadingElement>(null);
@@ -126,7 +128,11 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
 
   async function finish() {
     setTried((x) => ({ ...x, work: true }));
-    if (busy || Object.keys(errorsIn(checkDraft(d), "work")).length) return;
+    const workErr = Object.keys(errorsIn(checkDraft(d), "work"));
+    // 고를 칸이 다른 공정 탭에만 있으면 그 탭을 열어 보여요(#234: 탭에 가려 오류가 안 보이지 않게)
+    const go = errorTab(workErr, dobae, wtab);
+    if (go) setWtab(go);
+    if (busy || workErr.length) return;
     if (Object.keys(errorsIn(checkDraft(d), "home")).length) { setTried({ home: true, work: true }); setStep("home"); return; }
     if (mode === "guest") {
       writeGuest(d);
@@ -163,6 +169,8 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
   const homeLine = [place || "지역", d.area ? `${d.basis === "exclusive" ? "전용" : "공급"} ${d.area}㎡` : null, d.occupied === null ? null : d.occupied ? "살면서 공사" : "빈 집"].filter(Boolean).join(" · ");
   const doneLabel = mode === "edit" ? "저장하고 돌아가기" : busy ? "내 공사를 만들고 있어요" : "표준견적서 보기";
   const nWork = Object.keys(eWork).length;
+  /** 공정 탭 점: 제출해 본 뒤 고를 칸이 남은 탭(도배를 끄면 도배 탭은 늘) */
+  const badTab = badTabs(Object.keys(eWork), dobae);
   const nHome = Object.keys(eHome).length;
 
   const body = (
@@ -213,14 +221,14 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
             <div className={s.top}><h2 id="sf-work" ref={head} tabIndex={-1}>원하는 공사</h2><span className={s.mute}>아파트</span></div>
             {/* 공정 탭(2026-11-27 사용자): 공정마다 탭에서 따로 골라요. 공사 순서대로 목공 → 도배 → 바닥 */}
             <Row label="공정" help={<Tip label="공정" terms={["걸레받이", "문선"]} note="목공은 몰딩 · 걸레받이 · 문처럼 나무로 마감하는 일이에요. 목공을 먼저 하고 도배를 해요." />}>
-              <div className={s.wtabs} role="tablist" aria-label="공정">
-                {([["mokgong", "목공", d.mok, !!eWork.mokgong], ["dobae", "도배", dobae, !!(eWork.grade || eWork.spaces || eWork.faces) || !dobae], ["floor", "바닥", false, false]] as const).map(([k, label, on, bad]) => (
-                  <button key={k} type="button" role="tab" id={`sf-tab-${k}`} aria-selected={wtab === k} aria-controls="sf-tabpanel" className={wtab === k ? `${s.wtab} ${s.wtabOn}` : s.wtab} onClick={() => setWtab(k)}>
+              <div className={s.wtabs} role="tablist" aria-label="공정" onKeyDown={(e) => moveTab(e, WORK_TABS, wtab, setWtab)}>
+                {([["mokgong", "목공", d.mok], ["dobae", "도배", dobae], ["floor", "바닥", false]] as const).map(([k, label, on]) => { const bad = badTab.has(k); return (
+                  <button key={k} type="button" role="tab" id={`sf-tab-${k}`} aria-selected={wtab === k} tabIndex={wtab === k ? 0 : -1} aria-controls="sf-tabpanel" className={wtab === k ? `${s.wtab} ${s.wtabOn}` : s.wtab} onClick={() => setWtab(k)}>
                     {label}
                     {k === "floor" ? <span className={s.soon}>준비 중</span> : on ? <span className={s.wOn}><Icon name="check" size={14} strokeWidth={3} /><span className="mj-sr">고름</span></span> : <span className={s.soon}>안 함</span>}
-                    {bad ? <span className={s.wBad} aria-label="고를 칸이 있어요" /> : null}
+                    {bad ? <span className={s.wBad}><span className="mj-sr">고를 칸이 있어요</span></span> : null}
                   </button>
-                ))}
+                ); })}
               </div>
               {d.mok ? <p className={s.order} aria-label="공사 순서">공사 순서 <b>목공</b> → <b>도배</b> → <span>바닥</span></p> : null}
             </Row>

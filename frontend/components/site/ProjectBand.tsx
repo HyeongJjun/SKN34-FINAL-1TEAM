@@ -11,6 +11,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { PROJECT_STEPS, type StepItem } from "@/components/ui/Steps";
+import { moveTab } from "@/components/ui/tabKeys";
 import s from "./band.module.css";
 
 export type BandTask = {
@@ -102,9 +103,9 @@ export function ProjectBand({ name, shortName, href, steps = PROJECT_STEPS, curr
         <div className={s.tabRow}>
           <div className={s.tabRowIn}>
             <Link className={s.tabPj} href={href}>{shortName ?? name}</Link>
-            <div className={s.tabs} role="tablist" aria-label="공정">
+            <div className={s.tabs} role="tablist" aria-label="공정" onKeyDown={(e) => picked && moveTab(e, tracks, picked, pick)}>
               {tracks.map((t, i) => (
-                <button key={t.label} type="button" role="tab" aria-selected={t === picked} className={t === picked ? `${s.tab} ${s.tabOn}` : s.tab} onClick={() => pick(t)}>
+                <button key={t.label} type="button" role="tab" aria-selected={t === picked} tabIndex={t === picked ? 0 : -1} className={t === picked ? `${s.tab} ${s.tabOn}` : s.tab} onClick={() => pick(t)}>
                   <span className={s.tabNo} aria-hidden="true">{i + 1}</span><b>{t.label}</b> <span className={s.tabNow}>{steps[t.current]?.label}</span>{t !== picked && hasTodo(t) ? <span className={s.tabDot}><span className="mj-sr"> 할 일 있음</span></span> : null}
                 </button>
               ))}
