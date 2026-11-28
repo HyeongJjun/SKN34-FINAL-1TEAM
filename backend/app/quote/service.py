@@ -466,17 +466,13 @@ def market_parts_of(
     d = next((t for t in st.trades if t.trade == "dobae"), None)
     out = []
     for t in st.trades:
-        if t.trade not in ("dobae", "mokgong"):
+        if t.trade not in market_basis.MARKET_TRADES:
             continue
         q, note = market_calc(
             pyeong=None,
             area_m2=st.area_m2,
             area_basis="exclusive" if st.area_basis == "exclusive" else "supply",
-            dobae=t.trade == "dobae",
-            mokgong=t.trade == "mokgong",
-            wallpaper="hapji" if d is not None and d.grade == "economy" else "silk",
-            options=market_basis.mok_options(mok_items) if t.trade == "mokgong" else None,
-            **(market_basis.mok_base(mok_items) if t.trade == "mokgong" else {}),
+            **market_basis.trade_input(t.trade, d.grade if d else None, mok_items),
         )
         out.append((t.trade, q, note))
     return out

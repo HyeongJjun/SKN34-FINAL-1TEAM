@@ -33,6 +33,22 @@ def mok_base(items: list[str] | None) -> dict[str, bool]:
     return {"molding": "molding" in items, "skirting": "base" in items}
 
 
+# 시장 단가 견적(235건)으로 셀 수 있는 공정. 새 공정은 시장 단가 자료가 생기면 여기에 더해요
+MARKET_TRADES = ("dobae", "mokgong")
+
+
+def trade_input(trade: str, grade: str | None, mok_items: list[str] | None) -> dict:
+    """그 공정 하나만 하는 시장 단가 견적의 공정 입력(가견적 % 기준 · 공정 탭 표준견적서가 같은 값)"""
+    mok = trade == "mokgong"
+    return {
+        "dobae": trade == "dobae",
+        "mokgong": mok,
+        "wallpaper": "hapji" if grade == "economy" else "silk",
+        "options": mok_options(mok_items) if mok else None,
+        **(mok_base(mok_items) if mok else {}),
+    }
+
+
 def basis_total(
     trade: str,
     area_m2: Decimal | str,
@@ -43,19 +59,10 @@ def basis_total(
 ) -> int | None:
     """그 공정 하나의 시장 단가 견적 합계(부가세 포함). 전체 공사가 아니면 None.
     목공은 고른 목공 할 곳(mok_items)만 선택 항목으로 켜요(화면 표준견적서와 같은 값)"""
-    if (scope or "full") != "full" or trade not in ("dobae", "mokgong"):
+    if (scope or "full") != "full" or trade not in MARKET_TRADES:
         return None
     k = MOKGONG_2026H2.supply_per_exclusive if area_basis == "exclusive" else None
     py = market_quote.pyeong_from_m2(Decimal(str(area_m2)), k)
     rooms, baths = market_quote.default_rooms(py)
-    inp = market_quote.Input(
-        py,
-        rooms,
-        baths,
-        dobae=trade == "dobae",
-        mokgong=trade == "mokgong",
-        wallpaper="hapji" if grade == "economy" else "silk",
-        options=mok_options(mok_items) if trade == "mokgong" else None,
-        **(mok_base(mok_items) if trade == "mokgong" else {}),
-    )
+    inp = market_quote.Input(py, rooms, baths, **trade_input(trade, grade, mok_items))
     return market_quote.build(inp, BOOK).total

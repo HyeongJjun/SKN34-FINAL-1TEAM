@@ -125,10 +125,11 @@ export function clampTarget<T extends { tab: number }>(to: T | null, maxTab: num
   return to ? { ...to, tab: Math.min(to.tab, maxTab) } : null;
 }
 
-/** 주소의 공정(?trade=) 그대로 넘길 꼬리(#234 리뷰: 업체 · 실측 · 견적서 주소에서 재재 화면으로 갈 때 공정이 빠지지 않게). 모르는 값이면 빈 글 */
+/** 주소의 공정(?trade=) 그대로 넘길 꼬리(#234 리뷰: 업체 · 실측 · 견적서 주소에서 재재 화면으로 갈 때 공정이 빠지지 않게).
+ *  공정 키 모양(영어 소문자 · 숫자 · _)만 넘겨요. 공정 목록은 여기서 정하지 않고, 그 공사에 없는 공정이면 재재 화면이 기본 탭을 골라요 */
 export function tradeQuery(raw: string | string[] | undefined | null, lead: "?" | "&" = "&"): string {
   const t = Array.isArray(raw) ? raw[0] : raw;
-  return t === "dobae" || t === "mokgong" ? `${lead}trade=${t}` : "";
+  return t && /^[a-z][a-z0-9_]{0,19}$/.test(t) ? `${lead}trade=${t}` : "";
 }
 /** 사이트 안 주소에 공정을 붙여요(이미 있으면 그대로) */
 export function withTrade(href: string, trade: string | null | undefined): string {

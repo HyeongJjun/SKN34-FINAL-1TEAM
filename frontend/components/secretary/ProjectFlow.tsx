@@ -29,6 +29,7 @@ import type { ProjectVendors, ProjectVisits, VisitDraft, VisitProject } from "@/
 import { call, errorText, type Schemas } from "@/lib/backend/client";
 import { dateShort, euro, won } from "@/lib/format";
 import { termByName } from "@/lib/guide";
+import { TRADE_ORDER } from "@/lib/labels";
 import { moveTab } from "@/components/ui/tabKeys";
 import { autoDone, boardStateFor, boardTarget, clampTarget, stdSource, isWaiting, tabVendors, CLOSED_VISITS, norm, pickRule, pickStateOf, type PickState } from "./boardLink";
 import { quickChips } from "./chips";
@@ -103,11 +104,14 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   // 공정 탭(2026-11-27 사용자): 공정이 둘 이상이면 탭마다 대화 · 보드 · 표준견적서를 따로 보여요. 고른 탭은 주소(?trade=)에 둬서 위 띠와 같이 써요
   const sp = useSearchParams();
   const pathname = usePathname();
-  const tradeKeys = (["mokgong", "dobae"] as Trade[]).filter((t) => ov.trades.some((x) => x.trade === t));
+  // 탭 순서는 공사 순서 목록 하나(lib/labels TRADE_ORDER)를 따라요
+  const tradeKeys = (TRADE_ORDER as readonly Trade[]).filter((t) => ov.trades.some((x) => x.trade === t));
   const multi = tradeKeys.length > 1;
   const want = sp.get("trade");
   const active: Trade = tradeKeys.includes(want as Trade) ? (want as Trade) : tradeKeys.includes("dobae") ? "dobae" : (tradeKeys[0] ?? "dobae");
   const isMok = active === "mokgong";
+  // 도배 칸 내용(비교 · 확정 · 일정)은 도배 탭에서만. 목공이 아닌 공정을 도배로 보지 않아요
+  const isDobae = active === "dobae";
   // 주소만 바꿔요(서버에서 화면 값을 다시 읽지 않아 탭이 바로 바뀌어요). useSearchParams가 따라와요
   const pickTrade = (t: Trade) => window.history.replaceState(null, "", `${pathname}?trade=${t}`);
   const now = stepOf(data, active);
@@ -279,8 +283,8 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   // 목공 실측(팀 피드백 5): 목공을 고른 공사만. 견적서 비교 · 확정은 아직 도배만이라 실측 칸까지만 보여요
   const mvs = mokVendors ? (visits?.visits ?? []).filter((v) => v.trade === "mokgong" && !CLOSED.includes(v.status)) : [];
   // 대화 카드는 고른 공정 탭 것만(공정이 하나면 그대로)
-  const both = multi ? (isMok ? mvs : vs) : [...vs, ...mvs];
-  const showDobae = !multi || !isMok;
+  const both = multi ? (isMok ? mvs : isDobae ? vs : []) : [...vs, ...mvs];
+  const showDobae = !multi || isDobae;
   const showMok = !multi || isMok;
   // 공정별 표준견적서 금액(시장 단가 견적의 그 공정 합계). 없으면 전체 금액
   // 표준견적서 금액은 한 출처로(공정별 금액 · 전체 금액 · 창이 같은 기준, #234 리뷰)
@@ -322,7 +326,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   if (myTodo?.text) cards.push({ key: "todo", alert: true, node: <p><b>{myTodo.text}</b></p> });
   // 공사 순서는 목공 → 도배(→ 바닥)예요. 앞 공정이 뒤처져 있으면 뒤 공정 탭에서 먼저 알려요(막지는 않아요)
   const mokStep = multi ? stepOf(data, "mokgong") : 8;
-  if (multi && !isMok && mokStep < 6 && now > mokStep) {
+  if (multi && isDobae && mokStep < 6 && now > mokStep) {
     cards.push({ key: "order", alert: true, node: (
       <>
         <p><b>공사 순서는 목공 → 도배예요.</b> 목공이 아직 <b>{PLAN_STEPS[Math.min(mokStep, 7)]}</b> 단계라 도배보다 뒤에 있어요. 목공(몰딩 · 걸레받이 · 문)을 도배 뒤에 하면 새 벽지가 상할 수 있어요.</p>

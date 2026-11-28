@@ -171,7 +171,8 @@ test("보드 이동은 고른 공정 탭 상태로(#234 리뷰): 목공 탭은 �
 test("공정이 주소에서 재재 화면까지 이어져요(#234 리뷰: 목공 할 일 링크가 도배 보드로 가지 않게)", () => {
   assert.equal(tradeQuery("mokgong"), "&trade=mokgong");
   assert.equal(tradeQuery(["dobae", "mokgong"]), "&trade=dobae");
-  assert.equal(tradeQuery("floor"), ""); // 모르는 공정은 넘기지 않아요
+  assert.equal(tradeQuery("floor"), "&trade=floor"); // 새 공정(바닥)도 목록을 고치지 않고 넘겨요
+  for (const bad of ["", "Dobae", "a&b=1", "../x", "dobae mokgong"]) assert.equal(tradeQuery(bad), ""); // 공정 키 모양이 아니면 버려요
   assert.equal(tradeQuery(undefined), "");
   assert.equal(withTrade("/projects/p1/visits/v1", "mokgong"), "/projects/p1/visits/v1?trade=mokgong");
   assert.equal(withTrade("/projects/p1/vendors?trade=mokgong", "dobae"), "/projects/p1/vendors?trade=mokgong"); // 서버가 붙인 공정은 그대로
