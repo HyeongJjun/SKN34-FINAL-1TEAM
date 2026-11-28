@@ -69,7 +69,11 @@ export type ProjectShell = {
 export const stepLinks = (id: string) => Array.from({ length: 8 }, (_, i) => `/projects/${id}/assistant?step=${i}`);
 
 /** 사이트 안 경로만 링크로 둬요 */
-const safeHref = (v: string | null | undefined) => (v && v.startsWith("/") && !v.startsWith("//") && !v.includes("\\") ? v : undefined);
+const safeHref = (v: string | null | undefined) => {
+  if (!v || !v.startsWith("/") || v.startsWith("//") || v.includes("\\")) return undefined;
+  // 공사 요약(/projects/{id})은 재재 화면으로 넘어가요(#236). 한 번 더 거치지 않게 바로 재재 화면으로
+  return /^\/projects\/[^/?#]+$/.test(v) ? `${v}/assistant` : v;
+};
 
 /** 업체마다 다음 할 일(고객 차례면 할 일, 업체 차례면 기다림) */
 const CUSTOMER_NEXT: Record<string, string> = { pick: "날짜 고르기", proposal: "제안한 날 고르기", change: "일정 바꾸기 답하기", visit: "실측 받았는지 알려 주기", confirm: "견적서 보고 확정" };

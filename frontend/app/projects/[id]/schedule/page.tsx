@@ -1,67 +1,14 @@
-// /projects/{id}/schedule — 실측 뒤 공사(C35 공사 날짜 · C52 다른 날짜 요청 · C37 추가 금액 · C38 공사 끝 확인).
-// ?view=dates|extra|done. 없으면 가장 급한 것(공사 끝 확인 > 추가 금액 답 > 공사 날짜)을 보여요.
-// 읽기는 GET /projects/{id}/schedule 하나(도배 한 줄). 날 · 기한 · 금액은 API 값 그대로예요.
-import { notFound } from "next/navigation";
-import { AppHeader } from "@/components/site/AppHeader";
-import { Main, PageHead } from "@/components/site/Frame";
-import { Button } from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { Strip } from "@/components/project/Kit";
-import { LiveRefresh } from "@/components/schedule/LiveRefresh";
-import { datesView, doneView, extraView } from "@/components/schedule/views";
-import { currentExtra, defaultView, VIEW_TITLE, type ScheduleView } from "@/components/schedule/v3text";
-import { getSchedule } from "@/lib/api/schedule";
-import { getVisitProject, visitToday } from "@/lib/api/visit";
+// /projects/{id}/schedule — 공사 날짜 · 추가 금액 · 공사 끝 확인(?view=dates|extra|done)
+// 2026-11-27 사용자: 옛 화면이 나오지 않게 재재 화면(/projects/{id}/assistant)의 같은 창 · 보드 칸으로 보내요.
+// 알림 · 메일 · 공유 주소는 그대로 두고 여기서 넘겨요. 남의 공사 · 없는 공사는 재재 화면이 404예요.
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "공사" };
+export const metadata = { title: "공사 일정" };
 
-const VIEWS: ScheduleView[] = ["dates", "extra", "done"];
+const VIEWS = ["dates", "extra", "done"];
 
-export default async function SchedulePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ view?: string | string[] }> }) {
-  const { id } = await params;
-  const raw = (await searchParams).view;
-  const asked = Array.isArray(raw) ? raw[0] : raw;
-  const [p, sch, today] = await Promise.all([getVisitProject(id), getSchedule(id), visitToday()]);
-  if (!p || !sch) notFound();
-  const base = `/projects/${encodeURIComponent(p.id)}`;
-  const t = sch.trades.find((x) => x.deal.trade === "dobae") ?? sch.trades[0] ?? null;
-  const view: ScheduleView = VIEWS.includes(asked as ScheduleView) ? (asked as ScheduleView) : defaultView(t);
-  const title = VIEW_TITLE[view];
-
-  let body: React.ReactNode;
-  let bar: React.ReactNode = null;
-  if (!t) {
-    body = (
-      <EmptyState icon="calendar" title="업체를 확정하면 공사 날짜가 여기에 와요" action={<Button variant="text" arrow href={`${base}/quotes`}>실측 견적서 보기</Button>}>
-        확정한 업체가 공사할 날을 하나씩 골라 올려요
-      </EmptyState>
-    );
-  } else {
-    const ctx = { projectId: p.id, t, holidays: sch.holidays, finalVersion: sch.final_version, today, startDate: p.startDate, requestDue: sch.request_due_preview ?? null };
-    const v = view === "extra" ? extraView(ctx) : view === "done" ? doneView(ctx) : datesView(ctx);
-    body = v.body;
-    bar = v.bar;
-  }
-
-  // 이 화면에서 다른 일로 가는 줄(공사 날짜 ↔ 추가 금액 ↔ 공사 끝)
-  const others: { label: string; href: string }[] = [];
-  if (t) {
-    const x = currentExtra(t);
-    if (view !== "dates") others.push({ label: "공사 날짜", href: `${base}/schedule?view=dates` });
-    if (view !== "extra" && x) others.push({ label: x.answer === "pending" ? "추가 금액 · 답을 기다려요" : "추가 금액", href: `${base}/schedule?view=extra` });
-    if (view !== "done" && ["checking", "fixing", "done"].includes(t.deal.status)) others.push({ label: "공사 끝 확인", href: `${base}/schedule?view=done` });
-  }
-
-  return (
-    <>
-      <AppHeader only="phone" phone={{ title, back: base }} />
-      <Main narrow>
-        <PageHead title={title} crumbs={[{ label: "내 공사", href: "/my" }, { label: p.name, href: base }, { label: title }]} />
-        {body}
-        {others.map((o) => <Strip key={o.href} label={o.label} href={o.href} />)}
-      </Main>
-      {bar}
-      <LiveRefresh projectId={p.id} kinds={["deal", "extra"]} />
-    </>
-  );
+export default async function Page({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ view?: string | string[] }> }) {
+  const [{ id }, { view }] = await Promise.all([params, searchParams]);
+  const v = Array.isArray(view) ? view[0] : view;
+  redirect(`/projects/${encodeURIComponent(id)}/assistant?open=schedule${v && VIEWS.includes(v) ? `&view=${v}` : ""}`);
 }

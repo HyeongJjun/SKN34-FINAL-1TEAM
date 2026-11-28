@@ -1,67 +1,12 @@
-// /projects/{id}/vendors/{vid}/reviews — 리뷰 전체(C48) · 리뷰 기준 시트(C49).
-// 최신순 · 낮은 별점부터(?sort=), 숨긴 리뷰는 API가 빼요. 믿집 리뷰 아래에 업체가 연결한 외부 리뷰 링크를 펼쳐 보여요(새 창).
-import { notFound } from "next/navigation";
-import { AppHeader } from "@/components/site/AppHeader";
-import { Main, PageHead } from "@/components/site/Frame";
-import { RatingSummary } from "@/components/review/RatingSummary";
-import { ReviewFeed } from "@/components/review/ReviewFeed";
-import { ReviewRulesLine } from "@/components/review/RulesSheet";
-import { Tabs } from "@/components/ui/Tabs";
-import { ReviewLinks } from "@/components/vendors/ReviewLinks";
-import { safeLinks } from "@/components/vendors/v3text";
-import s from "@/components/vendors/vendors3.module.css";
-import { getProjectShell } from "@/lib/api/project";
-import { getVendorDetail, getVendorReviews } from "@/lib/api/shortlist";
+// /projects/{id}/vendors/{vid}/reviews — 업체 자세히 · 리뷰
+// 2026-11-27 사용자: 옛 화면이 나오지 않게 재재 화면(/projects/{id}/assistant)의 같은 창 · 보드 칸으로 보내요.
+// 알림 · 메일 · 공유 주소는 그대로 두고 여기서 넘겨요. 남의 공사 · 없는 공사는 재재 화면이 404예요.
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "리뷰" };
+export const metadata = { title: "업체 자세히" };
 
-export default async function VendorReviewsPage({ params, searchParams }: {
-  params: Promise<{ id: string; vid: string }>;
-  searchParams: Promise<{ sort?: string | string[]; trade?: string | string[] }>;
-}) {
-  const { id, vid } = await params;
-  const { sort: asked, trade: tq } = await searchParams;
-  // 목공 업체 리뷰는 ?trade=mokgong으로 와요. 업체 조회 · 정렬 · 뒤로 가기에서도 목공을 지켜요(#221 리뷰)
-  const trade = (Array.isArray(tq) ? tq[0] : tq) === "mokgong" ? "mokgong" : "dobae";
-  const amp = trade === "mokgong" ? "&trade=mokgong" : "";
-  const shell = await getProjectShell(id);
-  if (!shell) notFound();
-  const sort = asked === "low" ? "low" : "latest";
-  const [d, page] = await Promise.all([getVendorDetail(shell.id, vid, null, trade), getVendorReviews(shell.id, vid, sort)]);
-  if (!d || !page) notFound();
-
-  const name = d.profile.biz_name ?? "업체";
-  const base = `/projects/${shell.id}`;
-  const detailPath = `${base}/vendors/${encodeURIComponent(vid)}`;
-  const detail = `${detailPath}${trade === "mokgong" ? "?trade=mokgong" : ""}`;
-  const here = `${detailPath}/reviews`;
-  const links = safeLinks(page.links);
-  const title = `${name} 리뷰`;
-
-  return (
-    <>
-      <AppHeader only="phone" phone={{ title, back: detail }} />
-      <Main narrow>
-        <PageHead title={title} crumbs={[{ label: "내 공사", href: "/my" }, { label: shell.name, href: base }, { label: "업체 보기", href: `${base}/vendors` }, { label: name, href: detail }, { label: "리뷰" }]} />
-        <section className={s.group} aria-label="별점 요약">
-          <RatingSummary rating={page.rating} />
-          {page.rating.count > 0 ? (
-            <Tabs variant="pill" label="리뷰 순서" value={sort} items={[
-              { key: "latest", label: "최신순", href: `${here}?sort=latest${amp}` },
-              { key: "low", label: "낮은 별점부터", href: `${here}?sort=low${amp}` },
-            ]} />
-          ) : null}
-          <ReviewRulesLine />
-        </section>
-        <section className={s.list} aria-label={`${name} 리뷰 목록`}>
-          <ReviewFeed key={sort} projectId={shell.id} vendorId={vid} vendorName={name} first={page} sort={sort} />
-        </section>
-        {links.length ? (
-          <section className={s.group} aria-label="업체가 연결한 외부 리뷰">
-            <ReviewLinks vendorId={vid} links={links} />
-          </section>
-        ) : null}
-      </Main>
-    </>
-  );
+export default async function Page({ params, searchParams }: { params: Promise<{ id: string; vid: string }>; searchParams: Promise<{ trade?: string | string[] }> }) {
+  const [{ id, vid }, { trade }] = await Promise.all([params, searchParams]);
+  const t = (Array.isArray(trade) ? trade[0] : trade) === "mokgong" ? "&trade=mokgong" : "";
+  redirect(`/projects/${encodeURIComponent(id)}/assistant?step=2&vendor=${encodeURIComponent(vid)}${t}`);
 }
