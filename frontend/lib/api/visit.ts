@@ -38,11 +38,11 @@ export type BoardRow = Schemas["BoardRowOut"];
 export type VisitPick = Schemas["VisitPickOut"];
 export type VisitDraft = Schemas["VisitDraftOut"];
 
-/** 실측 일정 상태판(C14 · D03): 요청 머리 + 업체별 상태 · 다음 할 일 · 기한. 남의 공사면 null */
-export async function getVisitBoard(projectId: string, trade: VisitTrade = "dobae"): Promise<VisitBoard | null> {
+/** 실측 일정 상태판(C14 · D03): 요청 머리 + 업체별 상태 · 다음 할 일 · 기한. 공정이 없으면 이 공사 모든 공정. 남의 공사면 null */
+export async function getVisitBoard(projectId: string, trade?: VisitTrade): Promise<VisitBoard | null> {
   if (!UUID.test(projectId)) return null;
   if (MOCK_V3B) return mockBoard(await mockStep(), projectId);
-  return serverGet<VisitBoard>(`/projects/${seg(projectId)}/visits?trade=${trade}`);
+  return serverGet<VisitBoard>(`/projects/${seg(projectId)}/visits${trade ? `?trade=${trade}` : ""}`);
 }
 
 /** 날짜 고르기(C16 · C19 · C21 · C22 · D15~D17): 내 희망 · 업체 기간 · 열린 반나절 · 마감 · 내 다른 실측 · 추천. 남의 것이면 null */

@@ -45,3 +45,12 @@
 .order { margin: 0; padding: 8px 12px; border-radius: var(--mj-radius-field); background: var(--mj-surface-sub); font-size: var(--mj-type-caption); color: var(--mj-text-sub); }
 .order span { color: var(--mj-text-mute); }
 .bare { display: flex; flex-direction: column; min-width: 0; }
+/* 원하는 공사: 공정 탭(목공 · 도배 · 바닥) */
+.wtabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.wtab { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 44px; padding: 0 8px; border: 1px solid var(--mj-line-control); border-radius: var(--mj-radius-field); background: var(--mj-surface); color: var(--mj-text-sub); font: inherit; font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); cursor: pointer; }
+.wtabOn { border-color: var(--mj-primary); background: var(--mj-primary); color: var(--mj-on-primary); }
+.wtab .soon { white-space: nowrap; margin-left: 0; }
+.wtabOn .soon { color: inherit; opacity: 0.85; }
+.wOn { display: inline-flex; }
+.wBad { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--mj-danger); }
+.wpanel { display: flex; flex-direction: column; gap: 16px; padding: 14px; border: 1px solid var(--mj-line); border-radius: var(--mj-radius-field); background: var(--mj-surface-sub); }

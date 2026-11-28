@@ -31,10 +31,21 @@ def test_dobae_lines_follow_market_coefficients():
 def test_totals_follow_template_rates():
     q = _q()
     assert q.net == sum(t.total for t in q.trades) == q.material + q.labor + q.expense
-    assert [o.amount for o in q.overheads] == [mq.won(Decimal(q.net) * r) for _k, _n, r in mq.RATES]
+    # 경비 · 만 원 절사 · 부가세는 공종마다 따로 계산해 합쳐요(2026-11-27: 표준견적서는 공종별 금액을 합친 금액)
+    assert [o.amount for o in q.overheads] == [
+        sum(mq.won(Decimal(t.total) * r) for t in q.trades) for _k, _n, r in mq.RATES
+    ]
     before = q.net + sum(o.amount for o in q.overheads)
-    assert q.supply == before + q.cut and q.supply % 10_000 == 0 and -10_000 < q.cut <= 0
+    assert q.supply == before + q.cut and q.supply % 10_000 == 0
+    assert -10_000 * len(q.trades) < q.cut <= 0
     assert q.total == q.supply + q.vat
+    parts = [_q(mokgong=False), _q(dobae=False)]
+    assert q.total == sum(x.total for x in parts) and q.supply == sum(x.supply for x in parts)
+    one = parts[0]  # 공종이 하나면 전과 같아요
+    assert [o.amount for o in one.overheads] == [
+        mq.won(Decimal(one.net) * r) for _k, _n, r in mq.RATES
+    ]
+    assert -10_000 < one.cut <= 0
     assert q.doors == 5
 
 

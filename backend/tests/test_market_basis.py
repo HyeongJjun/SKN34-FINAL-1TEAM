@@ -58,6 +58,29 @@ def test_mokgong_basis_counts_only_chosen_items():
     assert with_door is not None and with_door > got
 
 
+def test_market_parts_are_per_trade_and_sum_up(api):
+    """공정 탭: 공정마다 그 공정만 계산한 표준견적서와 그 합계. 남의 공사는 404"""
+    signup(api, "parts@mitjip.test")
+    both = create(api, v2_body())  # 도배 + 목공
+    assert both.status_code == 201, both.text
+    pid = both.json()["id"]
+    r = api.get(f"/v2/projects/{pid}/market-quotes")
+    assert r.status_code == 200, r.text
+    got = r.json()
+    assert {x["trade"] for x in got["parts"]} == {"dobae", "mokgong"}
+    for x in got["parts"]:
+        assert [t["key"] for t in x["quote"]["trades"]] == [x["trade"]]  # 그 공정 줄만
+        assert x["quote"]["total"] > 0
+    assert got["total"] == sum(x["quote"]["total"] for x in got["parts"])
+    # 공정 탭 금액 = 그 공정 업체 목록의 가견적 % 기준(같은 계산 한 곳, market_basis.trade_input)
+    for x in got["parts"]:
+        r = api.get(f"/projects/{pid}/vendors", params={"trade": x["trade"]})
+        assert r.status_code == 200, r.text
+        assert r.json()["standard_total"] == x["quote"]["total"]
+    signup(api, "other-parts@mitjip.test")
+    assert api.get(f"/v2/projects/{pid}/market-quotes").status_code == 404
+
+
 def test_mokgong_basis_follows_molding_and_skirting_choice():
     """몰딩 · 걸레받이도 고른 것만: 하나를 빼면 비교 기준이 줄고, 화면 표준견적서와 같은 값이에요(#215 리뷰 후속)"""
     both = basis_total("mokgong", "84", "exclusive", None, "full", ["molding", "base"])

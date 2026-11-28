@@ -89,6 +89,20 @@ async def v2_project_market_quote(
 
 
 @router.get(
+    "/projects/{project_id}/market-quotes",
+    response_model=v2.V2MqPartsOut,
+    summary="내 공사 공정별 표준견적서와 합계 (전체 공사가 아니면 빈 목록)",
+)
+async def v2_project_market_quotes(
+    project_id: uuid.UUID,
+    user: User = Depends(current_user),
+    s: AsyncSession = Depends(get_session),
+) -> v2.V2MqPartsOut:
+    """공정 탭: 공정마다 그 공정만 계산한 표준견적서. 남의 공사는 404."""
+    return await service.market_parts_for(s, user, project_id)
+
+
+@router.get(
     "/market-extras",
     response_model=list[v2.V2MarketExtraOut],
     summary="v2 받은 견적 맞춰 보기 목공 추가 항목",

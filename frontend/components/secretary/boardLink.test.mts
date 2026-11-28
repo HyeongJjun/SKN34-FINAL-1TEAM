@@ -1,7 +1,7 @@
 // 재재 대화 → 보드 연동 시험(#197): pnpm test:unit
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { boardTarget, pickRule, pickStateOf, requestSaid, threadOf, type BoardAnswer } from "./boardLink.ts";
+import { autoDone, boardStateFor, myVendorRows, boardTarget, clampTarget, stdSource, tradeQuery, withQuery, withTrade, isWaiting, pickRule, pickStateOf, requestSaid, tabVendors, threadOf, type BoardAnswer } from "./boardLink.ts";
 
 const A = (over: Partial<BoardAnswer> = {}): BoardAnswer => ({ notice: "", sections: [], cards: [], ...over });
 const V = [
@@ -124,4 +124,137 @@ test("업체 채팅 창: 상호명이 아니라 실측 · 채팅 ID로 대화를
   assert.equal(threadOf(heads, "p1", { visitId: "v9", threadId: null }), null); // 다른 공사 실측
   assert.equal(threadOf(heads, "p1", { visitId: null, threadId: "t3" }), null); // 다른 공사 대화
   assert.equal(threadOf(heads, "p1", { visitId: null, threadId: null }), null);
+});
+
+// 공정 탭(#234 리뷰): 보드 업체 칸은 늘 고른 탭 공정이에요
+test("공정이 둘이면 재재 답 업체도 고른 탭 공정 업체만 맞춰 봐요", () => {
+  const mok = tabVendors(V, true, "mokgong");
+  assert.deepEqual(mok.map((v) => v.vendor_id), ["m1", "b1"]);
+  assert.ok(mok.every((v) => v.trade === "mokgong"));
+  // 목공 탭에서 도배 업체 이름을 물어도 보드를 도배로 바꾸지 않아요
+  assert.equal(boardTarget("마루와벽 어때요?", A(), mok, st), null);
+  // 둘 다 하는 업체는 그 탭 공정으로
+  assert.equal(boardTarget("솜씨공방 도배는요?", A(), mok, st)?.trade, "mokgong");
+  // 공정이 하나면 그대로
+  assert.equal(tabVendors(V, false, "dobae").length, V.length);
+});
+
+// 기다림 카드(#234 리뷰): 다른 공정의 견적서 · 확정으로 사라지지 않아요
+test("기다림 카드는 그 공정의 확정 · 견적서 · 고를 날만 봐요", () => {
+  const req = [{ status: "requested" }];
+  assert.equal(isWaiting(req, { deal: false, quoted: 0, toPick: 0 }), true);
+  assert.equal(isWaiting(req, { deal: true, quoted: 0, toPick: 0 }), false);
+  assert.equal(isWaiting(req, { deal: false, quoted: 1, toPick: 0 }), false);
+  assert.equal(isWaiting(req, { deal: false, quoted: 0, toPick: 1 }), false);
+  assert.equal(isWaiting([{ status: "offered" }], { deal: false, quoted: 0, toPick: 0 }), false);
+  assert.equal(isWaiting([], { deal: false, quoted: 0, toPick: 0 }), false);
+});
+
+test("보드 이동은 고른 공정 탭 상태로(#234 리뷰): 목공 탭은 도배 견적서 · 확정을 보지 않고 실측 칸까지만", () => {
+  const dobae = { quoted: true, deal: true, chosen: true };
+  const mok = { deal: false, chosen: false };
+  const mokSt = boardStateFor(true, dobae, mok);
+  // 도배가 견적서를 받고 확정했어도 목공 탭 질문은 목공 기준
+  assert.equal(clampTarget(boardTarget("업체 추천해 줘", A(), [], mokSt), mokSt.maxTab)?.tab, 2);
+  assert.equal(clampTarget(boardTarget("실측 날짜는 언제 잡아요?", A(), [], mokSt), mokSt.maxTab)?.tab, 3);
+  // 목공을 확정했어도 목공 보드는 실측 칸(3)까지
+  const mokDeal = boardStateFor(true, dobae, { deal: true, chosen: true });
+  assert.equal(clampTarget(boardTarget("공사 일정 알려 줘", A(), [], mokDeal), mokDeal.maxTab)?.tab, 3);
+  // 도배 탭은 그대로 도배 기준(견적서 받으면 비교 칸, 확정이면 공정표)
+  const dob = boardStateFor(false, { quoted: true, deal: false, chosen: true }, mok);
+  assert.equal(clampTarget(boardTarget("업체 추천해 줘", A(), [], dob), dob.maxTab)?.tab, 4);
+  const dobDeal = boardStateFor(false, dobae, mok);
+  assert.equal(clampTarget(boardTarget("공사 일정 알려 줘", A(), [], dobDeal), dobDeal.maxTab)?.tab, 5);
+  assert.equal(clampTarget(null, 3), null);
+});
+
+test("공정이 주소에서 재재 화면까지 이어져요(#234 리뷰: 목공 할 일 링크가 도배 보드로 가지 않게)", () => {
+  assert.equal(tradeQuery("mokgong"), "&trade=mokgong");
+  assert.equal(tradeQuery(["dobae", "mokgong"]), "&trade=dobae");
+  assert.equal(tradeQuery("floor"), "&trade=floor"); // 새 공정(바닥)도 목록을 고치지 않고 넘겨요
+  for (const bad of ["", "Dobae", "a&b=1", "../x", "dobae mokgong"]) assert.equal(tradeQuery(bad), ""); // 공정 키 모양이 아니면 버려요
+  assert.equal(tradeQuery(undefined), "");
+  assert.equal(withTrade("/projects/p1/visits/v1", "mokgong"), "/projects/p1/visits/v1?trade=mokgong");
+  assert.equal(withTrade("/projects/p1/vendors?trade=mokgong", "dobae"), "/projects/p1/vendors?trade=mokgong"); // 서버가 붙인 공정은 그대로
+  assert.equal(withTrade("/projects/p1/schedule?view=dates", "mokgong"), "/projects/p1/schedule?view=dates&trade=mokgong");
+  assert.equal(withTrade("/projects/p1/plan", null), "/projects/p1/plan");
+});
+
+test("표준견적서 금액 출처(#234 리뷰): 공정별 금액 · 전체 금액이 늘 같은 기준", () => {
+  const pub = { total: 1_200_000, sum: { total: 2_000_000 }, parts: [{ trade: "mokgong", total: 800_000 }] }; // 공공 기준: 도배 본문 + 목공 줄
+  const mq = { total: 6_754_000 }; // 전체 시장 단가
+  const pq = { total: 6_633_000, parts: [{ trade: "dobae", quote: { total: 4_928_000 } }, { trade: "mokgong", quote: { total: 1_705_000 } }] }; // 공정별 시장 단가
+  // 공정 둘 · 공정별 시장 단가 다 옴 → 시장 단가(전체 시장 단가가 실패해도 같음)
+  for (const market of [mq, null]) {
+    const x = stdSource({ view: pub, market, parts: pq });
+    assert.deepEqual([x.src, x.total, x.per], ["parts", 6_633_000, { dobae: 4_928_000, mokgong: 1_705_000 }]);
+  }
+  // 공정 둘 · 공정별 시장 단가 실패(전체 시장 단가만 옴) → 공정별 · 전체 모두 공공 기준(섞지 않아요)
+  const y = stdSource({ view: pub, market: mq, parts: null });
+  assert.deepEqual([y.src, y.total, y.per], ["public", 2_000_000, { dobae: 1_200_000, mokgong: 800_000 }]);
+  // 공정별 시장 단가가 한 공정만 옴 → 공공 기준
+  const z = stdSource({ view: pub, market: mq, parts: { total: 4_928_000, parts: [pq.parts[0]] } });
+  assert.equal(z.src, "public");
+  assert.equal(z.total, 2_000_000);
+  // 부분 도배 + 목공(시장 단가 없음) → 공공 기준 공정별
+  assert.deepEqual(stdSource({ view: pub, market: null, parts: null }).per, { dobae: 1_200_000, mokgong: 800_000 });
+  // 공정 하나: 시장 단가가 있으면 그 값, 없으면 공공 기준. 공정별 금액은 없어요
+  assert.deepEqual(stdSource({ view: { total: 1_000_000 }, market: { total: 1_100_000 } }), { src: "market", total: 1_100_000, per: null });
+  assert.deepEqual(stdSource({ view: { total: 1_000_000 }, market: null }), { src: "public", total: 1_000_000, per: null });
+  // 각 공정 금액의 합 = 전체 금액(공공 기준)
+  const per = stdSource({ view: pub, market: null }).per!;
+  assert.equal(per.dobae + per.mokgong, 2_000_000);
+});
+
+test("재재가 챙긴 일(#234 리뷰): 고른 공정 상태로만, 그 공정 보드에 없는 칸은 비워요", () => {
+  // 목공 탭: 도배 실측 · 견적서 · 확정이 있어도 목공 실측을 안 했으면 업체 칸에 완료 없음
+  const mok = autoDone({ asked: false, quoted: false, deal: false, maxTab: 3 });
+  assert.deepEqual(mok[2], []);
+  assert.equal(mok[4], undefined);
+  assert.equal(mok[5], undefined);
+  // 목공을 확정해도 목공 보드는 실측 칸까지라 공정표 칸 완료는 없어요
+  assert.equal(autoDone({ asked: true, quoted: false, deal: true, maxTab: 3 })[5], undefined);
+  assert.deepEqual(autoDone({ asked: true, quoted: false, deal: false, maxTab: 3 })[2], ["업체에 실측 날짜 물어보기"]);
+  // 도배 탭은 예전 그대로
+  const dob = autoDone({ asked: true, quoted: true, deal: true, maxTab: 7 });
+  assert.deepEqual([dob[2], dob[4], dob[5]], [["업체에 실측 날짜 물어보기"], ["견적서를 표준견적서와 비교"], ["확정 공정표 만들기"]]);
+});
+
+// 내 공사 목록 업체 줄(#234 리뷰): 도배 + 목공 공사에서 두 업체가 다 나오고, 링크는 그 업체 공정 탭으로
+const MV = [
+  { visit_id: "vm", vendor_name: "한뼘목공", trade: "mokgong" },
+  { visit_id: "vd", vendor_name: "마루와벽", trade: "dobae" },
+];
+const B = "/projects/p1";
+test("내 공사 목록: 상태판 줄이 다 오면 두 업체 · 각 공정 탭 링크", () => {
+  const rows = [{ visit_id: "vd", status: "offered" }, { visit_id: "vm", status: "requested" }];
+  assert.deepEqual(myVendorRows(B, MV, rows).map((x) => [x.vendor.vendor_name, x.row?.status ?? null, x.href]), [
+    ["한뼘목공", "requested", "/projects/p1/visits?trade=mokgong"],
+    ["마루와벽", "offered", "/projects/p1/visits/vd?trade=dobae"],
+  ]);
+});
+test("내 공사 목록: 상태판에 한 공정만 와도 다른 공정 업체를 빼지 않아요", () => {
+  const got = myVendorRows(B, MV, [{ visit_id: "vm", status: "proposed" }]);
+  assert.deepEqual(got.map((x) => [x.vendor.vendor_name, x.row?.status ?? null, x.href]), [
+    ["한뼘목공", "proposed", "/projects/p1/visits/vm?trade=mokgong"],
+    ["마루와벽", null, "/projects/p1/visits?trade=dobae"],
+  ]);
+});
+test("내 공사 목록: 상태판이 없으면 담은 업체 그대로 · 이 공사 밖 줄은 안 그려요", () => {
+  assert.deepEqual(myVendorRows(B, MV, null).map((x) => [x.vendor.visit_id, x.row, x.href]), [
+    ["vm", null, "/projects/p1/visits?trade=mokgong"],
+    ["vd", null, "/projects/p1/visits?trade=dobae"],
+  ]);
+  assert.equal(myVendorRows(B, MV, [{ visit_id: "other", status: "booked" }]).some((x) => x.row), false);
+});
+
+test("공정 탭을 바꿔도 화면의 다른 주소 값은 그대로(#234 리뷰)", () => {
+  // 공사 기록 · 일정 · 업체 리뷰 화면
+  assert.equal(withQuery("/projects/p1", "?tab=log", { trade: "mokgong" }), "/projects/p1?tab=log&trade=mokgong");
+  assert.equal(withQuery("/projects/p1/schedule", "?view=done", { trade: "mokgong" }), "/projects/p1/schedule?view=done&trade=mokgong");
+  assert.equal(withQuery("/projects/p1/vendors/v1/reviews", "?sort=low&trade=mokgong", { trade: "dobae" }), "/projects/p1/vendors/v1/reviews?sort=low&trade=dobae");
+  assert.equal(withQuery("/projects/p1/assistant", "", { trade: "dobae" }), "/projects/p1/assistant?trade=dobae");
+  // 재재 화면 주소 정리: 넘어온 칸 · 창 값만 지우고 공정은 남겨요
+  assert.equal(withQuery("/projects/p1/assistant", "?step=3&open=standard&trade=mokgong", { step: null, open: null }), "/projects/p1/assistant?trade=mokgong");
+  assert.equal(withQuery("/projects/p1/assistant", "?step=3", { step: null, open: null, trade: null }), "/projects/p1/assistant");
 });

@@ -456,6 +456,37 @@ def market_of(
     )
 
 
+def market_parts_of(
+    st: StandardOut, mok_items: list[str] | None = None
+) -> list[tuple[str, market_quote.Quote, str]]:
+    """공정마다 따로 계산한 시장 단가 표준견적서(공정 탭, 2026-11-27): (공정, 견적, 면적 설명).
+    그 공정만 하는 공사로 계산해서 경비 · 부가세까지 든 금액이에요. 전체 공사가 아니면 빈 목록."""
+    if (st.scope or "full") != "full":
+        return []
+    d = next((t for t in st.trades if t.trade == "dobae"), None)
+    out = []
+    for t in st.trades:
+        if t.trade not in market_basis.MARKET_TRADES:
+            continue
+        q, note = market_calc(
+            pyeong=None,
+            area_m2=st.area_m2,
+            area_basis="exclusive" if st.area_basis == "exclusive" else "supply",
+            **market_basis.trade_input(t.trade, d.grade if d else None, mok_items),
+        )
+        out.append((t.trade, q, note))
+    return out
+
+
+async def market_parts_for(
+    s: AsyncSession, user: User, project_id: uuid.UUID
+) -> list[tuple[str, market_quote.Quote, str]]:
+    """GET /v2/projects/{id}/market-quotes: 남의 것은 404."""
+    st = await standard_for(s, user, project_id)
+    p = await project_service.get_for(s, user, project_id)
+    return market_parts_of(st, list(p.trades.mokgong.items) if p.trades.mokgong else None)
+
+
 async def market_for(
     s: AsyncSession, user: User, project_id: uuid.UUID
 ) -> tuple[market_quote.Quote, str] | None:

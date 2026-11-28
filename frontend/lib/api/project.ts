@@ -5,6 +5,7 @@ import { serverGet, type Schemas } from "@/lib/backend/server";
 import type { BandTask } from "@/components/site/ProjectBand";
 import { dueText } from "@/lib/format";
 import { tradeLabel } from "@/lib/labels";
+import { withTrade } from "@/components/secretary/boardLink";
 import { projectName, stepIndex } from "@/lib/guest/info";
 import { mockKeyOf } from "@/lib/mock/v3a/mode";
 import { MOCK_CHECKS, mockPlan, mockProject } from "@/lib/mock/v3a/project";
@@ -54,10 +55,12 @@ export type ProjectShell = {
   budgetWon: number | null;
   /** 단계 띠 지금 단계(0~7, 지금 할 일이 있는 공정) · 공정마다 지금 칸 · 실측 뒤 작은 단계(8칸이 된 뒤로는 늘 null) */
   current: number;
-  tracks: { trade: string; label: string; current: number }[];
+  tracks: { trade: string; label: string; current: number; todo?: BandTask }[];
   sub: number | null;
   todo: BandTask[];
   waiting: BandTask[];
+  /** 공정 이름을 뺀 짧은 이름 '상계동 아파트'(공정 탭이 있는 띠) */
+  shortName: string;
   /** 예시 공사(개발 미리 보기) */
   mock: boolean;
 };
@@ -72,6 +75,9 @@ const safeHref = (v: string | null | undefined) => (v && v.startsWith("/") && !v
 const CUSTOMER_NEXT: Record<string, string> = { pick: "날짜 고르기", proposal: "제안한 날 고르기", change: "일정 바꾸기 답하기", visit: "실측 받았는지 알려 주기", confirm: "견적서 보고 확정" };
 const VENDOR_NEXT: Record<string, string> = { reply: "답 기다림", accept: "수락 기다림", change: "일정 바꾸기 답 기다림", quote: "견적서 기다림", visit: "실측 기다림" };
 
+/** 고객이 누를 일이 아닌 할 일 코드(기다림 · 진행 중 · 끝남). 공정 탭에 '할 일 있음' 점을 찍지 않아요 */
+const WAIT_CODES = ["before_work", "dates_waiting", "dates_requested", "working", "fixing", "done"];
+
 function bandOf(id: string, item: ApiProjectItem | undefined): Pick<ProjectShell, "current" | "tracks" | "todo" | "waiting"> {
   const todo: BandTask[] = [];
   const waiting: BandTask[] = [];
@@ -79,17 +85,25 @@ function bandOf(id: string, item: ApiProjectItem | undefined): Pick<ProjectShell
     const due = v.next.due_at ? dueText(v.next.due_at) : undefined;
     if (v.next.who === "customer" && CUSTOMER_NEXT[v.next.kind]) {
       const href = v.next.kind === "pick" || v.next.kind === "proposal" ? `/projects/${id}/visits/${seg(v.visit_id)}` : v.next.kind === "confirm" ? `/projects/${id}/quotes` : `/projects/${id}/visits`;
-      todo.push({ label: `${v.vendor_name} ${CUSTOMER_NEXT[v.next.kind]}`, href, due });
+      // 업체 공정을 주소에 붙여 그 공정 탭 보드로 가요(#234 리뷰)
+      // 목공 견적서 확정은 아직 준비 중이라(#206) '확정'을 말하지 않아요
+      const what = v.next.kind === "confirm" && v.trade === "mokgong" ? "견적서 도착" : CUSTOMER_NEXT[v.next.kind];
+      todo.push({ label: `${v.vendor_name} ${what}`, href: withTrade(href, v.trade), due, trade: v.trade });
     } else if (v.next.who === "vendor" && VENDOR_NEXT[v.next.kind]) {
-      waiting.push({ label: `${v.vendor_name} ${VENDOR_NEXT[v.next.kind]}`, due });
+      waiting.push({ label: `${v.vendor_name} ${VENDOR_NEXT[v.next.kind]}`, due, trade: v.trade });
     }
   }
-  if (!todo.length && item?.todo) todo.push({ label: item.todo.action || item.todo.text, href: safeHref(item.todo.link) });
+  const linkOf = (link: string | null | undefined, trade: string | null | undefined) => { const h = safeHref(link); return h ? withTrade(h, trade) : undefined; };
+  if (!todo.length && item?.todo) todo.push({ label: item.todo.action || item.todo.text, href: linkOf(item.todo.link, item.todo.trade), trade: item.todo.trade ?? undefined });
   // 공정마다 지금 칸(#203). 목공 → 도배 → 바닥 공사 순서로
   const order = ["mokgong", "dobae", "floor"];
   const tracks = [...(item?.trade_steps ?? [])]
     .sort((a, b) => order.indexOf(a.trade) - order.indexOf(b.trade))
-    .map((t) => ({ trade: t.trade, label: tradeLabel(t.trade), current: stepIndex(t.current) }));
+    .map((t) => ({
+      trade: t.trade, label: tradeLabel(t.trade), current: stepIndex(t.current),
+      // 그 공정의 지금 할 일(업체별 할 일이 없을 때 띠에 보여요)
+      todo: t.todo && (t.todo.action || t.todo.text) ? { label: t.todo.action || t.todo.text, href: linkOf(t.todo.link, t.trade), trade: t.trade, passive: WAIT_CODES.includes(t.todo.code) } : undefined,
+    }));
   return { current: stepIndex(item?.current), tracks, todo, waiting };
 }
 
@@ -103,7 +117,7 @@ export const getProjectShell = cache(async (id: string): Promise<ProjectShell | 
     const m = mockProject(k);
     const h = m.home;
     const cond: Condition = { scope: h.scope, spaces: h.spaces, faces: h.faces, area_m2: String(h.area_m2), area_basis: h.area_basis, grade: h.grade, occupied: h.occupied };
-    return { id, name: m.name, region: m.region, locked: m.locked, home: h, cond, budgetWon: h.budget_won, current: m.current, tracks: [], sub: m.after ?? null, todo: m.todo, waiting: [], mock: true };
+    return { id, name: m.name, region: m.region, locked: m.locked, home: h, cond, budgetWon: h.budget_won, current: m.current, tracks: [], sub: m.after ?? null, todo: m.todo, waiting: [], shortName: m.name, mock: true };
   }
   if (!isUuid(id)) return null;
   const [p, list] = await Promise.all([getMyProject(id), listMyProjects().catch(() => [] as ApiProjectItem[])]);
@@ -121,6 +135,7 @@ export const getProjectShell = cache(async (id: string): Promise<ProjectShell | 
   return {
     id: p.id, name: projectName(h?.emd ?? p.emd ?? item?.emd, p.region, trades), region: p.region, locked: p.locked,
     home: h, cond, budgetWon: h?.budget_won ?? p.budget_won ?? null, ...band, sub, mock: false,
+    shortName: `${(h?.emd ?? p.emd ?? item?.emd) || p.region.split(" ").at(-1) || p.region} 아파트`,
   };
 });
 

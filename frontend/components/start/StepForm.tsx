@@ -27,6 +27,8 @@ import { clearGuest, draftOf, readGuest, writeGuest } from "@/lib/guest/store";
 import { termByName, termHref } from "@/lib/guide";
 import { DateSheet } from "./DateSheet";
 import { RegionSheet } from "./RegionSheet";
+import { moveTab } from "@/components/ui/tabKeys";
+import { badTabs, errorTab, WORK_TABS, type WorkTab } from "./workTab";
 import s from "./StepForm.module.css";
 
 export type StepMode = "guest" | "member" | "edit";
@@ -71,6 +73,8 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
   const [unit, setUnit] = useState<"m2" | "py">("m2");
   const [py, setPy] = useState("");
   const [sheet, setSheet] = useState<null | "region" | "date">(null);
+  /** 원하는 공사의 공정 탭 */
+  const [wtab, setWtab] = useState<WorkTab>("dobae");
   const [busy, setBusy] = useState(false);
   const [formErr, setFormErr] = useState<string | null>(null);
   const head = useRef<HTMLHeadingElement>(null);
@@ -124,7 +128,11 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
 
   async function finish() {
     setTried((x) => ({ ...x, work: true }));
-    if (busy || Object.keys(errorsIn(checkDraft(d), "work")).length) return;
+    const workErr = Object.keys(errorsIn(checkDraft(d), "work"));
+    // 고를 칸이 다른 공정 탭에만 있으면 그 탭을 열어 보여요(#234: 탭에 가려 오류가 안 보이지 않게)
+    const go = errorTab(workErr, dobae, wtab);
+    if (go) setWtab(go);
+    if (busy || workErr.length) return;
     if (Object.keys(errorsIn(checkDraft(d), "home")).length) { setTried({ home: true, work: true }); setStep("home"); return; }
     if (mode === "guest") {
       writeGuest(d);
@@ -161,6 +169,8 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
   const homeLine = [place || "지역", d.area ? `${d.basis === "exclusive" ? "전용" : "공급"} ${d.area}㎡` : null, d.occupied === null ? null : d.occupied ? "살면서 공사" : "빈 집"].filter(Boolean).join(" · ");
   const doneLabel = mode === "edit" ? "저장하고 돌아가기" : busy ? "내 공사를 만들고 있어요" : "표준견적서 보기";
   const nWork = Object.keys(eWork).length;
+  /** 공정 탭 점: 제출해 본 뒤 고를 칸이 남은 탭(도배를 끄면 도배 탭은 늘) */
+  const badTab = badTabs(Object.keys(eWork), dobae);
   const nHome = Object.keys(eHome).length;
 
   const body = (
@@ -209,37 +219,60 @@ export function StepForm({ regions, today, mode, projectId, initial, mock, crumb
         ) : (
           <section className={s.card} aria-labelledby="sf-work">
             <div className={s.top}><h2 id="sf-work" ref={head} tabIndex={-1}>원하는 공사</h2><span className={s.mute}>아파트</span></div>
-            <Row label="공정" help={<Tip label="공정" terms={["걸레받이", "문선"]} note="목공은 몰딩 · 걸레받이 · 문처럼 나무로 마감하는 일이에요. 목공을 먼저 하고 도배를 해요." />} error={eWork.mokgong}>
-              <div className={s.chips} role="group" aria-label="공정 고르기">
-                {/* 공사 순서대로 목공 → 도배 → 바닥(2026-11-26 사용자) */}
-                <button type="button" className={s.chip} aria-pressed={d.mok} onClick={() => set({ mok: !d.mok })}>목공</button>
-                <button type="button" className={s.chip} aria-pressed={dobae} onClick={() => setDobae(!dobae)}>도배</button>
-                <button type="button" className={s.chip} aria-pressed={false} disabled>바닥(마루) <span className={s.soon}>준비 중</span></button>
+            {/* 공정 탭(2026-11-27 사용자): 공정마다 탭에서 따로 골라요. 공사 순서대로 목공 → 도배 → 바닥 */}
+            <Row label="공정" help={<Tip label="공정" terms={["걸레받이", "문선"]} note="목공은 몰딩 · 걸레받이 · 문처럼 나무로 마감하는 일이에요. 목공을 먼저 하고 도배를 해요." />}>
+              <div className={s.wtabs} role="tablist" aria-label="공정" onKeyDown={(e) => moveTab(e, WORK_TABS, wtab, setWtab)}>
+                {([["mokgong", "목공", d.mok], ["dobae", "도배", dobae], ["floor", "바닥", false]] as const).map(([k, label, on]) => { const bad = badTab.has(k); return (
+                  <button key={k} type="button" role="tab" id={`sf-tab-${k}`} aria-selected={wtab === k} tabIndex={wtab === k ? 0 : -1} aria-controls="sf-tabpanel" className={wtab === k ? `${s.wtab} ${s.wtabOn}` : s.wtab} onClick={() => setWtab(k)}>
+                    {label}
+                    {k === "floor" ? <span className={s.soon}>준비 중</span> : on ? <span className={s.wOn}><Icon name="check" size={14} strokeWidth={3} /><span className="mj-sr">고름</span></span> : <span className={s.soon}>안 함</span>}
+                    {bad ? <span className={s.wBad}><span className="mj-sr">고를 칸이 있어요</span></span> : null}
+                  </button>
+                ); })}
               </div>
-              {!dobae ? <span className={s.fieldErr}><Icon name="error" size={16} />지금은 도배가 꼭 들어가요. 도배를 다시 눌러 주세요.</span> : null}
-              {d.mok ? (
-                <ChoiceChips multiple legend="목공 할 곳" value={d.mokgong} onChange={(v) => set({ mokgong: v as MokItem[] })} options={MOK_ITEMS.map((x) => ({ value: x.key, label: x.label }))} />
-              ) : null}
               {d.mok ? <p className={s.order} aria-label="공사 순서">공사 순서 <b>목공</b> → <b>도배</b> → <span>바닥</span></p> : null}
             </Row>
-            <Row label="벽지" help={<Tip label="벽지" terms={["실크 벽지", "합지"]} />} error={eWork.grade}>
-              {/* 공정 칩과 같은 모양(정석 피드백 7) */}
-              <div className={s.chips} role="group" aria-label="벽지">
-                {(["basic", "economy"] as const).map((g) => (
-                  <button key={g} type="button" className={s.chip} aria-pressed={d.grade === g} onClick={() => set({ grade: g })}>{GRADE_WORD[g]}</button>
-                ))}
-              </div>
-            </Row>
-            <Row label="도배 범위" help={<Tip label="도배 범위" terms={[]} note="전체는 집 안 벽 + 천장이에요. 방 몇 개나 벽만 하려면 부분을 골라요." />}>
-              <Segmented legend="도배 범위" hideLegend value={d.scope} onChange={(v) => set(v === "partial" ? { scope: "partial" } : { scope: "full", spaces: [], faces: ["wall", "ceiling"] })}
-                options={[{ value: "full", label: "전체" }, { value: "partial", label: "부분" }]} />
-              {d.scope === "partial" ? (
-                <div className={s.part}>
-                  <ChoiceChips multiple legend="공간" value={d.spaces} error={eWork.spaces} onChange={(v) => set({ spaces: v as SpaceKind[] })} options={SPACES.map((x) => ({ value: x.key, label: x.label }))} />
-                  <ChoiceChips multiple legend="면" value={d.faces} error={eWork.faces} onChange={(v) => set({ faces: v as Face[] })} options={FACES.map((x) => ({ value: x.key, label: x.label }))} />
-                </div>
-              ) : null}
-            </Row>
+            <div id="sf-tabpanel" role="tabpanel" aria-labelledby={`sf-tab-${wtab}`} className={s.wpanel}>
+              {wtab === "mokgong" ? (
+                <Row label="목공" error={eWork.mokgong}>
+                  <div className={s.chips} role="group" aria-label="목공 하기">
+                    <button type="button" className={s.chip} aria-pressed={d.mok} onClick={() => set({ mok: true })}>목공도 해요</button>
+                    <button type="button" className={s.chip} aria-pressed={!d.mok} onClick={() => set({ mok: false })}>안 해요</button>
+                  </div>
+                  {d.mok ? (
+                    <ChoiceChips multiple legend="목공 할 곳" value={d.mokgong} onChange={(v) => set({ mokgong: v as MokItem[] })} options={MOK_ITEMS.map((x) => ({ value: x.key, label: x.label }))} />
+                  ) : <p className={s.mute}>몰딩 · 걸레받이 · 문을 바꾸려면 &apos;목공도 해요&apos;를 골라요.</p>}
+                </Row>
+              ) : wtab === "dobae" ? (
+                <>
+                  {!dobae ? (
+                    <Row label="도배">
+                      <span className={s.fieldErr}><Icon name="error" size={16} />지금은 도배가 꼭 들어가요.</span>
+                      <div className={s.chips}><button type="button" className={s.chip} aria-pressed={false} onClick={() => setDobae(true)}>도배 해요</button></div>
+                    </Row>
+                  ) : null}
+                  <Row label="벽지" help={<Tip label="벽지" terms={["실크 벽지", "합지"]} />} error={eWork.grade}>
+                    <div className={s.chips} role="group" aria-label="벽지">
+                      {(["basic", "economy"] as const).map((g) => (
+                        <button key={g} type="button" className={s.chip} aria-pressed={d.grade === g} onClick={() => set({ grade: g })}>{GRADE_WORD[g]}</button>
+                      ))}
+                    </div>
+                  </Row>
+                  <Row label="도배 범위" help={<Tip label="도배 범위" terms={[]} note="전체는 집 안 벽 + 천장이에요. 방 몇 개나 벽만 하려면 부분을 골라요." />}>
+                    <Segmented legend="도배 범위" hideLegend value={d.scope} onChange={(v) => set(v === "partial" ? { scope: "partial" } : { scope: "full", spaces: [], faces: ["wall", "ceiling"] })}
+                      options={[{ value: "full", label: "전체" }, { value: "partial", label: "부분" }]} />
+                    {d.scope === "partial" ? (
+                      <div className={s.part}>
+                        <ChoiceChips multiple legend="공간" value={d.spaces} error={eWork.spaces} onChange={(v) => set({ spaces: v as SpaceKind[] })} options={SPACES.map((x) => ({ value: x.key, label: x.label }))} />
+                        <ChoiceChips multiple legend="면" value={d.faces} error={eWork.faces} onChange={(v) => set({ faces: v as Face[] })} options={FACES.map((x) => ({ value: x.key, label: x.label }))} />
+                      </div>
+                    ) : null}
+                  </Row>
+                </>
+              ) : (
+                <Row label="바닥(마루)"><p className={s.mute}>바닥(마루)은 준비 중이에요. 열리면 여기서 골라요. 지금은 목공 · 도배만 견적을 받아요.</p></Row>
+              )}
+            </div>
             <Row label="희망 시기">
               <div className={s.chips}>
                 <button type="button" className={s.chip} aria-pressed={!d.start} onClick={() => set({ start: null })}>아직 몰라요</button>

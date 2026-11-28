@@ -880,3 +880,15 @@ class V2MqOut(BaseModel):
     per_pyeong: int  # 평당 (부가세 포함)
     quotes: int
     version: str
+
+
+class V2MqPartOut(BaseModel):
+    """공정 하나만 따로 계산한 시장 단가 표준견적서 (공정 탭)"""
+
+    trade: Literal["dobae", "mokgong"]
+    quote: V2MqOut
+
+
+class V2MqPartsOut(BaseModel):
+    parts: list[V2MqPartOut]
+    total: int = Field(description="공종별 표준견적서 금액을 합친 값 (부가세 포함)")

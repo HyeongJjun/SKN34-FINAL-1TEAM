@@ -335,7 +335,7 @@ def _trade(key, name, lines: list[QLine], net: int) -> QTrade:
 
 def _total(inp: Input, book: Book) -> int:
     dobae, mok, _ = _lines(inp, book)
-    return _money(sum(ln.amount for ln in dobae + mok))[3].total
+    return _money_sum([sum(ln.amount for ln in x) for x in (dobae, mok) if x])[3].total
 
 
 def _money(net: int) -> tuple[list[Overhead], int, int, Money]:
@@ -343,6 +343,21 @@ def _money(net: int) -> tuple[list[Overhead], int, int, Money]:
     before = net + sum(o.amount for o in ovh)
     supply = int((Decimal(before) / CUT_UNIT).to_integral_value(rounding=ROUND_FLOOR)) * CUT_UNIT
     return ovh, before, supply, with_vat(supply)
+
+
+def _money_sum(nets: list[int]) -> tuple[list[Overhead], int, int, Money]:
+    """공종마다 따로 계산한 경비 · 만 원 절사 · 부가세를 합친 값(2026-11-27 팀 결정: 표준견적서는 공종별 금액을
+    합친 금액). 공종이 하나면 _money와 같다. 이렇게 해야 공종별 표준견적서를 더한 값과 전체 금액이 늘 같다."""
+    parts = [_money(n) for n in nets]
+    ovh = [
+        Overhead(k, n, r, sum(x[0][i].amount for x in parts)) for i, (k, n, r) in enumerate(RATES)
+    ]
+    money = Money(
+        sum(x[3].supply for x in parts),
+        sum(x[3].vat for x in parts),
+        sum(x[3].total for x in parts),
+    )
+    return ovh, sum(x[1] for x in parts), sum(x[2] for x in parts), money
 
 
 def build(inp: Input, book: Book) -> Quote:
@@ -361,7 +376,7 @@ def build(inp: Input, book: Book) -> Quote:
         trades.append(_trade("dobae", "도배", dobae, net))
     if inp.mokgong:
         trades.append(_trade("mokgong", "목공 (문 포함)", mok, net))
-    ovh, before, supply, money = _money(net)
+    ovh, before, supply, money = _money_sum([sum(ln.amount for ln in x) for x in (dobae, mok) if x])
 
     on = common_options(book) if inp.options is None else inp.options
     common = common_options(book)

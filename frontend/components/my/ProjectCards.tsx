@@ -12,6 +12,7 @@ import { StateTag } from "@/components/ui/StateTag";
 import { Steps } from "@/components/ui/Steps";
 import { Group, Row, Rows, Small } from "@/components/project/Kit";
 import { boardState, slotText, windowText } from "@/components/visit/text";
+import { myVendorRows, withTrade } from "@/components/secretary/boardLink";
 import s from "./cards.module.css";
 
 export type MyCard = { p: ApiMyProject; name: string; rows: BoardRow[] | null };
@@ -36,24 +37,13 @@ function rowSub(r: BoardRow): string | undefined {
 }
 
 function VendorRows({ c, base }: { c: MyCard; base: string }) {
-  const ids = new Set(c.p.vendors.map((v) => v.visit_id));
-  const rows = (c.rows ?? []).filter((r) => ids.has(r.visit_id));
-  if (rows.length) {
-    return (
-      <Rows label="담은 업체">
-        {rows.map((r) => {
-          const st = boardState(r);
-          const href = r.status === "offered" || r.status === "proposed" ? `${base}/visits/${encodeURIComponent(r.visit_id)}` : `${base}/visits`;
-          return <Row key={r.visit_id} list label={r.vendor_name} sub={rowSub(r)} value={<StateTag tone={st.tone}>{st.label}</StateTag>} href={href} />;
-        })}
-      </Rows>
-    );
-  }
+  // 담은 업체마다 한 줄: 상태판 줄이 있으면 그 상태, 없으면 업체 상태. 링크는 그 업체 공정 탭으로(#234 리뷰)
   return (
     <Rows label="담은 업체">
-      {c.p.vendors.map((v) => {
-        const st = visitState(v.status, "customer");
-        return <Row key={v.visit_id} list label={v.vendor_name} sub={v.next.due_at ? dueText(v.next.due_at) : undefined} value={<StateTag tone={st.tone}>{st.label}</StateTag>} href={`${base}/visits`} />;
+      {myVendorRows(base, c.p.vendors, c.rows).map(({ vendor: v, row: r, href }) => {
+        const st = r ? boardState(r) : visitState(v.status, "customer");
+        const sub = r ? rowSub(r) : v.next.due_at ? dueText(v.next.due_at) : undefined;
+        return <Row key={v.visit_id} list label={r?.vendor_name ?? v.vendor_name} sub={sub} value={<StateTag tone={st.tone}>{st.label}</StateTag>} href={href} />;
       })}
     </Rows>
   );
@@ -66,7 +56,7 @@ function Card({ c }: { c: MyCard }) {
   const tracks = [...p.trade_steps].sort((a, b) => (a.trade === "mokgong" ? -1 : b.trade === "mokgong" ? 1 : 0));
   const small = [sizeLabel(p.size), p.trades.includes("dobae") ? gradeLabel(p.grades.dobae) : null, `마지막 소식 ${dateShort(dateSeoul(p.updated_at))}`].filter(Boolean).join(" · ");
   const todo = p.todo && p.todo.text ? p.todo : null;
-  const todoHref = todo && inSite(todo.link) ? todo.link : null;
+  const todoHref = todo && inSite(todo.link) ? withTrade(todo.link, todo.trade) : null;
   const picked = p.vendors.length > 0;
   return (
     <li>
@@ -96,7 +86,7 @@ function Card({ c }: { c: MyCard }) {
         ) : (
           <div className={s.todo}>
             <p className={s.todoText}>{todo?.text || "업체를 담을 차례예요"}</p>
-            <div className={s.todoBtn}><Button variant="text" arrow href={todoHref ?? `${base}/vendors`}>{todo?.action || "업체 보기"}</Button></div>
+            <div className={s.todoBtn}><Button variant="text" arrow href={todoHref ?? withTrade(`${base}/vendors`, todo?.trade)}>{todo?.action || "업체 보기"}</Button></div>
           </div>
         )}
       </Group>

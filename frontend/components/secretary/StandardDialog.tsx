@@ -12,29 +12,57 @@ import { MarketSheet, MarketTotal } from "@/components/v2/market/MarketQuote";
 import type { Schemas } from "@/lib/backend/client";
 import { won } from "@/lib/format";
 import { daysCaption, type StdView } from "@/lib/guest/standard";
+import { BigFigure } from "@/components/ui/Money";
+import { stdSource } from "./boardLink";
 import s from "./StandardDialog.module.css";
 
-export type StdData = { view: StdView; market: Schemas["V2MqOut"] | null };
+export type StdData = { view: StdView; market: Schemas["V2MqOut"] | null; /** 공정마다 따로 계산한 표준견적서(공정 탭) */ parts?: Schemas["V2MqPartsOut"] | null };
 
 /** onPick: '업체 고르기' — 창을 닫고 플랜의 업체 칸으로 옮겨요(폰은 플랜을 펼쳐요) */
-export function StandardDialog({ open, onClose, onPick, data, pid, locked, onEdit, onPlan, basis }: { open: boolean; onClose: () => void; onPick: () => void; data: StdData; pid: string; locked: boolean; /** 업체 도배 가견적 %의 기준(도배만 시장 단가, 서버 standard_total) */ basis?: number | null; /** 조건 바꾸기 · 예상 공정표를 재재 화면 창으로(옮기지 않아요) */ onEdit: () => void; onPlan: () => void }) {
+export function StandardDialog({ open, onClose, onPick, data, pid, locked, onEdit, onPlan, trade, basis }: { open: boolean; onClose: () => void; onPick: () => void; data: StdData; pid: string; locked: boolean; /** 업체 도배 가견적 %의 기준(도배만 시장 단가, 서버 standard_total) */ basis?: number | null; /** 공정 탭에서 열면 그 공정 표준견적서만 */ trade?: "dobae" | "mokgong"; /** 조건 바꾸기 · 예상 공정표를 재재 화면 창으로(옮기지 않아요) */ onEdit: () => void; onPlan: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const id = useId();
   const h = useModal(ref, open, onClose);
   const change = `/start?edit=${pid}`;
   const { view, market } = data;
   const parts = view.parts ?? [];
+  // 금액 출처는 재재 화면과 같은 stdSource 하나로 정해요(#234 리뷰: 시장 단가 · 공공 기준이 섞이거나 표가 겹치지 않게).
+  // 공정 탭: 모든 공정의 시장 단가가 왔으면 그 공정 시장 단가, 아니면 기존 표준견적서의 그 공정 줄
+  const src = stdSource(data).src;
+  const all = src === "parts" ? data.parts ?? null : null;
+  const word = (t: string) => (t === "dobae" ? "도배" : t === "mokgong" ? "목공" : t);
+  const one = trade && all ? all.parts.find((x) => x.trade === trade) ?? null : null;
+  // 시장 단가 공정별 견적이 없는 공사(부분 도배 + 목공): 기존 표준견적서의 공정별 줄 · 합계로 그 공정만 보여요(#234 리뷰)
+  const sepTrade = trade && src === "public" && parts.length && view.sum ? trade : null;
+  const sepPart = sepTrade === "mokgong" ? parts.find((x) => x.trade === "mokgong") ?? null : null;
+  const sepWords = view.sum ? `도배 ${won(view.total)} + ${parts.map((x) => `${word(x.trade)} ${won(x.total)}`).join(" + ")}` : "";
   return (
     <dialog ref={ref} className={s.dlg} aria-labelledby={`${id}-t`} onCancel={h.onCancel} onClick={h.onClick}>
       {open ? (
         <div className={s.card}>
           <div className={s.head}>
-            <h2 id={`${id}-t`}>표준견적서</h2>
+            <h2 id={`${id}-t`}>{one ? `${word(one.trade)} 표준견적서` : sepTrade ? `${word(sepTrade)} 표준견적서` : "표준견적서"}</h2>
             <button type="button" className={s.x} aria-label="닫기" onClick={onClose}><Icon name="close" /></button>
           </div>
           <div className={s.body}>
-            {parts.length ? <TradeOrder has={["dobae", ...parts.map((x) => x.trade)]} /> : null}
-            {market ? (
+            {parts.length && !one && !sepTrade ? <TradeOrder has={["dobae", ...parts.map((x) => x.trade)]} /> : null}
+            {one && all ? (
+              <>
+                <MarketTotal q={one.quote} changeHref={change} onChange={onEdit} caption={`${word(one.trade)}만 · 부가세 포함`} />
+                <p className={s.note}>전체 표준견적서 <b className="mj-num">{won(all.total)}</b>은 공종별 금액을 합친 금액이에요({all.parts.map((x) => `${word(x.trade)} ${won(x.quote.total)}`).join(" + ")}).</p>
+                <MarketSheet q={one.quote} />
+              </>
+            ) : sepTrade && view.sum ? (
+              <>
+                {sepPart ? (
+                  <>
+                    <BigFigure value={sepPart.total} caption="목공만 · 부가세 포함" />
+                    <TradePartSheets parts={[sepPart]} />
+                  </>
+                ) : <StandardSheet view={{ ...view, parts: undefined, sum: undefined }} changeHref={change} onChange={onEdit} />}
+                <p className={s.note}>전체 표준견적서 <b className="mj-num">{won(view.sum.total)}</b>은 공종별 금액을 합친 금액이에요({sepWords}).</p>
+              </>
+            ) : src === "market" && market ? (
               <>
                 <MarketTotal q={market} changeHref={change} onChange={onEdit} caption={["부가세 포함", daysCaption(view.days)].filter(Boolean).join(" · ")} />
                 {/* 목공도 한 공사는 합계와 가견적 % 기준이 달라서, 기준(도배만)을 서버 값 그대로 보여요(#207) */}
@@ -47,7 +75,8 @@ export function StandardDialog({ open, onClose, onPick, data, pid, locked, onEdi
               <StandardSheet view={view} changeHref={change} onChange={onEdit} />
             )}
             {/* 시장 단가 견적은 목공 줄도 들어 있어요(#207). 시장 단가가 없을 때만 공정별 줄을 따로 */}
-            {parts.length && !market ? <TradePartSheets parts={parts} /> : null}
+            {/* 공정 탭이 없고 공공 기준일 때만 다른 공정 줄을 아래에 붙여요(시장 단가 견적엔 이미 들어 있어요) */}
+            {!trade && src === "public" && parts.length ? <TradePartSheets parts={parts} /> : null}
             {locked ? <p className={s.note}>실측을 요청한 뒤라 조건은 잠겼어요. 조건 바꾸기에서 넣은 값만 볼 수 있어요.</p> : null}
           </div>
           <div className={s.actions}>

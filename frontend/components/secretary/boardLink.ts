@@ -12,7 +12,7 @@ export type BoardAnswer = {
 };
 /** stage: 도배 실측 견적서를 보냈어요(quoted · 비교 칸) · 실측 요청이 진행 중이에요(visit · 실측 칸) */
 export type BoardVendor = { vendor_id: string; name: string; trade: "dobae" | "mokgong"; stage?: "quoted" | "visit" };
-/** 도배 기준: quoted 견적서가 왔어요 · deal 업체를 확정했어요 · chosen 도배 업체에 실측을 이미 보냈어요 */
+/** 그 공정 기준(boardStateFor): quoted 견적서가 왔어요 · deal 업체를 확정했어요 · chosen 실측을 이미 보냈어요 */
 export type BoardState = { quoted: boolean; deal: boolean; chosen?: boolean };
 export type BoardTarget = { tab: number; hi: string[]; trade: "dobae" | "mokgong" | null } | null;
 
@@ -100,4 +100,94 @@ export function threadOf<T extends { thread_id: string; project_id: string | nul
   if (want.threadId) return heads.find((t) => t.thread_id === want.threadId && (t.project_id == null || t.project_id === projectId)) ?? null;
   if (!want.visitId) return null;
   return heads.find((t) => t.project_id === projectId && t.visit_id === want.visitId) ?? null;
+}
+
+/** 공정 탭(#234 리뷰): 공정이 둘 이상이면 재재 답의 업체도 고른 탭 공정 업체만 맞춰 봐요.
+ *  보드 업체 칸이 탭과 다른 공정을 보이지 않게 해요(둘 다 하는 업체는 그 탭 공정으로) */
+export function tabVendors(vs: BoardVendor[], multi: boolean, active: "dobae" | "mokgong"): BoardVendor[] {
+  return multi ? vs.filter((v) => v.trade === active) : vs;
+}
+
+/** 기다림 카드(#234 리뷰): 그 공정에 업체 답 · 실측 · 견적서를 기다리는 요청만 있고,
+ *  그 공정의 확정 · 온 견적서 · 고를 날이 없을 때. 다른 공정 상태는 넣지 않아요 */
+export function isWaiting(visits: { status: string }[], st: { deal: boolean; quoted: number; toPick: number }): boolean {
+  if (st.deal || st.quoted || st.toPick) return false;
+  return visits.some((v) => ["requested", "picked", "booked", "visited"].includes(v.status));
+}
+
+/** 보드 이동을 판단할 공정 상태(#234 리뷰): 목공 탭이면 목공의 확정 · 진행 실측만 봐요(도배 견적서 · 확정을 섞지 않아요).
+ *  목공은 비교 · 일정 칸이 아직 없어 보드가 실측 칸(3)까지예요 */
+export function boardStateFor(mokTab: boolean, dobae: BoardState, mok: { deal: boolean; chosen: boolean }): BoardState & { maxTab: number } {
+  return mokTab ? { quoted: false, deal: mok.deal, chosen: mok.chosen, maxTab: 3 } : { ...dobae, maxTab: 7 };
+}
+/** 고른 칸을 그 공정 보드에 있는 칸으로 맞춰요 */
+export function clampTarget<T extends { tab: number }>(to: T | null, maxTab: number): T | null {
+  return to ? { ...to, tab: Math.min(to.tab, maxTab) } : null;
+}
+
+/** 주소의 공정(?trade=) 그대로 넘길 꼬리(#234 리뷰: 업체 · 실측 · 견적서 주소에서 재재 화면으로 갈 때 공정이 빠지지 않게).
+ *  공정 키 모양(영어 소문자 · 숫자 · _)만 넘겨요. 공정 목록은 여기서 정하지 않고, 그 공사에 없는 공정이면 재재 화면이 기본 탭을 골라요 */
+export function tradeQuery(raw: string | string[] | undefined | null, lead: "?" | "&" = "&"): string {
+  const t = Array.isArray(raw) ? raw[0] : raw;
+  return t && /^[a-z][a-z0-9_]{0,19}$/.test(t) ? `${lead}trade=${t}` : "";
+}
+/** 사이트 안 주소에 공정을 붙여요(이미 있으면 그대로) */
+export function withTrade(href: string, trade: string | null | undefined): string {
+  if (!trade || /[?&]trade=/.test(href)) return href;
+  return `${href}${tradeQuery(trade, href.includes("?") ? "&" : "?")}`;
+}
+/** 주소의 다른 값은 그대로 두고 준 값만 바꿔요(null이면 지워요). 공정 탭을 바꿔도 화면 상태(?tab · ?view · ?sort)가 남게(#234 리뷰) */
+export function withQuery(path: string, search: string, set: Record<string, string | null>): string {
+  const q = new URLSearchParams(search);
+  for (const [k, v] of Object.entries(set)) {
+    if (v == null) q.delete(k);
+    else q.set(k, v);
+  }
+  const s = q.toString();
+  return s ? `${path}?${s}` : path;
+}
+
+/** 표준견적서 금액의 출처를 한 곳에서 정해요(#234 리뷰: 공정별 금액 · 전체 금액 · 창이 같은 기준).
+ *  - 공정이 둘 이상(view.parts가 있음): 모든 공정의 공정별 시장 단가가 왔을 때만 시장 단가("parts"), 하나라도 없으면 공공 기준("public").
+ *    전체 시장 단가(market)는 쓰지 않아요(공정별 값과 기준이 섞이지 않게)
+ *  - 공정이 하나: 시장 단가가 있으면 그 값("market"), 없으면 공공 기준 */
+export type StdSource = { src: "parts" | "market" | "public"; total: number; per: Record<string, number> | null };
+export function stdSource(d: {
+  view: { total: number; sum?: { total: number }; parts?: { trade: string; total: number }[] };
+  market: { total: number } | null;
+  parts?: { total: number; parts: { trade: string; quote: { total: number } }[] } | null;
+}): StdSource {
+  const others = d.view.parts ?? [];
+  if (others.length) {
+    const want = ["dobae", ...others.map((x) => x.trade)];
+    const got = d.parts?.parts ?? [];
+    if (d.parts && want.every((t) => got.some((x) => x.trade === t))) {
+      return { src: "parts", total: d.parts.total, per: Object.fromEntries(got.map((x) => [x.trade, x.quote.total])) };
+    }
+    return { src: "public", total: d.view.sum?.total ?? d.view.total, per: { dobae: d.view.total, ...Object.fromEntries(others.map((x) => [x.trade, x.total])) } };
+  }
+  return d.market ? { src: "market", total: d.market.total, per: null } : { src: "public", total: d.view.sum?.total ?? d.view.total, per: null };
+}
+
+/** 보드 칸마다 '재재가 챙긴 일'(#234 리뷰): 고른 공정 상태로만 채우고, 그 공정 보드에 없는 칸(maxTab 넘음)은 비워요 */
+export function autoDone(st: { asked: boolean; quoted: boolean; deal: boolean; maxTab: number }): Record<number, string[]> {
+  const all: Record<number, string[]> = {
+    0: ["집 정보 정리"], 1: ["표준견적서 계산"],
+    2: st.asked ? ["업체에 실측 날짜 물어보기"] : [],
+    4: st.quoted ? ["견적서를 표준견적서와 비교"] : [],
+    5: st.deal ? ["확정 공정표 만들기"] : [],
+  };
+  return Object.fromEntries(Object.entries(all).filter(([k]) => Number(k) <= st.maxTab));
+}
+
+/** 내 공사 목록 업체 줄: 담은 업체마다 한 줄, 상태판 줄이 있으면 그 상태. 링크는 그 업체 공정 탭으로(#234 리뷰) */
+export function myVendorRows<V extends { visit_id: string; trade: string }, R extends { visit_id: string; status: string }>(
+  base: string, vendors: readonly V[], rows: readonly R[] | null,
+): { vendor: V; row: R | null; href: string }[] {
+  const got = new Map((rows ?? []).map((r) => [r.visit_id, r]));
+  return vendors.map((v) => {
+    const row = got.get(v.visit_id) ?? null;
+    const to = row && (row.status === "offered" || row.status === "proposed") ? `${base}/visits/${encodeURIComponent(v.visit_id)}` : `${base}/visits`;
+    return { vendor: v, row, href: withTrade(to, v.trade) };
+  });
 }

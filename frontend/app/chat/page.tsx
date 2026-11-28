@@ -42,7 +42,7 @@ export default async function ChatListPage() {
 /** C23: 날짜 고를 차례인 업체가 있으면 그 업체 이름으로 언제 열리는지 알려요 */
 async function CustomerEmpty() {
   const pid = await latestProjectId();
-  const board = pid ? await getVisitBoard(pid).catch(() => null) : null;
+  const board = pid ? await getVisitBoard(pid, "dobae").catch(() => null) : null;
   const offered = board?.board.find((r) => r.status === "offered");
   return (
     <div className={s.empty}>
