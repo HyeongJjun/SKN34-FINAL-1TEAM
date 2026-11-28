@@ -31,7 +31,7 @@ import { dateShort, euro, won } from "@/lib/format";
 import { termByName } from "@/lib/guide";
 import { TRADE_ORDER } from "@/lib/labels";
 import { moveTab } from "@/components/ui/tabKeys";
-import { autoDone, boardStateFor, boardTarget, clampTarget, stdSource, isWaiting, tabVendors, CLOSED_VISITS, norm, pickRule, pickStateOf, type PickState } from "./boardLink";
+import { autoDone, boardStateFor, boardTarget, clampTarget, stdSource, isWaiting, tabVendors, withQuery, CLOSED_VISITS, norm, pickRule, pickStateOf, type PickState } from "./boardLink";
 import { quickChips } from "./chips";
 import { Jaejae } from "./Jaejae";
 import { MOK_TODO, Plan, PLAN_STEPS } from "./Plan";
@@ -113,7 +113,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   // 도배 칸 내용(비교 · 확정 · 일정)은 도배 탭에서만. 목공이 아닌 공정을 도배로 보지 않아요
   const isDobae = active === "dobae";
   // 주소만 바꿔요(서버에서 화면 값을 다시 읽지 않아 탭이 바로 바뀌어요). useSearchParams가 따라와요
-  const pickTrade = (t: Trade) => window.history.replaceState(null, "", `${pathname}?trade=${t}`);
+  const pickTrade = (t: Trade) => window.history.replaceState(null, "", withQuery(pathname, window.location.search, { trade: t }));
   const now = stepOf(data, active);
   // 보드 칸 주소(?step, 옛 업체 · 실측 화면에서 넘어옴)로 오면 폰에서도 플랜을 펼쳐 그 칸을 바로 보여요(#221 리뷰)
   const [open, setOpen] = useState(data.step != null);
@@ -185,7 +185,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
       requestAnimationFrame(() => document.getElementById("jj-board")?.scrollIntoView({ block: "start" }));
     }
     if (data.openStd && std) setStdOpen(true);
-    router.replace(`/projects/${pid}/assistant${multi ? `?trade=${active}` : ""}`, { scroll: false });
+    router.replace(withQuery(`/projects/${pid}/assistant`, window.location.search, { step: null, open: null, trade: multi ? active : null }), { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 넘어온 값(cameKey)이 바뀔 때만
   }, [cameKey]);
   // 단계가 넘어가면 보드도 지금 단계로 옮겨요. 지금 칸 값이 실제로 바뀔 때만(개발 모드 StrictMode는 effect를 두 번 돌려서 '처음 한 번 건너뛰기'로는 넘어온 칸이 지워져요)

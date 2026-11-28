@@ -1,7 +1,7 @@
 // 재재 대화 → 보드 연동 시험(#197): pnpm test:unit
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { autoDone, boardStateFor, myVendorRows, boardTarget, clampTarget, stdSource, tradeQuery, withTrade, isWaiting, pickRule, pickStateOf, requestSaid, tabVendors, threadOf, type BoardAnswer } from "./boardLink.ts";
+import { autoDone, boardStateFor, myVendorRows, boardTarget, clampTarget, stdSource, tradeQuery, withQuery, withTrade, isWaiting, pickRule, pickStateOf, requestSaid, tabVendors, threadOf, type BoardAnswer } from "./boardLink.ts";
 
 const A = (over: Partial<BoardAnswer> = {}): BoardAnswer => ({ notice: "", sections: [], cards: [], ...over });
 const V = [
@@ -246,4 +246,15 @@ test("내 공사 목록: 상태판이 없으면 담은 업체 그대로 · 이 �
     ["vd", null, "/projects/p1/visits?trade=dobae"],
   ]);
   assert.equal(myVendorRows(B, MV, [{ visit_id: "other", status: "booked" }]).some((x) => x.row), false);
+});
+
+test("공정 탭을 바꿔도 화면의 다른 주소 값은 그대로(#234 리뷰)", () => {
+  // 공사 기록 · 일정 · 업체 리뷰 화면
+  assert.equal(withQuery("/projects/p1", "?tab=log", { trade: "mokgong" }), "/projects/p1?tab=log&trade=mokgong");
+  assert.equal(withQuery("/projects/p1/schedule", "?view=done", { trade: "mokgong" }), "/projects/p1/schedule?view=done&trade=mokgong");
+  assert.equal(withQuery("/projects/p1/vendors/v1/reviews", "?sort=low&trade=mokgong", { trade: "dobae" }), "/projects/p1/vendors/v1/reviews?sort=low&trade=dobae");
+  assert.equal(withQuery("/projects/p1/assistant", "", { trade: "dobae" }), "/projects/p1/assistant?trade=dobae");
+  // 재재 화면 주소 정리: 넘어온 칸 · 창 값만 지우고 공정은 남겨요
+  assert.equal(withQuery("/projects/p1/assistant", "?step=3&open=standard&trade=mokgong", { step: null, open: null }), "/projects/p1/assistant?trade=mokgong");
+  assert.equal(withQuery("/projects/p1/assistant", "?step=3", { step: null, open: null, trade: null }), "/projects/p1/assistant");
 });

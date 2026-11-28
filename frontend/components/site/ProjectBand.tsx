@@ -5,7 +5,7 @@
 // 할 일 · 기다림이 둘 이상이면 상자 전체가 '지금 할 일 n · 기다림 n ▾' 펼침 단추가 돼요(업체별 할 일 · 기다림, 작은 메뉴 모양).
 // 하나면 상자 전체가 그 할 일로 가는 링크예요. 누를 곳은 모두 40px 이상(단계 칸 · 작은 단계 알약 · 할 일 상자).
 // 머리(AppHeader) 바로 아래, 다른 칸으로 감싸지 않게 둬요(붙는 띠라서). 단계 이름 · 할 일 글은 부르는 쪽이 9판 말로 넘겨요.
-import { withTrade } from "@/components/secretary/boardLink";
+import { withQuery, withTrade } from "@/components/secretary/boardLink";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
@@ -91,7 +91,7 @@ export function ProjectBand({ name, shortName, href, steps = PROJECT_STEPS, curr
   const first = todo[0] ?? waiting[0];
   /** 다른 공정 탭에 내가 할 일이 있나(탭에 점) */
   const hasTodo = (t: BandTrack) => allTodo.some((x) => x.trade === t.trade) || (!!t.todo && !t.todo.passive && !allWaiting.some((x) => x.trade === t.trade));
-  const pick = (t: BandTrack) => { if (t.trade) window.history.replaceState(null, "", `${pathname}?trade=${t.trade}`); };
+  const pick = (t: BandTrack) => { if (t.trade) window.history.replaceState(null, "", withQuery(pathname, window.location.search, { trade: t.trade })); };
   const shortText = multi
     ? tracks.map((t) => `${t.label} ${steps[t.current]?.label ?? ""}`).join(" · ")
     : `${subNow ?? nowLabel}`;

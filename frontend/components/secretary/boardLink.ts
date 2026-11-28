@@ -136,6 +136,16 @@ export function withTrade(href: string, trade: string | null | undefined): strin
   if (!trade || /[?&]trade=/.test(href)) return href;
   return `${href}${tradeQuery(trade, href.includes("?") ? "&" : "?")}`;
 }
+/** 주소의 다른 값은 그대로 두고 준 값만 바꿔요(null이면 지워요). 공정 탭을 바꿔도 화면 상태(?tab · ?view · ?sort)가 남게(#234 리뷰) */
+export function withQuery(path: string, search: string, set: Record<string, string | null>): string {
+  const q = new URLSearchParams(search);
+  for (const [k, v] of Object.entries(set)) {
+    if (v == null) q.delete(k);
+    else q.set(k, v);
+  }
+  const s = q.toString();
+  return s ? `${path}?${s}` : path;
+}
 
 /** 표준견적서 금액의 출처를 한 곳에서 정해요(#234 리뷰: 공정별 금액 · 전체 금액 · 창이 같은 기준).
  *  - 공정이 둘 이상(view.parts가 있음): 모든 공정의 공정별 시장 단가가 왔을 때만 시장 단가("parts"), 하나라도 없으면 공공 기준("public").
