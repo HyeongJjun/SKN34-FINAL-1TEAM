@@ -4,6 +4,7 @@
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/site/AppHeader";
 import { LiveRefresh } from "@/components/schedule/LiveRefresh";
+import { cameFrom } from "@/components/secretary/boardLink";
 import { ProjectFlow } from "@/components/secretary/ProjectFlow";
 import { getChecks, getPlanView, getProjectShell, getRegions } from "@/lib/api/project";
 import { fromSaved } from "@/lib/guest/info";
@@ -15,14 +16,10 @@ import { requireRole } from "@/lib/session";
 
 export const metadata = { title: "재재와 진행하기" };
 
-export default async function SecretaryPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ open?: string; step?: string; view?: string; vendor?: string; trade?: string }> }) {
-  const [{ id }, { open, step, view: sview, vendor, trade }] = await Promise.all([params, searchParams]);
-  // 옛 화면 주소에서 넘어온 창(공정표 · 공사 일정 · 서류 · 리뷰 · 결정 기록) · 업체 자세히(#236)
-  const openWin = open === "plan" || open === "schedule" || open === "docs" || open === "review" || open === "log" ? open : null;
-  const scheduleView = sview === "dates" || sview === "extra" || sview === "done" ? sview : null;
-  const openVendor = vendor && /^[0-9a-f-]{36}$/i.test(vendor) ? { vendorId: vendor, trade: trade === "mokgong" ? ("mokgong" as const) : ("dobae" as const) } : null;
-  // ?step=2(업체) · 3(실측): 업체 보기 · 실측 요청 화면에서 넘어와 그 보드 칸을 열어요
-  const board = step && /^[0-7]$/.test(step) ? Number(step) : null;
+export default async function SecretaryPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const [{ id }, q] = await Promise.all([params, searchParams]);
+  // 옛 화면 · 다른 화면에서 넘어온 보드 칸 · 창 · 업체 창(#236). 읽는 값과 ProjectFlow가 지우는 값은 boardLink.CAME_KEYS 하나예요
+  const { step: board, openWin, scheduleView, openVendor, openStd } = cameFrom(q);
   await requireRole("customer", `/projects/${encodeURIComponent(id)}/assistant`);
   const [p, ov] = await Promise.all([getVisitProject(id), getOverview(id)]);
   if (!p || !ov) notFound();
@@ -42,7 +39,7 @@ export default async function SecretaryPage({ params, searchParams }: { params: 
   return (
     <>
       <AppHeader only="phone" phone={{ title: "재재와 진행하기", back: "/my" }} />
-      <ProjectFlow data={{ p, ov, compare, schedule, visits, vendors, mokVendors, draft, mokDraft, today: todaySeoul(), std, openStd: open === "standard", step: board, openWin, scheduleView, openVendor,
+      <ProjectFlow data={{ p, ov, compare, schedule, visits, vendors, mokVendors, draft, mokDraft, today: todaySeoul(), std, openStd, step: board, openWin, scheduleView, openVendor,
         win: { regions, draft: shell?.home ? fromSaved(shell.home) : null, plan, checks } }} />
       <LiveRefresh projectId={p.id} />
     </>

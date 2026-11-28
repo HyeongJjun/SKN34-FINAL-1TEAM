@@ -22,7 +22,7 @@ import type { Message, Thread } from "@/lib/api/thread";
 import { call, errorText } from "@/lib/backend/client";
 import { placeText, type InfoDraft } from "@/lib/guest/info";
 import { termByName } from "@/lib/guide";
-import { threadOf } from "./boardLink";
+import { reviewState, threadOf } from "./boardLink";
 import d from "./StandardDialog.module.css";
 import s from "./flow.module.css";
 
@@ -153,9 +153,12 @@ function ChatBody({ data, vendorName, visitId, threadId }: { data: WinData; vend
 }
 
 function ReviewBody({ data, onDone }: { data: WinData; onDone: () => void }) {
-  const t = data.schedule?.trades.find((x) => x.deal.trade === "dobae");
-  if (!t) return <p className={s.note}>공사를 마친 뒤 리뷰를 쓸 수 있어요.</p>;
-  return <ReviewForm projectId={data.projectId} dealId={t.deal.id} vendorId={null} onDone={onDone} />;
+  // 옛 리뷰 화면과 같은 조건(#237 리뷰): 공사 끝을 확인한 뒤(review_open)만 쓰고, 이미 썼으면 쓴 안내
+  const deal = (data.schedule?.trades.find((x) => x.deal.trade === "dobae") ?? data.schedule?.trades[0])?.deal ?? null;
+  const st = reviewState(deal);
+  if (st === "form" && deal) return <ReviewForm projectId={data.projectId} dealId={deal.id} vendorId={deal.vendor_id} onDone={onDone} />;
+  if (st === "done") return <p className={s.note}>리뷰를 썼어요. 공사마다 리뷰는 한 번 써요.</p>;
+  return <p className={s.note}>공사 끝을 확인하면 리뷰를 쓸 수 있어요. 믿집에서 공사를 끝낸 고객만 써요.</p>;
 }
 
 function ScheduleBody({ data, view }: { data: WinData; view: ScheduleView }) {

@@ -31,7 +31,7 @@ import { dateShort, euro, won } from "@/lib/format";
 import { termByName } from "@/lib/guide";
 import { TRADE_ORDER } from "@/lib/labels";
 import { moveTab } from "@/components/ui/tabKeys";
-import { autoDone, boardStateFor, boardTarget, clampTarget, stdSource, isWaiting, tabVendors, withQuery, CLOSED_VISITS, norm, pickRule, pickStateOf, type PickState } from "./boardLink";
+import { autoDone, boardStateFor, boardTarget, clampTarget, stdSource, isWaiting, tabVendors, withQuery, CAME_KEYS, CLOSED_VISITS, norm, pickRule, pickStateOf, type PickState } from "./boardLink";
 import { quickChips } from "./chips";
 import { Jaejae } from "./Jaejae";
 import { MOK_TODO, Plan, PLAN_STEPS } from "./Plan";
@@ -188,7 +188,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
   // ① 주소가 가리키는 칸 · 창만 열고(다른 창은 닫아요) ② 지금 단계(now) 자동 이동이 덮지 않게 맞춘 뒤 ③ 주소를 정리해요
   const lastNow = useRef(now);
   const came = data.step != null || data.openVendor || data.openWin || data.openStd;
-  const cameKey = came ? JSON.stringify([data.step, data.openVendor?.vendorId, data.openVendor?.trade, data.openWin, data.scheduleView, data.openStd]) : "";
+  const cameKey = came ? JSON.stringify([data.step, data.openVendor, data.openWin, data.scheduleView, data.openStd]) : "";
   useEffect(() => {
     if (!cameKey) return;
     // 다른 공정 주소로 오면 공정 탭이 바뀌어 now도 같이 바뀌어요. 바로 뒤 now effect가 주소 칸을 지금 단계로 덮지 않게 맞춰 둬요
@@ -202,7 +202,7 @@ export function ProjectFlow({ data }: { data: FlowData }) {
       requestAnimationFrame(() => document.getElementById("jj-board")?.scrollIntoView({ block: "start" }));
     }
     // 한 번만 써요(새로고침 · 뒤로 가기에 다시 열리지 않게). 넘어온 값만 지우고 공정 · 다른 값은 남겨요
-    router.replace(withQuery(`/projects/${pid}/assistant`, window.location.search, { step: null, open: null, view: null, vendor: null, trade: multi ? active : null }), { scroll: false });
+    router.replace(withQuery(`/projects/${pid}/assistant`, window.location.search, { ...Object.fromEntries(CAME_KEYS.map((k) => [k, null])), trade: multi ? active : null }), { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 넘어온 값(cameKey)이 바뀔 때만
   }, [cameKey]);
   // 단계가 넘어가면 보드도 지금 단계로 옮겨요. 지금 칸 값이 실제로 바뀔 때만(개발 모드 StrictMode는 effect를 두 번 돌려요)

@@ -1,7 +1,7 @@
 // 재재 대화 → 보드 연동 시험(#197): pnpm test:unit
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { autoDone, boardStateFor, myVendorRows, boardTarget, clampTarget, stdSource, tradeQuery, withQuery, withTrade, isWaiting, pickRule, pickStateOf, requestSaid, tabVendors, threadOf, type BoardAnswer } from "./boardLink.ts";
+import { autoDone, boardStateFor, myVendorRows, boardTarget, clampTarget, stdSource, tradeQuery, withQuery, withTrade, cameFrom, CAME_KEYS, reviewState, isWaiting, pickRule, pickStateOf, requestSaid, tabVendors, threadOf, type BoardAnswer } from "./boardLink.ts";
 
 const A = (over: Partial<BoardAnswer> = {}): BoardAnswer => ({ notice: "", sections: [], cards: [], ...over });
 const V = [
@@ -257,4 +257,36 @@ test("공정 탭을 바꿔도 화면의 다른 주소 값은 그대로(#234 리�
   // 재재 화면 주소 정리: 넘어온 칸 · 창 값만 지우고 공정은 남겨요
   assert.equal(withQuery("/projects/p1/assistant", "?step=3&open=standard&trade=mokgong", { step: null, open: null }), "/projects/p1/assistant?trade=mokgong");
   assert.equal(withQuery("/projects/p1/assistant", "?step=3", { step: null, open: null, trade: null }), "/projects/p1/assistant");
+});
+
+test("옛 화면에서 넘어온 재재 화면 주소: 읽는 값과 정리할 값이 같아요(#237)", () => {
+  const V = "01a2155a-0987-7356-9f26-e16437c75c8c";
+  // 옛 화면 넘기기가 만드는 주소 → 열 창 · 칸
+  const cases: [string, ReturnType<typeof cameFrom>][] = [
+    ["?open=log&trade=mokgong", { step: null, openWin: "log", scheduleView: null, openVendor: null, openStd: false }],
+    ["?open=schedule&view=done&trade=mokgong", { step: null, openWin: "schedule", scheduleView: "done", openVendor: null, openStd: false }],
+    ["?open=plan", { step: null, openWin: "plan", scheduleView: null, openVendor: null, openStd: false }],
+    [`?step=2&vendor=${V}&trade=mokgong`, { step: 2, openWin: null, scheduleView: null, openVendor: { vendorId: V, trade: "mokgong", grade: null, photo: null }, openStd: false }],
+    [`?step=2&vendor=${V}`, { step: 2, openWin: null, scheduleView: null, openVendor: { vendorId: V, trade: "dobae", grade: null, photo: null }, openStd: false }],
+    ["?step=4", { step: 4, openWin: null, scheduleView: null, openVendor: null, openStd: false }],
+    ["?open=standard", { step: null, openWin: null, scheduleView: null, openVendor: null, openStd: true }],
+    // 옛 업체 화면의 벽지 · 사진(#237 리뷰). 벽지는 도배만
+    [`?step=2&vendor=${V}&grade=economy&photo=3`, { step: 2, openWin: null, scheduleView: null, openVendor: { vendorId: V, trade: "dobae", grade: "economy", photo: 3 }, openStd: false }],
+    [`?step=2&vendor=${V}&trade=mokgong&grade=economy&photo=0`, { step: 2, openWin: null, scheduleView: null, openVendor: { vendorId: V, trade: "mokgong", grade: null, photo: null }, openStd: false }],
+    // 모르는 값은 무시
+    ["?open=admin&step=9&view=x&vendor=../x", { step: null, openWin: null, scheduleView: null, openVendor: null, openStd: false }],
+  ];
+  for (const [q, want] of cases) {
+    assert.deepEqual(cameFrom(Object.fromEntries(new URLSearchParams(q))), want, q);
+    // 정리하면 넘어온 값은 모두 지워지고 공정만 남아요(새로고침 · 뒤로 가기에 창이 다시 열리지 않게)
+    const left = new URLSearchParams(withQuery("/a", q, Object.fromEntries(CAME_KEYS.map((k) => [k, null]))).split("?")[1] ?? "");
+    assert.deepEqual([...left.keys()].filter((k) => k !== "trade"), [], q);
+  }
+});
+
+test("리뷰 창은 공사 끝 확인 뒤에만 쓰고, 썼으면 쓴 안내(#237 리뷰)", () => {
+  assert.equal(reviewState(null), "wait"); // 확정 업체 없음
+  assert.equal(reviewState({ review_open: false, review_id: null }), "wait"); // 공사 끝 확인 전
+  assert.equal(reviewState({ review_open: true, review_id: null }), "form");
+  assert.equal(reviewState({ review_open: false, review_id: "r1" }), "done"); // 이미 씀
 });

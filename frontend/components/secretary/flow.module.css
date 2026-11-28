@@ -129,3 +129,5 @@
 .flowTab { flex: 1; min-height: var(--mj-hit-min); border: 1px solid var(--mj-line); border-radius: var(--mj-radius-pill); background: var(--mj-surface); color: var(--mj-text-sub); font: inherit; font-size: var(--mj-type-label); font-weight: var(--mj-weight-semibold); cursor: pointer; }
 .flowTabOn { border-color: var(--mj-primary); background: var(--mj-primary); color: var(--mj-on-primary); }
 @media (min-width: 768px) { .flowTabs { display: none; } }
+/* #237 리뷰: 업체 창 시공 사례를 눌러 크게 보기 */
+.pic { display: block; width: 100%; min-height: 40px; padding: 0; border: 0; border-radius: 8px; background: none; cursor: zoom-in; }

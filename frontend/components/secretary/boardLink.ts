@@ -136,6 +136,41 @@ export function withTrade(href: string, trade: string | null | undefined): strin
   if (!trade || /[?&]trade=/.test(href)) return href;
   return `${href}${tradeQuery(trade, href.includes("?") ? "&" : "?")}`;
 }
+/** 재재 화면이 한 번만 쓰고 지우는 주소 값(옛 화면 · 다른 화면에서 넘어옴). 읽기(cameFrom)와 지우기(ProjectFlow)가 이 목록 하나를 같이 써요(#237) */
+export const CAME_KEYS = ["step", "open", "view", "vendor", "grade", "photo"] as const;
+const WINS = ["plan", "schedule", "docs", "review", "log"] as const;
+const VIEWS = ["dates", "extra", "done"] as const;
+type Q = Record<string, string | string[] | undefined>;
+/** 넘어온 주소 값 → 처음에 열 보드 칸 · 창 · 업체 창. 모르는 값은 무시해요 */
+export function cameFrom(q: Q): {
+  step: number | null;
+  openWin: (typeof WINS)[number] | null;
+  scheduleView: (typeof VIEWS)[number] | null;
+  openVendor: { vendorId: string; trade: "dobae" | "mokgong"; grade: "basic" | "economy" | null; photo: number | null } | null;
+  openStd: boolean;
+} {
+  const one = (k: string) => { const v = q[k]; return Array.isArray(v) ? v[0] : v; };
+  const step = one("step"), open = one("open"), view = one("view"), vendor = one("vendor"), grade = one("grade"), photo = one("photo");
+  const trade = one("trade") === "mokgong" ? "mokgong" : "dobae";
+  return {
+    step: step && /^[0-7]$/.test(step) ? Number(step) : null,
+    openWin: (WINS as readonly string[]).includes(open ?? "") ? (open as (typeof WINS)[number]) : null,
+    scheduleView: (VIEWS as readonly string[]).includes(view ?? "") ? (view as (typeof VIEWS)[number]) : null,
+    openVendor: vendor && /^[0-9a-f-]{36}$/i.test(vendor) ? {
+      vendorId: vendor,
+      trade,
+      // 벽지 고르기는 도배만이에요(옛 업체 화면과 같아요)
+      grade: trade === "dobae" && (grade === "basic" || grade === "economy") ? grade : null,
+      photo: photo && /^[1-9][0-9]?$/.test(photo) ? Number(photo) : null,
+    } : null,
+    openStd: open === "standard",
+  };
+}
+/** 리뷰 창: 쓸 수 있으면 "form", 이미 썼으면 "done", 아직이면 "wait"(옛 리뷰 화면과 같은 조건, #237 리뷰) */
+export function reviewState(deal: { review_open?: boolean | null; review_id?: string | null } | null): "form" | "done" | "wait" {
+  if (deal?.review_open) return "form";
+  return deal?.review_id ? "done" : "wait";
+}
 /** 주소의 다른 값은 그대로 두고 준 값만 바꿔요(null이면 지워요). 공정 탭을 바꿔도 화면 상태(?tab · ?view · ?sort)가 남게(#234 리뷰) */
 export function withQuery(path: string, search: string, set: Record<string, string | null>): string {
   const q = new URLSearchParams(search);

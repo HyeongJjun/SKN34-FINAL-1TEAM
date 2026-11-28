@@ -5,8 +5,10 @@ import { redirect } from "next/navigation";
 
 export const metadata = { title: "업체 자세히" };
 
-export default async function Page({ params, searchParams }: { params: Promise<{ id: string; vid: string }>; searchParams: Promise<{ trade?: string | string[] }> }) {
-  const [{ id, vid }, { trade }] = await Promise.all([params, searchParams]);
-  const t = (Array.isArray(trade) ? trade[0] : trade) === "mokgong" ? "&trade=mokgong" : "";
-  redirect(`/projects/${encodeURIComponent(id)}/assistant?step=2&vendor=${encodeURIComponent(vid)}${t}`);
+export default async function Page({ params, searchParams }: { params: Promise<{ id: string; vid: string }>; searchParams: Promise<{ trade?: string | string[]; grade?: string | string[]; photo?: string | string[] }> }) {
+  const [{ id, vid }, q] = await Promise.all([params, searchParams]);
+  // 벽지(?grade) · 크게 볼 사진(?photo)도 업체 창으로 넘겨요(#237 리뷰). 값 확인은 재재 화면(cameFrom)이 해요
+  const u = new URLSearchParams({ step: "2", vendor: vid });
+  for (const k of ["trade", "grade", "photo"] as const) { const v = q[k]; const one = Array.isArray(v) ? v[0] : v; if (one) u.set(k, one); }
+  redirect(`/projects/${encodeURIComponent(id)}/assistant?${u}`);
 }
