@@ -106,6 +106,11 @@ def test_my_projects_list(api):
         "dobae": (3, "업체"),
         "mokgong": (8, "완료"),
     }
+    # 공정마다 그 공정의 지금 할 일(공정 탭 위 띠, #234)
+    assert {t["trade"]: (t["todo"]["code"], t["todo"]["trade"]) for t in old["trade_steps"]} == {
+        "dobae": ("pick", "dobae"),
+        "mokgong": ("done", "mokgong"),
+    }
     assert old["grades"] == {"dobae": "basic", "mokgong": None}
     assert old["code"].startswith("MJ-")
     assert datetime.fromisoformat(old["updated_at"]) > datetime.fromisoformat(old["created_at"])
